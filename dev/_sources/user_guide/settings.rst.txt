@@ -3,52 +3,57 @@
 Fitting the covariance settings
 ===============================
 
-Every inversion rests on settings someone chose: the prior error's standard
-deviation and correlation length, the model-data mismatch's standard
-deviation. The rule: **the settings that make the observations most probable
-are their maximum-likelihood estimates, and** :attr:`post.log_evidence
-<fips.Posterior.log_evidence>` **is that probability.** Write a function that
-builds the problem from the settings, and maximize the evidence over them with
-:mod:`scipy.optimize` (Michalak et al., 2005). fips adds no fitting function:
-the settings are yours, and so is the function that turns them into a
-problem.
+Every inversion rests on numbers someone chose: the prior covariance's
+standard deviation and correlation length, the observation covariance's
+standard deviation. These are the *settings*. **The settings that make the
+observations most probable are their maximum-likelihood estimates, and**
+:attr:`post.log_evidence <fips.Posterior.log_evidence>` **is the log of that
+probability**, the *evidence*. Write a function that builds the problem from
+the settings, and maximize the evidence over them with :mod:`scipy.optimize`:
+
+.. code-block:: python
+
+   def cost(log_settings):
+       return -fips.solve(build(np.exp(log_settings))).log_evidence
+
+   fit = scipy.optimize.minimize(cost, np.log(guess), method="L-BFGS-B")
+
+``np.exp(fit.x)`` is the fitted settings, and ``fips.solve(build(...))`` at
+them is the posterior. fips has no fitting function of its own: the settings
+are yours, and so is the function that turns them into a problem (Michalak et
+al., 2005).
 
 .. contents:: On this page
    :local:
    :depth: 1
 
 
-What the evidence is
---------------------
+When to use it
+--------------
 
-With the state integrated out, the observations of a linear problem are
-Gaussian: :math:`z \sim N(H x_0 + c, G)`, with :math:`G = H S_0 H^T + S_z /
-\gamma` the covariance of the innovation (:attr:`~fips.Posterior.innovation_cov`).
-The evidence is the density of the observations under it:
-
-.. math::
-
-    \ln p(z) = -\tfrac{1}{2} \left( \chi^2 + \ln \lvert G \rvert + m \ln 2\pi \right),
-
-with :math:`\chi^2 = d^T G^{-1} d` (:attr:`~fips.Posterior.chi2`) and :math:`d
-= z - H x_0 - c`. The two terms pull opposite ways: a wider prior or a larger
-mismatch lowers :math:`\chi^2` and raises :math:`\ln \lvert G \rvert`, so the
-evidence is largest at covariances as large as the innovation needs and no
-larger. fips reads :math:`\ln \lvert G \rvert` from what the solve computed (it
-is :math:`\ln \lvert S_z / \gamma \rvert` plus twice the
-:attr:`~fips.Posterior.information_content`), so the evidence costs one
-:math:`\ln \lvert S_z \rvert` beyond the solve, and ``post.with_gamma(g)``
-gives another gamma's for a few products. Gamma scales the mismatch, so it is
-the same setting as the mismatch's standard deviation: fit one or the other,
-not both.
+- **Your settings are a judgment, and you want the data's view of them.**
+  Fit the ones you are least sure of; hold the others.
+- **The reduced chi-squared is far from 1.** It says the covariances are too
+  small or too large together, not which one is wrong; the evidence decides
+  between them (`Against a reduced chi-squared of 1`_).
+- **Only gamma, one factor on the observation covariance.**
+  ``post.with_gamma(g).log_evidence`` gives the evidence at another gamma for
+  a few products, with no new solve, so a sweep or
+  :func:`scipy.optimize.minimize_scalar` over gamma is cheap. Gamma scales the
+  observation covariance, so it is the same setting as the observation
+  standard deviation: fit one or the other, not both.
+- **The fitted settings are uncertain, and that matters to the answer.** A
+  posterior at fitted settings treats them as known. :doc:`hierarchical`
+  draws the settings from their posterior instead, and carries their
+  uncertainty into the state's.
 
 
-A world at known settings
--------------------------
+An example
+----------
 
-A hundred and fifty cells along a line, 1 km apart, with a prior of 2 and
-errors correlated over a length the fit should find; two hundred observations,
-each of one to four neighboring cells:
+A quantity along a line: 150 state elements one unit apart, with a prior of
+2, and 200 observations, each a weighted sum of one to four neighboring
+elements.
 
 .. ipython:: python
 
@@ -58,27 +63,28 @@ each of one to four neighboring cells:
    import fips
 
    rng = np.random.default_rng(0)
-   n_cells, n_obs = 150, 200
-   cells = fips.Space({"flux": pd.Index(np.arange(n_cells) + 0.5, name="x")})  # km
-   observed = fips.Space({"ch4": pd.RangeIndex(n_obs, name="obs_id")})
+   n, m = 150, 200
+   line = fips.Space({"field": pd.Index(np.arange(n) + 0.5, name="x")})
+   observed = fips.Space({"obs": pd.RangeIndex(m, name="obs_id")})
 
 .. ipython:: python
 
-   footprint = np.zeros((n_obs, n_cells))
-   for i, start in enumerate(rng.integers(0, n_cells - 4, n_obs)):
-       footprint[i, start : start + rng.integers(1, 5)] = rng.uniform(0.5, 1.5)
+   weights = np.zeros((m, n))
+   for i, start in enumerate(rng.integers(0, n - 4, m)):
+       weights[i, start : start + rng.integers(1, 5)] = rng.uniform(0.5, 1.5)
 
-   H = fips.Operator(footprint, observed, cells)
-   prior = fips.Vector(np.full(n_cells, 2.0), cells, name="prior")
+   H = fips.Operator(weights, observed, line)
+   prior = fips.Vector(np.full(n, 2.0), line, name="prior")
 
-The function from the settings to the problem is the one a repeated inversion
-already has (:ref:`the user guide <repeated-inversions>`). Here the settings
-are three numbers:
+The function from the settings to the problem is the one a
+:ref:`repeated inversion <repeated-inversions>` already has. Here the
+settings are three numbers: the prior standard deviation, the correlation
+length, and the observation standard deviation.
 
 .. ipython:: python
 
    def build(settings, obs):
-       """The problem at the settings: the prior std, the correlation length (km), the mismatch std."""
+       """Return the problem at the settings (prior std, correlation length, observation std)."""
        std, length, noise = settings
        return fips.Problem(
            prior=prior,
@@ -88,23 +94,20 @@ are three numbers:
            forward=H,
        )
 
-The world is the problem at the true settings, and
+To show that the fit finds the right settings, the observations here come from
+a world whose settings are known: the problem at the true settings, whose
 :meth:`~fips.Problem.simulate` draws a truth from its prior and the
-observations it would give:
+observations it gives (:doc:`synthetic`).
 
 .. ipython:: python
 
    true = pd.Series({"std": 1.0, "length": 5.0, "noise": 0.5})
-   world = build(true, fips.Vector(np.zeros(n_obs), observed))
-   truth, obs = world.simulate(rng)
+   truth, obs = build(true, fips.Vector(np.zeros(m), observed)).simulate(rng)
 
-
-Maximizing the evidence
------------------------
-
-Minimize the negative log evidence over the logarithms of the settings, which
-keeps each positive and puts a factor of two the same distance away on either
-side. L-BFGS-B estimates the gradient from differences, at a few solves each:
+Minimize the negative log evidence over the logarithms of the settings. The
+logarithm keeps each setting positive and puts a factor of two the same
+distance away on either side. L-BFGS-B estimates the gradient from
+differences, a few solves per step:
 
 .. ipython:: python
 
@@ -117,18 +120,24 @@ side. L-BFGS-B estimates the gradient from differences, at a few solves each:
    pd.DataFrame({"true": true, "guess": guess, "fitted": fitted}).round(3)
 
 From a guess off by a factor of three to five in each setting, the fit finds
-the two standard deviations to 2% and 5% of the truth, and a correlation length of
-2.8 km against the true 5. That is not a failure of the fit: one map of 150
-cells holds about thirty correlation lengths, and the evidence says little
-more about the length than that. Hold the length at each of several values and
-fit the two standard deviations (a profile): the evidence changes by less than
-1.5 between 2 and 5 km, and a drop of 2 below the maximum is roughly the edge
-of a 95% interval (half of 3.84, the 95% point of a chi-squared with one degree
-of freedom):
+both standard deviations close to the truth. The correlation length it finds
+is shorter than the true one, and the next section shows why that is not a
+failure of the fit.
+
+
+How well the data decide a setting
+----------------------------------
+
+**The evidence is a likelihood, so its curvature says how well the data
+decide a setting.** Hold one setting at each of several values, fit the
+others, and read how far the evidence falls below its maximum (a *profile*).
+A fall of about 2 is the edge of a 95% interval: half of 3.84, the 95% point
+of a chi-squared with one degree of freedom.
 
 .. ipython:: python
 
    def profile(length):
+       """Fit the two standard deviations with the length held, and return the evidence there."""
        best = minimize(lambda s: cost(np.log([np.exp(s[0]), length, np.exp(s[1])])), np.log([1.0, 0.5]), method="L-BFGS-B")
        return pd.Series({"log_evidence": -best.fun, "std": np.exp(best.x[0]), "noise": np.exp(best.x[1])})
 
@@ -136,39 +145,61 @@ of freedom):
    table["below_max"] = -fit.fun - table["log_evidence"]
    table.round(3)
 
-The data rule out lengths of 1 km and of 8 km and more, and leave 2 to 5 km
-about equally likely. Over other worlds at the same settings the fits scatter
-about the truth; their medians, over ten worlds, are within 2% of it:
+The data rule out the shortest and the longest lengths and leave the middle
+of the range about equally likely: a line of 150 elements holds only a few
+dozen correlation lengths, and its observations say little more about the
+length than that. A flat profile is the data's answer, not the optimizer's failure;
+when it matters to the answer, :doc:`hierarchical` carries it into the
+state's uncertainty.
 
-.. ipython:: python
 
-   fits = []
-   for trial in range(10):
-       _, obs_k = world.simulate(rng)
-       best = minimize(cost, np.log(guess), args=(obs_k,), method="L-BFGS-B")
-       fits.append(np.exp(best.x))
+Which methods give the evidence
+-------------------------------
 
-   fits = pd.DataFrame(fits, columns=true.index)
-   fits.median().round(3)
+The evidence is exact for a Gaussian posterior, Laplace's approximation for a
+posterior summarized at its mode, and refused where neither holds:
 
-The scatter of the fits is the uncertainty of the settings, which the
-posterior at the fitted settings leaves out: it treats them as known. To carry
-it into the estimate, the settings need a prior of their own and draws over them:
-:doc:`hierarchical` draws them.
+- ``"analytic"``: exact.
+- ``"gauss_newton"`` (:doc:`nonlinear`, :doc:`positive`): Laplace's
+  approximation, the same formula with the misfit at the mode and the
+  information content of the Gaussian there. It is exact for a linear
+  forward model. For a model that bends, it leaves out how the posterior
+  departs from that Gaussian (its skew); for a lognormal state of a few
+  elements that error is about 0.1, small next to the differences between
+  settings, so fit the settings of a forward model with it as above.
+- ``"variational"`` (:doc:`variational`): the same formula with the
+  information content of its low-rank posterior (Laplace's at the mode, with
+  a forward model). It is exact at full rank. Below it, the evidence leaves
+  out the information of the directions not kept and is too high, the more so
+  for a larger prior, so a maximum would pick too large a prior. It raises
+  while the last direction kept still has an eigenvalue above 1: raise
+  ``rank`` until the last :attr:`~fips.Posterior.eigenvalues` are well below 1.
+- ``"bounded"`` (:doc:`bounds`): raises with a finite bound. The evidence
+  with bounds needs the probability of the bounds under the prior and under
+  the posterior, which fips does not compute. Fit the settings on the problem
+  without bounds, with ``"analytic"``. With no finite bound it is the
+  analytic posterior, and gives the exact evidence.
+- ``"ensemble"`` (:doc:`ensemble`): raises. For a linear problem, the
+  analytic solve of the same problem gives the exact evidence.
+
+A method that cannot give it raises :class:`~fips.UnavailableError`, saying
+why. The :ref:`members table <posterior-members>` lists it with the rest.
 
 
 Against a reduced chi-squared of 1
 ----------------------------------
 
-The common alternative is to sweep a setting until the reduced chi-squared,
-:math:`\chi^2 / m`, is 1 (:attr:`~fips.Posterior.reduced_chi2`). It is one
-equation, so it picks one setting given the others: each guess of the length
-and the mismatch has a prior std that passes it. Here are four, each with its
-evidence:
+The common alternative is to adjust a setting until the reduced chi-squared,
+:math:`\chi^2 / m` (:attr:`~fips.Posterior.reduced_chi2`), is 1. **It is one
+equation, so it picks one setting given the others**: each guess of the
+length and the observation standard deviation has a prior standard deviation
+that passes it. Here are four guesses, each with the prior standard deviation
+that gives a reduced chi-squared of 1, and the evidence there:
 
 .. ipython:: python
 
    def chi2_of_one(length, noise):
+       """Return the prior std at which the reduced chi-squared is 1, and the evidence there."""
        def excess(log_std):
            return fips.solve(build([np.exp(log_std), length, noise], obs)).reduced_chi2 - 1.0
        std = np.exp(brentq(excess, np.log(0.01), np.log(100.0)))
@@ -177,46 +208,96 @@ evidence:
 
    pd.DataFrame([chi2_of_one(L, s) for L, s in ((1.0, 2.0), (2.0, 1.0), (5.0, 0.5), (5.0, 0.3))]).round(3)
 
-Every row has a reduced chi-squared of 1, and their prior stds run from 0.3 to
-3.1: the test passes whatever the guess, so it cannot say which guess is right.
-Only the row at the true length and mismatch gets the right prior std (1.1),
-and its evidence is near the maximum (-268.5); the others are 58 to 163 below
-it, odds against them of :math:`e^{58}` and more. The evidence compares the
-rows, where the reduced chi-squared cannot.
-
-At the maximum of the evidence the reduced chi-squared is 1 by itself:
+Every row passes the test, with prior standard deviations a factor of ten
+apart, so the test cannot say which guess is right. The evidence can: only
+the row at the true length and observation standard deviation comes near its
+maximum, and a difference in log evidence is the log of the odds between two
+rows. At the maximum of the evidence, the reduced chi-squared is 1 by itself:
 
 .. ipython:: python
 
    round(fips.solve(build(fitted, obs)).reduced_chi2, 4)
 
-Scaling the prior std and the mismatch std together by :math:`k` scales
-:math:`G` by :math:`k^2`, and the evidence is stationary in :math:`k` exactly
-when :math:`\chi^2 = m`. So a reduced chi-squared of 1 is a consequence of the
-maximum, one condition of three, not a way to find it.
+A reduced chi-squared of 1 is one condition the maximum satisfies, not a way
+to find it (`How it works`_).
 
 
-The other methods
------------------
+Warnings and checks
+-------------------
 
-``"gauss_newton"`` (:doc:`nonlinear`, :doc:`positive`) gives Laplace's
-approximation of the evidence: the same formula with the cost at the mode and
-the information content of the Gaussian there. For a lognormal model of four
-elements with a log-std of 0.8, it was within about 0.1 of an importance-sampling
-estimate, a small error next to the differences between settings above; it is
-exact for a linear model, and it leaves out the skew of the posterior. Fit
-lognormal settings with it as above. ``"bounded"`` (:doc:`bounds`) raises: the
-evidence with bounds needs the probability of the bounds under the prior and
-under the posterior, which fips does not compute. Fit the settings of a
-bounded inversion on its analytic problem. ``"variational"``
-(:doc:`variational`) gives the evidence of its low-rank posterior, exact at
-full rank. Below it the evidence leaves out the information of the pairs not
-kept and is too high, the more so for a larger prior, so a maximum would pick
-too large a prior: it raises while the last pair kept still has an eigenvalue
-above 1, and is exact only when ``rank`` reaches the problem's.
+- **The evidence is a density of the observations**, so it depends on their
+  units and their number. Compare it only between problems of the same
+  observations.
+- **A setting the data do not decide** has a flat evidence, and the optimizer
+  stops anywhere along the flat part. Check a fitted setting with a profile
+  before trusting it.
+- **The observation covariance must be positive definite**: the evidence
+  needs :math:`\ln \lvert S_z \rvert`, and raises
+  :class:`numpy.linalg.LinAlgError` otherwise. A singular prior covariance is
+  fine.
+- **Gamma and the observation standard deviation are one setting.** Fitting
+  both leaves the optimizer a direction in which the evidence does not
+  change.
+
+
+Cost
+----
+
+Each evaluation is one solve. L-BFGS-B with differences takes one more
+solve per setting at each step, so a fit of :math:`p` settings costs a few
+dozen times :math:`p + 1` solves. The evidence itself costs one
+:math:`\ln \lvert S_z \rvert` beyond the solve, and
+``post.with_gamma(g).log_evidence`` a few products, after one
+eigendecomposition that every gamma shares.
+
+
+.. _settings-evidence:
+
+How it works
+------------
+
+With the state integrated out, the observations of a linear problem are
+Gaussian, :math:`z \sim N(H x_0 + c, G)`, with :math:`G = H S_0 H^T + S_z /
+\gamma` the covariance of the innovation
+(:attr:`~fips.Posterior.innovation_cov`). The evidence is the density of the
+observations under it:
+
+.. math::
+
+    \ln p(z) = -\tfrac{1}{2} \left( \chi^2 + \ln \lvert G \rvert + m \ln 2\pi \right),
+
+with :math:`\chi^2 = d^T G^{-1} d` (:attr:`~fips.Posterior.chi2`) and
+:math:`d = z - H x_0 - c`. The two terms pull opposite ways: a wider prior or
+a larger observation error lowers :math:`\chi^2` and raises
+:math:`\ln \lvert G \rvert`, so the evidence is largest at covariances as
+large as the innovation needs and no larger.
+
+fips reads :math:`\ln \lvert G \rvert` from what the solve computed:
+:math:`\lvert G \rvert = \lvert S_z / \gamma \rvert \, \lvert I + \gamma
+S_z^{-1} H S_0 H^T \rvert`, and the log of the second factor is twice the
+:attr:`~fips.Posterior.information_content`. So
+
+.. math::
+
+    \ln p(z) = -\tfrac{1}{2} \left( \chi^2 + 2 \mathcal{H} + \ln \lvert S_z \rvert
+        - m \ln \gamma + m \ln 2\pi \right),
+
+with :math:`\mathcal{H}` the information content: only :math:`\ln \lvert S_z
+\rvert` is computed beyond the solve, once per problem. Laplace's
+approximation, for a forward model, is the same formula with the misfit at
+the mode and the information content of the Gaussian there.
+
+**Why the reduced chi-squared is 1 at the maximum.** Scaling the prior and
+the observation standard deviations together by :math:`k` scales :math:`G`
+by :math:`k^2`, so the evidence along that direction is
+:math:`-\tfrac{1}{2} (\chi^2 / k^2 + m \ln k^2) + \text{const}`. It is
+stationary in :math:`k` exactly when :math:`\chi^2 = m`. The maximum over all
+the settings is stationary in that direction too, so its reduced chi-squared
+is 1; the other directions (how the variance splits between the prior and the
+observations, the correlation length) the reduced chi-squared does not see.
 
 References
-~~~~~~~~~~
+----------
 
 Michalak, A. M., Hirsch, A., Bruhwiler, L., Gurney, K. R., Peters, W., and
 Tans, P. P. (2005). Maximum likelihood estimation of covariance parameters for

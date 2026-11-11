@@ -8,26 +8,37 @@ rest of the documentation uses these words and no others.
 
 .. _the-linear-model:
 
-The linear model
-----------------
+The model
+---------
 
-fips solves the linear model
+fips solves for a state :math:`x` from observations :math:`z`, where
 
 .. math::
 
-   z = H x + c + \varepsilon
+   z = F(x) + c + \varepsilon,
 
-for the state :math:`x`, given the observations :math:`z`, the forward
-operator :math:`H`, the offset :math:`c`, a prior :math:`x_0` with its prior
-covariance :math:`S_0`, and the observation covariance :math:`S_z` (the
-covariance of the error :math:`\varepsilon`). With :math:`n` state elements and
-:math:`m` observations, the answer is the posterior
+given a forward map :math:`F`, an offset :math:`c`, a prior :math:`x_0` with
+its prior covariance :math:`S_0`, and the observation covariance :math:`S_z`
+(the covariance of the observation error :math:`\varepsilon`). The prior and
+the error are Gaussian. With :math:`n` state elements and :math:`m`
+observations, the main case is a **linear** forward map, :math:`F(x) = H x`,
+whose posterior is Gaussian and has a closed form:
 
 .. math::
 
    \hat{x} = x_0 + K (z - H x_0 - c), \qquad
    \hat{S} = S_0 - K H S_0, \qquad
    K = S_0 H^T \left(H S_0 H^T + S_z / \gamma\right)^{-1}.
+
+The estimate :math:`\hat{x}` is the point where the cost
+
+.. math::
+
+   (x - x_0)^T S_0^{-1} (x - x_0) + \gamma\, (z - F(x) - c)^T S_z^{-1} (z - F(x) - c)
+
+is least. When :math:`F` is not linear, or the state is held to bounds, the
+posterior is not Gaussian, and fips's other methods answer it
+(:doc:`/user_guide/methods`).
 
 The letters follow one convention: lowercase for vectors, uppercase for
 matrices, a subscript :math:`0` for the prior, a subscript :math:`z` for the
@@ -58,27 +69,25 @@ The words
        measurement vector (Rodgers writes :math:`y`).
    * - **forward operator**
      - :math:`H`
-     - ``forward``
+     - ``forward`` (an :class:`~fips.Operator`)
      - The matrix that maps a state to the observations it would produce,
-       :math:`m \times n`. Also called the Jacobian (of a nonlinear model,
-       linearized), the observation operator, the sensitivity matrix or, in
-       atmospheric transport, the footprints. :meth:`Problem.predict
-       <fips.Problem.predict>` gives :math:`H x + c` for any state.
+       :math:`m \times n`. Also called the Jacobian, the observation
+       operator, the sensitivity matrix or, in atmospheric transport, the
+       footprints. :meth:`Problem.predict <fips.Problem.predict>` gives
+       :math:`H x + c` for any state.
    * - **forward model**
      - :math:`F`
      - ``forward`` (a :class:`~fips.ForwardModel`)
-     - A map from the state to the observations that is not linear,
-       :math:`z = F(x) + c + \varepsilon`, written with its Jacobian
-       :math:`J(x)`, the forward operator of the problem linearized at
-       :math:`x` (:meth:`Problem.linearized <fips.Problem.linearized>`). Its
-       posterior's estimate is the mode (``"gauss_newton"``,
-       :doc:`/user_guide/nonlinear`). A forward operator is a forward model
-       whose Jacobian is itself: ``H(x)`` is ``H @ x``.
+     - A forward map that is not linear, written with its Jacobian
+       :math:`J(x) = \partial F / \partial x`, the forward operator of the
+       problem linearized at :math:`x` (:meth:`Problem.linearized
+       <fips.Problem.linearized>`). A forward operator is the forward model
+       whose Jacobian is itself. :doc:`/user_guide/nonlinear`.
    * - **offset**
      - :math:`c`
      - ``offset``
      - The part of the observations the state does not explain, added to
-       :math:`H x`: a background concentration, a known bias. Optional. An
+       :math:`F(x)`: a background concentration, a known bias. Optional. An
        offset the data should decide is a block of the state instead
        (:func:`~fips.offset_block`).
    * - **prior**
@@ -96,31 +105,44 @@ The words
    * - **observation covariance**
      - :math:`S_z`
      - ``obs_cov``
-     - The covariance of the error :math:`\varepsilon` between the
-       observations and what the forward operator models, :math:`m \times m`:
+     - The covariance of the observation error :math:`\varepsilon`, between
+       the observations and what the forward map models, :math:`m \times m`:
        measurement error plus the errors of the model and of representing the
        state. Also called the model-data mismatch or the observation error
        covariance (:math:`R` in data assimilation, :math:`S_\epsilon` in
        Rodgers, :math:`C_D` in Tarantola).
    * - **innovation**
      - :math:`d`
-     - ``post.innovation_cov``
-     - The observations minus what the prior models,
-       :math:`d = z - H x_0 - c`. Its covariance,
-       :math:`H S_0 H^T + S_z / \gamma`, is :math:`m \times m`. The solve factors
-       it, whitened by the model-data mismatch, unless there are fewer state
-       elements than observations, the mismatch is dense, diagonal, sparse,
-       block diagonal or Kronecker, and the prior error covariance has a
-       square root (a positive-definite one does): it then factors an
-       :math:`n \times n` matrix instead.
+     - ``post.innovation_cov`` (its covariance)
+     - The observations less what the prior models, :math:`d = z - H x_0 -
+       c`. Its covariance is :math:`H S_0 H^T + S_z / \gamma`,
+       :math:`m \times m`.
    * - **posterior**
      - :math:`\hat{x}`, :math:`\hat{S}`
      - ``fips.solve(problem)``, a :class:`~fips.Posterior`
-     - The answer: the state estimate :math:`\hat{x}` (``post.estimate``) and
-       its posterior covariance :math:`\hat{S}` (``post.cov()``, whose
-       diagonal is ``post.variances``). Also called the *a posteriori*, the
-       analysis or the retrieval. ``post.modeled_obs`` is
-       :math:`H \hat{x} + c`.
+     - The answer: the distribution of the state given the observations.
+       Also called the *a posteriori*, the analysis or the retrieval.
+       ``post.modeled_obs`` is :math:`F(\hat{x}) + c`.
+   * - **estimate**
+     - :math:`\hat{x}`
+     - ``post.estimate``
+     - The posterior's point estimate: its **mean** for a Gaussian posterior,
+       its **mode** (the most probable state, where the cost is least) for
+       a method whose posterior is not Gaussian. The two differ when the
+       posterior is skewed.
+   * - **posterior covariance**
+     - :math:`\hat{S}`
+     - ``post.cov()``, ``post.variances``
+     - The covariance of the state given the observations; its diagonal is
+       ``post.variances``.
+   * - **draws**
+     -
+     - ``post.sample(n)``
+     - States drawn from the posterior, one column each: the way to answer a
+       question a covariance cannot (the chance an aggregate is above a value,
+       a non-linear function of the state). A *sampled* posterior keeps a set
+       of draws from its solve (*kept draws*) and reads its mean, variances
+       and intervals from them.
    * - **gain**
      - :math:`K`
      - ``post.kalman_gain``
@@ -145,13 +167,26 @@ The words
      - The Shannon information content, in nats (divide by :math:`\ln 2`
        for bits): how much the observations shrink the volume of the state's
        uncertainty, :math:`\tfrac{1}{2} \ln (\lvert S_0 \rvert /
-       \lvert \hat{S} \rvert)`, on a log scale.
+       \lvert \hat{S} \rvert)`.
    * - **gamma**
      - :math:`\gamma`
      - ``gamma``, ``post.with_gamma(g)``
      - The regularization factor: the solve uses :math:`S_z / \gamma`, so a
        gamma above 1 trusts the observations more and below 1 the prior
        more. 1 by default.
+   * - **settings**
+     - :math:`s`
+     - your own function's arguments
+     - The numbers the covariances are built from: the prior's standard
+       deviation and correlation length, the observation error's standard
+       deviation. Also called hyperparameters. :doc:`/user_guide/settings`
+       fits them; :doc:`/user_guide/hierarchical` carries their uncertainty.
+   * - **evidence**
+     - :math:`p(z)`
+     - ``post.log_evidence``
+     - The probability of the observations given the covariances, with the
+       state integrated out. Also called the marginal likelihood. The
+       settings that maximize it are the maximum-likelihood settings.
 
 The posterior also has these statistics:
 
@@ -165,36 +200,33 @@ The posterior also has these statistics:
    * - chi-squared
      - ``post.chi2``
      - The misfit of the estimate to the observations and to the prior, each
-       weighed by its covariance; ``post.reduced_chi2`` divides it by
-       :math:`m`, and is near 1 when the covariances are right.
-       ``post.data_misfit`` and ``post.state_misfit`` are its two terms (the
-       first on :math:`S_z` as given, without :math:`\gamma`), the two axes
-       of an L-curve.
-       ``post.chi2_tests()`` gives its degrees of freedom and p-value, and
-       the same test of three more vectors (Rodgers' four tests): the
-       residual :math:`z - H \hat{x} - c`, the increment
-       :math:`\hat{x} - x_0`, and the modeled increment
-       :math:`H (\hat{x} - x_0)`, the increment as the observations see it.
-       In a linear problem the residual's test gives the innovation's
-       numbers and the modeled increment's the increment's.
+       weighed by its covariance: the cost above, at the estimate.
+       ``post.reduced_chi2`` divides it by :math:`m`, and is near 1 when the
+       covariances are right. ``post.data_misfit`` and ``post.state_misfit``
+       are its two terms (the first on :math:`S_z` as given, without
+       :math:`\gamma`), the two axes of an L-curve. ``post.chi2_tests()``
+       turns it into a test with degrees of freedom and a p-value, beside
+       the same test of the residual :math:`z - F(\hat{x}) - c`, the
+       increment :math:`\hat{x} - x_0`, and the modeled increment
+       :math:`H (\hat{x} - x_0)` (Rodgers' four tests).
    * - :math:`R^2`, RMSE
      - ``post.r2``, ``post.rmse``
      - The squared correlation of the observations less the offset,
-       :math:`z - c`, with :math:`H \hat{x}`, and the root mean square of
-       :math:`z - H \hat{x} - c`. With no offset, or a constant one, the
-       squared correlation is that of :math:`z` and :math:`H \hat{x} + c`.
+       :math:`z - c`, with :math:`F(\hat{x})`, and the root mean square of
+       the residual :math:`z - F(\hat{x}) - c`.
    * - uncertainty reduction
      - ``post.uncertainty_reduction``
      - :math:`1 - \sqrt{\operatorname{tr}(\hat{S})} / \sqrt{\operatorname{tr}(S_0)}`.
    * - Desroziers diagnostic
      - ``post.desroziers(by=...)``
-     - The observation error variances the residuals :math:`z - H \hat{x} - c`
-       and the innovation diagnose, beside those the solve used.
+     - The observation error variances the residuals and the innovation
+       diagnose, beside those the solve used.
    * - synthetic experiment (OSSE)
-     - ``problem.simulate``, ``post.with_data``, ``post.recovery``
+     - ``problem.simulate``, ``post.with_data``, ``post.recovery``,
+       ``post.trials``
      - A test on data whose answer is known: a *world* makes a truth and its
        observations, the inversion solves them with its own assumptions, and
-       the error of each total is read as its bias, spread and coverage.
+       the error of each aggregate is read as its bias, spread and coverage.
        Called an observing system simulation experiment (OSSE) in atmospheric
        science, a twin experiment in oceanography and a simulation study in
        statistics; :doc:`/user_guide/synthetic` is the guide.
@@ -231,14 +263,32 @@ fips's own words
    deviations, which a :class:`~fips.Problem` puts on the prior's or the
    observations' space.
 
-**aggregation** (:math:`W`)
-   An operator from a space to groups of its labels (sums or means): hourly
-   observations to daily means, the state to monthly totals
-   (:mod:`fips.aggregate`).
+**aggregation** (:math:`W`), **aggregate**
+   An aggregation is an operator from a space to groups of its labels (sums
+   or means): hourly observations to daily means, the state to monthly totals
+   (:mod:`fips.aggregate`). Each of its rows is an aggregate.
 
 **method**
-   How :func:`fips.solve` solves a problem. The one method is ``"analytic"``,
-   the closed-form Gaussian posterior.
+   How :func:`fips.solve` solves a problem: ``"analytic"`` (the default, the
+   exact Gaussian posterior), ``"bounded"``, ``"gauss_newton"``,
+   ``"ensemble"`` or ``"variational"`` (:doc:`/user_guide/methods`).
+
+**kind of answer**
+   What a posterior can give, which follows from its method: *Gaussian* (the
+   estimate is the mean, the covariance is exact), *sampled* (the estimate is
+   the mode; the spread comes from kept draws) or *low-rank* (the covariance
+   is the prior's less a few directions). :ref:`posterior-members`.
+
+**transform**
+   A forward model that solves for a variable :math:`u` and makes the
+   quantity a positive function of it (:class:`~fips.LogNormalForward`,
+   :class:`~fips.SoftplusForward`); ``model.transform`` maps :math:`u` to the
+   value. :doc:`/user_guide/positive`.
+
+**the Gaussian at the mode**
+   The analytic posterior of the problem linearized at the mode,
+   ``fips.solve(problem.linearized(post.estimate))``: the gain, the averaging
+   kernel and DOFS of a ``"gauss_newton"`` posterior are its.
 
 .. seealso::
 

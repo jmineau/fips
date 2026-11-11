@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>A problem too large to factor: the variational method &#8212; fips 0.2.0b3.dev33+g1b3edda40 documentation</title>
+    <title>A problem too large to factor: the variational method &#8212; fips 0.2.0b3.dev34+g9a0704831 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=d42acb76"></script>
+    <script src="../_static/documentation_options.js?v=8e63224c"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -60,8 +60,8 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Examples" href="examples/index.html" />
-    <link rel="prev" title="A model with no Jacobian: the ensemble method" href="ensemble.html" />
+    <link rel="next" title="Fitting the covariance settings" href="settings.html" />
+    <link rel="prev" title="A model without a Jacobian: the ensemble method" href="ensemble.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev33+g1b3edda40 documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev33+g1b3edda40 documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
   
   
 </a></div>
@@ -385,21 +385,33 @@
 <nav class="bd-docs-nav bd-links"
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
-  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="synthetic.html">Synthetic experiments</a></li>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Every problem</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="problem.html">Building a problem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="posterior.html">Reading the posterior</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Beyond the linear Gaussian problem</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="methods.html">Choosing a method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bounds.html">Bounds on the state</a></li>
+<li class="toctree-l1"><a class="reference internal" href="positive.html">Values that stay positive</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nonlinear.html">A nonlinear forward model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ensemble.html">A model without a Jacobian: the ensemble method</a></li>
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">A problem too large to factor: the variational method</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Checking and tuning an inversion</span></p>
+<ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="settings.html">Fitting the covariance settings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hierarchical.html">The uncertainty of the settings</a></li>
-<li class="toctree-l1"><a class="reference internal" href="bounds.html">Bounds on the state</a></li>
-<li class="toctree-l1"><a class="reference internal" href="nonlinear.html">A nonlinear forward model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="positive.html">Values that stay positive</a></li>
-<li class="toctree-l1"><a class="reference internal" href="comparison.html">Choosing a method</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ensemble.html">A model with no Jacobian: the ensemble method</a></li>
-<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">A problem too large to factor: the variational method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="synthetic.html">Synthetic experiments</a></li>
+</ul>
+<ul class="nav bd-sidenav">
 <li class="toctree-l1 has-children"><a class="reference internal" href="examples/index.html">Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="examples/gravity_2d.html">Gravity: density below the surface</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/flux_regional.html">A regional flux inversion</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/synthetic_truth.html">Does the inversion recover a known flux?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/data_worth.html">Which observations constrain a regional total?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/comparison.html">Comparing ways to keep a quantity positive</a></li>
 </ul>
 </details></li>
 </ul>
@@ -465,41 +477,56 @@
   <section id="a-problem-too-large-to-factor-the-variational-method">
 <span id="variational"></span><h1>A problem too large to factor: the variational method<a class="headerlink" href="#a-problem-too-large-to-factor-the-variational-method" title="Link to this heading">#</a></h1>
 <p><code class="docutils literal notranslate"><span class="pre">fips.solve(problem)</span></code> factors an <span class="math notranslate nohighlight">\(m \times m\)</span> or an <span class="math notranslate nohighlight">\(n \times n\)</span>
-matrix and forms <span class="math notranslate nohighlight">\(H S_0\)</span> (<span class="math notranslate nohighlight">\(m \times n\)</span>). With an hourly state on a
-fine grid and a year of observations, both <span class="math notranslate nohighlight">\(n\)</span> and <span class="math notranslate nohighlight">\(m\)</span> pass
-<span class="math notranslate nohighlight">\(10^5\)</span>, and then none of them fits in memory. The rule: <strong>give</strong> <span class="math notranslate nohighlight">\(H\)</span>
-<strong>as a sparse matrix (or as its products), keep the prior as Kronecker
-factors, and solve with</strong> <code class="docutils literal notranslate"><span class="pre">fips.solve(problem,</span> <span class="pre">&quot;variational&quot;,</span> <span class="pre">rank=k)</span></code>. It
-needs only products, <span class="math notranslate nohighlight">\(H v\)</span>, <span class="math notranslate nohighlight">\(H^T w\)</span>, the prior’s root through its
-factors and solves with <span class="math notranslate nohighlight">\(S_z\)</span>, and never forms anything <span class="math notranslate nohighlight">\(n \times
-n\)</span> or <span class="math notranslate nohighlight">\(m \times m\)</span>. Its estimate is the analytic one, by conjugate
-gradients, to <code class="docutils literal notranslate"><span class="pre">cg_tol</span></code>; its uncertainty is a low-rank posterior: the prior, less
-what the <code class="docutils literal notranslate"><span class="pre">k</span></code> directions the data inform most remove. Check
-<a class="reference internal" href="../reference/api/fips.Posterior.eigenvalues.html#fips.Posterior.eigenvalues" title="fips.Posterior.eigenvalues"><code class="xref py py-attr docutils literal notranslate"><span class="pre">post.eigenvalues</span></code></a> to see whether <code class="docutils literal notranslate"><span class="pre">k</span></code> was
-enough.</p>
-<p><strong>When not to use it</strong>: when <code class="docutils literal notranslate"><span class="pre">fips.solve(problem)</span></code> fits in memory, it is
-exact, gives every diagnostic at no extra cost, and is often as fast. The
-variational method is for the problem it cannot hold. It is also the method for
-a forward model with a tangent linear and an adjoint (its products, written as
-<a class="reference internal" href="../reference/api/fips.ForwardModel.jvp.html#fips.ForwardModel.jvp" title="fips.ForwardModel.jvp"><code class="xref py py-meth docutils literal notranslate"><span class="pre">jvp()</span></code></a> and <a class="reference internal" href="../reference/api/fips.ForwardModel.vjp.html#fips.ForwardModel.vjp" title="fips.ForwardModel.vjp"><code class="xref py py-meth docutils literal notranslate"><span class="pre">vjp()</span></code></a>), whose
-Jacobian is never formed: that is incremental 4D-Var (<a class="reference internal" href="#a-model-with-an-adjoint">A model with an
-adjoint</a>).</p>
+matrix and forms <span class="math notranslate nohighlight">\(H S_0\)</span>, which is <span class="math notranslate nohighlight">\(m \times n\)</span>. When both the
+state and the observations number in the hundreds of thousands, none of these
+fits in memory. <strong>Give</strong> <span class="math notranslate nohighlight">\(H\)</span> <strong>as a sparse matrix or by its products,
+keep the prior covariance as its factors, and solve with</strong>
+<code class="docutils literal notranslate"><span class="pre">fips.solve(problem,</span> <span class="pre">&quot;variational&quot;,</span> <span class="pre">rank=k)</span></code>. The method needs only
+products: <span class="math notranslate nohighlight">\(H v\)</span>, <span class="math notranslate nohighlight">\(H^T w\)</span>, the prior covariance’s root through its
+factors, and solves with <span class="math notranslate nohighlight">\(S_z\)</span>. It never forms anything
+<span class="math notranslate nohighlight">\(n \times n\)</span> or <span class="math notranslate nohighlight">\(m \times m\)</span>. The estimate is the posterior mean,
+found by conjugate gradients to a tolerance (the mode, with a forward model).
+The uncertainty is a low-rank posterior: the prior, less what the data remove
+along the <code class="docutils literal notranslate"><span class="pre">k</span></code> directions they inform most.</p>
 <nav class="contents local" id="on-this-page">
 <p class="topic-title">On this page</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="#one-problem-two-ways" id="id1">One problem, two ways</a></p></li>
-<li><p><a class="reference internal" href="#how-much-rank-is-enough" id="id2">How much rank is enough</a></p></li>
-<li><p><a class="reference internal" href="#what-it-costs-at-a-size-fips-solve-cannot-hold" id="id3">What it costs at a size fips.solve cannot hold</a></p></li>
-<li><p><a class="reference internal" href="#a-model-with-an-adjoint" id="id4">A model with an adjoint</a></p></li>
+<li><p><a class="reference internal" href="#when-to-use-it" id="id1">When to use it</a></p></li>
+<li><p><a class="reference internal" href="#an-example" id="id2">An example</a></p></li>
+<li><p><a class="reference internal" href="#what-the-posterior-reports" id="id3">What the posterior reports</a></p></li>
+<li><p><a class="reference internal" href="#options" id="id4">Options</a></p></li>
+<li><p><a class="reference internal" href="#warnings-and-checks" id="id5">Warnings and checks</a></p></li>
+<li><p><a class="reference internal" href="#cost" id="id6">Cost</a></p></li>
+<li><p><a class="reference internal" href="#how-it-works" id="id7">How it works</a></p></li>
+<li><p><a class="reference internal" href="#references" id="id8">References</a></p></li>
 </ul>
 </nav>
-<section id="one-problem-two-ways">
-<h2><a class="toc-backref" href="#id1" role="doc-backlink">One problem, two ways</a><a class="headerlink" href="#one-problem-two-ways" title="Link to this heading">#</a></h2>
-<p>A day of hourly fluxes on a 20 by 20 grid (9,600 state elements) and eight
-sites, each measuring six times an hour (1,152 observations). Each observation
-sees a plume upwind of its site, in its hour and the two before, drifting with
-that hour’s wind: a stand-in for STILT footprints, which are sparse and
-overlap from one observation to the next.</p>
+<section id="when-to-use-it">
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">When to use it</a><a class="headerlink" href="#when-to-use-it" title="Link to this heading">#</a></h2>
+<p>Use it when the problem is too large for <code class="docutils literal notranslate"><span class="pre">fips.solve(problem)</span></code>, or when the
+forward model is known only by a tangent linear and an adjoint (its
+<a class="reference internal" href="../reference/api/fips.ForwardModel.jvp.html#fips.ForwardModel.jvp" title="fips.ForwardModel.jvp"><code class="xref py py-meth docutils literal notranslate"><span class="pre">jvp()</span></code></a> and <a class="reference internal" href="../reference/api/fips.ForwardModel.vjp.html#fips.ForwardModel.vjp" title="fips.ForwardModel.vjp"><code class="xref py py-meth docutils literal notranslate"><span class="pre">vjp()</span></code></a>), whose
+Jacobian is never formed.</p>
+<ul class="simple">
+<li><p>When <code class="docutils literal notranslate"><span class="pre">fips.solve(problem)</span></code> fits in memory, use it (<a class="reference internal" href="posterior.html"><span class="doc">Reading the posterior</span></a>): it
+is exact, gives every diagnostic, and is often as fast. A large sparse
+<span class="math notranslate nohighlight">\(H\)</span> with a Kronecker prior covariance often still fits.</p></li>
+<li><p>With a forward model whose Jacobian you can write, and a posterior that may
+not be Gaussian, use <code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code> (<a class="reference internal" href="nonlinear.html"><span class="doc">A nonlinear forward model</span></a>): it draws the
+posterior, where this method gives the Gaussian at the mode.</p></li>
+<li><p>With a model that can only be run, use <code class="docutils literal notranslate"><span class="pre">&quot;ensemble&quot;</span></code> (<a class="reference internal" href="ensemble.html"><span class="doc">A model without a Jacobian: the ensemble method</span></a>).</p></li>
+<li><p>With bounds on the state, use <code class="docutils literal notranslate"><span class="pre">&quot;bounded&quot;</span></code> (<a class="reference internal" href="bounds.html"><span class="doc">Bounds on the state</span></a>): this method
+takes none.</p></li>
+</ul>
+</section>
+<section id="an-example">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">An example</a><a class="headerlink" href="#an-example" title="Link to this heading">#</a></h2>
+<p>Here the state is a flux on a 16 by 16 grid for each of 24 hours: 6,144
+elements. Six sensors each measure four times an hour, 576 observations in
+all. Each observation sees a plume upwind of its sensor, in its hour and the
+two before, drifting with that hour’s wind. <code class="docutils literal notranslate"><span class="pre">plume</span></code> writes one
+observation’s row of <span class="math notranslate nohighlight">\(H\)</span>: a few hundred elements, so <span class="math notranslate nohighlight">\(H\)</span> is
+sparse.</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [1]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 <span class="gp">In [2]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
@@ -508,22 +535,21 @@ overlap from one observation to the next.</p>
 
 <span class="gp">In [4]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">fips</span>
 
-<span class="gp">In [5]: </span><span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">KroneckerOperator</span>
+<span class="gp">In [5]: </span><span class="n">hours</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">nx</span><span class="p">,</span> <span class="n">sites</span> <span class="o">=</span> <span class="mi">24</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">6</span>
 
-<span class="gp">In [6]: </span><span class="n">hours</span><span class="p">,</span> <span class="n">ny</span><span class="p">,</span> <span class="n">nx</span><span class="p">,</span> <span class="n">sites</span> <span class="o">=</span> <span class="mi">24</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">8</span>
+<span class="gp">In [6]: </span><span class="n">n</span> <span class="o">=</span> <span class="n">hours</span> <span class="o">*</span> <span class="n">ny</span> <span class="o">*</span> <span class="n">nx</span>
 
-<span class="gp">In [7]: </span><span class="n">n</span> <span class="o">=</span> <span class="n">hours</span> <span class="o">*</span> <span class="n">ny</span> <span class="o">*</span> <span class="n">nx</span>
+<span class="gp">In [7]: </span><span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 
-<span class="gp">In [8]: </span><span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">In [8]: </span><span class="n">site_y</span><span class="p">,</span> <span class="n">site_x</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">ny</span> <span class="o">-</span> <span class="mi">4</span><span class="p">,</span> <span class="n">sites</span><span class="p">),</span> <span class="n">rng</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">nx</span> <span class="o">-</span> <span class="mi">4</span><span class="p">,</span> <span class="n">sites</span><span class="p">)</span>
 
-<span class="gp">In [9]: </span><span class="n">site_y</span><span class="p">,</span> <span class="n">site_x</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">ny</span> <span class="o">-</span> <span class="mi">4</span><span class="p">,</span> <span class="n">sites</span><span class="p">),</span> <span class="n">rng</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">nx</span> <span class="o">-</span> <span class="mi">4</span><span class="p">,</span> <span class="n">sites</span><span class="p">)</span>
+<span class="gp">In [9]: </span><span class="n">wind</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="p">(</span><span class="n">hours</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>  <span class="c1"># grid cells an hour</span>
+</pre></div>
+</div>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [10]: </span><span class="n">Y</span><span class="p">,</span> <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">ny</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">nx</span><span class="p">),</span> <span class="n">indexing</span><span class="o">=</span><span class="s2">"ij"</span><span class="p">)</span>
 
-<span class="gp">In [10]: </span><span class="n">wind</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="p">(</span><span class="n">hours</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>  <span class="c1"># cells an hour</span>
-
-<span class="gp">In [11]: </span><span class="n">Y</span><span class="p">,</span> <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">ny</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">nx</span><span class="p">),</span> <span class="n">indexing</span><span class="o">=</span><span class="s2">"ij"</span><span class="p">)</span>
-
-<span class="gp">In [12]: </span><span class="k">def</span><span class="w"> </span><span class="nf">plume</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">jitter</span><span class="p">):</span>
-<span class="gp">   ....: </span><span class="w">    </span><span class="sd">"""The footprint of one observation at site s in hour t: a dict of cell positions and weights."""</span>
+<span class="gp">In [11]: </span><span class="k">def</span><span class="w"> </span><span class="nf">plume</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">jitter</span><span class="p">):</span>
+<span class="gp">   ....: </span><span class="w">    </span><span class="sd">"""One observation's row of H, at sensor s in hour t: the positions it sees and their weights."""</span>
 <span class="gp">   ....: </span>    <span class="n">cells</span><span class="p">,</span> <span class="n">weights</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
 <span class="gp">   ....: </span>    <span class="k">for</span> <span class="n">back</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">t</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)):</span>
 <span class="gp">   ....: </span>        <span class="n">h</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="n">t</span> <span class="o">-</span> <span class="n">back</span><span class="p">,</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="n">back</span>
@@ -535,280 +561,153 @@ overlap from one observation to the next.</p>
 <span class="gp">   ....: </span>        <span class="n">weights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">w</span><span class="p">[</span><span class="n">keep</span><span class="p">])</span>
 <span class="gp">   ....: </span>    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">cells</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
 <span class="gp">   ....: </span>
-
-<span class="gp">In [13]: </span><span class="n">m</span> <span class="o">=</span> <span class="n">sites</span> <span class="o">*</span> <span class="n">hours</span> <span class="o">*</span> <span class="mi">6</span>  <span class="c1"># six observations an hour at each site</span>
-
-<span class="gp">In [14]: </span><span class="n">footprints</span> <span class="o">=</span> <span class="p">[</span><span class="n">plume</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">ndindex</span><span class="p">(</span><span class="n">sites</span><span class="p">,</span> <span class="n">hours</span><span class="p">,</span> <span class="mi">6</span><span class="p">)]</span>
-
-<span class="gp">In [15]: </span><span class="n">rows</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">),</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">footprints</span><span class="p">)])</span>
-
-<span class="gp">In [16]: </span><span class="n">cols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">footprints</span><span class="p">])</span>
-
-<span class="gp">In [17]: </span><span class="n">H</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">w</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">footprints</span><span class="p">]),</span> <span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">)),</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
-
-<span class="gp">In [18]: </span><span class="n">H</span><span class="o">.</span><span class="n">nnz</span> <span class="o">/</span> <span class="n">m</span>  <span class="c1"># cells each observation sees</span>
-<span class="gh">Out[18]: </span><span class="go">358.90625</span>
 </pre></div>
 </div>
-<p>The prior is a flux of 1 with a standard deviation of 0.5, correlated over 3
-hours and 3 cells in each direction: a Kronecker product of three
-correlations, kept as its factors (<a class="reference internal" href="../reference/api/fips.linalg.KroneckerOperator.html#fips.linalg.KroneckerOperator" title="fips.linalg.KroneckerOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">KroneckerOperator</span></code></a>).
-The footprints are scaled so that the prior’s spread, seen through them, is
-three times the observations’ error of 0.1.</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [19]: </span><span class="k">def</span><span class="w"> </span><span class="nf">exponential</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">length</span><span class="p">):</span>
-<span class="gp">   ....: </span>    <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">subtract</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">k</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">k</span><span class="p">)))</span>
-<span class="gp">   ....: </span>    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">d</span> <span class="o">/</span> <span class="n">length</span><span class="p">)</span>
-<span class="gp">   ....: </span>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [12]: </span><span class="n">m</span> <span class="o">=</span> <span class="n">sites</span> <span class="o">*</span> <span class="n">hours</span> <span class="o">*</span> <span class="mi">4</span>
 
-<span class="gp">In [20]: </span><span class="n">state</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"flux"</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_product</span><span class="p">(</span>
+<span class="gp">In [13]: </span><span class="n">footprints</span> <span class="o">=</span> <span class="p">[</span><span class="n">plume</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span> <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">ndindex</span><span class="p">(</span><span class="n">sites</span><span class="p">,</span> <span class="n">hours</span><span class="p">,</span> <span class="mi">4</span><span class="p">)]</span>
+
+<span class="gp">In [14]: </span><span class="n">rows</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">),</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">footprints</span><span class="p">)])</span>
+
+<span class="gp">In [15]: </span><span class="n">cols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">footprints</span><span class="p">])</span>
+
+<span class="gp">In [16]: </span><span class="n">H</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">w</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">footprints</span><span class="p">]),</span> <span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">)),</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+
+<span class="gp">In [17]: </span><span class="n">H</span><span class="o">.</span><span class="n">nnz</span> <span class="o">/</span> <span class="n">m</span>  <span class="c1"># elements each observation sees</span>
+<span class="gh">Out[17]: </span><span class="go">319.76215277777777</span>
+</pre></div>
+</div>
+<p>The prior is 1 everywhere with a standard deviation of 0.5, correlated over 3
+hours and 3 grid cells in each direction. <a class="reference internal" href="../reference/api/fips.Kronecker.html#fips.Kronecker" title="fips.Kronecker"><code class="xref py py-class docutils literal notranslate"><span class="pre">Kronecker</span></code></a> keeps it as
+three small factors, never the <span class="math notranslate nohighlight">\(n \times n\)</span> matrix. The observation
+error, 1.5, is about a third of the spread the prior gives the observations.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [18]: </span><span class="n">state</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"flux"</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_product</span><span class="p">(</span>
 <span class="gp">   ....: </span>    <span class="p">[</span><span class="nb">range</span><span class="p">(</span><span class="n">hours</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="n">ny</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="n">nx</span><span class="p">)],</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">"hour"</span><span class="p">,</span> <span class="s2">"y"</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">])})</span>
 <span class="gp">   ....: </span>
 
-<span class="gp">In [21]: </span><span class="n">observed</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"ch4"</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">RangeIndex</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"obs_id"</span><span class="p">)})</span>
+<span class="gp">In [19]: </span><span class="n">observed</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"obs"</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">RangeIndex</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"obs_id"</span><span class="p">)})</span>
 
-<span class="gp">In [22]: </span><span class="n">prior_cov</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Covariance</span><span class="p">(</span><span class="n">KroneckerOperator</span><span class="p">(</span>
-<span class="gp">   ....: </span>    <span class="p">[</span><span class="n">exponential</span><span class="p">(</span><span class="n">hours</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">),</span> <span class="n">exponential</span><span class="p">(</span><span class="n">ny</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">),</span> <span class="n">exponential</span><span class="p">(</span><span class="n">nx</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">)],</span> <span class="n">std</span><span class="o">=</span><span class="mf">0.5</span><span class="p">),</span> <span class="n">state</span><span class="p">)</span>
+<span class="gp">In [20]: </span><span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="n">obs</span><span class="p">):</span>
+<span class="gp">   ....: </span>    <span class="k">return</span> <span class="n">fips</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span>
+<span class="gp">   ....: </span>        <span class="n">prior</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">state</span><span class="p">),</span>
+<span class="gp">   ....: </span>        <span class="n">prior_cov</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Kronecker</span><span class="p">(</span>
+<span class="gp">   ....: </span>            <span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">(</span><span class="s2">"hour"</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">),</span> <span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">(</span><span class="s2">"y"</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">),</span> <span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">(</span><span class="s2">"x"</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">)</span>
+<span class="gp">   ....: </span>        <span class="p">)</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.5</span><span class="p">),</span>
+<span class="gp">   ....: </span>        <span class="n">obs</span><span class="o">=</span><span class="n">obs</span><span class="p">,</span>
+<span class="gp">   ....: </span>        <span class="n">obs_cov</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Independent</span><span class="p">()</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">1.5</span><span class="p">),</span>
+<span class="gp">   ....: </span>        <span class="n">forward</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">observed</span><span class="p">,</span> <span class="n">state</span><span class="p">),</span>
+<span class="gp">   ....: </span>    <span class="p">)</span>
 <span class="gp">   ....: </span>
 
-<span class="gp">In [23]: </span><span class="n">root</span> <span class="o">=</span> <span class="n">prior_cov</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">_root</span>  <span class="c1"># the prior's square root, through the factors</span>
+<span class="gp">In [21]: </span><span class="n">truth</span><span class="p">,</span> <span class="n">obs</span> <span class="o">=</span> <span class="n">build</span><span class="p">(</span><span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">m</span><span class="p">),</span> <span class="n">observed</span><span class="p">))</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="n">rng</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
-<span class="gp">In [24]: </span><span class="n">H</span> <span class="o">=</span> <span class="n">H</span> <span class="o">*</span> <span class="p">(</span><span class="mi">3</span> <span class="o">*</span> <span class="mf">0.1</span> <span class="o">/</span> <span class="p">(</span><span class="n">H</span> <span class="o">@</span> <span class="p">(</span><span class="n">root</span> <span class="o">@</span> <span class="n">rng</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">((</span><span class="n">root</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">20</span><span class="p">))))</span><span class="o">.</span><span class="n">std</span><span class="p">())</span>
-
-<span class="gp">In [25]: </span><span class="n">world</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span>
-<span class="gp">   ....: </span>    <span class="n">prior</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">state</span><span class="p">),</span> <span class="n">prior_cov</span><span class="o">=</span><span class="n">prior_cov</span><span class="p">,</span>
-<span class="gp">   ....: </span>    <span class="n">obs</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">m</span><span class="p">),</span> <span class="n">observed</span><span class="p">),</span>
-<span class="gp">   ....: </span>    <span class="n">obs_cov</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Covariance</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="mf">0.1</span><span class="o">**</span><span class="mi">2</span><span class="p">),</span> <span class="n">observed</span><span class="p">),</span>
-<span class="gp">   ....: </span>    <span class="n">forward</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">observed</span><span class="p">,</span> <span class="n">state</span><span class="p">),</span>
-<span class="gp">   ....: </span><span class="p">)</span>
-<span class="gp">   ....: </span>
-
-<span class="gp">In [26]: </span><span class="n">truth</span><span class="p">,</span> <span class="n">obs</span> <span class="o">=</span> <span class="n">world</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="n">rng</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-
-<span class="gp">In [27]: </span><span class="n">problem</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span><span class="n">prior</span><span class="o">=</span><span class="n">world</span><span class="o">.</span><span class="n">prior</span><span class="p">,</span> <span class="n">prior_cov</span><span class="o">=</span><span class="n">prior_cov</span><span class="p">,</span> <span class="n">obs</span><span class="o">=</span><span class="n">obs</span><span class="p">,</span>
-<span class="gp">   ....: </span>                       <span class="n">obs_cov</span><span class="o">=</span><span class="n">world</span><span class="o">.</span><span class="n">obs_cov</span><span class="p">,</span> <span class="n">forward</span><span class="o">=</span><span class="n">world</span><span class="o">.</span><span class="n">forward</span><span class="p">)</span>
-<span class="gp">   ....: </span>
+<span class="gp">In [22]: </span><span class="n">problem</span> <span class="o">=</span> <span class="n">build</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>This one is small enough for both methods, so the variational answer can be
-checked against the exact one:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [28]: </span><span class="n">exact</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span>
+<p>This problem is small enough for both methods, so the variational answer can
+be checked against the exact one. The estimates agree far inside the
+uncertainty:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [23]: </span><span class="n">exact</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span>
 
-<span class="gp">In [29]: </span><span class="n">post</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="s2">"variational"</span><span class="p">,</span> <span class="n">rank</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+<span class="gp">In [24]: </span><span class="n">post</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="s2">"variational"</span><span class="p">,</span> <span class="n">rank</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
 
-<span class="gp">In [30]: </span><span class="n">sd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">exact</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+<span class="gp">In [25]: </span><span class="n">sd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">exact</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
 
-<span class="gp">In [31]: </span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">estimate</span><span class="o">.</span><span class="n">values</span> <span class="o">-</span> <span class="n">exact</span><span class="o">.</span><span class="n">estimate</span><span class="o">.</span><span class="n">values</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">/</span> <span class="n">sd</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>  <span class="c1"># in posterior sd</span>
-<span class="gh">Out[31]: </span><span class="go">np.float64(1.120009985500065e-06)</span>
+<span class="gp">In [26]: </span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">estimate</span><span class="o">.</span><span class="n">values</span> <span class="o">-</span> <span class="n">exact</span><span class="o">.</span><span class="n">estimate</span><span class="o">.</span><span class="n">values</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">/</span> <span class="n">sd</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>  <span class="c1"># in posterior sd</span>
+<span class="gh">Out[26]: </span><span class="go">np.float64(3.438894381619387e-07)</span>
 
-<span class="gp">In [32]: </span><span class="n">post</span><span class="o">.</span><span class="n">iterations</span>
-<span class="gh">Out[32]: </span>
-<span class="go">                     d2        cost  cg_iterations</span>
-<span class="go">iteration                                         </span>
-<span class="go">1          12438.282033  1159.59161            122</span>
+<span class="gp">In [27]: </span><span class="n">post</span><span class="o">.</span><span class="n">iterations</span>
+<span class="gh">Out[27]: </span>
+<span class="go">                    d2        cost  cg_iterations</span>
+<span class="go">iteration                                        </span>
+<span class="go">1          2019.879959  546.315759             84</span>
 </pre></div>
 </div>
-<p>The estimate is the analytic one far inside its uncertainty (the conjugate
-gradients stop when their residual is below <code class="docutils literal notranslate"><span class="pre">cg_tol</span></code>, 1e-8 of the right side,
-by default). It took one solve of about 120 iterations: the data have about
-170 degrees of freedom among the 9,600 cells, and conjugate gradients converge
-in about as many steps as there are directions that stand out, not in
-<span class="math notranslate nohighlight">\(n\)</span>. Each iteration is one product with <span class="math notranslate nohighlight">\(H\)</span> and one with
-<span class="math notranslate nohighlight">\(H^T\)</span> (and the prior’s root and its transpose, through the factors).</p>
-</section>
+<p>The conjugate gradients took one solve of under a hundred iterations. Each
+is one product with <span class="math notranslate nohighlight">\(H\)</span> and one with <span class="math notranslate nohighlight">\(H^T\)</span>. Their number follows
+the directions the data inform (DOFS is about 95 here), not the 6,144
+elements.</p>
 <section id="how-much-rank-is-enough">
-<h2><a class="toc-backref" href="#id2" role="doc-backlink">How much rank is enough</a><a class="headerlink" href="#how-much-rank-is-enough" title="Link to this heading">#</a></h2>
-<p>The posterior covariance is <span class="math notranslate nohighlight">\(\hat{S} = R (I + \tilde{H})^{-1} R^T\)</span>, with
-<span class="math notranslate nohighlight">\(S_0 = R R^T\)</span> and <span class="math notranslate nohighlight">\(\tilde{H} = \gamma R^T H^T S_z^{-1} H R\)</span>, the
-data’s information on the state whitened by the prior. Its eigenvalues
-<span class="math notranslate nohighlight">\(\tilde\lambda_j\)</span> say how many times more the data know about each
-direction than the prior did; along that direction the data remove the share
-<span class="math notranslate nohighlight">\(\tilde\lambda_j / (1 + \tilde\lambda_j)\)</span> of the prior’s variance, and
-these shares add up to DOFS. <code class="docutils literal notranslate"><span class="pre">rank</span></code> keeps the <code class="docutils literal notranslate"><span class="pre">k</span></code> largest (by Lanczos,
-from products) and leaves the prior in the other directions:</p>
-<div class="math notranslate nohighlight">
-\[\hat{S}_k = S_0 - G \operatorname{diag}\big(\tilde\lambda_j / (1 + \tilde\lambda_j)\big) G^T,
-\qquad G = R V \ (n \times k).\]</div>
-<p>So each variance is the prior’s less a sum over the pairs: too large when <code class="docutils literal notranslate"><span class="pre">k</span></code>
-is too small, never too small, and exact once <code class="docutils literal notranslate"><span class="pre">k</span></code> reaches the number of
-directions the data see. <a class="reference internal" href="../reference/api/fips.Posterior.eigenvalues.html#fips.Posterior.eigenvalues" title="fips.Posterior.eigenvalues"><code class="xref py py-attr docutils literal notranslate"><span class="pre">eigenvalues</span></code></a> lists the pairs:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [33]: </span><span class="n">post</span><span class="o">.</span><span class="n">eigenvalues</span><span class="o">.</span><span class="n">iloc</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">49</span><span class="p">,</span> <span class="mi">99</span><span class="p">,</span> <span class="mi">149</span><span class="p">,</span> <span class="mi">199</span><span class="p">]]</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-<span class="gh">Out[33]: </span>
+<h3>How much rank is enough<a class="headerlink" href="#how-much-rank-is-enough" title="Link to this heading">#</a></h3>
+<p><strong>Read</strong> <a class="reference internal" href="../reference/api/fips.Posterior.eigenvalues.html#fips.Posterior.eigenvalues" title="fips.Posterior.eigenvalues"><code class="xref py py-attr docutils literal notranslate"><span class="pre">post.eigenvalues</span></code></a>. Each row is
+one direction the data inform, from the most informed. <code class="docutils literal notranslate"><span class="pre">eigenvalue</span></code> says how
+many times more the data know about that direction than the prior did, and
+<code class="docutils literal notranslate"><span class="pre">dofs</span></code> is the share of the prior’s variance the data remove along it. When
+the last rows’ <code class="docutils literal notranslate"><span class="pre">dofs</span></code> are near zero, <code class="docutils literal notranslate"><span class="pre">rank</span></code> held what the data inform.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [28]: </span><span class="n">post</span><span class="o">.</span><span class="n">eigenvalues</span><span class="o">.</span><span class="n">iloc</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="mi">49</span><span class="p">,</span> <span class="mi">99</span><span class="p">,</span> <span class="mi">149</span><span class="p">,</span> <span class="mi">199</span><span class="p">]]</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gh">Out[28]: </span>
 <span class="go">      eigenvalue   dofs  cumulative_dofs</span>
 <span class="go">pair                                    </span>
-<span class="go">1       1653.927  0.999            0.999</span>
-<span class="go">10       260.696  0.996            9.978</span>
-<span class="go">50        18.718  0.949           49.140</span>
-<span class="go">100        3.413  0.773           92.460</span>
-<span class="go">150        1.334  0.571          125.915</span>
-<span class="go">200        0.519  0.342          149.092</span>
+<span class="go">1        821.841  0.999            0.999</span>
+<span class="go">25        20.336  0.953           24.568</span>
+<span class="go">50         3.758  0.790           46.452</span>
+<span class="go">100        0.680  0.405           77.082</span>
+<span class="go">150        0.148  0.129           89.457</span>
+<span class="go">200        0.037  0.036           93.079</span>
 </pre></div>
 </div>
-<p>The last pairs still add about a third of a degree of freedom each: more
-directions are informed. The error of the standard deviations, against the
-exact ones, as <code class="docutils literal notranslate"><span class="pre">rank</span></code> grows:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [34]: </span><span class="n">ranks</span> <span class="o">=</span> <span class="p">[</span><span class="mi">25</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">400</span><span class="p">]</span>
+<p>Below the problem’s rank, the directions left out keep the prior’s variance.
+<strong>So a low rank makes every variance too large, never too small.</strong> The error
+of the standard deviations against the exact ones, as <code class="docutils literal notranslate"><span class="pre">rank</span></code> grows:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [29]: </span><span class="n">table</span> <span class="o">=</span> <span class="p">[]</span>
 
-<span class="gp">In [35]: </span><span class="n">curve</span> <span class="o">=</span> <span class="p">[]</span>
-
-<span class="gp">In [36]: </span><span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">ranks</span><span class="p">:</span>
+<span class="gp">In [30]: </span><span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">25</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">200</span><span class="p">]:</span>
 <span class="gp">   ....: </span>    <span class="n">low</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="s2">"variational"</span><span class="p">,</span> <span class="n">rank</span><span class="o">=</span><span class="n">k</span><span class="p">)</span>
 <span class="gp">   ....: </span>    <span class="n">error</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">low</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span><span class="p">)</span> <span class="o">/</span> <span class="n">sd</span> <span class="o">-</span> <span class="mi">1</span>
-<span class="gp">   ....: </span>    <span class="n">curve</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">"rank"</span><span class="p">:</span> <span class="n">k</span><span class="p">,</span> <span class="s2">"dofs"</span><span class="p">:</span> <span class="n">low</span><span class="o">.</span><span class="n">dofs</span><span class="p">,</span> <span class="s2">"last pair"</span><span class="p">:</span> <span class="n">low</span><span class="o">.</span><span class="n">eigenvalues</span><span class="p">[</span><span class="s2">"dofs"</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
-<span class="gp">   ....: </span>                  <span class="s2">"median sd error"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">error</span><span class="p">),</span> <span class="s2">"largest sd error"</span><span class="p">:</span> <span class="n">error</span><span class="o">.</span><span class="n">max</span><span class="p">()})</span>
+<span class="gp">   ....: </span>    <span class="n">last</span> <span class="o">=</span> <span class="n">low</span><span class="o">.</span><span class="n">eigenvalues</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="gp">   ....: </span>    <span class="n">table</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">"rank"</span><span class="p">:</span> <span class="n">k</span><span class="p">,</span> <span class="s2">"dofs"</span><span class="p">:</span> <span class="n">low</span><span class="o">.</span><span class="n">dofs</span><span class="p">,</span> <span class="s2">"last eigenvalue"</span><span class="p">:</span> <span class="n">last</span><span class="p">[</span><span class="s2">"eigenvalue"</span><span class="p">],</span>
+<span class="gp">   ....: </span>                  <span class="s2">"last dofs"</span><span class="p">:</span> <span class="n">last</span><span class="p">[</span><span class="s2">"dofs"</span><span class="p">],</span> <span class="s2">"median error"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">error</span><span class="p">),</span> <span class="s2">"worst error"</span><span class="p">:</span> <span class="n">error</span><span class="o">.</span><span class="n">max</span><span class="p">()})</span>
 <span class="gp">   ....: </span>
 
-<span class="gp">In [37]: </span><span class="n">curve</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">curve</span><span class="p">)</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">"rank"</span><span class="p">)</span>
+<span class="gp">In [31]: </span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">table</span><span class="p">)</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">"rank"</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gh">Out[31]: </span>
+<span class="go">        dofs  last eigenvalue  last dofs  median error  worst error</span>
+<span class="go">rank                                                               </span>
+<span class="go">25    24.568           20.336      0.953         0.058        0.455</span>
+<span class="go">50    46.452            3.758      0.790         0.029        0.199</span>
+<span class="go">100   77.082            0.680      0.405         0.008        0.059</span>
+<span class="go">200   93.079            0.037      0.036         0.000        0.004</span>
 
-<span class="gp">In [38]: </span><span class="n">curve</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">exact_dofs</span><span class="o">=</span><span class="n">exact</span><span class="o">.</span><span class="n">dofs</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
-<span class="gh">Out[38]: </span>
-<span class="go">          dofs  last pair  median sd error  largest sd error  exact_dofs</span>
-<span class="go">rank                                                                    </span>
-<span class="go">25     24.8589     0.9876           0.0722            0.6005    171.6342</span>
-<span class="go">50     49.1402     0.9493           0.0518            0.4247    171.6342</span>
-<span class="go">100    92.4604     0.7734           0.0277            0.1901    171.6342</span>
-<span class="go">200   149.0917     0.3419           0.0065            0.0503    171.6342</span>
-<span class="go">400   170.1831     0.0201           0.0002            0.0020    171.6342</span>
+<span class="gp">In [32]: </span><span class="n">exact</span><span class="o">.</span><span class="n">dofs</span>
+<span class="gh">Out[32]: </span><span class="go">94.47390857879236</span>
 </pre></div>
 </div>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [39]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<p>At ranks 25 and 50 the last pair kept still has an eigenvalue above 1, and
+the solve warns. At rank 100 it does not, yet the last pair still adds about
+four tenths of a degree of freedom and the worst standard deviation is
+several percent too large; at 200 the pairs have run out of information. The warning is a
+floor: read the last pairs’ <code class="docutils literal notranslate"><span class="pre">dofs</span></code>. Aggregates follow the same
+rule, here the sums of each six hours:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [33]: </span><span class="n">six_hours</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">hours</span><span class="p">)</span> <span class="o">//</span> <span class="mi">6</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">hours</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s2">"hour"</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s2">"six_hours"</span><span class="p">)</span>
 
-<span class="gp">In [40]: </span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">))</span>
+<span class="gp">In [34]: </span><span class="n">W</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">aggregate</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="n">six_hours</span><span class="p">)</span>
 
-<span class="gp">In [41]: </span><span class="n">ax</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span><span class="n">curve</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">curve</span><span class="p">[</span><span class="s2">"largest sd error"</span><span class="p">],</span> <span class="s2">"o-"</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"largest"</span><span class="p">)</span>
-<span class="gh">Out[41]: </span><span class="go">[&lt;matplotlib.lines.Line2D at 0x71d23c10dfd0&gt;]</span>
-
-<span class="gp">In [42]: </span><span class="n">ax</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span><span class="n">curve</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">curve</span><span class="p">[</span><span class="s2">"median sd error"</span><span class="p">],</span> <span class="s2">"s-"</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"median"</span><span class="p">)</span>
-<span class="gh">Out[42]: </span><span class="go">[&lt;matplotlib.lines.Line2D at 0x71d23c10e3c0&gt;]</span>
-
-<span class="gp">In [43]: </span><span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">"rank"</span><span class="p">)</span>
-<span class="gh">Out[43]: </span><span class="go">Text(0.5, 0, 'rank')</span>
-
-<span class="gp">In [44]: </span><span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"relative error of the posterior sd"</span><span class="p">)</span>
-<span class="gh">Out[44]: </span><span class="go">Text(0, 0.5, 'relative error of the posterior sd')</span>
-
-<span class="gp">In [45]: </span><span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
-<span class="gh">Out[45]: </span><span class="go">&lt;matplotlib.legend.Legend at 0x71d23c10de80&gt;</span>
-</pre></div>
-</div>
-<a class="reference internal image-reference" href="../_images/variational_rank.png"><img alt="../_images/variational_rank.png" src="../_images/variational_rank.png" style="width: 5in;" />
-</a>
-<p>The error falls with every pair, from above (the test suite holds that: the
-variances never cross the exact ones, and DOFS never falls as <code class="docutils literal notranslate"><span class="pre">rank</span></code> grows).
-At 200 pairs, the median standard deviation is within a percent of the exact
-one and the worst about 5% too large; at 400, within 0.2%. Read the last pairs’
-<code class="docutils literal notranslate"><span class="pre">dofs</span></code>: when they are near zero, <code class="docutils literal notranslate"><span class="pre">rank</span></code> held what the data inform. A solve
-warns when the last pair’s eigenvalue is still above 1 (that direction holds
-more from the data than from the prior). A pair costs Lanczos two or three
-products with <span class="math notranslate nohighlight">\(H\)</span> and <span class="math notranslate nohighlight">\(H^T\)</span>; the whole loop above took about ten
-seconds on four cores.</p>
-<p>Everything the posterior reports comes from the same factors, with nothing
-<span class="math notranslate nohighlight">\(n \times n\)</span>: DOFS (the sum over the pairs, a lower bound),
-<a class="reference internal" href="../reference/api/fips.Posterior.dofs_per_element.html#fips.Posterior.dofs_per_element" title="fips.Posterior.dofs_per_element"><code class="xref py py-attr docutils literal notranslate"><span class="pre">dofs_per_element</span></code></a>, the gain and the averaging kernel of
-the <code class="docutils literal notranslate"><span class="pre">k</span></code> directions, the information content, <a class="reference internal" href="../reference/api/fips.Posterior.cov.html#fips.Posterior.cov" title="fips.Posterior.cov"><code class="xref py py-meth docutils literal notranslate"><span class="pre">cov()</span></code></a>
-of aggregates (<span class="math notranslate nohighlight">\(W S_0 W^T - (W G) D (W G)^T\)</span>), and exact draws of
-<span class="math notranslate nohighlight">\(\hat{S}_k\)</span> (<a class="reference internal" href="../reference/api/fips.Posterior.sample.html#fips.Posterior.sample" title="fips.Posterior.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a>). The standard deviations
-of the totals of each six hours, at 50 and 200 pairs:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [46]: </span><span class="n">quarter</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">hours</span><span class="p">)</span> <span class="o">//</span> <span class="mi">6</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">hours</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s2">"hour"</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s2">"quarter"</span><span class="p">)</span>
-
-<span class="gp">In [47]: </span><span class="n">W</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">aggregate</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="n">quarter</span><span class="p">)</span>  <span class="c1"># the totals of each six hours</span>
-
-<span class="gp">In [48]: </span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="n">k</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="s2">"variational"</span><span class="p">,</span> <span class="n">rank</span><span class="o">=</span><span class="n">k</span><span class="p">)</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="n">dense</span><span class="p">()))</span>
-<span class="gp">   ....: </span>              <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">200</span><span class="p">)})</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">exact</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">exact</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="n">dense</span><span class="p">())))</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">In [35]: </span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="gp">   ....: </span>    <span class="s2">"exact"</span><span class="p">:</span> <span class="n">exact</span><span class="o">.</span><span class="n">uncertainty</span><span class="p">(</span><span class="n">W</span><span class="p">)[</span><span class="s2">"posterior_std"</span><span class="p">],</span>
+<span class="gp">   ....: </span>    <span class="s2">"rank 50"</span><span class="p">:</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="s2">"variational"</span><span class="p">,</span> <span class="n">rank</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span><span class="o">.</span><span class="n">uncertainty</span><span class="p">(</span><span class="n">W</span><span class="p">)[</span><span class="s2">"posterior_std"</span><span class="p">],</span>
+<span class="gp">   ....: </span>    <span class="s2">"rank 200"</span><span class="p">:</span> <span class="n">post</span><span class="o">.</span><span class="n">uncertainty</span><span class="p">(</span><span class="n">W</span><span class="p">)[</span><span class="s2">"posterior_std"</span><span class="p">],</span>
+<span class="gp">   ....: </span><span class="p">})</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
 <span class="gp">   ....: </span>
-<span class="gh">Out[48]: </span>
-<span class="go">        50      200    exact</span>
-<span class="go">0  129.464  119.375  118.465</span>
-<span class="go">1  126.381  115.923  114.838</span>
-<span class="go">2  123.397  110.980  109.702</span>
-<span class="go">3  125.094  114.110  112.698</span>
+<span class="gh">Out[35]: </span>
+<span class="go">                  exact  rank 50  rank 200</span>
+<span class="go">block six_hours                           </span>
+<span class="go">flux  0          85.104   90.231    85.232</span>
+<span class="go">      1          89.626   93.653    89.764</span>
+<span class="go">      2          89.569   93.891    89.713</span>
+<span class="go">      3          90.556   95.098    90.636</span>
 </pre></div>
 </div>
-<p>They are about 10% too large at 50 pairs and 1% at 200, as a typical cell’s are.</p>
-<p><a class="reference internal" href="../reference/api/fips.Posterior.with_data.html#fips.Posterior.with_data" title="fips.Posterior.with_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">with_data()</span></code></a> (and so <a class="reference internal" href="../reference/api/fips.Posterior.trials.html#fips.Posterior.trials" title="fips.Posterior.trials"><code class="xref py py-meth docutils literal notranslate"><span class="pre">trials()</span></code></a>) and
-<a class="reference internal" href="../reference/api/fips.Posterior.with_gamma.html#fips.Posterior.with_gamma" title="fips.Posterior.with_gamma"><code class="xref py py-meth docutils literal notranslate"><span class="pre">with_gamma()</span></code></a> cost one conjugate-gradient solve each: the
-eigenvectors depend neither on the observations’ values nor on
-<span class="math notranslate nohighlight">\(\gamma\)</span>.</p>
-</section>
-<section id="what-it-costs-at-a-size-fips-solve-cannot-hold">
-<h2><a class="toc-backref" href="#id3" role="doc-backlink">What it costs at a size fips.solve cannot hold</a><a class="headerlink" href="#what-it-costs-at-a-size-fips-solve-cannot-hold" title="Link to this heading">#</a></h2>
-<p>Measured on one cluster node (eight cores of an Intel Xeon Gold 6230R, 48 GB),
-each solve in its own process with its address space capped at 40 GB, with the plume footprints above on a larger grid
-(the same plumes, prior and signal-to-noise, with an error of 0.3 and a
-prior’s correlations of 3 hours and 4 cells):</p>
-<div class="pst-scrollable-table-container"><table class="table">
-<thead>
-<tr class="row-odd"><th class="head"><p>state <span class="math notranslate nohighlight">\(n\)</span></p></th>
-<th class="head"><p>observations <span class="math notranslate nohighlight">\(m\)</span></p></th>
-<th class="head"><p>method</p></th>
-<th class="head"><p>solve</p></th>
-<th class="head"><p>peak memory</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p>38,400</p></td>
-<td><p>2,880</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">fips.solve</span></code></p></td>
-<td><p>9 s</p></td>
-<td><p>2.1 GB</p></td>
-</tr>
-<tr class="row-odd"><td><p>38,400</p></td>
-<td><p>2,880</p></td>
-<td><p>variational, rank 100</p></td>
-<td><p>3 s</p></td>
-<td><p>0.3 GB</p></td>
-</tr>
-<tr class="row-even"><td><p>38,400</p></td>
-<td><p>2,880</p></td>
-<td><p>variational, rank 300</p></td>
-<td><p>13 s</p></td>
-<td><p>0.5 GB</p></td>
-</tr>
-<tr class="row-odd"><td><p>38,400</p></td>
-<td><p>2,880</p></td>
-<td><p>variational, rank 600</p></td>
-<td><p>45 s</p></td>
-<td><p>0.9 GB</p></td>
-</tr>
-<tr class="row-even"><td><p>259,200</p></td>
-<td><p>17,280</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">fips.solve</span></code></p></td>
-<td><p>out of memory (<code class="docutils literal notranslate"><span class="pre">MemoryError</span></code> at 38 GB, after 4 minutes)</p></td>
-<td><p>above 40 GB</p></td>
-</tr>
-<tr class="row-odd"><td><p>259,200</p></td>
-<td><p>17,280</p></td>
-<td><p>variational, rank 100</p></td>
-<td><p>41 s</p></td>
-<td><p>1.2 GB</p></td>
-</tr>
-<tr class="row-even"><td><p>259,200</p></td>
-<td><p>17,280</p></td>
-<td><p>variational, rank 300</p></td>
-<td><p>160 s</p></td>
-<td><p>2.8 GB</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">fips.solve</span></code> holds <span class="math notranslate nohighlight">\(H S_0\)</span>, <span class="math notranslate nohighlight">\(m \times n\)</span> dense, and factors the
-<span class="math notranslate nohighlight">\(m \times m\)</span> innovation covariance: its memory grows as <span class="math notranslate nohighlight">\(m n\)</span>. The
-variational solve holds the sparse <span class="math notranslate nohighlight">\(H\)</span>, the Kronecker factors and
-<span class="math notranslate nohighlight">\(G\)</span> (<span class="math notranslate nohighlight">\(n \times k\)</span>): its memory grows as <span class="math notranslate nohighlight">\(n k\)</span>, and its time
-as its products with <span class="math notranslate nohighlight">\(\tilde{H}\)</span> (each one with <span class="math notranslate nohighlight">\(H\)</span>, <span class="math notranslate nohighlight">\(H^T\)</span>
-and the prior’s root and its transpose): the CG iterations, about 200 at
-both sizes here, and two to three for each pair. The low ranks leave the
-standard deviations too large where the data inform more directions than
-<code class="docutils literal notranslate"><span class="pre">rank</span></code> keeps (at 38,400 cells the exact DOFS is 459): the median cell’s is
-9% too large at rank 100, 4% at 300 and 0.5% at 600 (the largest 65%, 21% and
-4%).</p>
 </section>
 <section id="a-model-with-an-adjoint">
-<h2><a class="toc-backref" href="#id4" role="doc-backlink">A model with an adjoint</a><a class="headerlink" href="#a-model-with-an-adjoint" title="Link to this heading">#</a></h2>
+<h3>A model with an adjoint<a class="headerlink" href="#a-model-with-an-adjoint" title="Link to this heading">#</a></h3>
 <p>A forward model whose Jacobian is too large to hold, but which can be run
-forward (tangent linear, <span class="math notranslate nohighlight">\(J v\)</span>) and backward (adjoint, <span class="math notranslate nohighlight">\(J^T w\)</span>),
-writes those two products in place of <code class="docutils literal notranslate"><span class="pre">jacobian</span></code>. Here a lognormal flux,
-<span class="math notranslate nohighlight">\(F(x) = H (r \circ e^{x})\)</span>, on a small grid:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [49]: </span><span class="k">class</span><span class="w"> </span><span class="nc">Lognormal</span><span class="p">(</span><span class="n">fips</span><span class="o">.</span><span class="n">ForwardModel</span><span class="p">):</span>
+forward (the tangent linear model, <span class="math notranslate nohighlight">\(J v\)</span>) and backward (the adjoint
+model, <span class="math notranslate nohighlight">\(J^T w\)</span>), writes those two products in place of <code class="docutils literal notranslate"><span class="pre">jacobian</span></code>.
+Here <span class="math notranslate nohighlight">\(F(x) = H (r \circ e^{x})\)</span> on a small problem, the model
+<a class="reference internal" href="../reference/api/fips.LogNormalForward.html#fips.LogNormalForward" title="fips.LogNormalForward"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogNormalForward</span></code></a> writes for you (<a class="reference internal" href="positive.html"><span class="doc">Values that stay positive</span></a>), written by
+its products:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [36]: </span><span class="k">class</span><span class="w"> </span><span class="nc">LogScale</span><span class="p">(</span><span class="n">fips</span><span class="o">.</span><span class="n">ForwardModel</span><span class="p">):</span>
+<span class="gp">   ....: </span><span class="w">    </span><span class="sd">"""F(x) = H (r * exp(x)), known by its products."""</span>
 <span class="gp">   ....: </span>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">reference</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">):</span>
 <span class="gp">   ....: </span>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">)</span>
 <span class="gp">   ....: </span>        <span class="bp">self</span><span class="o">.</span><span class="n">H</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">reference</span> <span class="o">=</span> <span class="n">H</span><span class="p">,</span> <span class="n">reference</span>
@@ -820,76 +719,252 @@ writes those two products in place of <code class="docutils literal notranslate"
 <span class="gp">   ....: </span>        <span class="k">return</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reference</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">values</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">H</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">w</span><span class="o">.</span><span class="n">values</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">)</span>
 <span class="gp">   ....: </span>
 
-<span class="gp">In [50]: </span><span class="n">small</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"flux"</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">RangeIndex</span><span class="p">(</span><span class="mi">60</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"cell"</span><span class="p">)})</span>
+<span class="gp">In [37]: </span><span class="n">small</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"state"</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">RangeIndex</span><span class="p">(</span><span class="mi">60</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"element"</span><span class="p">)})</span>
 
-<span class="gp">In [51]: </span><span class="n">seen</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"ch4"</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">RangeIndex</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"obs_id"</span><span class="p">)})</span>
+<span class="gp">In [38]: </span><span class="n">seen</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"obs"</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">RangeIndex</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"obs_id"</span><span class="p">)})</span>
 
-<span class="gp">In [52]: </span><span class="n">H_small</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">60</span><span class="p">)))</span> <span class="o">*</span> <span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">40</span><span class="p">,</span> <span class="mi">60</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mf">0.2</span><span class="p">)</span>
+<span class="gp">In [39]: </span><span class="n">H_small</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">60</span><span class="p">)))</span> <span class="o">*</span> <span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">40</span><span class="p">,</span> <span class="mi">60</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mf">0.2</span><span class="p">)</span>
 
-<span class="gp">In [53]: </span><span class="n">model</span> <span class="o">=</span> <span class="n">Lognormal</span><span class="p">(</span><span class="n">H_small</span><span class="p">,</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mi">60</span><span class="p">),</span> <span class="n">seen</span><span class="p">,</span> <span class="n">small</span><span class="p">)</span>
+<span class="gp">In [40]: </span><span class="n">model</span> <span class="o">=</span> <span class="n">LogScale</span><span class="p">(</span><span class="n">H_small</span><span class="p">,</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mi">60</span><span class="p">),</span> <span class="n">seen</span><span class="p">,</span> <span class="n">small</span><span class="p">)</span>
 
-<span class="gp">In [54]: </span><span class="n">fips</span><span class="o">.</span><span class="n">taylortest</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">60</span><span class="p">),</span> <span class="n">small</span><span class="p">))</span>
-<span class="gh">Out[54]: </span><span class="go">True</span>
+<span class="gp">In [41]: </span><span class="n">fips</span><span class="o">.</span><span class="n">taylortest</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">60</span><span class="p">),</span> <span class="n">small</span><span class="p">))</span>
+<span class="gh">Out[41]: </span><span class="go">True</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="../reference/api/fips.taylortest.html#fips.taylortest" title="fips.taylortest"><code class="xref py py-func docutils literal notranslate"><span class="pre">fips.taylortest()</span></code></a> checks both products: the tangent linear against the
-model (the remainder of <span class="math notranslate nohighlight">\(F(x + \epsilon v) - F(x) - \epsilon J v\)</span> falls
-as <span class="math notranslate nohighlight">\(\epsilon^2\)</span>) and the adjoint against the tangent linear
-(<span class="math notranslate nohighlight">\(\langle J v, w \rangle = \langle v, J^T w \rangle\)</span>); an adjoint with a
-term missing fails the second. The variational method then solves by
-Gauss-Newton, each step a conjugate-gradient solve of the problem linearized
-at the last estimate, with the same stopping rule as <code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code>
-(<a class="reference internal" href="nonlinear.html"><span class="doc">A nonlinear forward model</span></a>):</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [55]: </span><span class="n">log_truth</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">60</span><span class="p">),</span> <span class="n">small</span><span class="p">)</span>
+<p><a class="reference internal" href="../reference/api/fips.taylortest.html#fips.taylortest" title="fips.taylortest"><code class="xref py py-func docutils literal notranslate"><span class="pre">fips.taylortest()</span></code></a> checks both products. It checks the tangent linear
+against the model: the remainder of <span class="math notranslate nohighlight">\(F(x + \epsilon v) - F(x) -
+\epsilon J v\)</span> falls as <span class="math notranslate nohighlight">\(\epsilon^2\)</span>. It checks the adjoint against the
+tangent linear: <span class="math notranslate nohighlight">\(\langle J v, w \rangle = \langle v, J^T w \rangle\)</span>.
+An adjoint with a term missing fails the second. The variational method then
+solves by Gauss-Newton, each step a conjugate-gradient solve of the problem
+linearized at the last estimate:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [42]: </span><span class="n">log_truth</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">60</span><span class="p">),</span> <span class="n">small</span><span class="p">)</span>
 
-<span class="gp">In [56]: </span><span class="n">lognormal</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span>
+<span class="gp">In [43]: </span><span class="n">lognormal</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span>
 <span class="gp">   ....: </span>    <span class="n">prior</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">60</span><span class="p">),</span> <span class="n">small</span><span class="p">),</span>
-<span class="gp">   ....: </span>    <span class="n">prior_cov</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">(</span><span class="s2">"cell"</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">)</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.5</span><span class="p">),</span>
+<span class="gp">   ....: </span>    <span class="n">prior_cov</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">(</span><span class="s2">"element"</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">)</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.5</span><span class="p">),</span>
 <span class="gp">   ....: </span>    <span class="n">obs</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">model</span><span class="p">(</span><span class="n">log_truth</span><span class="p">)</span><span class="o">.</span><span class="n">values</span> <span class="o">+</span> <span class="mf">0.05</span> <span class="o">*</span> <span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">40</span><span class="p">),</span> <span class="n">seen</span><span class="p">),</span>
 <span class="gp">   ....: </span>    <span class="n">obs_cov</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Independent</span><span class="p">()</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.05</span><span class="p">),</span>
 <span class="gp">   ....: </span>    <span class="n">forward</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
 <span class="gp">   ....: </span><span class="p">)</span>
 <span class="gp">   ....: </span>
 
-<span class="gp">In [57]: </span><span class="n">by_products</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">lognormal</span><span class="p">,</span> <span class="s2">"variational"</span><span class="p">,</span> <span class="n">rank</span><span class="o">=</span><span class="mi">40</span><span class="p">)</span>
+<span class="gp">In [44]: </span><span class="n">by_products</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">lognormal</span><span class="p">,</span> <span class="s2">"variational"</span><span class="p">,</span> <span class="n">rank</span><span class="o">=</span><span class="mi">40</span><span class="p">)</span>
 
-<span class="gp">In [58]: </span><span class="n">by_products</span><span class="o">.</span><span class="n">iterations</span>
-<span class="gh">Out[58]: </span>
-<span class="go">                      d2           cost  cg_iterations</span>
-<span class="go">iteration                                             </span>
-<span class="go">1          130264.831519  114083.989483             68</span>
-<span class="go">2          114003.712451    2315.786242             81</span>
-<span class="go">3            2237.555312      84.467890             78</span>
-<span class="go">4               6.163438      78.468280             67</span>
-<span class="go">5               0.122497      78.384408             67</span>
-<span class="go">6               0.025351      78.369842             62</span>
-<span class="go">7               0.006698      78.366694             60</span>
-<span class="go">8               0.002122      78.365784             47</span>
-<span class="go">9               0.000725      78.365483             58</span>
-<span class="go">10              0.000252      78.365380             46</span>
-<span class="go">11              0.000089      78.365344             46</span>
-<span class="go">12              0.000031      78.365331             46</span>
+<span class="gp">In [45]: </span><span class="n">by_products</span><span class="o">.</span><span class="n">iterations</span>
+<span class="gh">Out[45]: </span>
+<span class="go">                     d2          cost  cg_iterations</span>
+<span class="go">iteration                                           </span>
+<span class="go">1          86869.737780  31728.345306             62</span>
+<span class="go">2          31651.894873    364.657056             72</span>
+<span class="go">3            289.820517     75.417719             71</span>
+<span class="go">4              0.672952     74.804003             65</span>
+<span class="go">5              0.073740     74.743728             62</span>
+<span class="go">6              0.014968     74.735908             59</span>
+<span class="go">7              0.006779     74.732577             59</span>
+<span class="go">8              0.002826     74.731526             53</span>
+<span class="go">9              0.001381     74.731045             57</span>
+<span class="go">10             0.000666     74.730835             53</span>
+<span class="go">11             0.000333     74.730733             52</span>
+<span class="go">12             0.000166     74.730684             48</span>
+<span class="go">13             0.000084     74.730659             48</span>
+<span class="go">14             0.000042     74.730647             47</span>
 
-<span class="gp">In [59]: </span><span class="n">newton</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">lognormal</span><span class="p">,</span> <span class="s2">"gauss_newton"</span><span class="p">,</span> <span class="n">draws</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+<span class="gp">In [46]: </span><span class="n">newton</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">lognormal</span><span class="p">,</span> <span class="s2">"gauss_newton"</span><span class="p">,</span> <span class="n">draws</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
 
-<span class="gp">In [60]: </span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">by_products</span><span class="o">.</span><span class="n">estimate</span><span class="o">.</span><span class="n">values</span> <span class="o">-</span> <span class="n">newton</span><span class="o">.</span><span class="n">estimate</span><span class="o">.</span><span class="n">values</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
-<span class="gh">Out[60]: </span><span class="go">np.float64(2.3905648343092167e-06)</span>
+<span class="gp">In [47]: </span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">by_products</span><span class="o">.</span><span class="n">estimate</span><span class="o">.</span><span class="n">values</span> <span class="o">-</span> <span class="n">newton</span><span class="o">.</span><span class="n">estimate</span><span class="o">.</span><span class="n">values</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+<span class="gh">Out[47]: </span><span class="go">np.float64(7.296662246913943e-07)</span>
 </pre></div>
 </div>
-<p>The two modes agree to within their stopping rules (both stop when a step is
-a thousandth of a posterior standard deviation). <code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code> forms the Jacobian (here from the same
-products, a column at a time) and draws the posterior itself; the variational
-method never forms it, and its uncertainty is the low-rank Gaussian at the
-mode, Laplace’s approximation, which is not the posterior where the model
-bends much over the posterior’s spread (<a class="reference internal" href="positive.html"><span class="doc">Values that stay positive</span></a>). Its posterior is
-the low-rank kind, and <a class="reference internal" href="../reference/posterior.html#posterior-members"><span class="std std-ref">the table</span></a> says what that
-gives (no <code class="docutils literal notranslate"><span class="pre">with_gamma</span></code> with a forward model, since the linearization depends
-on <span class="math notranslate nohighlight">\(\gamma\)</span>); <code class="docutils literal notranslate"><span class="pre">with_data</span></code> solves again from the last linearization.</p>
-<p>Out of this method, for now: bounds on the state, checkpointing an adjoint
-model, and a preconditioner for the conjugate gradients beyond the prior’s
-root (a problem with observations far more precise than its prior has large
-eigenvalues, and the solve takes more iterations; <code class="docutils literal notranslate"><span class="pre">max_cg_iterations</span></code> caps
-them).</p>
+<p>The two modes agree to within their stopping rules. <code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code> forms
+the Jacobian (here from the same products, a column at a time) and draws the
+posterior. The variational method never forms it, and its uncertainty is the
+low-rank Gaussian at the mode, which is not the posterior where the model
+bends much over the posterior’s spread (<a class="reference internal" href="positive.html"><span class="doc">Values that stay positive</span></a>).</p>
+</section>
+</section>
+<section id="what-the-posterior-reports">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">What the posterior reports</a><a class="headerlink" href="#what-the-posterior-reports" title="Link to this heading">#</a></h2>
+<p>The variational posterior is a low-rank one, or a Gaussian one when <code class="docutils literal notranslate"><span class="pre">rank</span></code>
+reaches the problem’s rank. The <a class="reference internal" href="../reference/posterior.html#posterior-members"><span class="std std-ref">members table</span></a> lists
+every member for every kind of answer; for this method:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../reference/api/fips.Posterior.estimate.html#fips.Posterior.estimate" title="fips.Posterior.estimate"><code class="xref py py-attr docutils literal notranslate"><span class="pre">estimate</span></code></a> is the posterior mean to <code class="docutils literal notranslate"><span class="pre">cg_tol</span></code> for a
+forward operator, and the mode for a forward model (whose
+<a class="reference internal" href="../reference/api/fips.Posterior.mean.html#fips.Posterior.mean" title="fips.Posterior.mean"><code class="xref py py-attr docutils literal notranslate"><span class="pre">mean</span></code></a> raises).</p></li>
+<li><p><a class="reference internal" href="../reference/api/fips.Posterior.variances.html#fips.Posterior.variances" title="fips.Posterior.variances"><code class="xref py py-attr docutils literal notranslate"><span class="pre">variances</span></code></a> and <a class="reference internal" href="../reference/api/fips.Posterior.cov.html#fips.Posterior.cov" title="fips.Posterior.cov"><code class="xref py py-meth docutils literal notranslate"><span class="pre">cov()</span></code></a> are the
+prior’s less <code class="docutils literal notranslate"><span class="pre">rank</span></code> pairs: too large below the problem’s rank, exact at
+it. The covariance of aggregates, <a class="reference internal" href="../reference/api/fips.Posterior.cov.html#fips.Posterior.cov" title="fips.Posterior.cov"><code class="xref py py-meth docutils literal notranslate"><span class="pre">cov()</span></code></a> with <code class="docutils literal notranslate"><span class="pre">W</span></code>,
+forms nothing <span class="math notranslate nohighlight">\(n \times n\)</span>.</p></li>
+<li><p><a class="reference internal" href="../reference/api/fips.Posterior.eigenvalues.html#fips.Posterior.eigenvalues" title="fips.Posterior.eigenvalues"><code class="xref py py-attr docutils literal notranslate"><span class="pre">eigenvalues</span></code></a> lists the pairs and the DOFS each adds;
+<a class="reference internal" href="../reference/api/fips.Posterior.iterations.html#fips.Posterior.iterations" title="fips.Posterior.iterations"><code class="xref py py-attr docutils literal notranslate"><span class="pre">iterations</span></code></a> lists each Gauss-Newton step (one for a
+forward operator) with its conjugate-gradient iterations.</p></li>
+<li><p><a class="reference internal" href="../reference/api/fips.Posterior.dofs.html#fips.Posterior.dofs" title="fips.Posterior.dofs"><code class="xref py py-attr docutils literal notranslate"><span class="pre">dofs</span></code></a> (a lower bound),
+<a class="reference internal" href="../reference/api/fips.Posterior.dofs_per_element.html#fips.Posterior.dofs_per_element" title="fips.Posterior.dofs_per_element"><code class="xref py py-attr docutils literal notranslate"><span class="pre">dofs_per_element</span></code></a>,
+<a class="reference internal" href="../reference/api/fips.Posterior.kalman_gain.html#fips.Posterior.kalman_gain" title="fips.Posterior.kalman_gain"><code class="xref py py-attr docutils literal notranslate"><span class="pre">kalman_gain</span></code></a>,
+<a class="reference internal" href="../reference/api/fips.Posterior.averaging_kernel.html#fips.Posterior.averaging_kernel" title="fips.Posterior.averaging_kernel"><code class="xref py py-meth docutils literal notranslate"><span class="pre">averaging_kernel()</span></code></a> and
+<a class="reference internal" href="../reference/api/fips.Posterior.information_content.html#fips.Posterior.information_content" title="fips.Posterior.information_content"><code class="xref py py-attr docutils literal notranslate"><span class="pre">information_content</span></code></a> are those of the <code class="docutils literal notranslate"><span class="pre">rank</span></code>
+directions kept.</p></li>
+<li><p><a class="reference internal" href="../reference/api/fips.Posterior.sample.html#fips.Posterior.sample" title="fips.Posterior.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a> gives exact draws of the low-rank posterior.</p></li>
+<li><p><a class="reference internal" href="../reference/api/fips.Posterior.with_data.html#fips.Posterior.with_data" title="fips.Posterior.with_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">with_data()</span></code></a> and <a class="reference internal" href="../reference/api/fips.Posterior.with_gamma.html#fips.Posterior.with_gamma" title="fips.Posterior.with_gamma"><code class="xref py py-meth docutils literal notranslate"><span class="pre">with_gamma()</span></code></a>
+cost one conjugate-gradient solve each, keeping the pairs. With a forward
+model, <code class="docutils literal notranslate"><span class="pre">with_data</span></code> solves again from the last linearization, and
+<code class="docutils literal notranslate"><span class="pre">with_gamma</span></code> raises: the linearization depends on <span class="math notranslate nohighlight">\(\gamma\)</span>.</p></li>
+<li><p><a class="reference internal" href="../reference/api/fips.Posterior.log_evidence.html#fips.Posterior.log_evidence" title="fips.Posterior.log_evidence"><code class="xref py py-attr docutils literal notranslate"><span class="pre">log_evidence</span></code></a> is exact at full rank for a forward
+operator, and Laplace’s for a forward model. It raises when <code class="docutils literal notranslate"><span class="pre">rank</span></code> left
+out pairs that still hold information.</p></li>
+<li><p><a class="reference internal" href="../reference/api/fips.Posterior.recovery.html#fips.Posterior.recovery" title="fips.Posterior.recovery"><code class="xref py py-meth docutils literal notranslate"><span class="pre">recovery()</span></code></a> and the data worth raise: the estimate is
+linear in the observations only to the tolerance.</p></li>
+</ul>
+</section>
+<section id="options">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Options</a><a class="headerlink" href="#options" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">fips.solve(problem,</span> <span class="pre">&quot;variational&quot;,</span> <span class="pre">**options)</span></code> takes
+(<a class="reference internal" href="../reference/api/fips.methods.variational.VariationalOptions.html#fips.methods.variational.VariationalOptions" title="fips.methods.variational.VariationalOptions"><code class="xref py py-class docutils literal notranslate"><span class="pre">VariationalOptions</span></code></a>):</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 22.0%" />
+<col style="width: 12.0%" />
+<col style="width: 66.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>What it does</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rank</span></code></p></td>
+<td><p>100</p></td>
+<td><p>The number of directions the low-rank posterior keeps (at most the
+smaller of <span class="math notranslate nohighlight">\(m\)</span> and the columns of the prior’s root).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">cg_tol</span></code></p></td>
+<td><p>1e-8</p></td>
+<td><p>The tolerance of the iterative solves, below 1: the conjugate
+gradients stop when their residual is below <code class="docutils literal notranslate"><span class="pre">cg_tol</span></code> times the right
+side, and Lanczos when each eigenvalue is good to <code class="docutils literal notranslate"><span class="pre">cg_tol</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">max_cg_iterations</span></code></p></td>
+<td><p>1000</p></td>
+<td><p>The most conjugate-gradient iterations of one solve.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">max_iterations</span></code></p></td>
+<td><p>50</p></td>
+<td><p>For a forward model, the most Gauss-Newton steps, as for
+<code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tol</span></code></p></td>
+<td><p>1e-6</p></td>
+<td><p>For a forward model, the steps stop when one moves the estimate by
+less than <code class="docutils literal notranslate"><span class="pre">tol</span></code> times <span class="math notranslate nohighlight">\(n\)</span>, measured in the posterior
+covariance (Rodgers’ rule, as for <code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code>).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">gamma</span></code></p></td>
+<td><p>1.0</p></td>
+<td><p>The regularization factor: the observation covariance is divided by
+it, as for every method (<a class="reference internal" href="posterior.html"><span class="doc">Reading the posterior</span></a>).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="warnings-and-checks">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Warnings and checks</a><a class="headerlink" href="#warnings-and-checks" title="Link to this heading">#</a></h2>
+<p><strong>It warns when</strong> <code class="docutils literal notranslate"><span class="pre">rank</span></code> <strong>is too small by a clear margin</strong>: when <code class="docutils literal notranslate"><span class="pre">rank</span></code>
+is below the most pairs the problem has and the last pair kept still has an
+eigenvalue above 1 (that direction holds more from the data than from the
+prior). Raise <code class="docutils literal notranslate"><span class="pre">rank</span></code>. The warning is a floor, not a target: read the last
+pairs’ <code class="docutils literal notranslate"><span class="pre">dofs</span></code> in <a class="reference internal" href="../reference/api/fips.Posterior.eigenvalues.html#fips.Posterior.eigenvalues" title="fips.Posterior.eigenvalues"><code class="xref py py-attr docutils literal notranslate"><span class="pre">eigenvalues</span></code></a>. Each solve also logs,
+at INFO, the pairs kept, DOFS and the share of it in the last tenth of the pairs,
+and the conjugate-gradient iterations. fips logs these through
+<a class="reference external" href="https://docs.python.org/3/library/logging.html#module-logging" title="(in Python v3.15)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">logging</span></code></a>, silent until you configure it (<a class="reference internal" href="posterior.html#repeated-inversions"><span class="std std-ref">Repeated inversions, logging and saving</span></a>).</p>
+<p>It raises <a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#RuntimeError" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">RuntimeError</span></code></a> when:</p>
+<ul class="simple">
+<li><p>the conjugate gradients have not reached <code class="docutils literal notranslate"><span class="pre">cg_tol</span></code> after
+<code class="docutils literal notranslate"><span class="pre">max_cg_iterations</span></code>: raise either. Observations far more precise than
+the prior make large eigenvalues, and the solve slow;</p></li>
+<li><p>Lanczos does not find the pairs: lower <code class="docutils literal notranslate"><span class="pre">rank</span></code>, or raise <code class="docutils literal notranslate"><span class="pre">cg_tol</span></code>;</p></li>
+<li><p>with a forward model, the steps have not stopped after <code class="docutils literal notranslate"><span class="pre">max_iterations</span></code>,
+or the cost rises along a step however short it is made. The second means
+the products are not the derivative of the model: check them with
+<a class="reference internal" href="../reference/api/fips.taylortest.html#fips.taylortest" title="fips.taylortest"><code class="xref py py-func docutils literal notranslate"><span class="pre">fips.taylortest()</span></code></a>.</p></li>
+</ul>
+<p>It raises <a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ValueError</span></code></a> for an option out of range (<code class="docutils literal notranslate"><span class="pre">cg_tol</span></code> must be
+below 1), and <a class="reference internal" href="../reference/api/fips.UnavailableError.html#fips.UnavailableError" title="fips.UnavailableError"><code class="xref py py-class docutils literal notranslate"><span class="pre">UnavailableError</span></code></a> for a member it cannot give
+(above).</p>
+</section>
+<section id="cost">
+<h2><a class="toc-backref" href="#id6" role="doc-backlink">Cost</a><a class="headerlink" href="#cost" title="Link to this heading">#</a></h2>
+<p><strong>Memory grows as</strong> <span class="math notranslate nohighlight">\(n k\)</span>, <strong>not</strong> <span class="math notranslate nohighlight">\(m n\)</span>. The method holds the
+sparse <span class="math notranslate nohighlight">\(H\)</span> (or nothing, for products), the prior covariance’s factors,
+and <span class="math notranslate nohighlight">\(n \times k\)</span> for the pairs. <code class="docutils literal notranslate"><span class="pre">fips.solve(problem)</span></code> holds
+<span class="math notranslate nohighlight">\(H S_0\)</span>, <span class="math notranslate nohighlight">\(m \times n\)</span> dense.</p>
+<p><strong>Time grows with the directions the data inform, not with</strong> <span class="math notranslate nohighlight">\(n\)</span>. A
+conjugate-gradient iteration is a product with each of <span class="math notranslate nohighlight">\(H\)</span>,
+<span class="math notranslate nohighlight">\(H^T\)</span>, the prior’s root and its transpose, and a solve takes about as
+many iterations as there are eigenvalues well above 1. The pairs cost about
+two such products each by Lanczos. When <code class="docutils literal notranslate"><span class="pre">rank</span></code> is at least half the
+columns of the prior’s root, the method forms the whitened Hessian from that
+many products instead and eigendecomposes it, dense. A forward model costs a
+solve and a run of the model per Gauss-Newton step. The conjugate gradients
+are preconditioned only by the prior’s root, so observations far more precise
+than the prior take more iterations. For scale: a few hundred thousand state
+elements and tens of thousands of observations, which <code class="docutils literal notranslate"><span class="pre">fips.solve(problem)</span></code>
+cannot hold, take about a minute and a gigabyte or two at <code class="docutils literal notranslate"><span class="pre">rank=100</span></code>.</p>
+</section>
+<section id="how-it-works">
+<h2><a class="toc-backref" href="#id7" role="doc-backlink">How it works</a><a class="headerlink" href="#how-it-works" title="Link to this heading">#</a></h2>
+<p>Write the prior covariance by its root, <span class="math notranslate nohighlight">\(S_0 = R R^T\)</span>, and the state in
+the whitened form <span class="math notranslate nohighlight">\(x = x_0 + R \xi\)</span>. With the innovation <span class="math notranslate nohighlight">\(d = z -
+H x_0 - c\)</span>, the cost is <span class="math notranslate nohighlight">\(\xi^T \xi + \gamma (d - H R \xi)^T S_z^{-1}
+(d - H R \xi)\)</span>, and its minimum solves the whitened normal equations</p>
+<div class="math notranslate nohighlight">
+\[(I + \tilde{H})\, \xi = \gamma R^T H^T S_z^{-1} d, \qquad
+\tilde{H} = \gamma R^T H^T S_z^{-1} H R,\]</div>
+<p>where <span class="math notranslate nohighlight">\(\tilde{H}\)</span> is the Hessian of the data misfit whitened by the
+prior. Their matrix is the identity plus a positive semidefinite one, so its
+eigenvalues are at least 1. Conjugate gradients solve the equations in about
+as many products as <span class="math notranslate nohighlight">\(\tilde{H}\)</span> has eigenvalues standing above 1.</p>
+<p>The posterior covariance is <span class="math notranslate nohighlight">\(\hat{S} = R (I + \tilde{H})^{-1} R^T\)</span>.
+The eigenvalues <span class="math notranslate nohighlight">\(\tilde\lambda_j\)</span> of <span class="math notranslate nohighlight">\(\tilde{H}\)</span> say how many
+times more the data know about each direction than the prior did; along that
+direction the data remove the share <span class="math notranslate nohighlight">\(\tilde\lambda_j / (1 +
+\tilde\lambda_j)\)</span> of the prior’s variance, and these shares add up to DOFS.
+The <code class="docutils literal notranslate"><span class="pre">k</span></code> leading pairs, <span class="math notranslate nohighlight">\(\tilde{H} v_j = \tilde\lambda_j v_j\)</span>, found by
+Lanczos from products, give the low-rank posterior</p>
+<div class="math notranslate nohighlight">
+\[\hat{S}_k = S_0 - G \operatorname{diag}\big(\tilde\lambda_j / (1 +
+\tilde\lambda_j)\big) G^T, \qquad G = R V \ (n \times k).\]</div>
+<p>It is the posterior of the <code class="docutils literal notranslate"><span class="pre">k</span></code> directions the data inform most, with the
+prior left in the others. The covariance of aggregates is <span class="math notranslate nohighlight">\(W S_0 W^T -
+(W G) D (W G)^T\)</span>, and a draw is <span class="math notranslate nohighlight">\(\hat{x} + R (w - V
+\operatorname{diag}(1 - (1 + \tilde\lambda_j)^{-1/2}) V^T w)\)</span> with <span class="math notranslate nohighlight">\(w\)</span>
+standard normal. The pairs depend neither on <span class="math notranslate nohighlight">\(\gamma\)</span> (it only scales
+<span class="math notranslate nohighlight">\(\tilde\lambda\)</span>) nor on the observations’ values, so another
+<span class="math notranslate nohighlight">\(\gamma\)</span> or other data cost one conjugate-gradient solve.</p>
+<p>With a forward model the same solve is the inner step of Gauss-Newton, which
+is incremental 4D-Var. At each iterate the problem linearized there, with the
+Jacobian known by <code class="docutils literal notranslate"><span class="pre">jvp</span></code> and <code class="docutils literal notranslate"><span class="pre">vjp</span></code>, is solved by conjugate gradients, and
+the steps stop by the rule <code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code> uses (<a class="reference internal" href="nonlinear.html"><span class="doc">A nonlinear forward model</span></a>). A step
+that raises the cost is halved until it does not. The pairs are those of the
+last linearization, so the uncertainty is the Gaussian at the mode, Laplace’s
+approximation.</p>
+</section>
+<section id="references">
+<h2><a class="toc-backref" href="#id8" role="doc-backlink">References</a><a class="headerlink" href="#references" title="Link to this heading">#</a></h2>
+<p>Bui-Thanh, T., Ghattas, O., Martin, J., and Stadler, G. (2013). A
+computational framework for infinite-dimensional Bayesian inverse problems.
+Part I. <em>SIAM Journal on Scientific Computing</em>, 35(6), A2494-A2523.
+<a class="reference external" href="https://doi.org/10.1137/12089586X">https://doi.org/10.1137/12089586X</a></p>
+<p>Courtier, P., Thépaut, J.-N., and Hollingsworth, A. (1994). A strategy for
+operational implementation of 4D-Var, using an incremental approach.
+<em>Quarterly Journal of the Royal Meteorological Society</em>, 120(519),
+1367-1387. <a class="reference external" href="https://doi.org/10.1002/qj.49712051912">https://doi.org/10.1002/qj.49712051912</a></p>
+<p>Spantini, A., Solonen, A., Cui, T., Martin, J., Tenorio, L., and Marzouk, Y.
+(2015). Optimal low-rank approximations of Bayesian linear inverse problems.
+<em>SIAM Journal on Scientific Computing</em>, 37(6), A2451-A2487.
+<a class="reference external" href="https://doi.org/10.1137/140977308">https://doi.org/10.1137/140977308</a></p>
 </section>
 </section>
 
@@ -909,15 +984,15 @@ them).</p>
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">A model with no Jacobian: the ensemble method</p>
+        <p class="prev-next-title">A model without a Jacobian: the ensemble method</p>
       </div>
     </a>
     <a class="right-next"
-       href="examples/index.html"
+       href="settings.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Examples</p>
+        <p class="prev-next-title">Fitting the covariance settings</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -940,10 +1015,18 @@ them).</p>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#one-problem-two-ways">One problem, two ways</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-much-rank-is-enough">How much rank is enough</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-it-costs-at-a-size-fips-solve-cannot-hold">What it costs at a size fips.solve cannot hold</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-model-with-an-adjoint">A model with an adjoint</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#when-to-use-it">When to use it</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#an-example">An example</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-much-rank-is-enough">How much rank is enough</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#a-model-with-an-adjoint">A model with an adjoint</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-posterior-reports">What the posterior reports</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#options">Options</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#warnings-and-checks">Warnings and checks</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cost">Cost</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-it-works">How it works</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#references">References</a></li>
 </ul>
   </nav></div>
 

@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>The uncertainty of the settings &#8212; fips 0.2.0b3.dev33+g1b3edda40 documentation</title>
+    <title>The uncertainty of the settings &#8212; fips 0.2.0b3.dev34+g9a0704831 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=d42acb76"></script>
+    <script src="../_static/documentation_options.js?v=8e63224c"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -60,7 +60,7 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Bounds on the state" href="bounds.html" />
+    <link rel="next" title="Synthetic experiments" href="synthetic.html" />
     <link rel="prev" title="Fitting the covariance settings" href="settings.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev33+g1b3edda40 documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev33+g1b3edda40 documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
   
   
 </a></div>
@@ -385,21 +385,33 @@
 <nav class="bd-docs-nav bd-links"
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
-  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="synthetic.html">Synthetic experiments</a></li>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Every problem</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="problem.html">Building a problem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="posterior.html">Reading the posterior</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Beyond the linear Gaussian problem</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="methods.html">Choosing a method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bounds.html">Bounds on the state</a></li>
+<li class="toctree-l1"><a class="reference internal" href="positive.html">Values that stay positive</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nonlinear.html">A nonlinear forward model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ensemble.html">A model without a Jacobian: the ensemble method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="variational.html">A problem too large to factor: the variational method</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Checking and tuning an inversion</span></p>
+<ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="settings.html">Fitting the covariance settings</a></li>
 <li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">The uncertainty of the settings</a></li>
-<li class="toctree-l1"><a class="reference internal" href="bounds.html">Bounds on the state</a></li>
-<li class="toctree-l1"><a class="reference internal" href="nonlinear.html">A nonlinear forward model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="positive.html">Values that stay positive</a></li>
-<li class="toctree-l1"><a class="reference internal" href="comparison.html">Choosing a method</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ensemble.html">A model with no Jacobian: the ensemble method</a></li>
-<li class="toctree-l1"><a class="reference internal" href="variational.html">A problem too large to factor: the variational method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="synthetic.html">Synthetic experiments</a></li>
+</ul>
+<ul class="nav bd-sidenav">
 <li class="toctree-l1 has-children"><a class="reference internal" href="examples/index.html">Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="examples/gravity_2d.html">Gravity: density below the surface</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/flux_regional.html">A regional flux inversion</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/synthetic_truth.html">Does the inversion recover a known flux?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/data_worth.html">Which observations constrain a regional total?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/comparison.html">Comparing ways to keep a quantity positive</a></li>
 </ul>
 </details></li>
 </ul>
@@ -464,86 +476,93 @@
                   
   <section id="the-uncertainty-of-the-settings">
 <span id="hierarchical"></span><h1>The uncertainty of the settings<a class="headerlink" href="#the-uncertainty-of-the-settings" title="Link to this heading">#</a></h1>
-<p><a class="reference internal" href="settings.html"><span class="doc">Fitting the covariance settings</span></a> fits the covariance settings and solves at the fit, which
-treats them as known. The rule: <strong>give each setting a prior, and</strong>
-<a class="reference internal" href="../reference/api/fips.hierarchical.html#fips.hierarchical" title="fips.hierarchical"><code class="xref py py-func docutils literal notranslate"><span class="pre">fips.hierarchical()</span></code></a> <strong>draws the settings from their posterior and the
-state at each of those draws, so intervals read from its draws hold the
-uncertainty of the settings.</strong> The answer is not one Gaussian posterior but a
-mixture of them, one for each draw of the settings, held by a
-<a class="reference internal" href="../reference/api/fips.Hierarchical.html#fips.Hierarchical" title="fips.Hierarchical"><code class="xref py py-class docutils literal notranslate"><span class="pre">Hierarchical</span></code></a>.</p>
+<p>A posterior at fitted settings (<a class="reference internal" href="settings.html"><span class="doc">Fitting the covariance settings</span></a>) treats them as known. <strong>Give
+each setting a prior, and</strong> <a class="reference internal" href="../reference/api/fips.hierarchical.html#fips.hierarchical" title="fips.hierarchical"><code class="xref py py-func docutils literal notranslate"><span class="pre">fips.hierarchical()</span></code></a> <strong>draws the settings
+from their posterior and the state at each of those draws, so the state’s
+intervals hold the uncertainty of the settings too.</strong> The call takes the
+function that builds the problem from the settings, and a prior for each
+setting by name:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">hierarchical</span><span class="p">(</span><span class="n">build</span><span class="p">,</span> <span class="p">{</span><span class="s2">"std"</span><span class="p">:</span> <span class="n">LogNormal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">0.5</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">),</span> <span class="o">...</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>What comes back is a <a class="reference internal" href="../reference/api/fips.Hierarchical.html#fips.Hierarchical" title="fips.Hierarchical"><code class="xref py py-class docutils literal notranslate"><span class="pre">Hierarchical</span></code></a>: the kept draws of the
+settings, and one draw of the state at each. Its estimate is the mean of the
+state’s draws, and its spread and intervals are theirs. It is not a
+<a class="reference internal" href="../reference/api/fips.Posterior.html#fips.Posterior" title="fips.Posterior"><code class="xref py py-class docutils literal notranslate"><span class="pre">Posterior</span></code></a>: the posterior of the state is a mixture of
+Gaussians, one for each draw of the settings, and what is defined only for
+one Gaussian comes from the posterior at one setting,
+<a class="reference internal" href="../reference/api/fips.Hierarchical.at.html#fips.Hierarchical.at" title="fips.Hierarchical.at"><code class="xref py py-meth docutils literal notranslate"><span class="pre">result.at(settings)</span></code></a>.</p>
 <nav class="contents local" id="on-this-page">
 <p class="topic-title">On this page</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="#the-settings-posterior" id="id1">The settings’ posterior</a></p></li>
-<li><p><a class="reference internal" href="#a-world-at-known-settings" id="id2">A world at known settings</a></p></li>
-<li><p><a class="reference internal" href="#totals-with-and-without-the-settings-uncertainty" id="id3">Totals with and without the settings’ uncertainty</a></p></li>
-<li><p><a class="reference internal" href="#few-observations-and-the-fast-path" id="id4">Few observations, and the fast path</a></p></li>
-<li><p><a class="reference internal" href="#what-it-costs-and-what-it-does-not-do" id="id5">What it costs, and what it does not do</a></p></li>
+<li><p><a class="reference internal" href="#when-to-use-it" id="id1">When to use it</a></p></li>
+<li><p><a class="reference internal" href="#an-example" id="id2">An example</a></p></li>
+<li><p><a class="reference internal" href="#reading-the-result" id="id3">Reading the result</a></p></li>
+<li><p><a class="reference internal" href="#the-priors-of-the-settings" id="id4">The priors of the settings</a></p></li>
+<li><p><a class="reference internal" href="#the-fast-path" id="id5">The fast path</a></p></li>
+<li><p><a class="reference internal" href="#options" id="id6">Options</a></p></li>
+<li><p><a class="reference internal" href="#warnings-and-checks" id="id7">Warnings and checks</a></p></li>
+<li><p><a class="reference internal" href="#cost" id="id8">Cost</a></p></li>
+<li><p><a class="reference internal" href="#how-it-works" id="id9">How it works</a></p></li>
+<li><p><a class="reference internal" href="#references" id="id10">References</a></p></li>
 </ul>
 </nav>
-<section id="the-settings-posterior">
-<h2><a class="toc-backref" href="#id1" role="doc-backlink">The settings’ posterior</a><a class="headerlink" href="#the-settings-posterior" title="Link to this heading">#</a></h2>
-<p>With a prior <span class="math notranslate nohighlight">\(p(s)\)</span> on the settings, their posterior is the prior times
-the evidence of the problem built at them (<a class="reference internal" href="../reference/api/fips.Posterior.log_evidence.html#fips.Posterior.log_evidence" title="fips.Posterior.log_evidence"><code class="xref py py-attr docutils literal notranslate"><span class="pre">log_evidence</span></code></a>,
-exact for a linear problem):</p>
-<div class="math notranslate nohighlight">
-\[p(s \mid z) \propto p(s) \, p(z \mid s).\]</div>
-<p>The posterior of the state is the posterior at each setting, averaged over
-the settings’ posterior,</p>
-<div class="math notranslate nohighlight">
-\[p(x \mid z) = \int p(x \mid s, z) \, p(s \mid z) \, ds,\]</div>
-<p>so a draw of the settings from <span class="math notranslate nohighlight">\(p(s \mid z)\)</span>, then of the state from
-<span class="math notranslate nohighlight">\(p(x \mid s, z)\)</span> (exactly, <a class="reference internal" href="../reference/api/fips.Posterior.sample.html#fips.Posterior.sample" title="fips.Posterior.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a>), is a draw
-of <span class="math notranslate nohighlight">\(p(x \mid z)\)</span>. Its variance is</p>
-<div class="math notranslate nohighlight">
-\[\operatorname{var}(x \mid z) = E\big[\hat{S}(s)\big] + \operatorname{var}\big[\hat{x}(s)\big],\]</div>
-<p>over the settings’ posterior: the average of each setting’s posterior
-variance, and the spread of the estimates between settings. A solve at fitted
-settings gives the first term at one setting and leaves out the second.</p>
-<p><a class="reference internal" href="../reference/api/fips.hierarchical.html#fips.hierarchical" title="fips.hierarchical"><code class="xref py py-func docutils literal notranslate"><span class="pre">fips.hierarchical()</span></code></a> draws the settings by a random-walk Metropolis, in
-the log of each positive setting. It starts at the settings’ posterior mode,
-proposes steps from Laplace’s approximation there (the inverse of a numerical
-Hessian of the log posterior), and during the burn-in scales the steps until
-about 0.3 of them are accepted. Each step solves one problem; at each kept
-step it draws the state once, at that step’s settings.</p>
+<section id="when-to-use-it">
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">When to use it</a><a class="headerlink" href="#when-to-use-it" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><strong>Few observations decide the settings, and the answer depends on them.</strong>
+The settings’ uncertainty then widens the state’s intervals. With many
+observations it widens them little, and a fit (<a class="reference internal" href="settings.html"><span class="doc">Fitting the covariance settings</span></a>) is enough;
+<code class="docutils literal notranslate"><span class="pre">result.at(result.mode)</span></code> shows the difference on your own problem.</p></li>
+<li><p><strong>The only settings are a factor on the prior standard deviation and one
+on the observation standard deviation.</strong> Pass the problem itself and take
+<a class="reference internal" href="#the-fast-path">The fast path</a>, which costs about one eigendecomposition for the whole
+run.</p></li>
+<li><p><strong>For one best value of the settings</strong>, maximize the evidence instead
+(<a class="reference internal" href="settings.html"><span class="doc">Fitting the covariance settings</span></a>): it is cheaper, and the posterior at the fit has every
+diagnostic.</p></li>
+<li><p><strong>Not for a problem the analytic method cannot solve</strong> (a forward model,
+bounds, a problem too large to factor): each step needs the exact evidence
+and exact draws of the analytic posterior.</p></li>
+</ul>
 </section>
-<section id="a-world-at-known-settings">
-<h2><a class="toc-backref" href="#id2" role="doc-backlink">A world at known settings</a><a class="headerlink" href="#a-world-at-known-settings" title="Link to this heading">#</a></h2>
-<p>The world of <a class="reference internal" href="settings.html"><span class="doc">Fitting the covariance settings</span></a>: a hundred and fifty cells along a line, 1 km
-apart, two hundred observations of one to four neighboring cells, and a truth
-drawn at a prior std of 1, a correlation length of 5 km and a mismatch std of
-0.5:</p>
+<section id="an-example">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">An example</a><a class="headerlink" href="#an-example" title="Link to this heading">#</a></h2>
+<p>The example of <a class="reference internal" href="settings.html"><span class="doc">Fitting the covariance settings</span></a>: 150 state elements along a line, one unit
+apart, 200 observations of one to four neighboring elements, and
+observations drawn from a world at a prior standard deviation of 1, a
+correlation length of 5 and an observation standard deviation of 0.5.</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [1]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 <span class="gp">In [2]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
-<span class="gp">In [3]: </span><span class="kn">from</span><span class="w"> </span><span class="nn">scipy.special</span><span class="w"> </span><span class="kn">import</span> <span class="n">ndtri</span>
+<span class="gp">In [3]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">fips</span>
 
-<span class="gp">In [4]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">fips</span>
+<span class="gp">In [4]: </span><span class="kn">from</span><span class="w"> </span><span class="nn">fips.distributions</span><span class="w"> </span><span class="kn">import</span> <span class="n">LogNormal</span>
 
 <span class="gp">In [5]: </span><span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 
-<span class="gp">In [6]: </span><span class="n">n_cells</span><span class="p">,</span> <span class="n">n_obs</span> <span class="o">=</span> <span class="mi">150</span><span class="p">,</span> <span class="mi">200</span>
+<span class="gp">In [6]: </span><span class="n">n</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="mi">150</span><span class="p">,</span> <span class="mi">200</span>
 
-<span class="gp">In [7]: </span><span class="n">cells</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"flux"</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_cells</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"x"</span><span class="p">)})</span>  <span class="c1"># km</span>
+<span class="gp">In [7]: </span><span class="n">line</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"field"</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"x"</span><span class="p">)})</span>
 
-<span class="gp">In [8]: </span><span class="n">observed</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"ch4"</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">RangeIndex</span><span class="p">(</span><span class="n">n_obs</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"obs_id"</span><span class="p">)})</span>
+<span class="gp">In [8]: </span><span class="n">observed</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"obs"</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">RangeIndex</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"obs_id"</span><span class="p">)})</span>
 </pre></div>
 </div>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [9]: </span><span class="n">footprint</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_obs</span><span class="p">,</span> <span class="n">n_cells</span><span class="p">))</span>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [9]: </span><span class="n">weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
 
-<span class="gp">In [10]: </span><span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">start</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_cells</span> <span class="o">-</span> <span class="mi">4</span><span class="p">,</span> <span class="n">n_obs</span><span class="p">)):</span>
-<span class="gp">   ....: </span>    <span class="n">footprint</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">start</span> <span class="p">:</span> <span class="n">start</span> <span class="o">+</span> <span class="n">rng</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">)]</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">)</span>
+<span class="gp">In [10]: </span><span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">start</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">4</span><span class="p">,</span> <span class="n">m</span><span class="p">)):</span>
+<span class="gp">   ....: </span>    <span class="n">weights</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">start</span> <span class="p">:</span> <span class="n">start</span> <span class="o">+</span> <span class="n">rng</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">)]</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">)</span>
 <span class="gp">   ....: </span>
 
-<span class="gp">In [11]: </span><span class="n">H</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="n">footprint</span><span class="p">,</span> <span class="n">observed</span><span class="p">,</span> <span class="n">cells</span><span class="p">)</span>
+<span class="gp">In [11]: </span><span class="n">H</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">observed</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
 
-<span class="gp">In [12]: </span><span class="n">prior</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">n_cells</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">),</span> <span class="n">cells</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"prior"</span><span class="p">)</span>
+<span class="gp">In [12]: </span><span class="n">prior</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">),</span> <span class="n">line</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"prior"</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The function from the settings to the problem takes them as a dict, by name:</p>
+<p>The function takes the settings as a dict, by the names their priors have:</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [13]: </span><span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">H</span><span class="o">=</span><span class="n">H</span><span class="p">):</span>
-<span class="gp">   ....: </span><span class="w">    </span><span class="sd">"""The problem at the settings: the prior std, the correlation length (km), the mismatch std."""</span>
+<span class="gp">   ....: </span><span class="w">    </span><span class="sd">"""Return the problem at the settings (prior std, correlation length, observation std)."""</span>
 <span class="gp">   ....: </span>    <span class="k">return</span> <span class="n">fips</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span>
 <span class="gp">   ....: </span>        <span class="n">prior</span><span class="o">=</span><span class="n">prior</span><span class="p">,</span>
 <span class="gp">   ....: </span>        <span class="n">prior_cov</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">(</span><span class="s2">"x"</span><span class="p">,</span> <span class="n">settings</span><span class="p">[</span><span class="s2">"length"</span><span class="p">])</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s2">"std"</span><span class="p">]),</span>
@@ -553,233 +572,292 @@ drawn at a prior std of 1, a correlation length of 5 km and a mismatch std of
 <span class="gp">   ....: </span>    <span class="p">)</span>
 <span class="gp">   ....: </span>
 
-<span class="gp">In [14]: </span><span class="n">true</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">({</span><span class="s2">"std"</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s2">"length"</span><span class="p">:</span> <span class="mf">5.0</span><span class="p">,</span> <span class="s2">"noise"</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">})</span>
+<span class="gp">In [14]: </span><span class="n">true</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"std"</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s2">"length"</span><span class="p">:</span> <span class="mf">5.0</span><span class="p">,</span> <span class="s2">"noise"</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">}</span>
 
-<span class="gp">In [15]: </span><span class="n">world</span> <span class="o">=</span> <span class="n">build</span><span class="p">(</span><span class="n">true</span><span class="p">,</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_obs</span><span class="p">),</span> <span class="n">observed</span><span class="p">))</span>
-
-<span class="gp">In [16]: </span><span class="n">truth</span><span class="p">,</span> <span class="n">obs</span> <span class="o">=</span> <span class="n">world</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span>
+<span class="gp">In [15]: </span><span class="n">truth</span><span class="p">,</span> <span class="n">obs</span> <span class="o">=</span> <span class="n">build</span><span class="p">(</span><span class="n">true</span><span class="p">,</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">m</span><span class="p">),</span> <span class="n">observed</span><span class="p">))</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Each setting gets a prior that knows it to a factor of <span class="math notranslate nohighlight">\(e\)</span> (a
-<a class="reference internal" href="../reference/api/fips.distributions.LogNormal.html#fips.distributions.LogNormal" title="fips.distributions.LogNormal"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogNormal</span></code></a> with a standard deviation of 1 in the log), about a
-guess that is off by a factor of two in the two standard deviations and 2.5 in
-the length. <a class="reference internal" href="../reference/api/fips.distributions.HalfNormal.html#fips.distributions.HalfNormal" title="fips.distributions.HalfNormal"><code class="xref py py-class docutils literal notranslate"><span class="pre">HalfNormal</span></code></a> and
-<a class="reference internal" href="../reference/api/fips.distributions.Uniform.html#fips.distributions.Uniform" title="fips.distributions.Uniform"><code class="xref py py-class docutils literal notranslate"><span class="pre">Uniform</span></code></a> are the other two
-(<a class="reference internal" href="../reference/hierarchical.html#module-fips.distributions" title="fips.distributions"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fips.distributions</span></code></a>).</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [17]: </span><span class="n">priors</span> <span class="o">=</span> <span class="p">{</span>
-<span class="gp">   ....: </span>    <span class="s2">"std"</span><span class="p">:</span> <span class="n">fips</span><span class="o">.</span><span class="n">distributions</span><span class="o">.</span><span class="n">LogNormal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">0.5</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">),</span>
-<span class="gp">   ....: </span>    <span class="s2">"length"</span><span class="p">:</span> <span class="n">fips</span><span class="o">.</span><span class="n">distributions</span><span class="o">.</span><span class="n">LogNormal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">2.0</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">),</span>
-<span class="gp">   ....: </span>    <span class="s2">"noise"</span><span class="p">:</span> <span class="n">fips</span><span class="o">.</span><span class="n">distributions</span><span class="o">.</span><span class="n">LogNormal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">1.0</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">),</span>
+<p>Each setting’s prior is a <a class="reference internal" href="../reference/api/fips.distributions.LogNormal.html#fips.distributions.LogNormal" title="fips.distributions.LogNormal"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogNormal</span></code></a> that knows
+it to a factor of <span class="math notranslate nohighlight">\(e\)</span> (a standard deviation of 1 in its log), centered
+a factor of two or more from the truth:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [16]: </span><span class="n">priors</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">   ....: </span>    <span class="s2">"std"</span><span class="p">:</span> <span class="n">LogNormal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">0.5</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">),</span>
+<span class="gp">   ....: </span>    <span class="s2">"length"</span><span class="p">:</span> <span class="n">LogNormal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">2.0</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">),</span>
+<span class="gp">   ....: </span>    <span class="s2">"noise"</span><span class="p">:</span> <span class="n">LogNormal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">1.0</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">),</span>
 <span class="gp">   ....: </span><span class="p">}</span>
 <span class="gp">   ....: </span>
 
-<span class="gp">In [18]: </span><span class="n">result</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">hierarchical</span><span class="p">(</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">build</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">obs</span><span class="p">),</span> <span class="n">priors</span><span class="p">,</span> <span class="n">draws</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span> <span class="n">burn_in</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">In [17]: </span><span class="n">result</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">hierarchical</span><span class="p">(</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">build</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">obs</span><span class="p">),</span> <span class="n">priors</span><span class="p">,</span> <span class="n">draws</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">burn_in</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
-<span class="gp">In [19]: </span><span class="n">table</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">quantile</span><span class="p">([</span><span class="mf">0.025</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.975</span><span class="p">])</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">set_axis</span><span class="p">([</span><span class="s2">"2.5%"</span><span class="p">,</span> <span class="s2">"median"</span><span class="p">,</span> <span class="s2">"97.5%"</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-
-<span class="gp">In [20]: </span><span class="n">table</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">"true"</span><span class="p">,</span> <span class="n">true</span><span class="p">)</span>
-
-<span class="gp">In [21]: </span><span class="n">table</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="n">result</span><span class="o">.</span><span class="n">mode</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-<span class="gh">Out[21]: </span>
-<span class="go">         true   2.5%  median  97.5%   mode</span>
-<span class="go">setting                                   </span>
-<span class="go">std       1.0  0.789   0.983  1.275  0.965</span>
-<span class="go">length    5.0  1.761   2.811  5.818  2.751</span>
-<span class="go">noise     0.5  0.419   0.483  0.561  0.477</span>
+<span class="gp">In [18]: </span><span class="n">result</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">quantile</span><span class="p">([</span><span class="mf">0.025</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.975</span><span class="p">])</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">true</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">true</span><span class="p">),</span> <span class="n">mode</span><span class="o">=</span><span class="n">result</span><span class="o">.</span><span class="n">mode</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gh">Out[18]: </span>
+<span class="go">         0.025    0.5  0.975  true   mode</span>
+<span class="go">setting                                  </span>
+<span class="go">std      0.784  0.982  1.214   1.0  0.965</span>
+<span class="go">length   1.741  2.793  5.485   5.0  2.751</span>
+<span class="go">noise    0.418  0.481  0.564   0.5  0.477</span>
 </pre></div>
 </div>
-<p>The two standard deviations are known to about 25% and 15% (their 95%
-intervals), each holding the truth. The length is known to a factor of three:
-from 1.8 to 5.8 km, about its median of 2.8 km, the fit <a class="reference internal" href="settings.html"><span class="doc">Fitting the covariance settings</span></a> found.
-<a class="reference internal" href="../reference/api/fips.Hierarchical.mode.html#fips.Hierarchical.mode" title="fips.Hierarchical.mode"><code class="xref py py-attr docutils literal notranslate"><span class="pre">mode</span></code></a> is the settings’ posterior mode, where the
-chain started, close to that fit. The chain’s diagnostics are its acceptance
-and the effective sample size of each setting, about as many independent
-draws as the 2000 correlated ones are worth:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [22]: </span><span class="nb">round</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">acceptance</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">result</span><span class="o">.</span><span class="n">ess</span><span class="o">.</span><span class="n">round</span><span class="p">()</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
-<span class="gh">Out[22]: </span><span class="go">(0.26, {'std': 111.0, 'length': 122.0, 'noise': 199.0})</span>
-</pre></div>
-</div>
-<p>A standard error of a setting’s mean is its standard deviation over the root
-of its effective sample size: here about a tenth of its spread. Ask for more
-draws to make it smaller.</p>
+<p>The two standard deviations are known to within about a fifth, and each
+95% interval holds its truth. The correlation length is known only to a factor of about three,
+as the profile of <a class="reference internal" href="settings.html"><span class="doc">Fitting the covariance settings</span></a> found.</p>
 </section>
-<section id="totals-with-and-without-the-settings-uncertainty">
-<h2><a class="toc-backref" href="#id3" role="doc-backlink">Totals with and without the settings’ uncertainty</a><a class="headerlink" href="#totals-with-and-without-the-settings-uncertainty" title="Link to this heading">#</a></h2>
-<p>The flux of three regions of 50 km each:
-<a class="reference internal" href="../reference/api/fips.Hierarchical.uncertainty.html#fips.Hierarchical.uncertainty" title="fips.Hierarchical.uncertainty"><code class="xref py py-meth docutils literal notranslate"><span class="pre">uncertainty()</span></code></a> reads each total’s mean, standard
-deviation and interval from the draws (here 90%), and
-<a class="reference internal" href="../reference/api/fips.Hierarchical.at.html#fips.Hierarchical.at" title="fips.Hierarchical.at"><code class="xref py py-meth docutils literal notranslate"><span class="pre">at()</span></code></a> gives the ordinary posterior at one setting, the
-mode, whose interval leaves the settings’ uncertainty out:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [23]: </span><span class="n">x</span> <span class="o">=</span> <span class="n">cells</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">"flux"</span><span class="p">)</span>
-
-<span class="gp">In [24]: </span><span class="n">regions</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">select</span><span class="p">([</span><span class="n">x</span> <span class="o">&lt;</span> <span class="mi">50</span><span class="p">,</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="mi">100</span><span class="p">],</span> <span class="p">[</span><span class="s2">"west"</span><span class="p">,</span> <span class="s2">"middle"</span><span class="p">],</span> <span class="s2">"east"</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"region"</span><span class="p">)</span>
-
-<span class="gp">In [25]: </span><span class="n">W</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">aggregate</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">cells</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="n">regions</span><span class="p">)</span>
+<section id="reading-the-result">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Reading the result</a><a class="headerlink" href="#reading-the-result" title="Link to this heading">#</a></h2>
+<p><strong>The settings.</strong> <a class="reference internal" href="../reference/api/fips.Hierarchical.settings.html#fips.Hierarchical.settings" title="fips.Hierarchical.settings"><code class="xref py py-attr docutils literal notranslate"><span class="pre">settings</span></code></a> is the kept draws, one
+row per draw and one column per setting; <a class="reference internal" href="../reference/api/fips.Hierarchical.mode.html#fips.Hierarchical.mode" title="fips.Hierarchical.mode"><code class="xref py py-attr docutils literal notranslate"><span class="pre">mode</span></code></a> is
+the posterior mode in the coordinates the sampler works in (the log of a
+positive setting, the logit of a bounded one), mapped back: close to the fit
+of <a class="reference internal" href="settings.html"><span class="doc">Fitting the covariance settings</span></a>, but not the peak of the settings’ density itself. Two
+numbers say whether the chain can be trusted:
+<a class="reference internal" href="../reference/api/fips.Hierarchical.acceptance.html#fips.Hierarchical.acceptance" title="fips.Hierarchical.acceptance"><code class="xref py py-attr docutils literal notranslate"><span class="pre">acceptance</span></code></a>, the fraction of proposals accepted
+(near 0.3 when the proposal is tuned), and <a class="reference internal" href="../reference/api/fips.Hierarchical.ess.html#fips.Hierarchical.ess" title="fips.Hierarchical.ess"><code class="xref py py-attr docutils literal notranslate"><span class="pre">ess</span></code></a>,
+each setting’s effective sample size: about as many independent draws as the
+correlated ones are worth.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [19]: </span><span class="nb">round</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">acceptance</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">result</span><span class="o">.</span><span class="n">ess</span><span class="o">.</span><span class="n">round</span><span class="p">()</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+<span class="gh">Out[19]: </span><span class="go">(0.31, {'std': 79.0, 'length': 61.0, 'noise': 102.0})</span>
 </pre></div>
 </div>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [26]: </span><span class="k">def</span><span class="w"> </span><span class="nf">intervals</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">truth</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="mf">0.9</span><span class="p">):</span>
-<span class="gp">   ....: </span><span class="w">    </span><span class="sd">"""Each region's truth, and its interval with the settings' uncertainty and at their mode."""</span>
-<span class="gp">   ....: </span>    <span class="n">mixed</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">uncertainty</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">level</span><span class="p">)</span>
-<span class="gp">   ....: </span>    <span class="n">at_mode</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">mode</span><span class="p">)</span>
-<span class="gp">   ....: </span>    <span class="n">estimate</span> <span class="o">=</span> <span class="p">(</span><span class="n">W</span> <span class="o">@</span> <span class="n">at_mode</span><span class="o">.</span><span class="n">estimate</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
-<span class="gp">   ....: </span>    <span class="n">std</span> <span class="o">=</span> <span class="n">at_mode</span><span class="o">.</span><span class="n">uncertainty</span><span class="p">(</span><span class="n">W</span><span class="p">)[</span><span class="s2">"posterior_std"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
-<span class="gp">   ....: </span>    <span class="n">half</span> <span class="o">=</span> <span class="n">ndtri</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">+</span> <span class="n">level</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">std</span>
-<span class="gp">   ....: </span>    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
-<span class="gp">   ....: </span>        <span class="p">{</span>
-<span class="gp">   ....: </span>            <span class="s2">"truth"</span><span class="p">:</span> <span class="p">(</span><span class="n">W</span> <span class="o">@</span> <span class="n">truth</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
-<span class="gp">   ....: </span>            <span class="s2">"std"</span><span class="p">:</span> <span class="n">mixed</span><span class="p">[</span><span class="s2">"posterior_std"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
-<span class="gp">   ....: </span>            <span class="s2">"lower"</span><span class="p">:</span> <span class="n">mixed</span><span class="p">[</span><span class="s2">"lower"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
-<span class="gp">   ....: </span>            <span class="s2">"upper"</span><span class="p">:</span> <span class="n">mixed</span><span class="p">[</span><span class="s2">"upper"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
-<span class="gp">   ....: </span>            <span class="s2">"std_at_mode"</span><span class="p">:</span> <span class="n">std</span><span class="p">,</span>
-<span class="gp">   ....: </span>            <span class="s2">"lower_at_mode"</span><span class="p">:</span> <span class="n">estimate</span> <span class="o">-</span> <span class="n">half</span><span class="p">,</span>
-<span class="gp">   ....: </span>            <span class="s2">"upper_at_mode"</span><span class="p">:</span> <span class="n">estimate</span> <span class="o">+</span> <span class="n">half</span><span class="p">,</span>
-<span class="gp">   ....: </span>        <span class="p">},</span>
-<span class="gp">   ....: </span>        <span class="n">index</span><span class="o">=</span><span class="n">W</span><span class="o">.</span><span class="n">rows</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="s2">"region"</span><span class="p">),</span>
-<span class="gp">   ....: </span>    <span class="p">)</span>
+<p>A setting’s mean is known to its standard deviation over the root of its
+effective sample size. For a smaller error, ask for more <code class="docutils literal notranslate"><span class="pre">draws</span></code>.</p>
+<p><strong>The state.</strong> <a class="reference internal" href="../reference/api/fips.Hierarchical.estimate.html#fips.Hierarchical.estimate" title="fips.Hierarchical.estimate"><code class="xref py py-attr docutils literal notranslate"><span class="pre">estimate</span></code></a>,
+<a class="reference internal" href="../reference/api/fips.Hierarchical.variances.html#fips.Hierarchical.variances" title="fips.Hierarchical.variances"><code class="xref py py-attr docutils literal notranslate"><span class="pre">variances</span></code></a>, <a class="reference internal" href="../reference/api/fips.Hierarchical.cov.html#fips.Hierarchical.cov" title="fips.Hierarchical.cov"><code class="xref py py-meth docutils literal notranslate"><span class="pre">cov()</span></code></a>,
+<a class="reference internal" href="../reference/api/fips.Hierarchical.uncertainty.html#fips.Hierarchical.uncertainty" title="fips.Hierarchical.uncertainty"><code class="xref py py-meth docutils literal notranslate"><span class="pre">uncertainty()</span></code></a> and <a class="reference internal" href="../reference/api/fips.Hierarchical.sample.html#fips.Hierarchical.sample" title="fips.Hierarchical.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a>
+read the state, or its aggregates with <code class="docutils literal notranslate"><span class="pre">W</span></code>, from the draws, as a
+<a class="reference internal" href="../reference/api/fips.Posterior.html#fips.Posterior" title="fips.Posterior"><code class="xref py py-class docutils literal notranslate"><span class="pre">Posterior</span></code></a>’s members of the same names do. The intervals are the
+draws’ quantiles, and <code class="docutils literal notranslate"><span class="pre">uncertainty</span></code> has no prior columns: the prior of the
+state depends on the settings.</p>
+<p><strong>One setting.</strong> <a class="reference internal" href="../reference/api/fips.Hierarchical.at.html#fips.Hierarchical.at" title="fips.Hierarchical.at"><code class="xref py py-meth docutils literal notranslate"><span class="pre">at()</span></code></a> gives the ordinary posterior
+at one value of every setting: the gain, DOFS, the chi-squared tests, the
+evidence. At the mode, its intervals are those of a fit, which leave the
+settings’ uncertainty out. Here, the sum over each third of the line, with
+and without the settings’ uncertainty:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [20]: </span><span class="n">x</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">"field"</span><span class="p">)</span>
+
+<span class="gp">In [21]: </span><span class="n">parts</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">select</span><span class="p">([</span><span class="n">x</span> <span class="o">&lt;</span> <span class="mi">50</span><span class="p">,</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="mi">100</span><span class="p">],</span> <span class="p">[</span><span class="s2">"left"</span><span class="p">,</span> <span class="s2">"middle"</span><span class="p">],</span> <span class="s2">"right"</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"part"</span><span class="p">)</span>
+
+<span class="gp">In [22]: </span><span class="n">W</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">aggregate</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="n">parts</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [23]: </span><span class="k">def</span><span class="w"> </span><span class="nf">compare</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">truth</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="mf">0.9</span><span class="p">):</span>
+<span class="gp">   ....: </span><span class="w">    </span><span class="sd">"""Each aggregate's truth, and its interval with the settings' uncertainty and at their mode."""</span>
+<span class="gp">   ....: </span>    <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"posterior_std"</span><span class="p">,</span> <span class="s2">"lower"</span><span class="p">,</span> <span class="s2">"upper"</span><span class="p">]</span>
+<span class="gp">   ....: </span>    <span class="n">with_settings</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">uncertainty</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">level</span><span class="p">)[</span><span class="n">columns</span><span class="p">]</span>
+<span class="gp">   ....: </span>    <span class="n">at_mode</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">mode</span><span class="p">)</span><span class="o">.</span><span class="n">uncertainty</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">level</span><span class="p">)[</span><span class="n">columns</span><span class="p">]</span>
+<span class="gp">   ....: </span>    <span class="n">true_value</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">""</span><span class="p">:</span> <span class="p">(</span><span class="n">W</span> <span class="o">@</span> <span class="n">truth</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">},</span> <span class="n">index</span><span class="o">=</span><span class="n">with_settings</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+<span class="gp">   ....: </span>    <span class="n">table</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">({</span><span class="s2">"with settings"</span><span class="p">:</span> <span class="n">with_settings</span><span class="p">,</span> <span class="s2">"at mode"</span><span class="p">:</span> <span class="n">at_mode</span><span class="p">,</span> <span class="s2">"truth"</span><span class="p">:</span> <span class="n">true_value</span><span class="p">},</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">   ....: </span>    <span class="k">return</span> <span class="n">table</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="s2">"block"</span><span class="p">)</span>
 <span class="gp">   ....: </span>
 
-<span class="gp">In [27]: </span><span class="n">intervals</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">truth</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
-<span class="gh">Out[27]: </span>
-<span class="go">         truth   std   lower   upper  std_at_mode  lower_at_mode  upper_at_mode</span>
-<span class="go">region                                                                         </span>
-<span class="go">east    109.10  1.98  106.68  113.30         1.95         106.80         113.20</span>
-<span class="go">middle  101.74  1.97   98.07  104.42         1.95          98.15         104.55</span>
-<span class="go">west    112.52  1.57  110.62  115.69         1.58         110.66         115.87</span>
+<span class="gp">In [24]: </span><span class="n">compare</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">truth</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gh">Out[24]: </span>
+<span class="go">       with settings                       at mode                   truth</span>
+<span class="go">       posterior_std   lower   upper posterior_std   lower   upper        </span>
+<span class="go">part                                                                      </span>
+<span class="go">left            1.61  110.45  115.71          1.58  110.66  115.87  112.52</span>
+<span class="go">middle          1.97   98.15  104.46          1.95   98.15  104.55  101.74</span>
+<span class="go">right           1.96  106.69  113.08          1.95  106.80  113.20  109.10</span>
 </pre></div>
 </div>
-<p>The two agree to about 2%: two hundred observations pin these totals, and the
-length, the setting known least, moves how a total splits between its cells
-more than the total itself (the prior std of each region’s total is 15.7; the
-posterior’s is under 2).</p>
+<p>The two agree closely: two hundred observations decide these aggregates, and
+the correlation length, the setting known least, moves how an aggregate
+splits among its elements more than the aggregate itself.</p>
 </section>
-<section id="few-observations-and-the-fast-path">
-<h2><a class="toc-backref" href="#id4" role="doc-backlink">Few observations, and the fast path</a><a class="headerlink" href="#few-observations-and-the-fast-path" title="Link to this heading">#</a></h2>
-<p>The settings’ uncertainty matters when few observations decide them. Fifteen
-observations, all in the western two regions:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [28]: </span><span class="n">few</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"ch4"</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">RangeIndex</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"obs_id"</span><span class="p">)})</span>
+<section id="the-priors-of-the-settings">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">The priors of the settings</a><a class="headerlink" href="#the-priors-of-the-settings" title="Link to this heading">#</a></h2>
+<p>A setting’s prior is one of the three distributions of
+<a class="reference internal" href="../reference/hierarchical.html#module-fips.distributions" title="fips.distributions"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fips.distributions</span></code></a>:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../reference/api/fips.distributions.LogNormal.html#fips.distributions.LogNormal" title="fips.distributions.LogNormal"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogNormal</span></code></a> <code class="docutils literal notranslate"><span class="pre">(mu,</span> <span class="pre">sigma)</span></code>: a positive setting
+known to a factor, with median <span class="math notranslate nohighlight">\(e^{\mu}\)</span>. The usual choice for a
+standard deviation or a correlation length.</p></li>
+<li><p><a class="reference internal" href="../reference/api/fips.distributions.HalfNormal.html#fips.distributions.HalfNormal" title="fips.distributions.HalfNormal"><code class="xref py py-class docutils literal notranslate"><span class="pre">HalfNormal</span></code></a> <code class="docutils literal notranslate"><span class="pre">(scale)</span></code>: a positive setting that
+may be near zero.</p></li>
+<li><p><a class="reference internal" href="../reference/api/fips.distributions.Uniform.html#fips.distributions.Uniform" title="fips.distributions.Uniform"><code class="xref py py-class docutils literal notranslate"><span class="pre">Uniform</span></code></a> <code class="docutils literal notranslate"><span class="pre">(low,</span> <span class="pre">high)</span></code>: a setting known only
+to lie in an interval.</p></li>
+</ul>
+<p>The search for the settings’ mode starts at the priors’ medians. <strong>A prior on
+a setting is a claim like any other, and the intervals are only as good as
+it.</strong> A prior centered far from the truth pulls the settings toward it, and
+with few observations the data do not undo all of the pull.</p>
+</section>
+<section id="the-fast-path">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">The fast path</a><a class="headerlink" href="#the-fast-path" title="Link to this heading">#</a></h2>
+<p>When the only settings are a factor on the prior standard deviation and one
+on the observation standard deviation, pass the problem built at factors of
+1 instead of a function, and name the settings:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;prior_scale&quot;</span></code>: the prior standard deviation is multiplied by it;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;obs_scale&quot;</span></code>: the observation standard deviation is multiplied by it;
+or <code class="docutils literal notranslate"><span class="pre">&quot;gamma&quot;</span></code> in its place: the observation covariance is divided by it.</p></li>
+</ul>
+<p>One eigendecomposition then gives the evidence at every step without a
+solve, and the state’s draws at every kept step in one product, whatever the
+size of the problem.</p>
+<p>Fast or not, <strong>the settings’ uncertainty matters most when few observations
+decide them.</strong> Fifteen observations, all in the left two thirds of the line,
+with the correlation length held at 5:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [25]: </span><span class="n">few</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"obs"</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">RangeIndex</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"obs_id"</span><span class="p">)})</span>
 
-<span class="gp">In [29]: </span><span class="n">sparse</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">15</span><span class="p">,</span> <span class="n">n_cells</span><span class="p">))</span>
+<span class="gp">In [26]: </span><span class="n">sparse</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">15</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
 
-<span class="gp">In [30]: </span><span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">start</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">96</span><span class="p">,</span> <span class="mi">15</span><span class="p">)):</span>
+<span class="gp">In [27]: </span><span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">start</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">96</span><span class="p">,</span> <span class="mi">15</span><span class="p">)):</span>
 <span class="gp">   ....: </span>    <span class="n">sparse</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">start</span> <span class="p">:</span> <span class="n">start</span> <span class="o">+</span> <span class="n">rng</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">)]</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">)</span>
 <span class="gp">   ....: </span>
 
-<span class="gp">In [31]: </span><span class="n">H_few</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="n">sparse</span><span class="p">,</span> <span class="n">few</span><span class="p">,</span> <span class="n">cells</span><span class="p">)</span>
+<span class="gp">In [28]: </span><span class="n">H_few</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="n">sparse</span><span class="p">,</span> <span class="n">few</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
 
-<span class="gp">In [32]: </span><span class="n">few_world</span> <span class="o">=</span> <span class="n">build</span><span class="p">(</span><span class="n">true</span><span class="p">,</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">15</span><span class="p">),</span> <span class="n">few</span><span class="p">),</span> <span class="n">H</span><span class="o">=</span><span class="n">H_few</span><span class="p">)</span>
-
-<span class="gp">In [33]: </span><span class="n">truth_few</span><span class="p">,</span> <span class="n">obs_few</span> <span class="o">=</span> <span class="n">few_world</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span>
+<span class="gp">In [29]: </span><span class="n">truth_few</span><span class="p">,</span> <span class="n">obs_few</span> <span class="o">=</span> <span class="n">build</span><span class="p">(</span><span class="n">true</span><span class="p">,</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">15</span><span class="p">),</span> <span class="n">few</span><span class="p">),</span> <span class="n">H</span><span class="o">=</span><span class="n">H_few</span><span class="p">)</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Here the length is held at its true 5 km and the two standard deviations are
-the settings. When the only settings are a factor on the prior std and one on
-the mismatch’s, pass the problem at factors of 1 instead of a function, and
-name them <code class="docutils literal notranslate"><span class="pre">&quot;prior_scale&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;obs_scale&quot;</span></code> (or <code class="docutils literal notranslate"><span class="pre">&quot;gamma&quot;</span></code>): one
-eigendecomposition then gives the evidence at every step without a solve, and
-the state’s draws at every kept step in one product. This run of 2500 steps
-takes about a tenth of a second, where the function would take a solve each:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [34]: </span><span class="n">unit</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"std"</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s2">"length"</span><span class="p">:</span> <span class="mf">5.0</span><span class="p">,</span> <span class="s2">"noise"</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">}</span>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [30]: </span><span class="n">unit</span> <span class="o">=</span> <span class="n">build</span><span class="p">({</span><span class="s2">"std"</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s2">"length"</span><span class="p">:</span> <span class="mf">5.0</span><span class="p">,</span> <span class="s2">"noise"</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">},</span> <span class="n">obs_few</span><span class="p">,</span> <span class="n">H</span><span class="o">=</span><span class="n">H_few</span><span class="p">)</span>
 
-<span class="gp">In [35]: </span><span class="n">scales</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"prior_scale"</span><span class="p">:</span> <span class="n">fips</span><span class="o">.</span><span class="n">distributions</span><span class="o">.</span><span class="n">LogNormal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">0.5</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">),</span> <span class="s2">"obs_scale"</span><span class="p">:</span> <span class="n">fips</span><span class="o">.</span><span class="n">distributions</span><span class="o">.</span><span class="n">LogNormal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)}</span>
+<span class="gp">In [31]: </span><span class="n">scales</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"prior_scale"</span><span class="p">:</span> <span class="n">LogNormal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">0.5</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">),</span> <span class="s2">"obs_scale"</span><span class="p">:</span> <span class="n">LogNormal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)}</span>
 
-<span class="gp">In [36]: </span><span class="n">fast</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">hierarchical</span><span class="p">(</span><span class="n">build</span><span class="p">(</span><span class="n">unit</span><span class="p">,</span> <span class="n">obs_few</span><span class="p">,</span> <span class="n">H</span><span class="o">=</span><span class="n">H_few</span><span class="p">),</span> <span class="n">scales</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">In [32]: </span><span class="n">fast</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">hierarchical</span><span class="p">(</span><span class="n">unit</span><span class="p">,</span> <span class="n">scales</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
-<span class="gp">In [37]: </span><span class="n">fast</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">quantile</span><span class="p">([</span><span class="mf">0.025</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.975</span><span class="p">])</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-<span class="gh">Out[37]: </span>
+<span class="gp">In [33]: </span><span class="n">fast</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">quantile</span><span class="p">([</span><span class="mf">0.025</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.975</span><span class="p">])</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gh">Out[33]: </span>
 <span class="go">setting  prior_scale  obs_scale</span>
 <span class="go">0.025          0.556      0.239</span>
 <span class="go">0.500          0.897      0.563</span>
 <span class="go">0.975          1.575      1.468</span>
 
-<span class="gp">In [38]: </span><span class="n">intervals</span><span class="p">(</span><span class="n">fast</span><span class="p">,</span> <span class="n">truth_few</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
-<span class="gh">Out[38]: </span>
-<span class="go">         truth    std  lower   upper  std_at_mode  lower_at_mode  upper_at_mode</span>
-<span class="go">region                                                                         </span>
-<span class="go">east     81.72  20.48  68.73  135.50        19.68          69.35         134.08</span>
-<span class="go">middle  108.50  10.85  97.83  132.99        10.36          98.15         132.23</span>
-<span class="go">west     74.70  13.27  63.47  106.72        12.16          63.54         103.54</span>
+<span class="gp">In [34]: </span><span class="n">compare</span><span class="p">(</span><span class="n">fast</span><span class="p">,</span> <span class="n">truth_few</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gh">Out[34]: </span>
+<span class="go">       with settings                      at mode                  truth</span>
+<span class="go">       posterior_std  lower   upper posterior_std  lower   upper        </span>
+<span class="go">part                                                                    </span>
+<span class="go">left           13.27  63.47  106.72         12.16  63.54  103.54   74.70</span>
+<span class="go">middle         10.85  97.83  132.99         10.36  98.15  132.23  108.50</span>
+<span class="go">right          20.48  68.73  135.50         19.68  69.35  134.08   81.72</span>
 </pre></div>
 </div>
-<p>Each standard deviation is now known to a factor of three to six, and the
-totals’ standard deviations with their uncertainty are 4% to 9% larger. Whether that is enough
-is a question of coverage: over worlds, how often each interval holds the
-true total. First in worlds at the true settings, then in worlds whose
-settings are drawn from their priors, 200 of each:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [39]: </span><span class="k">def</span><span class="w"> </span><span class="nf">coverage</span><span class="p">(</span><span class="n">make_world</span><span class="p">,</span> <span class="n">trials</span><span class="o">=</span><span class="mi">200</span><span class="p">):</span>
-<span class="gp">   ....: </span><span class="w">    </span><span class="sd">"""The fraction of worlds whose 90% interval holds each region's true total."""</span>
-<span class="gp">   ....: </span>    <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="gp">   ....: </span>    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">trials</span><span class="p">):</span>
-<span class="gp">   ....: </span>        <span class="n">truth_k</span><span class="p">,</span> <span class="n">obs_k</span> <span class="o">=</span> <span class="n">make_world</span><span class="p">()</span>
-<span class="gp">   ....: </span>        <span class="n">table</span> <span class="o">=</span> <span class="n">intervals</span><span class="p">(</span><span class="n">fips</span><span class="o">.</span><span class="n">hierarchical</span><span class="p">(</span><span class="n">build</span><span class="p">(</span><span class="n">unit</span><span class="p">,</span> <span class="n">obs_k</span><span class="p">,</span> <span class="n">H</span><span class="o">=</span><span class="n">H_few</span><span class="p">),</span> <span class="n">scales</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">k</span><span class="p">),</span> <span class="n">truth_k</span><span class="p">)</span>
-<span class="gp">   ....: </span>        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="gp">   ....: </span>            <span class="s2">"with"</span><span class="p">:</span> <span class="n">table</span><span class="p">[</span><span class="s2">"lower"</span><span class="p">]</span><span class="o">.</span><span class="n">le</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="s2">"truth"</span><span class="p">])</span> <span class="o">&amp;</span> <span class="n">table</span><span class="p">[</span><span class="s2">"truth"</span><span class="p">]</span><span class="o">.</span><span class="n">le</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="s2">"upper"</span><span class="p">]),</span>
-<span class="gp">   ....: </span>            <span class="s2">"without"</span><span class="p">:</span> <span class="n">table</span><span class="p">[</span><span class="s2">"lower_at_mode"</span><span class="p">]</span><span class="o">.</span><span class="n">le</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="s2">"truth"</span><span class="p">])</span> <span class="o">&amp;</span> <span class="n">table</span><span class="p">[</span><span class="s2">"truth"</span><span class="p">]</span><span class="o">.</span><span class="n">le</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="s2">"upper_at_mode"</span><span class="p">]),</span>
-<span class="gp">   ....: </span>        <span class="p">}))</span>
-<span class="gp">   ....: </span>    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="s2">"region"</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-<span class="gp">   ....: </span>
-</pre></div>
-</div>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [40]: </span><span class="n">coverage</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">few_world</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="n">rng</span><span class="p">))</span>
-<span class="gh">Out[40]: </span>
-<span class="go">         with  without</span>
-<span class="go">region                </span>
-<span class="go">east    0.845    0.825</span>
-<span class="go">middle  0.860    0.835</span>
-<span class="go">west    0.885    0.845</span>
-</pre></div>
-</div>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [41]: </span><span class="k">def</span><span class="w"> </span><span class="nf">from_priors</span><span class="p">():</span>
-<span class="gp">   ....: </span><span class="w">    </span><span class="sd">"""A world whose two standard deviations are drawn from their priors."""</span>
-<span class="gp">   ....: </span>    <span class="n">std</span><span class="p">,</span> <span class="n">noise</span> <span class="o">=</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">scales</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">rng</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"prior_scale"</span><span class="p">,</span> <span class="s2">"obs_scale"</span><span class="p">))</span>
-<span class="gp">   ....: </span>    <span class="n">world_k</span> <span class="o">=</span> <span class="n">build</span><span class="p">({</span><span class="s2">"std"</span><span class="p">:</span> <span class="n">std</span><span class="p">,</span> <span class="s2">"length"</span><span class="p">:</span> <span class="mf">5.0</span><span class="p">,</span> <span class="s2">"noise"</span><span class="p">:</span> <span class="n">noise</span><span class="p">},</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">15</span><span class="p">),</span> <span class="n">few</span><span class="p">),</span> <span class="n">H</span><span class="o">=</span><span class="n">H_few</span><span class="p">)</span>
-<span class="gp">   ....: </span>    <span class="k">return</span> <span class="n">world_k</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span>
-<span class="gp">   ....: </span>
-
-<span class="gp">In [42]: </span><span class="n">coverage</span><span class="p">(</span><span class="n">from_priors</span><span class="p">)</span>
-<span class="gh">Out[42]: </span>
-<span class="go">         with  without</span>
-<span class="go">region                </span>
-<span class="go">east    0.935    0.885</span>
-<span class="go">middle  0.895    0.875</span>
-<span class="go">west    0.890    0.850</span>
-</pre></div>
-</div>
-<p>With 200 worlds a coverage is known to about 0.02. In the worlds drawn from
-the priors, the intervals with the settings’ uncertainty cover at their level,
-89% to 93.5%, as a posterior must on average over its own prior; those at the
-mode cover 85% to 89%. At the true settings both cover less, 84.5% to 88.5%
-with the uncertainty and 82.5% to 84.5% without: there the priors pull each
-standard deviation towards their median, the prior std’s (0.5) below the
-truth and the mismatch std’s (1) above it, and fifteen observations do not
-undo all of the pull. With the prior std’s prior median at the truth instead,
-the same worlds cover 87% to 91.5% with the uncertainty (a run not on this
-page). A prior on the settings is a claim like any other, and the intervals
-are only as good as it.</p>
+<p>Here each standard deviation is known only to a factor of several, and the
+intervals with the settings’ uncertainty are wider than those at the mode.
+Over many such worlds whose settings are drawn from their priors, the
+intervals with the settings’ uncertainty hold the truth about as often as
+they claim, and those at the mode less often.</p>
 </section>
-<section id="what-it-costs-and-what-it-does-not-do">
-<h2><a class="toc-backref" href="#id5" role="doc-backlink">What it costs, and what it does not do</a><a class="headerlink" href="#what-it-costs-and-what-it-does-not-do" title="Link to this heading">#</a></h2>
-<p>A step of the general path is a solve of the problem the function builds
-(here 4 ms for 150 cells and 200 observations, so the 2500 steps above took
-about 12 s), and the search for the mode and its Hessian about sixty more. A step of the
-fast path is <span class="math notranslate nohighlight">\(O(m)\)</span> (or <span class="math notranslate nohighlight">\(O(n)\)</span>, whichever is smaller) after one
-eigendecomposition, whatever the size of the problem. The draws of the state
-are kept, a <code class="docutils literal notranslate"><span class="pre">state</span> <span class="pre">x</span> <span class="pre">draws</span></code> array: 2000 draws of 30,000 cells are 480 MB.
-The settings’ estimates have Monte Carlo errors that
-<a class="reference internal" href="../reference/api/fips.Hierarchical.ess.html#fips.Hierarchical.ess" title="fips.Hierarchical.ess"><code class="xref py py-attr docutils literal notranslate"><span class="pre">ess</span></code></a> measures; four hundred effective draws give a
-setting’s mean to a twentieth of its spread.</p>
-<p>The posterior of the state is a mixture, so what is defined for one Gaussian
-(the gain, DOFS, the chi-squared tests, the evidence) is read from the
-posterior at one setting, <code class="docutils literal notranslate"><span class="pre">result.at(settings)</span></code>. The method is the analytic
-one: a function that returns a <code class="docutils literal notranslate"><span class="pre">&quot;bounded&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code> posterior
-is refused, since neither gives the exact evidence and exact draws each step
-needs.</p>
+<section id="options">
+<h2><a class="toc-backref" href="#id6" role="doc-backlink">Options</a><a class="headerlink" href="#options" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 18.0%" />
+<col style="width: 18.0%" />
+<col style="width: 64.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>What it does</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">build</span></code></p></td>
+<td><p>(required)</p></td>
+<td><p>The function from a dict of settings to the <a class="reference internal" href="../reference/api/fips.Problem.html#fips.Problem" title="fips.Problem"><code class="xref py py-class docutils literal notranslate"><span class="pre">Problem</span></code></a>, or
+to its analytic posterior (<code class="docutils literal notranslate"><span class="pre">fips.solve(problem,</span> <span class="pre">gamma=s[&quot;gamma&quot;])</span></code>
+makes gamma a setting). Or the problem itself, for the fast path.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">settings</span></code></p></td>
+<td><p>(required)</p></td>
+<td><p>The prior of each setting, by the name <code class="docutils literal notranslate"><span class="pre">build</span></code> reads it by. Their
+order is the order of the columns of <code class="docutils literal notranslate"><span class="pre">result.settings</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">draws</span></code></p></td>
+<td><p>2000</p></td>
+<td><p>The kept steps of the chain, each with one draw of the state.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">burn_in</span></code></p></td>
+<td><p>500</p></td>
+<td><p>The steps before them, which tune the proposal and are not kept.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">seed</span></code></p></td>
+<td><p>0</p></td>
+<td><p>The seed of the chain and of the state’s draws (an integer), so a run
+is reproducible. The two have their own streams: the chain is the same
+whatever the state’s draws are.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="warnings-and-checks">
+<h2><a class="toc-backref" href="#id7" role="doc-backlink">Warnings and checks</a><a class="headerlink" href="#warnings-and-checks" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><strong>The log posterior does not curve down in some direction at the mode</strong>
+(a warning): the data and the prior hardly decide a setting, or a
+combination of them. The proposal takes a variance of 1 there and the
+burn-in scales it, but the chain may be slow: look at the effective sample
+sizes, and give that setting a narrower prior or hold it fixed.</p></li>
+<li><p><strong>A low acceptance or a small effective sample size</strong>: run more <code class="docutils literal notranslate"><span class="pre">draws</span></code>
+or a longer <code class="docutils literal notranslate"><span class="pre">burn_in</span></code>. An <code class="docutils literal notranslate"><span class="pre">INFO</span></code> record gives both at the end of each
+run, and another says when the search for the mode stopped early.</p></li>
+<li><p><strong>A problem that does not solve at some settings</strong> (a covariance that is
+not positive definite) has no density there, and the chain does not step
+to it. At the priors’ medians it raises a <a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ValueError</span></code></a>, because the
+search for the mode starts there.</p></li>
+<li><p><strong>A function that returns a posterior of another method</strong> raises a
+<a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#TypeError" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeError</span></code></a>: return the problem, or its analytic posterior. A prior
+that is not one of <a class="reference internal" href="../reference/hierarchical.html#module-fips.distributions" title="fips.distributions"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fips.distributions</span></code></a> raises a <a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#TypeError" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeError</span></code></a>.</p></li>
+<li><p><strong>The fast path takes only its three names</strong>, and only one of
+<code class="docutils literal notranslate"><span class="pre">&quot;obs_scale&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;gamma&quot;</span></code>; any other raises a <a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ValueError</span></code></a>.
+For other settings, pass a function.</p></li>
+</ul>
+</section>
+<section id="cost">
+<h2><a class="toc-backref" href="#id8" role="doc-backlink">Cost</a><a class="headerlink" href="#cost" title="Link to this heading">#</a></h2>
+<p>A step of the chain is one solve of the problem the function builds, so a
+run costs <code class="docutils literal notranslate"><span class="pre">burn_in</span> <span class="pre">+</span> <span class="pre">draws</span></code> solves, plus a few dozen for the search for the
+mode and its Hessian (more with more settings). A step of the fast path
+costs a sum over the smaller of the number of observations and the number of
+state elements, after one eigendecomposition. The draws of the state are kept
+as a <code class="docutils literal notranslate"><span class="pre">state</span> <span class="pre">x</span> <span class="pre">draws</span></code> array: 2000 draws of 30,000 elements take 480 MB, so
+for a large state ask for fewer draws, or keep the aggregates you need.</p>
+</section>
+<section id="how-it-works">
+<h2><a class="toc-backref" href="#id9" role="doc-backlink">How it works</a><a class="headerlink" href="#how-it-works" title="Link to this heading">#</a></h2>
+<p>With a prior <span class="math notranslate nohighlight">\(p(s)\)</span> on the settings, their posterior is the prior times
+the evidence of the problem built at them (<a class="reference internal" href="settings.html#settings-evidence"><span class="std std-ref">the evidence</span></a>,
+exact for a linear problem):</p>
+<div class="math notranslate nohighlight">
+\[p(s \mid z) \propto p(s) \, p(z \mid s).\]</div>
+<p>The posterior of the state is the posterior at each setting, averaged over
+the settings’ posterior,</p>
+<div class="math notranslate nohighlight">
+\[p(x \mid z) = \int p(x \mid s, z) \, p(s \mid z) \, ds,\]</div>
+<p>so a draw of the settings from <span class="math notranslate nohighlight">\(p(s \mid z)\)</span>, then of the state from
+<span class="math notranslate nohighlight">\(p(x \mid s, z)\)</span> (exactly, as <a class="reference internal" href="../reference/api/fips.Posterior.sample.html#fips.Posterior.sample" title="fips.Posterior.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a> draws it),
+is a draw of <span class="math notranslate nohighlight">\(p(x \mid z)\)</span>. Its variance is</p>
+<div class="math notranslate nohighlight">
+\[\operatorname{var}(x \mid z) = E\big[\hat{S}(s)\big] + \operatorname{var}\big[\hat{x}(s)\big]\]</div>
+<p>over the settings’ posterior: the average of each setting’s posterior
+variance, and the spread of the estimates between settings. A solve at
+fitted settings gives the first term at one setting and leaves out the
+second.</p>
+<p>The settings are drawn by a random-walk Metropolis in unbounded coordinates:
+the log of a positive setting, the logit of a setting on an interval. The
+chain starts at the settings’ posterior mode, found by L-BFGS-B from the
+priors’ medians. It proposes steps from Laplace’s approximation there (the
+inverse of a numerical Hessian of the log posterior), and during the burn-in
+scales them toward an acceptance of 0.3 (Gelman, Roberts and Gilks, 1996);
+the scale is fixed after, so the kept steps are a Markov chain of the exact
+posterior. At each kept step it draws the state once, at that step’s
+settings. The effective sample size is Geyer’s (1992) initial monotone
+sequence.</p>
+<p>On the fast path, with <span class="math notranslate nohighlight">\(s\)</span> the prior scale, <span class="math notranslate nohighlight">\(o\)</span> the observation
+scale and <span class="math notranslate nohighlight">\(c = o^2 / \gamma\)</span>, the innovation covariance is <span class="math notranslate nohighlight">\(s^2 H S_0
+H^T + c S_z = s^2 (H S_0 H^T + S_z / \gamma')\)</span> with <span class="math notranslate nohighlight">\(\gamma' = s^2 /
+c\)</span>. The evidence at every <span class="math notranslate nohighlight">\((s, c)\)</span> is the problem’s at gamma
+<span class="math notranslate nohighlight">\(\gamma'\)</span>, rescaled, and one eigendecomposition gives it at every gamma.</p>
+</section>
 <section id="references">
-<h3>References<a class="headerlink" href="#references" title="Link to this heading">#</a></h3>
+<h2><a class="toc-backref" href="#id10" role="doc-backlink">References</a><a class="headerlink" href="#references" title="Link to this heading">#</a></h2>
 <p>Gelman, A., Roberts, G. O., and Gilks, W. R. (1996). Efficient Metropolis
 jumping rules. <em>Bayesian Statistics 5</em>, 599-607.</p>
 <p>Geyer, C. J. (1992). Practical Markov chain Monte Carlo. <em>Statistical
 Science</em>, 7(4), 473-483.</p>
-</section>
 </section>
 </section>
 
@@ -803,11 +881,11 @@ Science</em>, 7(4), 473-483.</p>
       </div>
     </a>
     <a class="right-next"
-       href="bounds.html"
+       href="synthetic.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Bounds on the state</p>
+        <p class="prev-next-title">Synthetic experiments</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -830,14 +908,16 @@ Science</em>, 7(4), 473-483.</p>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-settings-posterior">The settings’ posterior</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-world-at-known-settings">A world at known settings</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#totals-with-and-without-the-settings-uncertainty">Totals with and without the settings’ uncertainty</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#few-observations-and-the-fast-path">Few observations, and the fast path</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-it-costs-and-what-it-does-not-do">What it costs, and what it does not do</a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#references">References</a></li>
-</ul>
-</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#when-to-use-it">When to use it</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#an-example">An example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reading-the-result">Reading the result</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-priors-of-the-settings">The priors of the settings</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-fast-path">The fast path</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#options">Options</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#warnings-and-checks">Warnings and checks</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cost">Cost</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-it-works">How it works</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#references">References</a></li>
 </ul>
   </nav></div>
 

@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>A nonlinear forward model &#8212; fips 0.2.0b3.dev33+g1b3edda40 documentation</title>
+    <title>A nonlinear forward model &#8212; fips 0.2.0b3.dev34+g9a0704831 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=d42acb76"></script>
+    <script src="../_static/documentation_options.js?v=8e63224c"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -60,8 +60,8 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Values that stay positive" href="positive.html" />
-    <link rel="prev" title="Bounds on the state" href="bounds.html" />
+    <link rel="next" title="A model without a Jacobian: the ensemble method" href="ensemble.html" />
+    <link rel="prev" title="Values that stay positive" href="positive.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev33+g1b3edda40 documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev33+g1b3edda40 documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
   
   
 </a></div>
@@ -385,21 +385,33 @@
 <nav class="bd-docs-nav bd-links"
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
-  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="synthetic.html">Synthetic experiments</a></li>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Every problem</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="problem.html">Building a problem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="posterior.html">Reading the posterior</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Beyond the linear Gaussian problem</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="methods.html">Choosing a method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bounds.html">Bounds on the state</a></li>
+<li class="toctree-l1"><a class="reference internal" href="positive.html">Values that stay positive</a></li>
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">A nonlinear forward model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ensemble.html">A model without a Jacobian: the ensemble method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="variational.html">A problem too large to factor: the variational method</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Checking and tuning an inversion</span></p>
+<ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="settings.html">Fitting the covariance settings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hierarchical.html">The uncertainty of the settings</a></li>
-<li class="toctree-l1"><a class="reference internal" href="bounds.html">Bounds on the state</a></li>
-<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">A nonlinear forward model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="positive.html">Values that stay positive</a></li>
-<li class="toctree-l1"><a class="reference internal" href="comparison.html">Choosing a method</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ensemble.html">A model with no Jacobian: the ensemble method</a></li>
-<li class="toctree-l1"><a class="reference internal" href="variational.html">A problem too large to factor: the variational method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="synthetic.html">Synthetic experiments</a></li>
+</ul>
+<ul class="nav bd-sidenav">
 <li class="toctree-l1 has-children"><a class="reference internal" href="examples/index.html">Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="examples/gravity_2d.html">Gravity: density below the surface</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/flux_regional.html">A regional flux inversion</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/synthetic_truth.html">Does the inversion recover a known flux?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/data_worth.html">Which observations constrain a regional total?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/comparison.html">Comparing ways to keep a quantity positive</a></li>
 </ul>
 </details></li>
 </ul>
@@ -464,44 +476,65 @@
                   
   <section id="a-nonlinear-forward-model">
 <span id="nonlinear"></span><h1>A nonlinear forward model<a class="headerlink" href="#a-nonlinear-forward-model" title="Link to this heading">#</a></h1>
-<p>When the observations are not a linear function of the state (fluxes solved
-as scale factors of an inventory, <span class="math notranslate nohighlight">\(x \mapsto r\, e^{x}\)</span>; a sensor that
-saturates), the forward map is a model <span class="math notranslate nohighlight">\(F\)</span> and the observations are
-<span class="math notranslate nohighlight">\(z = F(x) + c + e\)</span>. The rule: <strong>write the model and its Jacobian as a</strong>
-<a class="reference internal" href="../reference/api/fips.ForwardModel.html#fips.ForwardModel" title="fips.ForwardModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">ForwardModel</span></code></a>, <strong>and</strong> <code class="docutils literal notranslate"><span class="pre">fips.solve(problem,</span> <span class="pre">&quot;gauss_newton&quot;)</span></code>
-<strong>solves the problem linearized at its last estimate, again and again, until the
-estimate stops moving.</strong> It ends at the mode of the posterior, and draws the
-posterior itself for its uncertainty, by Hamiltonian Monte Carlo started at the
-mode and steered by the Gaussian of the problem linearized there. That
-Gaussian is the posterior when the model is close to linear over the
-posterior’s spread; when the model bends a lot it is not, and the draws still
-are.</p>
+<p>When the observations are not a linear function of the state, the forward map
+is a model <span class="math notranslate nohighlight">\(F\)</span>, and the observations are <span class="math notranslate nohighlight">\(z = F(x) + c + e\)</span>.
+Write the model and its Jacobian as a <a class="reference internal" href="../reference/api/fips.ForwardModel.html#fips.ForwardModel" title="fips.ForwardModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">ForwardModel</span></code></a>, and
+<code class="docutils literal notranslate"><span class="pre">fips.solve(problem,</span> <span class="pre">&quot;gauss_newton&quot;)</span></code> solves the problem linearized at its
+last estimate, again and again, until the estimate stops moving. <strong>The
+estimate is the mode</strong> of the posterior. <strong>The spread comes from draws</strong> of
+the posterior itself, which the solve keeps: Hamiltonian Monte Carlo, started
+at the mode and steered by the Gaussian at the mode (the analytic posterior of
+the problem linearized there).</p>
 <nav class="contents local" id="on-this-page">
 <p class="topic-title">On this page</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="#a-model" id="id1">A model</a></p></li>
-<li><p><a class="reference internal" href="#checking-the-jacobian" id="id2">Checking the Jacobian</a></p></li>
-<li><p><a class="reference internal" href="#one-linearization" id="id3">One linearization</a></p></li>
-<li><p><a class="reference internal" href="#solving" id="id4">Solving</a></p></li>
-<li><p><a class="reference internal" href="#what-the-posterior-reports" id="id5">What the posterior reports</a></p></li>
-<li><p><a class="reference internal" href="#how-the-posterior-is-drawn" id="id6">How the posterior is drawn</a></p></li>
-<li><p><a class="reference internal" href="#how-well-the-draws-cover" id="id7">How well the draws cover</a></p></li>
+<li><p><a class="reference internal" href="#when-to-use-it" id="id1">When to use it</a></p></li>
+<li><p><a class="reference internal" href="#an-example" id="id2">An example</a></p></li>
+<li><p><a class="reference internal" href="#what-the-posterior-reports" id="id3">What the posterior reports</a></p></li>
+<li><p><a class="reference internal" href="#options" id="id4">Options</a></p></li>
+<li><p><a class="reference internal" href="#warnings-and-checks" id="id5">Warnings and checks</a></p></li>
+<li><p><a class="reference internal" href="#cost" id="id6">Cost</a></p></li>
+<li><p><a class="reference internal" href="#how-it-works" id="id7">How it works</a></p></li>
+<li><p><a class="reference internal" href="#references" id="id8">References</a></p></li>
 </ul>
 </nav>
-<section id="a-model">
-<h2><a class="toc-backref" href="#id1" role="doc-backlink">A model</a><a class="headerlink" href="#a-model" title="Link to this heading">#</a></h2>
-<p>A <a class="reference internal" href="../reference/api/fips.ForwardModel.html#fips.ForwardModel" title="fips.ForwardModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">ForwardModel</span></code></a> is a class with two methods: <code class="docutils literal notranslate"><span class="pre">__call__(x)</span></code>,
-the observations a state models without the offset, <span class="math notranslate nohighlight">\(F(x)\)</span>, a
-<a class="reference internal" href="../reference/api/fips.Vector.html#fips.Vector" title="fips.Vector"><code class="xref py py-class docutils literal notranslate"><span class="pre">Vector</span></code></a> on the observations’ labels; and <code class="docutils literal notranslate"><span class="pre">jacobian(x)</span></code>, the
-derivatives <span class="math notranslate nohighlight">\(J_{ij} = \partial F_i / \partial x_j\)</span> at <span class="math notranslate nohighlight">\(x\)</span>, an
-<a class="reference internal" href="../reference/api/fips.Operator.html#fips.Operator" title="fips.Operator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Operator</span></code></a>. Its <code class="docutils literal notranslate"><span class="pre">__init__</span></code> passes the two spaces to
+<section id="when-to-use-it">
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">When to use it</a><a class="headerlink" href="#when-to-use-it" title="Link to this heading">#</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code> when the forward map is a model whose Jacobian you can
+write (or compute), and the problem fits in memory as the analytic one does.</p>
+<p>Another method is better when:</p>
+<ul class="simple">
+<li><p><strong>the forward map is linear</strong>: write it as an <a class="reference internal" href="../reference/api/fips.Operator.html#fips.Operator" title="fips.Operator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Operator</span></code></a> and use
+<code class="docutils literal notranslate"><span class="pre">&quot;analytic&quot;</span></code> (<a class="reference internal" href="posterior.html"><span class="doc">Reading the posterior</span></a>). <code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code> with an operator
+returns the analytic posterior itself;</p></li>
+<li><p><strong>the model makes a quantity positive</strong> (a factor of a reference, or a value
+that bends away from zero): <a class="reference internal" href="../reference/api/fips.LogNormalForward.html#fips.LogNormalForward" title="fips.LogNormalForward"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogNormalForward</span></code></a> and
+<a class="reference internal" href="../reference/api/fips.SoftplusForward.html#fips.SoftplusForward" title="fips.SoftplusForward"><code class="xref py py-class docutils literal notranslate"><span class="pre">SoftplusForward</span></code></a> are ready-made models solved this way
+(<a class="reference internal" href="positive.html"><span class="doc">Values that stay positive</span></a>);</p></li>
+<li><p><strong>the model can only be run</strong>, with no Jacobian: <code class="docutils literal notranslate"><span class="pre">&quot;ensemble&quot;</span></code>
+(<a class="reference internal" href="ensemble.html"><span class="doc">A model without a Jacobian: the ensemble method</span></a>);</p></li>
+<li><p><strong>the problem is too large to factor</strong>, or the Jacobian is known only by
+its products (a tangent linear and an adjoint model): <code class="docutils literal notranslate"><span class="pre">&quot;variational&quot;</span></code>
+(<a class="reference internal" href="variational.html"><span class="doc">A problem too large to factor: the variational method</span></a>).</p></li>
+</ul>
+</section>
+<section id="an-example">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">An example</a><a class="headerlink" href="#an-example" title="Link to this heading">#</a></h2>
+<p>As an example, a flux inversion solved for scale factors: the state
+<span class="math notranslate nohighlight">\(x\)</span> is the logarithm of a factor that scales each cell’s reference flux
+<span class="math notranslate nohighlight">\(r\)</span> (an inventory), so the flux <span class="math notranslate nohighlight">\(r\, e^{x}\)</span> cannot be negative.
+The model is <span class="math notranslate nohighlight">\(F(x) = H\, (r\, e^{x})\)</span> and its Jacobian is <span class="math notranslate nohighlight">\(H
+\operatorname{diag}(r\, e^{x})\)</span>. (fips has this model ready-made, with the
+prior that goes with it: <a class="reference internal" href="../reference/api/fips.LogNormalForward.html#fips.LogNormalForward" title="fips.LogNormalForward"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogNormalForward</span></code></a>. Here it is
+written by hand, to show how.)</p>
+<section id="writing-the-model">
+<h3>Writing the model<a class="headerlink" href="#writing-the-model" title="Link to this heading">#</a></h3>
+<p>A <a class="reference internal" href="../reference/api/fips.ForwardModel.html#fips.ForwardModel" title="fips.ForwardModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">ForwardModel</span></code></a> is a class with two methods: <code class="docutils literal notranslate"><span class="pre">__call__(x)</span></code>
+returns <span class="math notranslate nohighlight">\(F(x)\)</span> without the offset, a <a class="reference internal" href="../reference/api/fips.Vector.html#fips.Vector" title="fips.Vector"><code class="xref py py-class docutils literal notranslate"><span class="pre">Vector</span></code></a> on the
+observations’ labels, and <code class="docutils literal notranslate"><span class="pre">jacobian(x)</span></code> returns <span class="math notranslate nohighlight">\(J_{ij} = \partial
+F_i / \partial x_j\)</span> at <span class="math notranslate nohighlight">\(x\)</span>, an <a class="reference internal" href="../reference/api/fips.Operator.html#fips.Operator" title="fips.Operator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Operator</span></code></a> in any form.
+Its <code class="docutils literal notranslate"><span class="pre">__init__</span></code> passes the observations’ and the state’s spaces to
 <code class="docutils literal notranslate"><span class="pre">super().__init__(rows,</span> <span class="pre">cols)</span></code>. fips builds no Jacobian: it calls yours.</p>
-<p>Here the state is the logarithm of a scale factor of each cell’s inventory
-<span class="math notranslate nohighlight">\(r\)</span>, so the flux <span class="math notranslate nohighlight">\(r\, e^{x}\)</span> cannot be negative and the prior is a
-factor of the inventory, not a flux. The model is <span class="math notranslate nohighlight">\(F(x) = H (r\, e^{x})\)</span>
-and its Jacobian <span class="math notranslate nohighlight">\(H \operatorname{diag}(r\, e^{x})\)</span> (fips has it ready
-made, with the prior that goes with it, as <a class="reference internal" href="../reference/api/fips.LogNormalForward.html#fips.LogNormalForward" title="fips.LogNormalForward"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogNormalForward</span></code></a>:
-<a class="reference internal" href="positive.html"><span class="doc">Values that stay positive</span></a>):</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [1]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 <span class="gp">In [2]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
@@ -510,8 +543,8 @@ made, with the prior that goes with it, as <a class="reference internal" href=".
 
 <span class="gp">In [4]: </span><span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">DiagonalOperator</span>
 
-<span class="gp">In [5]: </span><span class="k">class</span><span class="w"> </span><span class="nc">ScaledInventory</span><span class="p">(</span><span class="n">fips</span><span class="o">.</span><span class="n">ForwardModel</span><span class="p">):</span>
-<span class="gp">   ...: </span><span class="w">    </span><span class="sd">"""The observations of an inventory scaled by exp(x): F(x) = H (r * exp(x))."""</span>
+<span class="gp">In [5]: </span><span class="k">class</span><span class="w"> </span><span class="nc">ScaledReference</span><span class="p">(</span><span class="n">fips</span><span class="o">.</span><span class="n">ForwardModel</span><span class="p">):</span>
+<span class="gp">   ...: </span><span class="w">    </span><span class="sd">"""The observations of a reference scaled by exp(x): F(x) = H (r * exp(x))."""</span>
 <span class="gp">   ...: </span>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">reference</span><span class="p">):</span>
 <span class="gp">   ...: </span>        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">H</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="n">H</span><span class="o">.</span><span class="n">cols</span><span class="p">)</span>
 <span class="gp">   ...: </span>        <span class="bp">self</span><span class="o">.</span><span class="n">H</span> <span class="o">=</span> <span class="n">H</span>
@@ -519,121 +552,105 @@ made, with the prior that goes with it, as <a class="reference internal" href=".
 <span class="gp">   ...: </span>    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
 <span class="gp">   ...: </span>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">H</span> <span class="o">@</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reference</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
 <span class="gp">   ...: </span>    <span class="k">def</span><span class="w"> </span><span class="nf">jacobian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-<span class="gp">   ...: </span>        <span class="n">flux</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reference</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">))</span><span class="o">.</span><span class="n">values</span>
-<span class="gp">   ...: </span>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">H</span> <span class="o">@</span> <span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="n">DiagonalOperator</span><span class="p">(</span><span class="n">flux</span><span class="p">),</span> <span class="n">x</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">space</span><span class="p">)</span>
+<span class="gp">   ...: </span>        <span class="n">value</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reference</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">))</span><span class="o">.</span><span class="n">values</span>
+<span class="gp">   ...: </span>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">H</span> <span class="o">@</span> <span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="n">DiagonalOperator</span><span class="p">(</span><span class="n">value</span><span class="p">),</span> <span class="n">x</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">space</span><span class="p">)</span>
 <span class="gp">   ...: </span>
 </pre></div>
 </div>
-<p>Ten cells, 25 observations of them over a background of 1900 ppb, a prior of
-no change (<span class="math notranslate nohighlight">\(x_0 = 0\)</span>) with a standard deviation of 0.5 (a factor of
-about 1.6) correlated over two cells, and data made from a truth drawn from
-that prior:</p>
+<p>Ten cells and 25 observations. The prior is no change (<span class="math notranslate nohighlight">\(x_0 = 0\)</span>), with
+a standard deviation of 0.5 (a factor of about 1.6 either way) correlated
+over two cells; the data come from a truth drawn from that prior:</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [6]: </span><span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 
 <span class="gp">In [7]: </span><span class="n">cells</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"flux"</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">RangeIndex</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"cell"</span><span class="p">)})</span>
 
-<span class="gp">In [8]: </span><span class="n">observed</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"ch4"</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">RangeIndex</span><span class="p">(</span><span class="mi">25</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"obs_id"</span><span class="p">)})</span>
+<span class="gp">In [8]: </span><span class="n">observed</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"conc"</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">RangeIndex</span><span class="p">(</span><span class="mi">25</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"obs_id"</span><span class="p">)})</span>
 
 <span class="gp">In [9]: </span><span class="n">footprint</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="p">(</span><span class="mi">25</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span> <span class="o">*</span> <span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">25</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mf">0.4</span><span class="p">)</span>
 
 <span class="gp">In [10]: </span><span class="n">H</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="n">footprint</span><span class="p">,</span> <span class="n">observed</span><span class="p">,</span> <span class="n">cells</span><span class="p">)</span>
 
-<span class="gp">In [11]: </span><span class="n">inventory</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">cells</span><span class="p">)</span>
+<span class="gp">In [11]: </span><span class="n">reference</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">cells</span><span class="p">)</span>
 
-<span class="gp">In [12]: </span><span class="n">model</span> <span class="o">=</span> <span class="n">ScaledInventory</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">inventory</span><span class="p">)</span>
+<span class="gp">In [12]: </span><span class="n">model</span> <span class="o">=</span> <span class="n">ScaledReference</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">reference</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [13]: </span><span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">noise</span><span class="o">=</span><span class="mf">0.2</span><span class="p">):</span>
-<span class="gp">   ....: </span><span class="w">    </span><span class="sd">"""The problem of the observations `obs`, with a prior std of `std` in log units."""</span>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [13]: </span><span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="n">obs</span><span class="p">):</span>
+<span class="gp">   ....: </span><span class="w">    </span><span class="sd">"""The problem of the observations `obs`."""</span>
 <span class="gp">   ....: </span>    <span class="k">return</span> <span class="n">fips</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span>
 <span class="gp">   ....: </span>        <span class="n">prior</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="n">cells</span><span class="p">),</span>
-<span class="gp">   ....: </span>        <span class="n">prior_cov</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">(</span><span class="s2">"cell"</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="n">std</span><span class="p">),</span>
+<span class="gp">   ....: </span>        <span class="n">prior_cov</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">(</span><span class="s2">"cell"</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.5</span><span class="p">),</span>
 <span class="gp">   ....: </span>        <span class="n">obs</span><span class="o">=</span><span class="n">obs</span><span class="p">,</span>
-<span class="gp">   ....: </span>        <span class="n">obs_cov</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Independent</span><span class="p">()</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="n">noise</span><span class="p">),</span>
+<span class="gp">   ....: </span>        <span class="n">obs_cov</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Independent</span><span class="p">()</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.2</span><span class="p">),</span>
 <span class="gp">   ....: </span>        <span class="n">forward</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
-<span class="gp">   ....: </span>        <span class="n">offset</span><span class="o">=</span><span class="mf">1900.0</span><span class="p">,</span>
+<span class="gp">   ....: </span>        <span class="n">offset</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span>
 <span class="gp">   ....: </span>    <span class="p">)</span>
 <span class="gp">   ....: </span>
 
 <span class="gp">In [14]: </span><span class="n">truth</span><span class="p">,</span> <span class="n">obs</span> <span class="o">=</span> <span class="n">build</span><span class="p">(</span><span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">25</span><span class="p">),</span> <span class="n">observed</span><span class="p">))</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="n">rng</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
 <span class="gp">In [15]: </span><span class="n">problem</span> <span class="o">=</span> <span class="n">build</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
-
-<span class="gp">In [16]: </span><span class="n">problem</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">[:</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>  <span class="c1"># F(x_0) + c</span>
-<span class="gh">Out[16]: </span><span class="go">array([1902.313, 1902.293, 1901.283, 1901.071])</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="../reference/api/fips.Problem.predict.html#fips.Problem.predict" title="fips.Problem.predict"><code class="xref py py-meth docutils literal notranslate"><span class="pre">predict()</span></code></a> and <a class="reference internal" href="../reference/api/fips.Problem.simulate.html#fips.Problem.simulate" title="fips.Problem.simulate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">simulate()</span></code></a> run the model,
-and <a class="reference internal" href="../reference/api/fips.Problem.aggregate.html#fips.Problem.aggregate" title="fips.Problem.aggregate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">aggregate()</span></code></a> follows it with the aggregation (the model
-of the aggregated problem is <span class="math notranslate nohighlight">\(W F(x)\)</span>). <a class="reference internal" href="../reference/api/fips.Problem.restrict.html#fips.Problem.restrict" title="fips.Problem.restrict"><code class="xref py py-meth docutils literal notranslate"><span class="pre">restrict()</span></code></a>
-refuses a model: holding elements at their prior puts what they add to the
-observations into the offset, which is a constant only for a linear forward.</p>
+<p><a class="reference internal" href="../reference/api/fips.Problem.predict.html#fips.Problem.predict" title="fips.Problem.predict"><code class="xref py py-meth docutils literal notranslate"><span class="pre">predict()</span></code></a> and <a class="reference internal" href="../reference/api/fips.Problem.simulate.html#fips.Problem.simulate" title="fips.Problem.simulate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">simulate()</span></code></a> run the
+model; <a class="reference internal" href="../reference/api/fips.Problem.aggregate.html#fips.Problem.aggregate" title="fips.Problem.aggregate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">aggregate()</span></code></a> follows it with the aggregation.
+<a class="reference internal" href="../reference/api/fips.Problem.restrict.html#fips.Problem.restrict" title="fips.Problem.restrict"><code class="xref py py-meth docutils literal notranslate"><span class="pre">restrict()</span></code></a> refuses a model: holding elements at their
+prior puts what they add to the observations into the offset, which is a
+constant only for a linear forward map.</p>
 </section>
 <section id="checking-the-jacobian">
-<h2><a class="toc-backref" href="#id2" role="doc-backlink">Checking the Jacobian</a><a class="headerlink" href="#checking-the-jacobian" title="Link to this heading">#</a></h2>
-<p>A wrong Jacobian still gives an answer, so check it first.
-<a class="reference internal" href="../reference/api/fips.taylortest.html#fips.taylortest" title="fips.taylortest"><code class="xref py py-func docutils literal notranslate"><span class="pre">fips.taylortest()</span></code></a> steps away from a state along a direction and
-compares the model with its tangent: the remainder <span class="math notranslate nohighlight">\(\lVert F(x +
-\epsilon\, \delta x) - F(x) - \epsilon J \delta x \rVert\)</span> falls as
-<span class="math notranslate nohighlight">\(\epsilon^2\)</span> when <span class="math notranslate nohighlight">\(J\)</span> is the derivative, and only as
-<span class="math notranslate nohighlight">\(\epsilon\)</span> when it is not. A Jacobian that forgot the inventory fails:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [17]: </span><span class="n">fips</span><span class="o">.</span><span class="n">taylortest</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="p">)</span>
-<span class="gh">Out[17]: </span><span class="go">True</span>
+<h3>Checking the Jacobian<a class="headerlink" href="#checking-the-jacobian" title="Link to this heading">#</a></h3>
+<p><strong>A wrong Jacobian still gives an answer, so check it first.</strong>
+<a class="reference internal" href="../reference/api/fips.taylortest.html#fips.taylortest" title="fips.taylortest"><code class="xref py py-func docutils literal notranslate"><span class="pre">fips.taylortest()</span></code></a> steps away from a state and compares the model with
+its tangent: the remainder falls as the square of the step when the Jacobian
+is the derivative, and only as the step when it is not. It also checks that
+the Jacobian’s transpose is its adjoint. A Jacobian that forgot the reference
+fails:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [16]: </span><span class="n">fips</span><span class="o">.</span><span class="n">taylortest</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="p">)</span>
+<span class="gh">Out[16]: </span><span class="go">True</span>
 
-<span class="gp">In [18]: </span><span class="k">class</span><span class="w"> </span><span class="nc">Forgot</span><span class="p">(</span><span class="n">ScaledInventory</span><span class="p">):</span>
+<span class="gp">In [17]: </span><span class="k">class</span><span class="w"> </span><span class="nc">Forgot</span><span class="p">(</span><span class="n">ScaledReference</span><span class="p">):</span>
 <span class="gp">   ....: </span>    <span class="k">def</span><span class="w"> </span><span class="nf">jacobian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
 <span class="gp">   ....: </span>        <span class="n">scale</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="n">DiagonalOperator</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">values</span><span class="p">)),</span> <span class="n">x</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">space</span><span class="p">)</span>
 <span class="gp">   ....: </span>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">H</span> <span class="o">@</span> <span class="n">scale</span>
 <span class="gp">   ....: </span>
 
-<span class="gp">In [19]: </span><span class="n">fips</span><span class="o">.</span><span class="n">taylortest</span><span class="p">(</span><span class="n">Forgot</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">inventory</span><span class="p">),</span> <span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="p">)</span>
-<span class="gh">Out[19]: </span><span class="go">False</span>
+<span class="gp">In [18]: </span><span class="n">fips</span><span class="o">.</span><span class="n">taylortest</span><span class="p">(</span><span class="n">Forgot</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">reference</span><span class="p">),</span> <span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="p">)</span>
+<span class="gh">Out[18]: </span><span class="go">False</span>
 </pre></div>
 </div>
-<p>Its debug log has the order of the remainder at each step; a right Jacobian
-gives 2. It checks one direction, a random one by default (<code class="docutils literal notranslate"><span class="pre">dx=</span></code> sets it),
-and the state you give: check at the prior and at the estimate.</p>
+<p>It checks one direction (a random one by default; <code class="docutils literal notranslate"><span class="pre">dx=</span></code> sets it) at the
+state you give: check at the prior and again at the estimate.</p>
 </section>
 <section id="one-linearization">
-<h2><a class="toc-backref" href="#id3" role="doc-backlink">One linearization</a><a class="headerlink" href="#one-linearization" title="Link to this heading">#</a></h2>
-<p><a class="reference internal" href="../reference/api/fips.Problem.linearized.html#fips.Problem.linearized" title="fips.Problem.linearized"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Problem.linearized(x)</span></code></a> is the linear problem
+<h3>One linearization<a class="headerlink" href="#one-linearization" title="Link to this heading">#</a></h3>
+<p><a class="reference internal" href="../reference/api/fips.Problem.linearized.html#fips.Problem.linearized" title="fips.Problem.linearized"><code class="xref py py-meth docutils literal notranslate"><span class="pre">problem.linearized(x)</span></code></a> is the linear problem
 at a state <span class="math notranslate nohighlight">\(x\)</span>: the forward operator <span class="math notranslate nohighlight">\(J(x)\)</span> and the offset
-<span class="math notranslate nohighlight">\(c + F(x) - J(x)\, x\)</span>, so it predicts what the model does at <span class="math notranslate nohighlight">\(x\)</span>
-and near it to first order. Its analytic solve is one Gauss-Newton step from
+<span class="math notranslate nohighlight">\(c + F(x) - J(x)\, x\)</span>. Its analytic solve is one Gauss-Newton step from
 <span class="math notranslate nohighlight">\(x\)</span>. <code class="docutils literal notranslate"><span class="pre">fips.solve(problem)</span></code> refuses a model rather than linearize it
-silently at the prior, since one linearization is not the mode when the data
-move the state far:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [20]: </span><span class="n">linear</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">linearized</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="p">)</span>
+at the prior without saying so:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [19]: </span><span class="n">linear</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">linearized</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="p">)</span>
 
-<span class="gp">In [21]: </span><span class="n">linear</span><span class="o">.</span><span class="n">forward</span>
+<span class="gp">In [20]: </span><span class="n">one_step</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">linear</span><span class="p">)</span>
+
+<span class="gp">In [21]: </span><span class="n">one_step</span><span class="o">.</span><span class="n">estimate</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
 <span class="gh">Out[21]: </span>
-<span class="go">Operator(name=None, shape=(25, 10), form=DenseOperator)</span>
-<span class="go">  rows: Space(ch4: 25 x ['obs_id'])</span>
-<span class="go">  cols: Space(flux: 10 x ['cell'])</span>
-
-<span class="gp">In [22]: </span><span class="n">one_step</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">linear</span><span class="p">)</span>
-
-<span class="gp">In [23]: </span><span class="n">one_step</span><span class="o">.</span><span class="n">estimate</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
-<span class="gh">Out[23]: </span>
 <span class="go">array([ 0.43,  0.57,  0.54, -0.07,  0.04,  0.19, -0.17,  0.24,  0.28,</span>
 <span class="go">        0.29])</span>
 </pre></div>
 </div>
 </section>
 <section id="solving">
-<h2><a class="toc-backref" href="#id4" role="doc-backlink">Solving</a><a class="headerlink" href="#solving" title="Link to this heading">#</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code> starts from the prior and takes that step from each new
-estimate. It stops by Rodgers’ (2000) rule: when the step <span class="math notranslate nohighlight">\(\delta\)</span>,
-measured in the posterior covariance of the solve that made it, <span class="math notranslate nohighlight">\(d^2 =
-\delta^T \hat{S}^{-1} \delta\)</span>, is below <code class="docutils literal notranslate"><span class="pre">tol</span></code> (default <span class="math notranslate nohighlight">\(10^{-6}\)</span>) times
-the number of state elements. A step that would raise the cost is halved until
-it does not; a solve that has not stopped after <code class="docutils literal notranslate"><span class="pre">max_iterations</span></code> (50) raises,
-naming the steps’ <span class="math notranslate nohighlight">\(d^2\)</span>. <a class="reference internal" href="../reference/api/fips.Posterior.iterations.html#fips.Posterior.iterations" title="fips.Posterior.iterations"><code class="xref py py-attr docutils literal notranslate"><span class="pre">iterations</span></code></a> keeps each
-step’s <span class="math notranslate nohighlight">\(d^2\)</span> and the cost after it:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [24]: </span><span class="n">post</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="s2">"gauss_newton"</span><span class="p">)</span>
+<h3>Solving<a class="headerlink" href="#solving" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code> starts at the prior and takes that step from each new
+estimate. <a class="reference internal" href="../reference/api/fips.Posterior.iterations.html#fips.Posterior.iterations" title="fips.Posterior.iterations"><code class="xref py py-attr docutils literal notranslate"><span class="pre">iterations</span></code></a> has each step’s size
+<span class="math notranslate nohighlight">\(d^2\)</span> (the step measured in the posterior covariance) and the cost
+after it; the solve stops when <span class="math notranslate nohighlight">\(d^2\)</span> is below <code class="docutils literal notranslate"><span class="pre">tol</span></code> times the number
+of state elements:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [22]: </span><span class="n">post</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="s2">"gauss_newton"</span><span class="p">)</span>
 
-<span class="gp">In [25]: </span><span class="n">post</span><span class="o">.</span><span class="n">iterations</span>
-<span class="gh">Out[25]: </span>
+<span class="gp">In [23]: </span><span class="n">post</span><span class="o">.</span><span class="n">iterations</span>
+<span class="gh">Out[23]: </span>
 <span class="go">                   d2       cost</span>
 <span class="go">iteration                       </span>
 <span class="go">1          436.403475  52.876757</span>
@@ -641,73 +658,38 @@ step’s <span class="math notranslate nohighlight">\(d^2\)</span> and the cost 
 <span class="go">3            0.059860  23.443242</span>
 <span class="go">4            0.000002  23.443240</span>
 
-<span class="gp">In [26]: </span><span class="n">post</span><span class="o">.</span><span class="n">estimate</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
-<span class="gh">Out[26]: </span>
+<span class="gp">In [24]: </span><span class="n">post</span><span class="o">.</span><span class="n">estimate</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gh">Out[24]: </span>
 <span class="go">array([ 0.36,  0.45,  0.43, -0.08,  0.04,  0.18, -0.18,  0.21,  0.25,</span>
 <span class="go">        0.25])</span>
 </pre></div>
 </div>
-<p>The first step went most of the way; the next ones moved the estimate by up to
-a few posterior standard deviations, which one linearization would have missed:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [27]: </span><span class="n">moved</span> <span class="o">=</span> <span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">estimate</span><span class="o">.</span><span class="n">values</span> <span class="o">-</span> <span class="n">one_step</span><span class="o">.</span><span class="n">estimate</span><span class="o">.</span><span class="n">values</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+<p>The first step went most of the way. The next ones still moved some cells
+by more than two posterior standard deviations, which one linearization
+would have missed:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [25]: </span><span class="n">moved</span> <span class="o">=</span> <span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">estimate</span><span class="o">.</span><span class="n">values</span> <span class="o">-</span> <span class="n">one_step</span><span class="o">.</span><span class="n">estimate</span><span class="o">.</span><span class="n">values</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
 
-<span class="gp">In [28]: </span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">moved</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
-<span class="gh">Out[28]: </span><span class="go">np.float64(2.61)</span>
+<span class="gp">In [26]: </span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">moved</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gh">Out[26]: </span><span class="go">np.float64(2.61)</span>
 </pre></div>
 </div>
-<p>Near the mode, <span class="math notranslate nohighlight">\(d^2\)</span> falls by orders of magnitude a step. When it falls
-only by a constant factor, the model bends much over the posterior’s spread,
-the estimate may be further from the mode than the last step, and the solve
-logs a warning saying so. A model written by hand gives only its Jacobian, so
-its steps are Gauss-Newton’s; for <a class="reference internal" href="../reference/api/fips.LogNormalForward.html#fips.LogNormalForward" title="fips.LogNormalForward"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogNormalForward</span></code></a> and
-<a class="reference internal" href="../reference/api/fips.SoftplusForward.html#fips.SoftplusForward" title="fips.SoftplusForward"><code class="xref py py-class docutils literal notranslate"><span class="pre">SoftplusForward</span></code></a>, whose second derivatives fips knows, the steps
-are Newton’s where those are better, and the solve takes about half as many
-where Gauss-Newton’s crawl (<a class="reference internal" href="positive.html"><span class="doc">Values that stay positive</span></a>).</p>
-</section>
-<section id="what-the-posterior-reports">
-<h2><a class="toc-backref" href="#id5" role="doc-backlink">What the posterior reports</a><a class="headerlink" href="#what-the-posterior-reports" title="Link to this heading">#</a></h2>
-<p>The <strong>estimate</strong> is the mode: the state where the cost <span class="math notranslate nohighlight">\((x - x_0)^T
-S_0^{-1} (x - x_0) + \gamma (z - F(x) - c)^T S_z^{-1} (z - F(x) - c)\)</span> is least.
-<code class="docutils literal notranslate"><span class="pre">post.mean</span></code> is the mean of the draws (below). The rest comes from three places:</p>
-<ul class="simple">
-<li><p><strong>the model at the mode</strong>: <a class="reference internal" href="../reference/api/fips.Posterior.modeled_obs.html#fips.Posterior.modeled_obs" title="fips.Posterior.modeled_obs"><code class="xref py py-attr docutils literal notranslate"><span class="pre">modeled_obs</span></code></a> is
-<span class="math notranslate nohighlight">\(F(\hat{x}) + c\)</span>, and the residuals, <a class="reference internal" href="../reference/api/fips.Posterior.rmse.html#fips.Posterior.rmse" title="fips.Posterior.rmse"><code class="xref py py-attr docutils literal notranslate"><span class="pre">rmse</span></code></a>,
-<a class="reference internal" href="../reference/api/fips.Posterior.r2.html#fips.Posterior.r2" title="fips.Posterior.r2"><code class="xref py py-attr docutils literal notranslate"><span class="pre">r2</span></code></a>, <a class="reference internal" href="../reference/api/fips.Posterior.chi2.html#fips.Posterior.chi2" title="fips.Posterior.chi2"><code class="xref py py-attr docutils literal notranslate"><span class="pre">chi2</span></code></a> (the cost at the
-mode) and its two misfits are the model’s;</p></li>
-<li><p><strong>draws of the posterior</strong>, <span class="math notranslate nohighlight">\(p(x \mid z) \propto e^{-\chi^2(x)/2}\)</span>:
-<a class="reference internal" href="../reference/api/fips.Posterior.mean.html#fips.Posterior.mean" title="fips.Posterior.mean"><code class="xref py py-attr docutils literal notranslate"><span class="pre">mean</span></code></a>, <a class="reference internal" href="../reference/api/fips.Posterior.variances.html#fips.Posterior.variances" title="fips.Posterior.variances"><code class="xref py py-attr docutils literal notranslate"><span class="pre">variances</span></code></a>,
-<a class="reference internal" href="../reference/api/fips.Posterior.cov.html#fips.Posterior.cov" title="fips.Posterior.cov"><code class="xref py py-meth docutils literal notranslate"><span class="pre">cov()</span></code></a> (of the state, or of aggregates <span class="math notranslate nohighlight">\(W x\)</span>),
-<a class="reference internal" href="../reference/api/fips.Posterior.uncertainty.html#fips.Posterior.uncertainty" title="fips.Posterior.uncertainty"><code class="xref py py-meth docutils literal notranslate"><span class="pre">uncertainty()</span></code></a> (whose interval is the draws’
-quantiles) and <a class="reference internal" href="../reference/api/fips.Posterior.sample.html#fips.Posterior.sample" title="fips.Posterior.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a>. They are read from <code class="docutils literal notranslate"><span class="pre">draws</span></code>
-(2000) kept draws, made at their first use from <code class="docutils literal notranslate"><span class="pre">seed</span></code>, after a
-<code class="docutils literal notranslate"><span class="pre">burn_in</span></code> (200) that tunes the sampler;</p></li>
-<li><p><strong>the Gaussian at the mode</strong>, the analytic posterior of the problem
-linearized at the last step, one step of <span class="math notranslate nohighlight">\(d^2 &lt; \mathrm{tol} \cdot n\)</span>
-from the mode: the gain, the averaging kernel, DOFS, the information
-content and the innovation covariance. <a class="reference internal" href="../reference/api/fips.Posterior.chi2_tests.html#fips.Posterior.chi2_tests" title="fips.Posterior.chi2_tests"><code class="xref py py-meth docutils literal notranslate"><span class="pre">chi2_tests()</span></code></a>
-tests the model’s innovation and residual against that Gaussian’s
-covariances, so its p-values are approximate. To compare, that Gaussian is
-<code class="docutils literal notranslate"><span class="pre">fips.solve(problem.linearized(post.estimate))</span></code>.</p></li>
-</ul>
-<p><a class="reference internal" href="../reference/api/fips.Posterior.problem.html#fips.Posterior.problem" title="fips.Posterior.problem"><code class="xref py py-attr docutils literal notranslate"><span class="pre">problem</span></code></a> is the problem you solved, with the model.
-<a class="reference internal" href="../reference/api/fips.Posterior.with_data.html#fips.Posterior.with_data" title="fips.Posterior.with_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">with_data()</span></code></a> solves again, from the last linearization,
-and draws again, so <a class="reference internal" href="../reference/api/fips.Posterior.trials.html#fips.Posterior.trials" title="fips.Posterior.trials"><code class="xref py py-meth docutils literal notranslate"><span class="pre">trials()</span></code></a> works (running the sampler
-in each trial: <code class="docutils literal notranslate"><span class="pre">draws=</span></code> fewer makes it quicker). This is a sampled
-posterior, and <a class="reference internal" href="../reference/posterior.html#posterior-members"><span class="std std-ref">the table</span></a> says what it cannot give:
-no <a class="reference internal" href="../reference/api/fips.Posterior.with_gamma.html#fips.Posterior.with_gamma" title="fips.Posterior.with_gamma"><code class="xref py py-meth docutils literal notranslate"><span class="pre">with_gamma()</span></code></a> (the linearization depends on gamma),
-and <a class="reference internal" href="../reference/api/fips.Posterior.recovery.html#fips.Posterior.recovery" title="fips.Posterior.recovery"><code class="xref py py-meth docutils literal notranslate"><span class="pre">recovery()</span></code></a>, whose exact answer needs an estimate
-linear in the data, points to <code class="docutils literal notranslate"><span class="pre">trials</span></code>.</p>
-<p>A statement about the flux, not the log scale factor, goes through the model’s
-transform: the flux at the mode is <span class="math notranslate nohighlight">\(r\, e^{\hat{x}}\)</span>, and the total from
-draws of the posterior:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [29]: </span><span class="n">draws</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">4000</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<p><strong>A statement about the value, not the state, comes from the draws.</strong> The
+flux at the mode is <span class="math notranslate nohighlight">\(r\, e^{\hat{x}}\)</span>; the total flux and its spread
+come from mapping each draw of the posterior to the flux, then summing:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [27]: </span><span class="n">draws</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">4000</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 
-<span class="gp">In [30]: </span><span class="n">totals</span> <span class="o">=</span> <span class="p">(</span><span class="n">inventory</span><span class="o">.</span><span class="n">values</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">draws</span><span class="o">.</span><span class="n">values</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">In [28]: </span><span class="n">totals</span> <span class="o">=</span> <span class="p">(</span><span class="n">reference</span><span class="o">.</span><span class="n">values</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">draws</span><span class="o">.</span><span class="n">values</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
-<span class="gp">In [31]: </span><span class="n">flux_at_mode</span> <span class="o">=</span> <span class="p">(</span><span class="n">inventory</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">estimate</span><span class="p">))</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
-
-<span class="gp">In [32]: </span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">({</span><span class="s2">"truth"</span><span class="p">:</span> <span class="p">(</span><span class="n">inventory</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">truth</span><span class="p">))</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span> <span class="s2">"at the mode"</span><span class="p">:</span> <span class="n">flux_at_mode</span><span class="p">,</span> <span class="s2">"mean of draws"</span><span class="p">:</span> <span class="n">totals</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span> <span class="s2">"std of draws"</span><span class="p">:</span> <span class="n">totals</span><span class="o">.</span><span class="n">std</span><span class="p">()})</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
-<span class="gh">Out[32]: </span>
+<span class="gp">In [29]: </span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span>
+<span class="gp">   ....: </span>    <span class="p">{</span>
+<span class="gp">   ....: </span>        <span class="s2">"truth"</span><span class="p">:</span> <span class="p">(</span><span class="n">reference</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">truth</span><span class="p">))</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span>
+<span class="gp">   ....: </span>        <span class="s2">"at the mode"</span><span class="p">:</span> <span class="p">(</span><span class="n">reference</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">estimate</span><span class="p">))</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span>
+<span class="gp">   ....: </span>        <span class="s2">"mean of draws"</span><span class="p">:</span> <span class="n">totals</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
+<span class="gp">   ....: </span>        <span class="s2">"std of draws"</span><span class="p">:</span> <span class="n">totals</span><span class="o">.</span><span class="n">std</span><span class="p">(),</span>
+<span class="gp">   ....: </span>    <span class="p">}</span>
+<span class="gp">   ....: </span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">   ....: </span>
+<span class="gh">Out[29]: </span>
 <span class="go">truth            17.46</span>
 <span class="go">at the mode      17.44</span>
 <span class="go">mean of draws    17.41</span>
@@ -716,76 +698,225 @@ draws of the posterior:</p>
 </pre></div>
 </div>
 </section>
-<section id="how-the-posterior-is-drawn">
-<h2><a class="toc-backref" href="#id6" role="doc-backlink">How the posterior is drawn</a><a class="headerlink" href="#how-the-posterior-is-drawn" title="Link to this heading">#</a></h2>
-<p>The sampler is Hamiltonian Monte Carlo: each draw starts from the last with a
-random velocity and follows a path on which the cost is a potential energy,
-and a Metropolis test accepts the path’s end or keeps the start, which makes
-the chain’s draws those of the posterior exactly, whatever the paths are. The
-paths are steered by the Gaussian at the mode, in two ways (Shahbaba et al.,
-2014, split HMC): the velocities are its draws less its mean, and the part of
-the cost that Gaussian accounts for is followed exactly, as a rotation about
-the mode (a quarter turn makes a draw of that Gaussian independent of its
-start); only the rest, the cost less the Gaussian’s, is followed in steps,
-whose length the <code class="docutils literal notranslate"><span class="pre">burn_in</span></code> tunes to accept 90% of the paths. A model that is
-linear has no rest: every path is a quarter turn of one step and is accepted,
-and the draws are exact and independent. The more the model bends over the
-posterior’s spread, the more steps a path takes (a median of 16 over 200 data
-sets of <a class="reference internal" href="comparison.html"><span class="doc">Choosing a method</span></a>’s 400-cell flux problem with a log standard
-deviation of 1, at most 38). No inverse of
-the prior covariance is formed, so a prior with zero spread somewhere (an
-element with no reference) works.</p>
-<p>Each step evaluates the model and the product of its Jacobian’s transpose with
-a vector (<code class="docutils literal notranslate"><span class="pre">fips.LogNormalForward</span></code> and <code class="docutils literal notranslate"><span class="pre">fips.SoftplusForward</span></code> form no
-Jacobian for it; a model of your own forms one with <code class="docutils literal notranslate"><span class="pre">jacobian</span></code>), and one
-product with the covariance of the Gaussian at the mode. The draws are
-correlated, a few draws apart for most elements; a solve logs a warning when
-some element’s draws mix so slowly that its standard deviation is uncertain by
-more than 10%, and <code class="docutils literal notranslate"><span class="pre">draws=</span></code> asks for more. The tuned step and the burn-in’s
-acceptance rate are logged at the INFO level. A wrong Jacobian does not make
-the draws wrong (the Metropolis test corrects the paths), but the step falls
-until a draw takes hundreds of steps, and the solve warns: check the Jacobian
-with <a class="reference internal" href="../reference/api/fips.taylortest.html#fips.taylortest" title="fips.taylortest"><code class="xref py py-func docutils literal notranslate"><span class="pre">fips.taylortest()</span></code></a>.</p>
 </section>
-<section id="how-well-the-draws-cover">
-<h2><a class="toc-backref" href="#id7" role="doc-backlink">How well the draws cover</a><a class="headerlink" href="#how-well-the-draws-cover" title="Link to this heading">#</a></h2>
-<p>In the problem’s own world the draws’ intervals should hold the truth as often
-as they claim, for any model: each trial draws a truth from the prior, makes
-its data through the model, and solves them. Here with a prior standard
-deviation of 0.3 (a factor of 1.35 either way) and of 1.5 (a factor of 4.5),
-noisier data, and fewer draws and trials than a study would use, to keep the
-page quick; each cell’s interval is the quantiles of its draws:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [33]: </span><span class="k">def</span><span class="w"> </span><span class="nf">own_world</span><span class="p">(</span><span class="n">std</span><span class="p">,</span> <span class="n">trials</span><span class="o">=</span><span class="mi">40</span><span class="p">):</span>
-<span class="gp">   ....: </span><span class="w">    </span><span class="sd">"""How often each cell's 68% and 95% intervals from the draws hold the truth, in the problem's own world."""</span>
-<span class="gp">   ....: </span>    <span class="n">_</span><span class="p">,</span> <span class="n">obs</span> <span class="o">=</span> <span class="n">build</span><span class="p">(</span><span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">25</span><span class="p">),</span> <span class="n">observed</span><span class="p">),</span> <span class="n">std</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="n">rng</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
-<span class="gp">   ....: </span>    <span class="n">post</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">build</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">std</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span> <span class="s2">"gauss_newton"</span><span class="p">,</span> <span class="n">max_iterations</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">burn_in</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
-<span class="gp">   ....: </span>    <span class="n">g</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
-<span class="gp">   ....: </span>    <span class="n">inside</span> <span class="o">=</span> <span class="p">{</span><span class="mf">0.68</span><span class="p">:</span> <span class="p">[],</span> <span class="mf">0.95</span><span class="p">:</span> <span class="p">[]}</span>
-<span class="gp">   ....: </span>    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">trials</span><span class="p">):</span>
-<span class="gp">   ....: </span>        <span class="n">truth</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="n">rng</span><span class="o">=</span><span class="n">g</span><span class="p">)</span>
-<span class="gp">   ....: </span>        <span class="n">draws</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">with_data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">150</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="n">g</span><span class="p">)</span>
-<span class="gp">   ....: </span>        <span class="k">for</span> <span class="n">level</span> <span class="ow">in</span> <span class="n">inside</span><span class="p">:</span>
-<span class="gp">   ....: </span>            <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="n">draws</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">-</span> <span class="n">level</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">draws</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">+</span> <span class="n">level</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-<span class="gp">   ....: </span>            <span class="n">inside</span><span class="p">[</span><span class="n">level</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(((</span><span class="n">low</span><span class="o">.</span><span class="n">values</span> <span class="o">&lt;=</span> <span class="n">truth</span><span class="o">.</span><span class="n">values</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">truth</span><span class="o">.</span><span class="n">values</span> <span class="o">&lt;=</span> <span class="n">high</span><span class="o">.</span><span class="n">values</span><span class="p">))</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
-<span class="gp">   ....: </span>    <span class="k">return</span> <span class="p">{</span><span class="sa">f</span><span class="s2">"coverage_</span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="mi">100</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">level</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">level</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">inside</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
-<span class="gp">   ....: </span>
-
-<span class="gp">In [34]: </span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="n">std</span><span class="p">:</span> <span class="n">own_world</span><span class="p">(</span><span class="n">std</span><span class="p">)</span> <span class="k">for</span> <span class="n">std</span> <span class="ow">in</span> <span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">)})</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-<span class="gh">Out[34]: </span>
-<span class="go">     coverage_68  coverage_95</span>
-<span class="go">0.3        0.695        0.945</span>
-<span class="go">1.5        0.702        0.948</span>
-</pre></div>
+<section id="what-the-posterior-reports">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">What the posterior reports</a><a class="headerlink" href="#what-the-posterior-reports" title="Link to this heading">#</a></h2>
+<p>A <code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code> posterior is a <em>sampled</em> one: the
+<a class="reference internal" href="../reference/posterior.html#posterior-members"><span class="std std-ref">members table</span></a> lists what it gives. Its members
+come from three places:</p>
+<ul class="simple">
+<li><p><strong>the model at the mode.</strong> <a class="reference internal" href="../reference/api/fips.Posterior.estimate.html#fips.Posterior.estimate" title="fips.Posterior.estimate"><code class="xref py py-attr docutils literal notranslate"><span class="pre">estimate</span></code></a> is the mode.
+<a class="reference internal" href="../reference/api/fips.Posterior.modeled_obs.html#fips.Posterior.modeled_obs" title="fips.Posterior.modeled_obs"><code class="xref py py-attr docutils literal notranslate"><span class="pre">modeled_obs</span></code></a> is <span class="math notranslate nohighlight">\(F(\hat{x}) + c\)</span>; the
+residuals, <a class="reference internal" href="../reference/api/fips.Posterior.rmse.html#fips.Posterior.rmse" title="fips.Posterior.rmse"><code class="xref py py-attr docutils literal notranslate"><span class="pre">rmse</span></code></a>, <a class="reference internal" href="../reference/api/fips.Posterior.r2.html#fips.Posterior.r2" title="fips.Posterior.r2"><code class="xref py py-attr docutils literal notranslate"><span class="pre">r2</span></code></a>,
+<a class="reference internal" href="../reference/api/fips.Posterior.chi2.html#fips.Posterior.chi2" title="fips.Posterior.chi2"><code class="xref py py-attr docutils literal notranslate"><span class="pre">chi2</span></code></a> (the cost at the mode) and the misfits are
+the model’s.</p></li>
+<li><p><strong>the kept draws of the posterior.</strong> <a class="reference internal" href="../reference/api/fips.Posterior.mean.html#fips.Posterior.mean" title="fips.Posterior.mean"><code class="xref py py-attr docutils literal notranslate"><span class="pre">mean</span></code></a>,
+<a class="reference internal" href="../reference/api/fips.Posterior.variances.html#fips.Posterior.variances" title="fips.Posterior.variances"><code class="xref py py-attr docutils literal notranslate"><span class="pre">variances</span></code></a>, <a class="reference internal" href="../reference/api/fips.Posterior.cov.html#fips.Posterior.cov" title="fips.Posterior.cov"><code class="xref py py-meth docutils literal notranslate"><span class="pre">cov()</span></code></a> (of the
+state, or of aggregates <span class="math notranslate nohighlight">\(W x\)</span>) and the <code class="docutils literal notranslate"><span class="pre">lower</span></code> and <code class="docutils literal notranslate"><span class="pre">upper</span></code> of
+<a class="reference internal" href="../reference/api/fips.Posterior.uncertainty.html#fips.Posterior.uncertainty" title="fips.Posterior.uncertainty"><code class="xref py py-meth docutils literal notranslate"><span class="pre">uncertainty()</span></code></a> and <a class="reference internal" href="../reference/api/fips.Posterior.trials.html#fips.Posterior.trials" title="fips.Posterior.trials"><code class="xref py py-meth docutils literal notranslate"><span class="pre">trials()</span></code></a>
+(the draws’ quantiles) are read from <code class="docutils literal notranslate"><span class="pre">draws</span></code> kept draws, made from
+<code class="docutils literal notranslate"><span class="pre">seed</span></code> the first time one is needed. <a class="reference internal" href="../reference/api/fips.Posterior.sample.html#fips.Posterior.sample" title="fips.Posterior.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a>
+makes new ones.</p></li>
+<li><p><strong>the Gaussian at the mode</strong>, the analytic posterior of the problem
+linearized at the last step: the gain, the averaging kernel, DOFS, the
+information content and the innovation covariance.
+<a class="reference internal" href="../reference/api/fips.Posterior.chi2_tests.html#fips.Posterior.chi2_tests" title="fips.Posterior.chi2_tests"><code class="xref py py-meth docutils literal notranslate"><span class="pre">chi2_tests()</span></code></a> tests the model’s innovation and
+residuals against that Gaussian’s covariances, so its p-values are
+approximate. To read it
+whole, solve it: <code class="docutils literal notranslate"><span class="pre">fips.solve(problem.linearized(post.estimate))</span></code>.</p></li>
+</ul>
+<p><a class="reference internal" href="../reference/api/fips.Posterior.iterations.html#fips.Posterior.iterations" title="fips.Posterior.iterations"><code class="xref py py-attr docutils literal notranslate"><span class="pre">iterations</span></code></a> has the steps.
+<a class="reference internal" href="../reference/api/fips.Posterior.with_data.html#fips.Posterior.with_data" title="fips.Posterior.with_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">with_data()</span></code></a> solves again from the last linearization
+and draws again, so <a class="reference internal" href="../reference/api/fips.Posterior.trials.html#fips.Posterior.trials" title="fips.Posterior.trials"><code class="xref py py-meth docutils literal notranslate"><span class="pre">trials()</span></code></a> works; it runs the sampler
+in each trial. <code class="docutils literal notranslate"><span class="pre">log_evidence</span></code> is Laplace’s, from the Gaussian at the mode.
+<a class="reference internal" href="../reference/api/fips.Posterior.with_gamma.html#fips.Posterior.with_gamma" title="fips.Posterior.with_gamma"><code class="xref py py-meth docutils literal notranslate"><span class="pre">with_gamma()</span></code></a> raises (the linearization depends on
+gamma), and so does <a class="reference internal" href="../reference/api/fips.Posterior.recovery.html#fips.Posterior.recovery" title="fips.Posterior.recovery"><code class="xref py py-meth docutils literal notranslate"><span class="pre">recovery()</span></code></a>, which needs an
+estimate linear in the data: <a class="reference internal" href="../reference/api/fips.Posterior.trials.html#fips.Posterior.trials" title="fips.Posterior.trials"><code class="xref py py-meth docutils literal notranslate"><span class="pre">trials()</span></code></a> measures what it
+would (<a class="reference internal" href="synthetic.html"><span class="doc">Synthetic experiments</span></a>).</p>
+<p><strong>Read an interval as the draws’ quantiles.</strong> In the problem’s own world
+(truths drawn from the prior, data made through the model), those intervals
+hold the truth about as often as they claim, for any model. Read as the mode
+plus or minus a multiple of the standard deviation, an interval is not the
+posterior’s where the posterior is skewed.</p>
+</section>
+<section id="options">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Options</a><a class="headerlink" href="#options" title="Link to this heading">#</a></h2>
+<p>Each is a keyword of <code class="docutils literal notranslate"><span class="pre">fips.solve(problem,</span> <span class="pre">&quot;gauss_newton&quot;,</span> <span class="pre">...)</span></code>
+(<a class="reference internal" href="../reference/api/fips.methods.gauss_newton.GaussNewtonOptions.html#fips.methods.gauss_newton.GaussNewtonOptions" title="fips.methods.gauss_newton.GaussNewtonOptions"><code class="xref py py-class docutils literal notranslate"><span class="pre">GaussNewtonOptions</span></code></a>).</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 12.0%" />
+<col style="width: 68.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>What it does</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tol</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1e-6</span></code></p></td>
+<td><p>The iterations stop when a step’s <span class="math notranslate nohighlight">\(d^2\)</span> is below <code class="docutils literal notranslate"><span class="pre">tol</span></code> times
+the number of state elements. At the default the last step is about a
+thousandth of a posterior standard deviation.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">max_iterations</span></code></p></td>
+<td><p>50</p></td>
+<td><p>The most steps to take; a solve that has not stopped by then raises.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">draws</span></code></p></td>
+<td><p>2000</p></td>
+<td><p>The number of draws of the posterior kept for the variances, the
+covariances, the mean and the intervals. Fewer make each trial of
+<a class="reference internal" href="../reference/api/fips.Posterior.trials.html#fips.Posterior.trials" title="fips.Posterior.trials"><code class="xref py py-meth docutils literal notranslate"><span class="pre">trials()</span></code></a> quicker.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">burn_in</span></code></p></td>
+<td><p>200</p></td>
+<td><p>The draws made from the mode and left out before those kept, while the
+sampler tunes its step.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">seed</span></code></p></td>
+<td><p>0</p></td>
+<td><p>The seed of the tuning and of the kept draws.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">gamma</span></code></p></td>
+<td><p>1.0</p></td>
+<td><p>The regularization factor: the observation covariance is divided by
+it, as for the analytic method.</p></td>
+</tr>
+</tbody>
+</table>
 </div>
-<p>Both cover about as they claim (40 trials of 10 cells know a coverage to
-about 0.02). <a class="reference internal" href="../reference/api/fips.Posterior.trials.html#fips.Posterior.trials" title="fips.Posterior.trials"><code class="xref py py-meth docutils literal notranslate"><span class="pre">trials()</span></code></a> runs the same loop, and its
-<code class="docutils literal notranslate"><span class="pre">lower</span></code> and <code class="docutils literal notranslate"><span class="pre">upper</span></code> are each trial’s draws’ quantiles, as here. Read
-instead as the mode plus or minus a multiple of the draws’ standard
-deviation, the interval is not the posterior’s where it is skewed: at 1.5 it
-held the truth 93% of the time at 95% (the Gaussian at the mode, read the
-same way, 92%). A total of a transform’s flux is not a total of the state, so
-read it from the draws (<a class="reference internal" href="positive.html"><span class="doc">Values that stay positive</span></a>); <a class="reference internal" href="comparison.html"><span class="doc">Choosing a method</span></a> reads every
-method that way.</p>
+<p>There is no option to skip the draws. The Gaussian at the mode, which is not
+the posterior where the model bends, is
+<code class="docutils literal notranslate"><span class="pre">fips.solve(problem.linearized(post.estimate))</span></code>.</p>
+</section>
+<section id="warnings-and-checks">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Warnings and checks</a><a class="headerlink" href="#warnings-and-checks" title="Link to this heading">#</a></h2>
+<p>fips logs its warnings through Python’s <a class="reference external" href="https://docs.python.org/3/library/logging.html#module-logging" title="(in Python v3.15)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">logging</span></code></a>, which is silent
+until you configure it (<a class="reference internal" href="posterior.html#repeated-inversions"><span class="std std-ref">Repeated inversions, logging and saving</span></a>). The solve logs a
+warning when:</p>
+<ul class="simple">
+<li><p><strong>it converged slowly</strong>: each step was a large fraction of the last, so the
+estimate may be further from the mode than <code class="docutils literal notranslate"><span class="pre">tol</span></code> meant. Lower <code class="docutils literal notranslate"><span class="pre">tol</span></code>.
+The model bends much over the posterior’s spread, which is also where the
+Gaussian at the mode is least right.</p></li>
+<li><p><strong>the sampler takes 200 or more steps a draw</strong>: the posterior bends very
+much over its spread, or the Jacobian is not the derivative of the model.
+A wrong Jacobian leaves the draws exact (the sampler’s acceptance test
+corrects for it) but makes each draw cost hundreds of steps. Check it with
+<code class="docutils literal notranslate"><span class="pre">fips.taylortest(problem.forward,</span> <span class="pre">post.estimate)</span></code>.</p></li>
+<li><p><strong>the kept draws mix slowly</strong>: a standard deviation from them is uncertain
+by more than 10%. It says how many draws would do; raise <code class="docutils literal notranslate"><span class="pre">draws</span></code>, or read
+the aggregates the data constrain, which mix faster.</p></li>
+</ul>
+<p><strong>The slow-mixing warning reads one chain, so it cannot see what that chain
+missed.</strong> On a posterior that bends along a curve (an observation of a sum of
+elements, each with a wide prior), the chain can stay out of a tail for
+hundreds of draws: an element’s standard deviation from the default 2000
+draws can then be off by a third or more, with a warning that understates it
+or no warning at all, while the aggregates the observations constrain stay
+right. When an element’s spread matters, solve again with two or three other
+<code class="docutils literal notranslate"><span class="pre">seed</span></code> values and compare, and raise <code class="docutils literal notranslate"><span class="pre">draws</span></code> until they agree. Calls to
+<a class="reference internal" href="../reference/api/fips.Posterior.sample.html#fips.Posterior.sample" title="fips.Posterior.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a> each start a new chain from the same point, so
+draws from several calls are not a check either.</p>
+<p>At the INFO level it logs the number of steps it took, and the sampler’s
+tuned step and acceptance rate.</p>
+<p>It raises:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#RuntimeError" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">RuntimeError</span></code></a> if it has not stopped after <code class="docutils literal notranslate"><span class="pre">max_iterations</span></code>,
+naming each step’s <span class="math notranslate nohighlight">\(d^2\)</span>. If they are still falling, raise
+<code class="docutils literal notranslate"><span class="pre">max_iterations</span></code>; if the whole steps do not shrink while the steps taken
+do, check the Jacobian; a very wide prior can also be too nonlinear to
+solve from the prior;</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#RuntimeError" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">RuntimeError</span></code></a> if the cost rises along a step however short: the
+Jacobian is not the derivative of the model, or the model does not give
+finite observations near the estimate;</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#NotImplementedError" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">NotImplementedError</span></code></a> if the model has no <code class="docutils literal notranslate"><span class="pre">jacobian</span></code>.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">fips.solve(problem)</span></code> (the analytic method) and <code class="docutils literal notranslate"><span class="pre">&quot;bounded&quot;</span></code> raise
+<a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#TypeError" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeError</span></code></a> for a problem with a model. A member a sampled posterior
+cannot give raises <a class="reference internal" href="../reference/api/fips.UnavailableError.html#fips.UnavailableError" title="fips.UnavailableError"><code class="xref py py-class docutils literal notranslate"><span class="pre">UnavailableError</span></code></a>.</p>
+</section>
+<section id="cost">
+<h2><a class="toc-backref" href="#id6" role="doc-backlink">Cost</a><a class="headerlink" href="#cost" title="Link to this heading">#</a></h2>
+<p><strong>Each step costs an analytic solve</strong> of the problem linearized at the last
+estimate, plus a few runs of the model. A mildly nonlinear problem stops in a
+few steps; a strongly nonlinear one (a wide prior on a model that bends) can
+take tens.</p>
+<p><strong>The draws cost more</strong>, and are made only when a spread is first asked for:
+<code class="docutils literal notranslate"><span class="pre">burn_in</span></code> plus <code class="docutils literal notranslate"><span class="pre">draws</span></code> of them. Each draw follows a path of steps (one for
+a linear model, more the more it bends), and each step runs the model, a
+product with its Jacobian’s transpose and one with the covariance of the
+Gaussian at the mode: thousands to tens of thousands of model runs in all.
+<a class="reference internal" href="../reference/api/fips.Posterior.trials.html#fips.Posterior.trials" title="fips.Posterior.trials"><code class="xref py py-meth docutils literal notranslate"><span class="pre">trials()</span></code></a> draws in every trial: keep <code class="docutils literal notranslate"><span class="pre">draws</span></code> small
+there.</p>
+</section>
+<section id="how-it-works">
+<h2><a class="toc-backref" href="#id7" role="doc-backlink">How it works</a><a class="headerlink" href="#how-it-works" title="Link to this heading">#</a></h2>
+<p><strong>The mode.</strong> The estimate is the state where the cost</p>
+<div class="math notranslate nohighlight">
+\[\chi^2(x) = (x - x_0)^T S_0^{-1} (x - x_0)
+    + \gamma\, (z - F(x) - c)^T S_z^{-1} (z - F(x) - c)\]</div>
+<p>is least. Gauss-Newton finds it as Rodgers (2000, chapter 5) does: from the
+prior, each step solves the problem linearized at the last estimate
+<span class="math notranslate nohighlight">\(x_i\)</span>, with the Jacobian <span class="math notranslate nohighlight">\(J_i = J(x_i)\)</span> and the gain
+<span class="math notranslate nohighlight">\(K_i\)</span> of that linear problem,</p>
+<div class="math notranslate nohighlight">
+\[x_{i+1} = x_0 + K_i \big(z - F(x_i) - c + J_i (x_i - x_0)\big).\]</div>
+<p><strong>The stopping rule</strong> is Rodgers’: the step, measured in the posterior
+covariance of the solve that made it, is small against the number of state
+elements <span class="math notranslate nohighlight">\(n\)</span>:</p>
+<div class="math notranslate nohighlight">
+\[d_i^2 = (x_{i+1} - x_i)^T \hat{S}_i^{-1} (x_{i+1} - x_i)
+    &lt; \mathrm{tol} \cdot n, \qquad
+\hat{S}_i^{-1} = S_0^{-1} + \gamma J_i^T S_z^{-1} J_i.\]</div>
+<p>Neither <span class="math notranslate nohighlight">\(\hat{S}_i^{-1}\)</span> nor <span class="math notranslate nohighlight">\(S_0^{-1}\)</span> is formed: every estimate
+is <span class="math notranslate nohighlight">\(x_0 + S_0 y\)</span>, so the prior term of <span class="math notranslate nohighlight">\(d^2\)</span> is <span class="math notranslate nohighlight">\(\Delta y^T
+S_0 \Delta y\)</span>, and a prior covariance that is singular works. A step that
+would raise the cost is halved until it does not; only a whole step below the
+rule stops the iterations. The rule measures the step, not the distance to
+the mode: near the mode, <span class="math notranslate nohighlight">\(d^2\)</span> falls by orders of magnitude a step,
+and when it falls only by a constant factor the solve warns.</p>
+<p><strong>Newton’s steps, for a transform.</strong> For <a class="reference internal" href="../reference/api/fips.LogNormalForward.html#fips.LogNormalForward" title="fips.LogNormalForward"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogNormalForward</span></code></a> and
+<a class="reference internal" href="../reference/api/fips.SoftplusForward.html#fips.SoftplusForward" title="fips.SoftplusForward"><code class="xref py py-class docutils literal notranslate"><span class="pre">SoftplusForward</span></code></a> fips knows the second derivatives, and each
+iteration also takes Newton’s step, with the cost’s whole Hessian. It goes to
+whichever of the two estimates has the lower cost. Where Gauss-Newton’s steps
+crawl, Newton’s converge much faster near the mode. The mode is the same, and
+the Gaussian at the mode is still that of the problem linearized there. A
+model you write gives only its Jacobian, so its steps are Gauss-Newton’s.</p>
+<p><strong>The draws</strong> are Hamiltonian Monte Carlo, split at the Gaussian at the mode
+(Shahbaba et al., 2014). Each draw starts from the last with a random
+velocity and follows a path on which half the cost is a potential energy; a
+Metropolis test accepts the path’s end or keeps the start, which makes the
+posterior, <span class="math notranslate nohighlight">\(p(x \mid z) \propto e^{-\chi^2(x)/2}\)</span>, the chain’s
+distribution exactly, whatever the paths are. Each draw is then exact; how
+well a finite chain covers the posterior depends on how well it mixes
+(<a class="reference internal" href="#warnings-and-checks">Warnings and checks</a>). The Gaussian at the mode
+steers the paths in two ways. The velocities are its draws less its mean. The
+part of the cost that it accounts for is followed exactly, as a rotation
+about the mode,</p>
+<div class="math notranslate nohighlight">
+\[x(t) = \hat{x} + (x - \hat{x}) \cos t + v \sin t,\]</div>
+<p>for a quarter period (after which a draw of that Gaussian is independent of
+its start), and only the rest of the cost is followed in steps. The burn-in
+tunes the step’s length to accept 90% of the paths (Hoffman and Gelman,
+2014). A linear model has no rest: each path is a quarter turn of one step,
+always accepted, and the draws are exact and independent. A path the model
+cannot follow (it overflows) is rejected.</p>
+</section>
+<section id="references">
+<h2><a class="toc-backref" href="#id8" role="doc-backlink">References</a><a class="headerlink" href="#references" title="Link to this heading">#</a></h2>
+<p>Hoffman, M. D., and Gelman, A. (2014). The No-U-Turn sampler: adaptively
+setting path lengths in Hamiltonian Monte Carlo. <em>Journal of Machine Learning
+Research</em>, 15, 1593-1623.</p>
+<p>Rodgers, C. D. (2000). <em>Inverse Methods for Atmospheric Sounding: Theory and
+Practice</em>, chapter 5. World Scientific. <a class="reference external" href="https://doi.org/10.1142/3171">https://doi.org/10.1142/3171</a></p>
+<p>Shahbaba, B., Lan, S., Johnson, W. O., and Neal, R. M. (2014). Split
+Hamiltonian Monte Carlo. <em>Statistics and Computing</em>, 24(3), 339-349.
+<a class="reference external" href="https://doi.org/10.1007/s11222-012-9373-1">https://doi.org/10.1007/s11222-012-9373-1</a></p>
 </section>
 </section>
 
@@ -800,20 +931,20 @@ method that way.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="bounds.html"
+       href="positive.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Bounds on the state</p>
+        <p class="prev-next-title">Values that stay positive</p>
       </div>
     </a>
     <a class="right-next"
-       href="positive.html"
+       href="ensemble.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Values that stay positive</p>
+        <p class="prev-next-title">A model without a Jacobian: the ensemble method</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -836,13 +967,20 @@ method that way.</p>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-model">A model</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#checking-the-jacobian">Checking the Jacobian</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#one-linearization">One linearization</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#solving">Solving</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#when-to-use-it">When to use it</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#an-example">An example</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#writing-the-model">Writing the model</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#checking-the-jacobian">Checking the Jacobian</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#one-linearization">One linearization</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#solving">Solving</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-posterior-reports">What the posterior reports</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-the-posterior-is-drawn">How the posterior is drawn</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-well-the-draws-cover">How well the draws cover</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#options">Options</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#warnings-and-checks">Warnings and checks</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cost">Cost</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-it-works">How it works</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#references">References</a></li>
 </ul>
   </nav></div>
 

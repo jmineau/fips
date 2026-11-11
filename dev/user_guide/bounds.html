@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Bounds on the state &#8212; fips 0.2.0b3.dev33+g1b3edda40 documentation</title>
+    <title>Bounds on the state &#8212; fips 0.2.0b3.dev34+g9a0704831 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=d42acb76"></script>
+    <script src="../_static/documentation_options.js?v=8e63224c"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -60,8 +60,8 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="A nonlinear forward model" href="nonlinear.html" />
-    <link rel="prev" title="The uncertainty of the settings" href="hierarchical.html" />
+    <link rel="next" title="Values that stay positive" href="positive.html" />
+    <link rel="prev" title="Choosing a method" href="methods.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev33+g1b3edda40 documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev33+g1b3edda40 documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
   
   
 </a></div>
@@ -385,21 +385,33 @@
 <nav class="bd-docs-nav bd-links"
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
-  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="synthetic.html">Synthetic experiments</a></li>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Every problem</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="problem.html">Building a problem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="posterior.html">Reading the posterior</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Beyond the linear Gaussian problem</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="methods.html">Choosing a method</a></li>
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Bounds on the state</a></li>
+<li class="toctree-l1"><a class="reference internal" href="positive.html">Values that stay positive</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nonlinear.html">A nonlinear forward model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ensemble.html">A model without a Jacobian: the ensemble method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="variational.html">A problem too large to factor: the variational method</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Checking and tuning an inversion</span></p>
+<ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="settings.html">Fitting the covariance settings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hierarchical.html">The uncertainty of the settings</a></li>
-<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Bounds on the state</a></li>
-<li class="toctree-l1"><a class="reference internal" href="nonlinear.html">A nonlinear forward model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="positive.html">Values that stay positive</a></li>
-<li class="toctree-l1"><a class="reference internal" href="comparison.html">Choosing a method</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ensemble.html">A model with no Jacobian: the ensemble method</a></li>
-<li class="toctree-l1"><a class="reference internal" href="variational.html">A problem too large to factor: the variational method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="synthetic.html">Synthetic experiments</a></li>
+</ul>
+<ul class="nav bd-sidenav">
 <li class="toctree-l1 has-children"><a class="reference internal" href="examples/index.html">Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="examples/gravity_2d.html">Gravity: density below the surface</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/flux_regional.html">A regional flux inversion</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/synthetic_truth.html">Does the inversion recover a known flux?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/data_worth.html">Which observations constrain a regional total?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/comparison.html">Comparing ways to keep a quantity positive</a></li>
 </ul>
 </details></li>
 </ul>
@@ -464,70 +476,53 @@
                   
   <section id="bounds-on-the-state">
 <span id="bounds"></span><h1>Bounds on the state<a class="headerlink" href="#bounds-on-the-state" title="Link to this heading">#</a></h1>
-<p>Some quantities cannot be negative (a flux, a concentration, a rate), yet the
-Gaussian posterior of a problem that estimates them often is negative where
-the prior is small and the observations see little.
-<code class="docutils literal notranslate"><span class="pre">fips.solve(problem,</span> <span class="pre">&quot;bounded&quot;,</span> <span class="pre">lower={&quot;flux&quot;:</span> <span class="pre">0.0})</span></code> holds the state to
-bounds (here, a block named <code class="docutils literal notranslate"><span class="pre">flux</span></code> at or above zero). The rule: <strong>the bounded estimate is the analytic one moved
-onto the bounds along the posterior’s correlations.</strong> An element the analytic
-estimate puts below its bound goes to the bound, and its neighbors move by what
-the posterior says they would if that element were known to be at its bound.
-A neighbor the move would push out is held at its bound too. Clipping (setting
-the negative elements to zero and nothing else) is not this: it always raises the
-total, while moving along the correlations can lower it as well.</p>
+<p>Some quantities cannot leave a range: a rate cannot be negative, a fraction
+stays between 0 and 1. The Gaussian posterior of a linear problem does not
+know this, and where the prior is near a bound and the observations see
+little, its estimate crosses it. <code class="docutils literal notranslate"><span class="pre">fips.solve(problem,</span> <span class="pre">&quot;bounded&quot;,</span>
+<span class="pre">lower={&quot;flux&quot;:</span> <span class="pre">0.0})</span></code> solves the same problem with the state held to its
+bounds (here, a block named <code class="docutils literal notranslate"><span class="pre">flux</span></code> at or above zero). <strong>The estimate is the
+mode</strong>: the analytic estimate moved onto the bounds along the posterior’s
+correlations. <strong>The spread comes from draws</strong> of the analytic posterior
+truncated to the bounds, which the solve keeps.</p>
 <nav class="contents local" id="on-this-page">
 <p class="topic-title">On this page</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="#what-the-bounded-posterior-is" id="id1">What the bounded posterior is</a></p></li>
-<li><p><a class="reference internal" href="#a-small-problem" id="id2">A small problem</a></p></li>
-<li><p><a class="reference internal" href="#what-the-posterior-says" id="id3">What the posterior says</a></p></li>
-<li><p><a class="reference internal" href="#rectified-draws" id="id4">Rectified draws</a></p></li>
-<li><p><a class="reference internal" href="#what-it-costs" id="id5">What it costs</a></p></li>
-<li><p><a class="reference internal" href="#in-a-world-with-a-nonnegative-truth" id="id6">In a world with a nonnegative truth</a></p></li>
+<li><p><a class="reference internal" href="#when-to-use-it" id="id1">When to use it</a></p></li>
+<li><p><a class="reference internal" href="#an-example" id="id2">An example</a></p></li>
+<li><p><a class="reference internal" href="#what-the-posterior-reports" id="id3">What the posterior reports</a></p></li>
+<li><p><a class="reference internal" href="#options" id="id4">Options</a></p></li>
+<li><p><a class="reference internal" href="#warnings-and-checks" id="id5">Warnings and checks</a></p></li>
+<li><p><a class="reference internal" href="#cost" id="id6">Cost</a></p></li>
+<li><p><a class="reference internal" href="#how-it-works" id="id7">How it works</a></p></li>
+<li><p><a class="reference internal" href="#references" id="id8">References</a></p></li>
 </ul>
 </nav>
-<section id="what-the-bounded-posterior-is">
-<h2><a class="toc-backref" href="#id1" role="doc-backlink">What the bounded posterior is</a><a class="headerlink" href="#what-the-bounded-posterior-is" title="Link to this heading">#</a></h2>
-<p>The prior with the bounds is the Gaussian prior set to zero outside them
-(whose mean is above the Gaussian’s: <a class="reference internal" href="comparison.html"><span class="doc">Choosing a method</span></a> shows how far), so
-the posterior with the bounds is the analytic posterior <span class="math notranslate nohighlight">\(N(\hat{x},
-\hat{S})\)</span> truncated to the box <span class="math notranslate nohighlight">\(l \le x \le u\)</span>. It is not Gaussian, and
-its mean is not its mode:</p>
+<section id="when-to-use-it">
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">When to use it</a><a class="headerlink" href="#when-to-use-it" title="Link to this heading">#</a></h2>
+<p>Use <code class="docutils literal notranslate"><span class="pre">&quot;bounded&quot;</span></code> when each element’s estimate must respect its bounds (a map
+with no negative values) and the Gaussian prior cut at the bounds is the
+prior you mean. The problem is the linear one: a forward operator, a
+Gaussian prior and Gaussian observation errors.</p>
+<p>Another method is better when:</p>
 <ul class="simple">
-<li><p>the <strong>estimate</strong> is the <strong>mode</strong>, the point of the box where the analytic
-cost is least, which is the point of the box nearest <span class="math notranslate nohighlight">\(\hat{x}\)</span> in the
-metric of <span class="math notranslate nohighlight">\(\hat{S}\)</span>. fips finds it with an active set that needs only
-the columns of <span class="math notranslate nohighlight">\(\hat{S}\)</span> at the elements on a bound, from the analytic
-factors, and checks the optimality conditions of the answer before it
-returns it. The mode is not the mean: <code class="docutils literal notranslate"><span class="pre">post.mean</span></code> is the mean of the draws;</p></li>
-<li><p>the <strong>uncertainty</strong> comes from <strong>draws</strong> of the truncated posterior, by exact
-Hamiltonian Monte Carlo (Pakman and Paninski, 2014). An element on its bound
-still has spread, on one side of the bound. The intervals of
-<a class="reference internal" href="../reference/api/fips.Posterior.uncertainty.html#fips.Posterior.uncertainty" title="fips.Posterior.uncertainty"><code class="xref py py-meth docutils literal notranslate"><span class="pre">uncertainty()</span></code></a> and <a class="reference internal" href="../reference/api/fips.Posterior.trials.html#fips.Posterior.trials" title="fips.Posterior.trials"><code class="xref py py-meth docutils literal notranslate"><span class="pre">trials()</span></code></a>
-(<code class="docutils literal notranslate"><span class="pre">lower</span></code> and <code class="docutils literal notranslate"><span class="pre">upper</span></code>) are the draws’ quantiles, not the mode plus or
-minus a multiple of the standard deviation.</p></li>
+<li><p><strong>you want an aggregate</strong> (a sum or a mean over many elements): the analytic
+posterior’s aggregate is often close to Gaussian, its estimate is unbiased,
+and it costs least (<code class="docutils literal notranslate"><span class="pre">fips.solve(problem)</span></code>; <a class="reference internal" href="methods.html#methods-positive"><span class="std std-ref">Keeping a quantity positive</span></a>);</p></li>
+<li><p><strong>the uncertainty is a factor of a reference, or additive away from zero</strong>:
+solve for a transform of the state that is always positive
+(<a class="reference internal" href="../reference/api/fips.LogNormalForward.html#fips.LogNormalForward" title="fips.LogNormalForward"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogNormalForward</span></code></a>, <a class="reference internal" href="../reference/api/fips.SoftplusForward.html#fips.SoftplusForward" title="fips.SoftplusForward"><code class="xref py py-class docutils literal notranslate"><span class="pre">SoftplusForward</span></code></a>;
+<a class="reference internal" href="positive.html"><span class="doc">Values that stay positive</span></a>);</p></li>
+<li><p><strong>the forward map is a model, not a matrix</strong>: <code class="docutils literal notranslate"><span class="pre">&quot;bounded&quot;</span></code> refuses it.
+Write the model on a state that cannot leave the bounds (the logarithm of a
+positive value) and solve with <code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code> (<a class="reference internal" href="nonlinear.html"><span class="doc">A nonlinear forward model</span></a>).</p></li>
 </ul>
-<p>Where the prior is wide against its bounds (a standard deviation over half the
-distance to a bound, for more than a tenth of a block’s bounded elements) the
-solve logs one warning naming the block, how many of its elements are wide,
-and by how much the cut prior’s total sits above the prior’s (below it, at an
-upper bound), each element taken alone, as a percentage of the total’s
-distance from the bounds: of the prior’s total, for a bound of zero. That is
-how far the draws’ totals sit from the prior’s where the data constrain little;
-the estimate is not affected. With rectified draws (below) it gives the
-smaller shift of the prior set to its bounds.</p>
-<p>The bounds are <code class="docutils literal notranslate"><span class="pre">lower</span></code> and <code class="docutils literal notranslate"><span class="pre">upper</span></code>: a number for every element, a
-<a class="reference internal" href="../reference/api/fips.Vector.html#fips.Vector" title="fips.Vector"><code class="xref py py-class docutils literal notranslate"><span class="pre">Vector</span></code></a> with an element’s own bound (<code class="docutils literal notranslate"><span class="pre">-inf</span></code> or <code class="docutils literal notranslate"><span class="pre">inf</span></code> for
-none), or a dict by block. <code class="docutils literal notranslate"><span class="pre">{&quot;flux&quot;:</span> <span class="pre">0.0}</span></code> bounds the <code class="docutils literal notranslate"><span class="pre">flux</span></code> block and leaves the
-other blocks free, as a bias block must be. Bounds go to the solve, not to the
-<a class="reference internal" href="../reference/api/fips.Problem.html#fips.Problem" title="fips.Problem"><code class="xref py py-class docutils literal notranslate"><span class="pre">Problem</span></code></a>: the problem is the Gaussian question, and the bounds
-are how the method answers it.</p>
 </section>
-<section id="a-small-problem">
-<h2><a class="toc-backref" href="#id2" role="doc-backlink">A small problem</a><a class="headerlink" href="#a-small-problem" title="Link to this heading">#</a></h2>
-<p>Twenty cells along a line, with a prior of 0.2 and correlated errors, seen
-from two sites, each with a bias of its own; the data come from a truth drawn
-lognormal, most of it near zero:</p>
+<section id="an-example">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">An example</a><a class="headerlink" href="#an-example" title="Link to this heading">#</a></h2>
+<p>As an example, a flux inversion: twenty cells along a line, a prior flux of
+0.2 in each with correlated errors, and two sites that see the cells, each
+with a bias of its own. The bias block must stay free.</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [1]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 <span class="gp">In [2]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
@@ -536,9 +531,9 @@ lognormal, most of it near zero:</p>
 
 <span class="gp">In [4]: </span><span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 
-<span class="gp">In [5]: </span><span class="n">n_cells</span><span class="p">,</span> <span class="n">n_obs</span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">24</span>
+<span class="gp">In [5]: </span><span class="n">n</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">24</span>
 
-<span class="gp">In [6]: </span><span class="n">cells</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_cells</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"x"</span><span class="p">)</span>  <span class="c1"># km along a line</span>
+<span class="gp">In [6]: </span><span class="n">cells</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"x"</span><span class="p">)</span>  <span class="c1"># km along a line</span>
 
 <span class="gp">In [7]: </span><span class="n">sites</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">([</span><span class="s2">"north"</span><span class="p">,</span> <span class="s2">"south"</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">"site"</span><span class="p">)</span>
 
@@ -550,16 +545,15 @@ lognormal, most of it near zero:</p>
 </pre></div>
 </div>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [9]: </span><span class="n">obs_labels</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_arrays</span><span class="p">(</span>
-<span class="gp">   ...: </span>    <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">sites</span><span class="p">,</span> <span class="n">n_obs</span> <span class="o">//</span> <span class="mi">2</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_obs</span> <span class="o">//</span> <span class="mi">2</span><span class="p">),</span> <span class="mi">2</span><span class="p">)],</span>
-<span class="gp">   ...: </span>    <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">"site"</span><span class="p">,</span> <span class="s2">"hour"</span><span class="p">],</span>
+<span class="gp">   ...: </span>    <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">sites</span><span class="p">,</span> <span class="n">m</span> <span class="o">//</span> <span class="mi">2</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">m</span> <span class="o">//</span> <span class="mi">2</span><span class="p">),</span> <span class="mi">2</span><span class="p">)],</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">"site"</span><span class="p">,</span> <span class="s2">"hour"</span><span class="p">]</span>
 <span class="gp">   ...: </span><span class="p">)</span>
 <span class="gp">   ...: </span>
 
-<span class="gp">In [10]: </span><span class="n">obs_space</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"ch4"</span><span class="p">:</span> <span class="n">obs_labels</span><span class="p">})</span>
+<span class="gp">In [10]: </span><span class="n">obs_space</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"conc"</span><span class="p">:</span> <span class="n">obs_labels</span><span class="p">})</span>
 
-<span class="gp">In [11]: </span><span class="n">footprint</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="p">(</span><span class="n">n_obs</span><span class="p">,</span> <span class="n">n_cells</span><span class="p">))</span>
+<span class="gp">In [11]: </span><span class="n">footprint</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
 
-<span class="gp">In [12]: </span><span class="n">footprint</span> <span class="o">*=</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="p">(</span><span class="n">n_obs</span><span class="p">,</span> <span class="n">n_cells</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mf">0.3</span>
+<span class="gp">In [12]: </span><span class="n">footprint</span> <span class="o">*=</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mf">0.3</span>
 
 <span class="gp">In [13]: </span><span class="n">south</span> <span class="o">=</span> <span class="p">(</span><span class="n">obs_labels</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="s2">"site"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"south"</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
 
@@ -568,39 +562,33 @@ lognormal, most of it near zero:</p>
 <span class="gp">In [15]: </span><span class="n">forward</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">obs_space</span><span class="p">,</span> <span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [16]: </span><span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="n">obs</span><span class="p">):</span>
-<span class="gp">   ....: </span><span class="w">    </span><span class="sd">"""The problem of the observations `obs`."""</span>
-<span class="gp">   ....: </span>    <span class="k">return</span> <span class="n">fips</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span>
-<span class="gp">   ....: </span>        <span class="n">prior</span><span class="o">=</span><span class="n">prior</span><span class="p">,</span>
-<span class="gp">   ....: </span>        <span class="n">prior_cov</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Covariance</span><span class="o">.</span><span class="n">block_diag</span><span class="p">(</span>
-<span class="gp">   ....: </span>            <span class="n">flux</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">(</span><span class="s2">"x"</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">)</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.4</span><span class="p">),</span>
-<span class="gp">   ....: </span>            <span class="n">bias</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Independent</span><span class="p">()</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.5</span><span class="p">),</span>
-<span class="gp">   ....: </span>        <span class="p">),</span>
-<span class="gp">   ....: </span>        <span class="n">obs</span><span class="o">=</span><span class="n">obs</span><span class="p">,</span>
-<span class="gp">   ....: </span>        <span class="n">obs_cov</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Independent</span><span class="p">()</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.2</span><span class="p">),</span>
-<span class="gp">   ....: </span>        <span class="n">forward</span><span class="o">=</span><span class="n">forward</span><span class="p">,</span>
-<span class="gp">   ....: </span>    <span class="p">)</span>
+<p>The data come from a truth that is mostly near zero:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [16]: </span><span class="n">flux</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">0.15</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+
+<span class="gp">In [17]: </span><span class="n">truth</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="n">flux</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">],</span> <span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">)</span>
+
+<span class="gp">In [18]: </span><span class="n">obs</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">H</span> <span class="o">@</span> <span class="n">truth</span><span class="o">.</span><span class="n">values</span> <span class="o">+</span> <span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="n">m</span><span class="p">),</span> <span class="n">obs_space</span><span class="p">)</span>
+
+<span class="gp">In [19]: </span><span class="n">problem</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span>
+<span class="gp">   ....: </span>    <span class="n">prior</span><span class="o">=</span><span class="n">prior</span><span class="p">,</span>
+<span class="gp">   ....: </span>    <span class="n">prior_cov</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Covariance</span><span class="o">.</span><span class="n">block_diag</span><span class="p">(</span>
+<span class="gp">   ....: </span>        <span class="n">flux</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">(</span><span class="s2">"x"</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">)</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.4</span><span class="p">),</span>
+<span class="gp">   ....: </span>        <span class="n">bias</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Independent</span><span class="p">()</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.5</span><span class="p">),</span>
+<span class="gp">   ....: </span>    <span class="p">),</span>
+<span class="gp">   ....: </span>    <span class="n">obs</span><span class="o">=</span><span class="n">obs</span><span class="p">,</span>
+<span class="gp">   ....: </span>    <span class="n">obs_cov</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Independent</span><span class="p">()</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.2</span><span class="p">),</span>
+<span class="gp">   ....: </span>    <span class="n">forward</span><span class="o">=</span><span class="n">forward</span><span class="p">,</span>
+<span class="gp">   ....: </span><span class="p">)</span>
 <span class="gp">   ....: </span>
 </pre></div>
 </div>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [17]: </span><span class="n">flux</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">0.15</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">n_cells</span><span class="p">))</span>
+<p>The analytic estimate and the bounded one, at the cells on a bound and their
+neighbors:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [20]: </span><span class="n">analytic</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span>
 
-<span class="gp">In [18]: </span><span class="n">truth</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="n">flux</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">],</span> <span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">)</span>
+<span class="gp">In [21]: </span><span class="n">post</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="s2">"bounded"</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="p">{</span><span class="s2">"flux"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">})</span>
 
-<span class="gp">In [19]: </span><span class="n">obs</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">H</span> <span class="o">@</span> <span class="n">truth</span><span class="o">.</span><span class="n">values</span> <span class="o">+</span> <span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="n">n_obs</span><span class="p">),</span> <span class="n">obs_space</span><span class="p">)</span>
-
-<span class="gp">In [20]: </span><span class="n">problem</span> <span class="o">=</span> <span class="n">build</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>The analytic posterior and the bounded one, side by side. Two cells go below
-zero in the analytic estimate; with the bounds they sit at zero, their
-neighbors move a little, and the bias block, unbounded, keeps its negative
-north bias:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [21]: </span><span class="n">analytic</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span>
-
-<span class="gp">In [22]: </span><span class="n">post</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="s2">"bounded"</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="p">{</span><span class="s2">"flux"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">})</span>
-
-<span class="gp">In [23]: </span><span class="n">side</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+<span class="gp">In [22]: </span><span class="n">side</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
 <span class="gp">   ....: </span>    <span class="p">{</span>
 <span class="gp">   ....: </span>        <span class="s2">"truth"</span><span class="p">:</span> <span class="n">truth</span><span class="o">.</span><span class="n">to_series</span><span class="p">(),</span>
 <span class="gp">   ....: </span>        <span class="s2">"analytic"</span><span class="p">:</span> <span class="n">analytic</span><span class="o">.</span><span class="n">estimate</span><span class="o">.</span><span class="n">to_series</span><span class="p">(),</span>
@@ -610,52 +598,47 @@ north bias:</p>
 <span class="gp">   ....: </span><span class="p">)</span>
 <span class="gp">   ....: </span>
 
-<span class="gp">In [24]: </span><span class="n">near</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">at_bound</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+<span class="gp">In [23]: </span><span class="n">near</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">at_bound</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
 
-<span class="gp">In [25]: </span><span class="n">near</span> <span class="o">=</span> <span class="n">near</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="n">near</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="n">near</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># on a bound, or next to one</span>
+<span class="gp">In [24]: </span><span class="n">near</span> <span class="o">=</span> <span class="n">near</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="n">near</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">roll</span><span class="p">(</span><span class="n">near</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># on a bound, or next to one</span>
 
-<span class="gp">In [26]: </span><span class="n">side</span><span class="p">[</span><span class="n">near</span><span class="p">]</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-<span class="gh">Out[26]: </span>
+<span class="gp">In [25]: </span><span class="n">side</span><span class="p">[</span><span class="n">near</span><span class="p">]</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gh">Out[25]: </span>
 <span class="go">                 truth  analytic  bounded  at_bound</span>
 <span class="go">block x    site                                    </span>
 <span class="go">flux  11.5 nan   0.008     0.008    0.046     False</span>
 <span class="go">      12.5 nan   0.088    -0.058    0.000      True</span>
 <span class="go">      13.5 nan   0.114    -0.012    0.000      True</span>
 <span class="go">      14.5 nan   0.095     0.022    0.025     False</span>
-
-<span class="gp">In [27]: </span><span class="n">side</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s2">"bias"</span><span class="p">]</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-<span class="gh">Out[27]: </span>
+</pre></div>
+</div>
+<p>The cells the analytic estimate puts below zero sit at zero, and their
+neighbors move by what the posterior’s correlations say. Clipping (setting
+the negative values to zero and nothing else) would always raise the total;
+moving along the correlations can lower it too. The bias block has no bound
+and keeps its negative north bias:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [26]: </span><span class="n">side</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="s2">"bias"</span><span class="p">]</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gh">Out[26]: </span>
 <span class="go">           truth  analytic  bounded  at_bound</span>
 <span class="go">x   site                                     </span>
 <span class="go">NaN north   -0.6    -0.605   -0.617     False</span>
 <span class="go">    south    0.4     0.410    0.381     False</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="../reference/api/fips.Posterior.at_bound.html#fips.Posterior.at_bound" title="fips.Posterior.at_bound"><code class="xref py py-attr docutils literal notranslate"><span class="pre">at_bound</span></code></a> says which elements sit on a bound at the
-mode: the elements the bounds decide, where the observations decide the
-others.</p>
-</section>
-<section id="what-the-posterior-says">
-<h2><a class="toc-backref" href="#id3" role="doc-backlink">What the posterior says</a><a class="headerlink" href="#what-the-posterior-says" title="Link to this heading">#</a></h2>
-<p><strong>The spread comes from draws.</strong> <a class="reference internal" href="../reference/api/fips.Posterior.variances.html#fips.Posterior.variances" title="fips.Posterior.variances"><code class="xref py py-attr docutils literal notranslate"><span class="pre">variances</span></code></a>,
-<a class="reference internal" href="../reference/api/fips.Posterior.cov.html#fips.Posterior.cov" title="fips.Posterior.cov"><code class="xref py py-meth docutils literal notranslate"><span class="pre">cov()</span></code></a> (of the state or of totals) and
-<a class="reference internal" href="../reference/api/fips.Posterior.uncertainty.html#fips.Posterior.uncertainty" title="fips.Posterior.uncertainty"><code class="xref py py-meth docutils literal notranslate"><span class="pre">uncertainty()</span></code></a> are those of the draws the solve keeps:
-<code class="docutils literal notranslate"><span class="pre">draws=2000</span></code> of them by default, made at the first need from <code class="docutils literal notranslate"><span class="pre">seed=0</span></code>, so a
-solve is reproducible. They are Monte Carlo estimates from a chain, each draw
-exact but started from the last: from 2000 draws a standard deviation is good
-to about 1.5% for an element away from its bounds, and to about 12% for one
-whose analytic estimate is one to four standard deviations outside its bound,
-whose draws pile against it and mix slowly (more draws make it better as one
-over their square root; the solve warns when a standard deviation is
-uncertain by more than 10%, with the number of draws that would do). The
-total’s uncertainty is smaller with
-the bounds: they rule out the negative totals the Gaussian allowed.</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [28]: </span><span class="n">W</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span>
-<span class="gp">   ....: </span>    <span class="n">np</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n_cells</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">][</span><span class="kc">None</span><span class="p">,</span> <span class="p">:],</span>
+<p>The total of the flux, with its 95% interval. With the bounds, the interval
+is the quantiles of the draws. It is narrower, since the bounds rule out the
+negative totals the Gaussian allowed, and higher: where the data see little,
+the draws are those of the prior cut at zero, whose mean is above the prior
+mean. Here it misses the true total, which the analytic interval holds.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [27]: </span><span class="n">W</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span>
+<span class="gp">   ....: </span>    <span class="n">np</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">][</span><span class="kc">None</span><span class="p">,</span> <span class="p">:],</span>
 <span class="gp">   ....: </span>    <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"total"</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">([</span><span class="s2">"flux"</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">"what"</span><span class="p">)}),</span>
 <span class="gp">   ....: </span>    <span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
 <span class="gp">   ....: </span><span class="p">)</span>
 <span class="gp">   ....: </span>
+
+<span class="gp">In [28]: </span><span class="p">(</span><span class="n">W</span> <span class="o">@</span> <span class="n">truth</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gh">Out[28]: </span><span class="go">array([3.452])</span>
 
 <span class="gp">In [29]: </span><span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">({</span><span class="s2">"analytic"</span><span class="p">:</span> <span class="n">analytic</span><span class="o">.</span><span class="n">uncertainty</span><span class="p">(</span><span class="n">W</span><span class="p">),</span> <span class="s2">"bounded"</span><span class="p">:</span> <span class="n">post</span><span class="o">.</span><span class="n">uncertainty</span><span class="p">(</span><span class="n">W</span><span class="p">)})</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
 <span class="gh">Out[29]: </span>
@@ -665,11 +648,10 @@ the bounds: they rule out the negative totals the Gaussian allowed.</p>
 <span class="go">bounded  total flux      4.065          0.679      0.833  3.894  6.569</span>
 </pre></div>
 </div>
-<p><strong>The mode is not the mean.</strong> The estimate is the mode; the draws are spread
-on the side of the bound away from it, so their mean is above it for a lower
-bound. A question about the distribution (a total’s mean, the chance it is
-below a value) is read off <a class="reference internal" href="../reference/api/fips.Posterior.sample.html#fips.Posterior.sample" title="fips.Posterior.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a>, new draws of the
-truncated posterior:</p>
+<p><strong>The mode is not the mean.</strong> The draws spread on the side of the bound away
+from the mode, so their mean is above it. A question about the distribution
+(the mean of a total, the chance it is below a value) is read off new draws,
+<a class="reference internal" href="../reference/api/fips.Posterior.sample.html#fips.Posterior.sample" title="fips.Posterior.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a>:</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [30]: </span><span class="n">draws</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">2000</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">W</span><span class="o">=</span><span class="n">W</span><span class="p">)</span>
 
 <span class="gp">In [31]: </span><span class="p">(</span><span class="n">W</span> <span class="o">@</span> <span class="n">post</span><span class="o">.</span><span class="n">estimate</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">draws</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()),</span> <span class="mi">3</span><span class="p">)</span>
@@ -679,282 +661,277 @@ truncated posterior:</p>
 <span class="gh">Out[32]: </span><span class="go">0.001</span>
 </pre></div>
 </div>
-<p><strong>The gain, DOFS and the averaging kernel are those at the mode</strong>: the
-analytic posterior with the elements on a bound held there. An element on a
-bound has no DOFS, since the bound, not the data, decides it. The chi-squared
-and the misfits are those of the mode (the chi-squared tests’ degrees of
-freedom and p-values are then approximate):</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [33]: </span><span class="n">post</span><span class="o">.</span><span class="n">dofs_per_element</span><span class="o">.</span><span class="n">to_series</span><span class="p">()[</span><span class="n">post</span><span class="o">.</span><span class="n">at_bound</span><span class="p">]</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-<span class="gh">Out[33]: </span>
-<span class="go">block  x     site</span>
-<span class="go">flux   12.5  nan     0.0</span>
-<span class="go">       13.5  nan     0.0</span>
-<span class="go">Name: dofs_per_element, dtype: float64</span>
-
-<span class="gp">In [34]: </span><span class="nb">round</span><span class="p">(</span><span class="n">analytic</span><span class="o">.</span><span class="n">dofs</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="nb">round</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">dofs</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
-<span class="gh">Out[34]: </span><span class="go">(13.634, 12.633)</span>
-</pre></div>
-</div>
-<p><a class="reference internal" href="../reference/api/fips.Posterior.with_gamma.html#fips.Posterior.with_gamma" title="fips.Posterior.with_gamma"><code class="xref py py-meth docutils literal notranslate"><span class="pre">with_gamma()</span></code></a> and <a class="reference internal" href="../reference/api/fips.Posterior.with_data.html#fips.Posterior.with_data" title="fips.Posterior.with_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">with_data()</span></code></a> find
-the mode again on the kept factors, without solving again, and their draws are
-made when first needed. A bounded posterior is a sampled one: the members it
-cannot give (<a class="reference internal" href="../reference/api/fips.Posterior.recovery.html#fips.Posterior.recovery" title="fips.Posterior.recovery"><code class="xref py py-meth docutils literal notranslate"><span class="pre">recovery()</span></code></a> and the data worth among them,
-since its estimate is not linear in the data) are in <a class="reference internal" href="../reference/posterior.html#posterior-members"><span class="std std-ref">the table</span></a>, and <a class="reference internal" href="../reference/api/fips.Posterior.trials.html#fips.Posterior.trials" title="fips.Posterior.trials"><code class="xref py py-meth docutils literal notranslate"><span class="pre">trials()</span></code></a> measures what
-<code class="docutils literal notranslate"><span class="pre">recovery</span></code> would (below).</p>
 </section>
-<section id="rectified-draws">
-<span id="bounds-rectified"></span><h2><a class="toc-backref" href="#id4" role="doc-backlink">Rectified draws</a><a class="headerlink" href="#rectified-draws" title="Link to this heading">#</a></h2>
-<p><strong>Rectified draws are the bounded estimate itself, with the prior mean and the
-data redrawn</strong> (<code class="docutils literal notranslate"><span class="pre">distribution=&quot;rectified&quot;</span></code>). Each draw is the bounded problem solved
-again for one draw of the prior mean from <span class="math notranslate nohighlight">\(N(x_0, S_0)\)</span> and of the
-observations from <span class="math notranslate nohighlight">\(N(z, S_z)\)</span>, so an element that draw puts outside its
-bounds is exactly on its bound, as at the mode. The default draws, of the
-truncated posterior, are never exactly on a bound. The estimate, the active
-set, the gain and DOFS are the same either way; only the draws differ, and
-with them the variances, <code class="docutils literal notranslate"><span class="pre">post.mean</span></code>, the intervals and totals.</p>
-<p>A cell on its bound at the mode, in the small problem above:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [35]: </span><span class="n">rectified</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="s2">"bounded"</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="p">{</span><span class="s2">"flux"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">},</span> <span class="n">distribution</span><span class="o">=</span><span class="s2">"rectified"</span><span class="p">)</span>
-
-<span class="gp">In [36]: </span><span class="n">cell</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">at_bound</span><span class="p">[</span><span class="n">post</span><span class="o">.</span><span class="n">at_bound</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># the first cell on its bound</span>
-
-<span class="gp">In [37]: </span><span class="n">cell_draws</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"truncated"</span><span class="p">:</span> <span class="n">post</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">2000</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="s2">"rectified"</span><span class="p">:</span> <span class="n">rectified</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">2000</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="mi">1</span><span class="p">)}</span>
-</pre></div>
-</div>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [38]: </span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
-<span class="gp">   ....: </span>    <span class="p">{</span>
-<span class="gp">   ....: </span>        <span class="n">name</span><span class="p">:</span> <span class="p">{</span>
-<span class="gp">   ....: </span>            <span class="s2">"exactly 0"</span><span class="p">:</span> <span class="nb">float</span><span class="p">((</span><span class="n">d</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cell</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()),</span>
-<span class="gp">   ....: </span>            <span class="s2">"mean"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cell</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()),</span>
-<span class="gp">   ....: </span>            <span class="s2">"95th percentile"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">cell</span><span class="p">]</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="mf">0.95</span><span class="p">)),</span>
-<span class="gp">   ....: </span>        <span class="p">}</span>
-<span class="gp">   ....: </span>        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">cell_draws</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-<span class="gp">   ....: </span>    <span class="p">}</span>
-<span class="gp">   ....: </span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-<span class="gp">   ....: </span>
-<span class="gh">Out[38]: </span>
-<span class="go">           exactly 0   mean  95th percentile</span>
-<span class="go">truncated      0.000  0.141            0.329</span>
-<span class="go">rectified      0.499  0.063            0.268</span>
-</pre></div>
-</div>
-<p>About half the rectified draws hold this cell at zero, and none of the
-truncated ones does: a truncated draw sits above the bound, by little or by
-much, so its mean is higher. The total moves the same way. Here the analytic
-total’s interval and the rectified one hold the truth (3.45) and the truncated
-one, centered higher, does not; one set of data proves nothing, and the trials
-below measure it:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [39]: </span><span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span>
-<span class="gp">   ....: </span>    <span class="p">{</span>
-<span class="gp">   ....: </span>        <span class="s2">"analytic"</span><span class="p">:</span> <span class="n">analytic</span><span class="o">.</span><span class="n">uncertainty</span><span class="p">(</span><span class="n">W</span><span class="p">),</span>
-<span class="gp">   ....: </span>        <span class="s2">"truncated"</span><span class="p">:</span> <span class="n">post</span><span class="o">.</span><span class="n">uncertainty</span><span class="p">(</span><span class="n">W</span><span class="p">),</span>
-<span class="gp">   ....: </span>        <span class="s2">"rectified"</span><span class="p">:</span> <span class="n">rectified</span><span class="o">.</span><span class="n">uncertainty</span><span class="p">(</span><span class="n">W</span><span class="p">),</span>
-<span class="gp">   ....: </span>    <span class="p">}</span>
-<span class="gp">   ....: </span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-<span class="gp">   ....: </span>
-<span class="gh">Out[39]: </span>
-<span class="go">                      prior_std  posterior_std  reduction  lower  upper</span>
-<span class="go">          block what                                                   </span>
-<span class="go">analytic  total flux      4.065          0.952      0.766  1.838  5.568</span>
-<span class="go">truncated total flux      4.065          0.679      0.833  3.894  6.569</span>
-<span class="go">rectified total flux      4.065          0.660      0.838  3.140  5.737</span>
-</pre></div>
-</div>
-<p><strong>What the rectified draws are, and are not.</strong> They are the distribution of
-the bounded estimate when the prior mean and the data are redrawn from their
-Gaussians: what the inversion would give for other inputs as likely as these.
-They are not, in general, the Bayesian posterior of any prior fips writes
-down, and they are not the truncated posterior. For one element whose prior
-mean is one standard deviation above a bound of zero, with no data, the
-rectified mean is 1.083 times the prior mean (the truncated one is 1.288
-times), and 16% of the draws are exactly zero. The construction is old:
-Miller, Michalak and Levi (2014, section 3.3.1) propose realizations this way
-(perturbed inputs, then the bounded solve) and then accept or reject each by a
-Metropolis-Hastings test, which fips does not; Bardsley and Fox (2012) solve a
-nonnegativity-constrained quadratic problem for each sample; Everink, Dong and
-Andersen (2023) call the resulting distribution a regularized Gaussian.</p>
-<p><strong>How often their intervals hold the truth</strong>, against the analytic posterior
-and the truncated draws: 50 cells on a line whose prior standard deviation
-equals its mean (correlated over 5 cells), 40 observations, 300 trials of data
-from the problem’s own error (a coverage near 0.9 is known to about 0.02),
-1000 draws a trial. The truth is a draw of the Gaussian prior, the same with
-its negative cells set to zero, or a draw of the prior truncated at zero. With
-weak data (the analytic total’s standard deviation a third of the prior’s),
-the share of 95% intervals that held the truth:</p>
+<section id="what-the-posterior-reports">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">What the posterior reports</a><a class="headerlink" href="#what-the-posterior-reports" title="Link to this heading">#</a></h2>
+<p>A bounded posterior is a <em>sampled</em> one: the
+<a class="reference internal" href="../reference/posterior.html#posterior-members"><span class="std std-ref">members table</span></a> lists what it gives.</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../reference/api/fips.Posterior.estimate.html#fips.Posterior.estimate" title="fips.Posterior.estimate"><code class="xref py py-attr docutils literal notranslate"><span class="pre">estimate</span></code></a> is the <strong>mode</strong>, and
+<a class="reference internal" href="../reference/api/fips.Posterior.at_bound.html#fips.Posterior.at_bound" title="fips.Posterior.at_bound"><code class="xref py py-attr docutils literal notranslate"><span class="pre">at_bound</span></code></a> says which elements sit on a bound there:
+the bounds decide those, and the observations the others.</p></li>
+<li><p><a class="reference internal" href="../reference/api/fips.Posterior.variances.html#fips.Posterior.variances" title="fips.Posterior.variances"><code class="xref py py-attr docutils literal notranslate"><span class="pre">variances</span></code></a>, <a class="reference internal" href="../reference/api/fips.Posterior.cov.html#fips.Posterior.cov" title="fips.Posterior.cov"><code class="xref py py-meth docutils literal notranslate"><span class="pre">cov()</span></code></a> (of the
+state or of aggregates), <a class="reference internal" href="../reference/api/fips.Posterior.mean.html#fips.Posterior.mean" title="fips.Posterior.mean"><code class="xref py py-attr docutils literal notranslate"><span class="pre">mean</span></code></a> and the <code class="docutils literal notranslate"><span class="pre">lower</span></code> and
+<code class="docutils literal notranslate"><span class="pre">upper</span></code> of <a class="reference internal" href="../reference/api/fips.Posterior.uncertainty.html#fips.Posterior.uncertainty" title="fips.Posterior.uncertainty"><code class="xref py py-meth docutils literal notranslate"><span class="pre">uncertainty()</span></code></a> and
+<a class="reference internal" href="../reference/api/fips.Posterior.trials.html#fips.Posterior.trials" title="fips.Posterior.trials"><code class="xref py py-meth docutils literal notranslate"><span class="pre">trials()</span></code></a> are those of the <strong>kept draws</strong>: <code class="docutils literal notranslate"><span class="pre">draws</span></code>
+of them, made from <code class="docutils literal notranslate"><span class="pre">seed</span></code> the first time one is needed, so a solve is
+reproducible. The interval is the draws’ quantiles, not the mode plus or
+minus a multiple of the standard deviation. An element on its bound still
+has spread, on one side of the bound.</p></li>
+<li><p><a class="reference internal" href="../reference/api/fips.Posterior.sample.html#fips.Posterior.sample" title="fips.Posterior.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a> makes new draws, for any function of the
+state.</p></li>
+<li><p><strong>The gain, the averaging kernel, DOFS and the information content are
+those at the mode</strong>: the analytic posterior with the elements on a bound
+held there. An element on a bound has no DOFS: the bound decides it, not
+the data.</p></li>
+<li><p><a class="reference internal" href="../reference/api/fips.Posterior.chi2.html#fips.Posterior.chi2" title="fips.Posterior.chi2"><code class="xref py py-attr docutils literal notranslate"><span class="pre">chi2</span></code></a> and the misfits are those of the mode. The
+degrees of freedom and p-values of <a class="reference internal" href="../reference/api/fips.Posterior.chi2_tests.html#fips.Posterior.chi2_tests" title="fips.Posterior.chi2_tests"><code class="xref py py-meth docutils literal notranslate"><span class="pre">chi2_tests()</span></code></a> are
+then approximate.</p></li>
+<li><p><a class="reference internal" href="../reference/api/fips.Posterior.with_gamma.html#fips.Posterior.with_gamma" title="fips.Posterior.with_gamma"><code class="xref py py-meth docutils literal notranslate"><span class="pre">with_gamma()</span></code></a> and <a class="reference internal" href="../reference/api/fips.Posterior.with_data.html#fips.Posterior.with_data" title="fips.Posterior.with_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">with_data()</span></code></a>
+find the mode again on the kept factors, without factoring again; their
+draws are made when first needed.</p></li>
+<li><p><a class="reference internal" href="../reference/api/fips.Posterior.recovery.html#fips.Posterior.recovery" title="fips.Posterior.recovery"><code class="xref py py-meth docutils literal notranslate"><span class="pre">recovery()</span></code></a> and the data worth raise: they need an
+estimate linear in the data, and the mode is not.
+<a class="reference internal" href="../reference/api/fips.Posterior.trials.html#fips.Posterior.trials" title="fips.Posterior.trials"><code class="xref py py-meth docutils literal notranslate"><span class="pre">trials()</span></code></a> measures what <code class="docutils literal notranslate"><span class="pre">recovery</span></code> would
+(<a class="reference internal" href="synthetic.html"><span class="doc">Synthetic experiments</span></a>). <code class="docutils literal notranslate"><span class="pre">log_evidence</span></code> raises too; the evidence of the
+problem without bounds is <code class="docutils literal notranslate"><span class="pre">fips.solve(problem).log_evidence</span></code>.</p></li>
+</ul>
+<p>With no finite bound, the solve returns the analytic posterior itself, a
+Gaussian one.</p>
+</section>
+<section id="options">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Options</a><a class="headerlink" href="#options" title="Link to this heading">#</a></h2>
+<p>Each is a keyword of <code class="docutils literal notranslate"><span class="pre">fips.solve(problem,</span> <span class="pre">&quot;bounded&quot;,</span> <span class="pre">...)</span></code>
+(<a class="reference internal" href="../reference/api/fips.methods.bounded.BoundedOptions.html#fips.methods.bounded.BoundedOptions" title="fips.methods.bounded.BoundedOptions"><code class="xref py py-class docutils literal notranslate"><span class="pre">BoundedOptions</span></code></a>).</p>
 <div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 18.0%" />
+<col style="width: 16.0%" />
+<col style="width: 66.0%" />
+</colgroup>
 <thead>
-<tr class="row-odd"><th class="head stub"><p>The truth</p></th>
-<th class="head"><p>Total, analytic</p></th>
-<th class="head"><p>Total, truncated</p></th>
-<th class="head"><p>Total, rectified</p></th>
-<th class="head"><p>Cells, truncated</p></th>
-<th class="head"><p>Cells, rectified</p></th>
+<tr class="row-odd"><th class="head"><p>Option</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>What it does</p></th>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><th class="stub"><p>Gaussian prior draw</p></th>
-<td><p>0.98</p></td>
-<td><p>0.54</p></td>
-<td><p>0.77</p></td>
-<td><p>0.76</p></td>
-<td><p>0.79</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">lower</span></code>, <code class="docutils literal notranslate"><span class="pre">upper</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>The bounds: <code class="docutils literal notranslate"><span class="pre">lower</span> <span class="pre">&lt;=</span> <span class="pre">x</span> <span class="pre">&lt;=</span> <span class="pre">upper</span></code>. A number, a
+<a class="reference internal" href="../reference/api/fips.Vector.html#fips.Vector" title="fips.Vector"><code class="xref py py-class docutils literal notranslate"><span class="pre">Vector</span></code></a>, or a dict by block (below). <code class="docutils literal notranslate"><span class="pre">None</span></code> is no
+bound.</p></td>
 </tr>
-<tr class="row-odd"><th class="stub"><p>Negatives set to zero</p></th>
-<td><p>0.99</p></td>
-<td><p>0.63</p></td>
-<td><p>0.88</p></td>
-<td><p>0.77</p></td>
-<td><p>0.96</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">distribution</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;truncated&quot;</span></code></p></td>
+<td><p>What the draws are draws of: the posterior truncated to the bounds, or
+<code class="docutils literal notranslate"><span class="pre">&quot;rectified&quot;</span></code>, the bounded estimate with the prior mean and the data
+drawn again (below).</p></td>
 </tr>
-<tr class="row-even"><th class="stub"><p>Truncated prior draw</p></th>
-<td><p>0.94</p></td>
-<td><p>0.95</p></td>
-<td><p>0.94</p></td>
-<td><p>0.95</p></td>
-<td><p>0.97</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">draws</span></code></p></td>
+<td><p>2000</p></td>
+<td><p>The number of draws kept for the variances, the covariances, the mean
+and the intervals. The Monte Carlo error of a standard deviation falls
+as one over its square root.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">burn_in</span></code></p></td>
+<td><p>20</p></td>
+<td><p>The draws of the truncated chain made and left out before those kept.
+Rectified draws are not a chain, and leave none out.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">seed</span></code></p></td>
+<td><p>0</p></td>
+<td><p>The seed of the kept draws.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">gamma</span></code></p></td>
+<td><p>1.0</p></td>
+<td><p>The regularization factor: the observation covariance is divided by
+it, as for the analytic method.</p></td>
 </tr>
 </tbody>
 </table>
 </div>
-<p>With stronger data (a standard deviation a tenth of the prior’s) the totals
-were 0.97, 0.70, 0.84; 0.98, 0.81, 0.94; and 0.96, 0.95, 0.96. <strong>The
-rectified intervals hold the truth more often than the truncated ones wherever
-the truth is not a draw of the truncated prior, and as often where it is; the
-analytic total held it in every world, while the rectified total fell short of
-95% where the truth could be negative (0.77 and 0.84) and, with weak data,
-where it had exact zeros (0.88).</strong> For a total, read the analytic posterior. The rectified draws suit
-the elements of a map near zero: where the truth has exact zeros, 96% of
-their intervals held it, against 77% for the truncated draws, which never
-reach zero.</p>
-<p>How they are made: the analytic estimate of the perturbed problem is an exact
-draw of the analytic posterior <span class="math notranslate nohighlight">\(N(\hat{x}, \hat{S})\)</span> (what
-<a class="reference internal" href="../reference/api/fips.Posterior.sample.html#fips.Posterior.sample" title="fips.Posterior.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a> of <code class="docutils literal notranslate"><span class="pre">fips.solve(problem)</span></code> returns), and its
-bounded estimate is that draw moved onto the bounds along the posterior’s
-correlations, by the same active set as the mode. So draw <code class="docutils literal notranslate"><span class="pre">k</span></code> of
-<code class="docutils literal notranslate"><span class="pre">rectified.sample(n,</span> <span class="pre">rng=5)</span></code> is draw <code class="docutils literal notranslate"><span class="pre">k</span></code> of
-<code class="docutils literal notranslate"><span class="pre">fips.solve(problem).sample(n,</span> <span class="pre">rng=5)</span></code>, unchanged where no bound binds in
-it. The draws are independent, not a chain: <code class="docutils literal notranslate"><span class="pre">burn_in</span></code> does nothing, and the
-solve warns when a standard deviation from them is uncertain by more than 10%,
-which happens for an element on its bound in nearly every draw, whose spread
-comes from the few that are not. With rectified draws, the wide-prior warning
-gives the shift of the prior set to its bounds, not cut at them (8% of the
-distance to a bound of zero, against 29%, for a standard deviation equal to
-that distance).</p>
+<section id="giving-the-bounds">
+<h3>Giving the bounds<a class="headerlink" href="#giving-the-bounds" title="Link to this heading">#</a></h3>
+<p>The bounds go to the solve, not to the <a class="reference internal" href="../reference/api/fips.Problem.html#fips.Problem" title="fips.Problem"><code class="xref py py-class docutils literal notranslate"><span class="pre">Problem</span></code></a>: the problem is
+the Gaussian question, and the bounds are how this method answers it. Each
+of <code class="docutils literal notranslate"><span class="pre">lower</span></code> and <code class="docutils literal notranslate"><span class="pre">upper</span></code> is one of:</p>
+<ul class="simple">
+<li><p><strong>a number</strong>, for every state element. On a state of several blocks that
+bounds the bias block too, which is rarely meant, and the solve warns;</p></li>
+<li><p><strong>a</strong> <a class="reference internal" href="../reference/api/fips.Vector.html#fips.Vector" title="fips.Vector"><code class="xref py py-class docutils literal notranslate"><span class="pre">Vector</span></code></a> with exactly the state’s labels, one bound per
+element, <code class="docutils literal notranslate"><span class="pre">-inf</span></code> (or <code class="docutils literal notranslate"><span class="pre">inf</span></code> for <code class="docutils literal notranslate"><span class="pre">upper</span></code>) where an element has none;</p></li>
+<li><p><strong>a dict by block</strong>, such as <code class="docutils literal notranslate"><span class="pre">{&quot;flux&quot;:</span> <span class="pre">0.0}</span></code>: each value a number or a
+Vector on that block’s labels. Blocks it does not name are free.</p></li>
+</ul>
 </section>
-<section id="what-it-costs">
-<h2><a class="toc-backref" href="#id5" role="doc-backlink">What it costs</a><a class="headerlink" href="#what-it-costs" title="Link to this heading">#</a></h2>
-<p>The mode costs little more than the analytic solve: the active set needs the
-columns of <span class="math notranslate nohighlight">\(\hat{S}\)</span> at the elements on a bound, a product with the
-factors for each, and a solve with <span class="math notranslate nohighlight">\(\hat{S}\)</span> at those elements at each
-of its steps. The draws cost more. Each draw follows a path that bounces off
-every bound it reaches, each bounce a step of the size of the state, and a
-path reaches about as many bounds as there are elements near one. A state of a
-thousand elements, most of them near zero, took about 20 ms a draw (40 s for
-2000), and one of three thousand about 0.1 s a draw, on one machine; a state
-far from its bounds bounces little and costs little. The draws are made only
-when a spread is asked for, and a smaller <code class="docutils literal notranslate"><span class="pre">draws</span></code> (<code class="docutils literal notranslate"><span class="pre">fips.solve(problem,</span>
-<span class="pre">&quot;bounded&quot;,</span> <span class="pre">lower={&quot;flux&quot;:</span> <span class="pre">0.0},</span> <span class="pre">draws=500)</span></code>) costs proportionally less, with a
-larger Monte Carlo error.</p>
-<p>A rectified draw costs an active set, as the mode does: a few steps, each
-exchanging at once every element to hold or release, and each a solve with
-<span class="math notranslate nohighlight">\(\hat{S}\)</span> at the elements on a bound. With a correlated prior whose
-standard deviation equals its mean and weak data, a draw of 400 elements (70
-of them on a bound in a typical draw) took 1.7 ms against 4 ms for a truncated
-one, and a draw of 2000 elements (120 on a bound) 7.6 ms against 14 ms: 15 s
-for the default 2000 draws, on one machine. Both keep the same columns of
-<span class="math notranslate nohighlight">\(\hat{S}\)</span>, up to all of them (<code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">x</span> <span class="pre">n</span></code>).</p>
-<p><a class="reference internal" href="../reference/api/fips.Posterior.trials.html#fips.Posterior.trials" title="fips.Posterior.trials"><code class="xref py py-meth docutils literal notranslate"><span class="pre">trials()</span></code></a> asks each trial’s posterior for its spread, so
-a bounded posterior draws in every trial: keep <code class="docutils literal notranslate"><span class="pre">draws</span></code> small there.</p>
+<section id="truncated-or-rectified-draws">
+<span id="bounds-rectified"></span><h3>Truncated or rectified draws<a class="headerlink" href="#truncated-or-rectified-draws" title="Link to this heading">#</a></h3>
+<p><strong>Truncated draws</strong> (the default) are draws of the analytic posterior
+truncated to the bounds: the Bayesian posterior of the Gaussian prior cut at
+the bounds. A truncated draw is never exactly on a bound.</p>
+<p><strong>Rectified draws</strong> (<code class="docutils literal notranslate"><span class="pre">distribution=&quot;rectified&quot;</span></code>) are the bounded estimate
+itself, with the inputs drawn again: each is the bounded problem solved for
+one draw of the prior mean from <span class="math notranslate nohighlight">\(N(x_0, S_0)\)</span> and of the observations
+from <span class="math notranslate nohighlight">\(N(z, S_z)\)</span>. An element that the draw puts outside its bounds is
+exactly on its bound, as at the mode. They are the distribution of the
+bounded estimate over inputs as likely as these. They are not the truncated
+posterior, and not the Bayesian posterior of any prior fips writes down.</p>
+<p>The estimate, <code class="docutils literal notranslate"><span class="pre">at_bound</span></code>, the gain and DOFS are the same either way; the
+draws differ, and with them the variances, the mean, the intervals and the
+aggregates. Where the data see little, the truncated draws’ mean sits above
+the prior mean at a lower bound, and the rectified draws’ less far above:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [33]: </span><span class="n">rectified</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="s2">"bounded"</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="p">{</span><span class="s2">"flux"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">},</span> <span class="n">distribution</span><span class="o">=</span><span class="s2">"rectified"</span><span class="p">)</span>
+
+<span class="gp">In [34]: </span><span class="n">first</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">at_bound</span><span class="p">[</span><span class="n">post</span><span class="o">.</span><span class="n">at_bound</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># the first cell on its bound</span>
+
+<span class="gp">In [35]: </span><span class="n">on_bound</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"truncated"</span><span class="p">:</span> <span class="n">post</span><span class="p">,</span> <span class="s2">"rectified"</span><span class="p">:</span> <span class="n">rectified</span><span class="p">}</span>
+
+<span class="gp">In [36]: </span><span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="nb">float</span><span class="p">((</span><span class="n">p</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">2000</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">first</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">on_bound</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+<span class="gh">Out[36]: </span><span class="go">{'truncated': 0.0, 'rectified': 0.499}</span>
+
+<span class="gp">In [37]: </span><span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">({</span><span class="s2">"truncated"</span><span class="p">:</span> <span class="n">post</span><span class="o">.</span><span class="n">uncertainty</span><span class="p">(</span><span class="n">W</span><span class="p">),</span> <span class="s2">"rectified"</span><span class="p">:</span> <span class="n">rectified</span><span class="o">.</span><span class="n">uncertainty</span><span class="p">(</span><span class="n">W</span><span class="p">)})</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gh">Out[37]: </span>
+<span class="go">                      prior_std  posterior_std  reduction  lower  upper</span>
+<span class="go">          block what                                                   </span>
+<span class="go">truncated total flux      4.065          0.679      0.833  3.894  6.569</span>
+<span class="go">rectified total flux      4.065          0.660      0.838  3.140  5.737</span>
+</pre></div>
+</div>
+<p>About half the rectified draws hold that cell at exactly zero, and none of
+the truncated ones do. The rectified total sits lower, and here its interval
+holds the true total. <strong>For an aggregate, read the analytic posterior</strong>;
+rectified draws suit the elements of a map near a bound, where the truth may
+be exactly on it. <a class="reference internal" href="examples/comparison.html"><span class="doc">Comparing ways to keep a quantity positive</span></a> compares the methods on one
+problem.</p>
 </section>
-<section id="in-a-world-with-a-nonnegative-truth">
-<h2><a class="toc-backref" href="#id6" role="doc-backlink">In a world with a nonnegative truth</a><a class="headerlink" href="#in-a-world-with-a-nonnegative-truth" title="Link to this heading">#</a></h2>
-<p>Does holding the state at or above zero give a better answer? It depends on
-what is asked, and <a class="reference internal" href="../reference/api/fips.Posterior.trials.html#fips.Posterior.trials" title="fips.Posterior.trials"><code class="xref py py-meth docutils literal notranslate"><span class="pre">trials()</span></code></a> (see <a class="reference internal" href="synthetic.html"><span class="doc">Synthetic experiments</span></a>)
-measures it: the same data, trial for trial (the same seed), solved with and
-without the bounds, in a world whose truth is lognormal, most of it near zero,
-which neither posterior assumes. The rows of the aggregation are each cell and
-the total:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [40]: </span><span class="k">def</span><span class="w"> </span><span class="nf">world</span><span class="p">(</span><span class="n">rng</span><span class="p">):</span>
-<span class="gp">   ....: </span><span class="w">    </span><span class="sd">"""A lognormal flux, a Gaussian bias, and the observations they give."""</span>
-<span class="gp">   ....: </span>    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">0.15</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">n_cells</span><span class="p">)),</span> <span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">2</span><span class="p">)]</span>
-<span class="gp">   ....: </span>    <span class="k">return</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">),</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span>
-<span class="gp">   ....: </span>        <span class="n">H</span> <span class="o">@</span> <span class="n">x</span> <span class="o">+</span> <span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="n">n_obs</span><span class="p">),</span> <span class="n">obs_space</span>
-<span class="gp">   ....: </span>    <span class="p">)</span>
-<span class="gp">   ....: </span>
-</pre></div>
-</div>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [41]: </span><span class="n">rows</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"cell"</span><span class="p">:</span> <span class="n">cells</span><span class="p">,</span> <span class="s2">"total"</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">([</span><span class="s2">"flux"</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">"what"</span><span class="p">)})</span>
-
-<span class="gp">In [42]: </span><span class="n">each_and_total</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">n_cells</span><span class="p">,</span> <span class="n">n_cells</span> <span class="o">+</span> <span class="mi">2</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">r_</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n_cells</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]])</span>
-
-<span class="gp">In [43]: </span><span class="n">W_rows</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="n">each_and_total</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">)</span>
-
-<span class="gp">In [44]: </span><span class="n">small</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="s2">"bounded"</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="p">{</span><span class="s2">"flux"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">},</span> <span class="n">draws</span><span class="o">=</span><span class="mi">300</span><span class="p">)</span>
-
-<span class="gp">In [45]: </span><span class="n">tables</span> <span class="o">=</span> <span class="p">{</span>
-<span class="gp">   ....: </span>    <span class="s2">"analytic"</span><span class="p">:</span> <span class="n">analytic</span><span class="o">.</span><span class="n">trials</span><span class="p">(</span><span class="n">world</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">W</span><span class="o">=</span><span class="n">W_rows</span><span class="p">),</span>
-<span class="gp">   ....: </span>    <span class="s2">"bounded"</span><span class="p">:</span> <span class="n">small</span><span class="o">.</span><span class="n">trials</span><span class="p">(</span><span class="n">world</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">W</span><span class="o">=</span><span class="n">W_rows</span><span class="p">),</span>
-<span class="gp">   ....: </span><span class="p">}</span>
-<span class="gp">   ....: </span>
-</pre></div>
-</div>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [46]: </span><span class="k">def</span><span class="w"> </span><span class="nf">scores</span><span class="p">(</span><span class="n">table</span><span class="p">):</span>
-<span class="gp">   ....: </span><span class="w">    </span><span class="sd">"""The cells' RMSE, and the total's bias, spread, claimed spread and 95% coverage."""</span>
-<span class="gp">   ....: </span>    <span class="n">error</span> <span class="o">=</span> <span class="n">table</span><span class="p">[</span><span class="s2">"estimate"</span><span class="p">]</span> <span class="o">-</span> <span class="n">table</span><span class="p">[</span><span class="s2">"truth"</span><span class="p">]</span>
-<span class="gp">   ....: </span>    <span class="n">cell</span> <span class="o">=</span> <span class="n">error</span><span class="o">.</span><span class="n">xs</span><span class="p">(</span><span class="s2">"cell"</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">"block"</span><span class="p">)</span>
-<span class="gp">   ....: </span>    <span class="n">total</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">xs</span><span class="p">(</span><span class="s2">"total"</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">"block"</span><span class="p">)</span>
-<span class="gp">   ....: </span>    <span class="n">total_error</span> <span class="o">=</span> <span class="n">total</span><span class="p">[</span><span class="s2">"estimate"</span><span class="p">]</span> <span class="o">-</span> <span class="n">total</span><span class="p">[</span><span class="s2">"truth"</span><span class="p">]</span>
-<span class="gp">   ....: </span>    <span class="n">covered</span> <span class="o">=</span> <span class="p">(</span><span class="n">total</span><span class="p">[</span><span class="s2">"lower"</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">total</span><span class="p">[</span><span class="s2">"truth"</span><span class="p">])</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">total</span><span class="p">[</span><span class="s2">"truth"</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">total</span><span class="p">[</span><span class="s2">"upper"</span><span class="p">])</span>
-<span class="gp">   ....: </span>    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span>
-<span class="gp">   ....: </span>        <span class="p">{</span>
-<span class="gp">   ....: </span>            <span class="s2">"cell RMSE"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">cell</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">())),</span>
-<span class="gp">   ....: </span>            <span class="s2">"total bias"</span><span class="p">:</span> <span class="n">total_error</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
-<span class="gp">   ....: </span>            <span class="s2">"total spread"</span><span class="p">:</span> <span class="n">total_error</span><span class="o">.</span><span class="n">std</span><span class="p">(),</span>
-<span class="gp">   ....: </span>            <span class="s2">"claimed spread"</span><span class="p">:</span> <span class="n">total</span><span class="p">[</span><span class="s2">"posterior_std"</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
-<span class="gp">   ....: </span>            <span class="s2">"total coverage"</span><span class="p">:</span> <span class="n">covered</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
-<span class="gp">   ....: </span>        <span class="p">}</span>
-<span class="gp">   ....: </span>    <span class="p">)</span>
-<span class="gp">   ....: </span>
-</pre></div>
-</div>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [47]: </span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="n">name</span><span class="p">:</span> <span class="n">scores</span><span class="p">(</span><span class="n">table</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">table</span> <span class="ow">in</span> <span class="n">tables</span><span class="o">.</span><span class="n">items</span><span class="p">()})</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-<span class="gh">Out[47]: </span>
-<span class="go">                analytic  bounded</span>
-<span class="go">cell RMSE          0.211    0.193</span>
-<span class="go">total bias         0.109    0.386</span>
-<span class="go">total spread       1.003    0.870</span>
-<span class="go">claimed spread     0.952    0.748</span>
-<span class="go">total coverage     0.900    0.480</span>
-</pre></div>
-</div>
-<p>With 100 trials the bias is known to about a tenth of the spread, and a
-coverage near 0.9 to about 0.03. In this world the bounds make the map better
-(a smaller cell RMSE) and move the total: up, by a few Monte Carlo standard
-errors of the bias, with a smaller spread and a smaller claimed spread. The
-bounded total’s interval, the quantiles of its draws, holds the truth much
-less often than the analytic one: the draws are of the truncated posterior,
-whose total is above this world’s wherever the data see little. That is the
-pattern to expect: <strong>bounds mostly improve maps and can move totals</strong>, and since the
-estimate is the mode of a skewed posterior, a total read from it is not the
-posterior’s mean total (above, the draws’). Which matters depends on the
-question. For a total of the state, read the analytic posterior: the draws’
-total is that of the truncated prior wherever the data see little, above a
-prior that is the mean, and <a class="reference internal" href="comparison.html"><span class="doc">Choosing a method</span></a> measures it far above in its
-400-cell example. The world here is a toy: the trials of an inversion’s
-own problem, at its own size, say what its bounds do.</p>
+</section>
+<section id="warnings-and-checks">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Warnings and checks</a><a class="headerlink" href="#warnings-and-checks" title="Link to this heading">#</a></h2>
+<p>fips logs its warnings through Python’s <a class="reference external" href="https://docs.python.org/3/library/logging.html#module-logging" title="(in Python v3.15)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">logging</span></code></a>, which is silent
+until you configure it (<a class="reference internal" href="posterior.html#repeated-inversions"><span class="std std-ref">Repeated inversions, logging and saving</span></a>). The solve logs a
+warning when:</p>
+<ul class="simple">
+<li><p><strong>a number bounds a state of several blocks.</strong> It bounds every block, a
+bias block too. Give a dict to bound only some: <code class="docutils literal notranslate"><span class="pre">lower={&quot;flux&quot;:</span> <span class="pre">0.0}</span></code>.</p></li>
+<li><p><strong>the prior is wide against its bounds</strong>: a prior standard deviation over
+half the distance to a bound, for more than a tenth of a block’s bounded
+elements. Where the data see little, the draws’ mean, intervals and
+aggregates are those of the prior as the draws treat it, cut at the bounds
+(or, for rectified draws, set to them), and so above the prior mean at a
+lower bound. The warning names the block and says by how much its
+aggregate sits above the prior’s, as a share of its distance from the
+bounds. The estimate is not affected. For an aggregate, read the analytic
+posterior or use <a class="reference internal" href="../reference/api/fips.LogNormalForward.html#fips.LogNormalForward" title="fips.LogNormalForward"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogNormalForward</span></code></a>.</p></li>
+<li><p><strong>the kept draws are too few</strong>: a standard deviation from them is
+uncertain by more than 10%. It says how many draws would do; raise
+<code class="docutils literal notranslate"><span class="pre">draws</span></code>. Truncated draws mix slowest at an element whose analytic
+estimate is one to a few standard deviations outside its bound; rectified
+draws are too few at an element on its bound in nearly every draw.</p></li>
+</ul>
+<p>It raises:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#TypeError" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeError</span></code></a> if the problem’s forward is a model, or a bound is not a
+number, a Vector, a dict or <code class="docutils literal notranslate"><span class="pre">None</span></code>;</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ValueError</span></code></a> if <code class="docutils literal notranslate"><span class="pre">lower</span></code> is not below <code class="docutils literal notranslate"><span class="pre">upper</span></code> at some element
+(an element held at one value is known, not bounded), a bound is NaN or
+one no value can satisfy (a <code class="docutils literal notranslate"><span class="pre">lower</span></code> of <code class="docutils literal notranslate"><span class="pre">inf</span></code>), a Vector’s labels are
+not the state’s (or its block’s), or a dict names a block the state does
+not have;</p></li>
+<li><p><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.LinAlgError.html#scipy.linalg.LinAlgError" title="(in SciPy v1.18.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.linalg.LinAlgError</span></code></a> if elements on a bound cannot be held
+there: an element whose posterior variance is zero, or elements whose
+posterior errors are tied together. Check the bounds of the elements the
+prior or the observations fix.</p></li>
+</ul>
+<p>A member a sampled posterior cannot give raises
+<a class="reference internal" href="../reference/api/fips.UnavailableError.html#fips.UnavailableError" title="fips.UnavailableError"><code class="xref py py-class docutils literal notranslate"><span class="pre">UnavailableError</span></code></a> (<a class="reference internal" href="../reference/posterior.html#posterior-members"><span class="std std-ref">the table</span></a>).</p>
+</section>
+<section id="cost">
+<h2><a class="toc-backref" href="#id6" role="doc-backlink">Cost</a><a class="headerlink" href="#cost" title="Link to this heading">#</a></h2>
+<p><strong>The mode costs little more than the analytic solve</strong>: the factors, plus a
+column of the posterior covariance <span class="math notranslate nohighlight">\(\hat{S}\)</span> for each element that ends
+on a bound.</p>
+<p><strong>The draws cost more</strong>, and are made only when a spread is first asked for.
+A truncated draw follows a path that bounces off each bound it meets, and
+each bounce costs a step of the size of the state, so the cost grows with the
+number of elements near a bound: for a thousand elements mostly near zero,
+the default 2000 draws take tens of seconds, and a state far from its bounds
+bounces little. A rectified draw costs an active set, as the mode does. Both
+keep the columns of <span class="math notranslate nohighlight">\(\hat{S}\)</span> at every element a draw holds on a bound,
+up to all of them (<span class="math notranslate nohighlight">\(n \times n\)</span>). The cost is proportional to
+<code class="docutils literal notranslate"><span class="pre">draws</span></code>; <a class="reference internal" href="../reference/api/fips.Posterior.trials.html#fips.Posterior.trials" title="fips.Posterior.trials"><code class="xref py py-meth docutils literal notranslate"><span class="pre">trials()</span></code></a> draws in every trial, so keep
+<code class="docutils literal notranslate"><span class="pre">draws</span></code> small there.</p>
+</section>
+<section id="how-it-works">
+<h2><a class="toc-backref" href="#id7" role="doc-backlink">How it works</a><a class="headerlink" href="#how-it-works" title="Link to this heading">#</a></h2>
+<p><strong>The posterior.</strong> The prior with the bounds is the Gaussian prior set to
+zero outside them. The likelihood is unchanged, so the posterior is the
+analytic posterior <span class="math notranslate nohighlight">\(N(\hat{x}, \hat{S})\)</span> truncated to the box
+<span class="math notranslate nohighlight">\(l \le x \le u\)</span>. It is not Gaussian, and its mean is not its mode.</p>
+<p><strong>The mode</strong> is the point of the box where the analytic cost is least. The
+cost is quadratic, so that is the point of the box nearest <span class="math notranslate nohighlight">\(\hat{x}\)</span> in
+the metric of the posterior:</p>
+<div class="math notranslate nohighlight">
+\[x^\ast = \arg\min_{l \le x \le u} (x - \hat{x})^T \hat{S}^{-1} (x - \hat{x}).\]</div>
+<p>With <span class="math notranslate nohighlight">\(a\)</span> the set of elements held on a bound <span class="math notranslate nohighlight">\(b_a\)</span>, the answer is
+<span class="math notranslate nohighlight">\(x^\ast = \hat{x} + \hat{S}_{:a} \lambda_a\)</span>, with <span class="math notranslate nohighlight">\(\lambda_a =
+\hat{S}_{aa}^{-1} (b_a - \hat{x}_a)\)</span>: the held elements go to their bounds,
+and the others move by what the posterior says they would if those elements
+were known to be there. An active set finds <span class="math notranslate nohighlight">\(a\)</span>, exchanging at each
+step every element to hold or release (Nocedal and Wright, 2006; Lawson and
+Hanson, 1974, for nonnegative least squares), and needs <span class="math notranslate nohighlight">\(\hat{S}\)</span> only
+at the columns of <span class="math notranslate nohighlight">\(a\)</span>, from the analytic factors. The solve checks the
+optimality conditions of the answer before it returns it.</p>
+<p><strong>The diagnostics at the mode</strong> are those of the analytic posterior with the
+elements of <span class="math notranslate nohighlight">\(a\)</span> held at their bounds. With <span class="math notranslate nohighlight">\(C = \hat{S}_{aa}\)</span>,</p>
+<div class="math notranslate nohighlight">
+\[K_a = K - \hat{S}_{:a} C^{-1} K_{a:}, \qquad
+A_a = K_a H = A - \hat{S}_{:a} C^{-1} A_{a:},\]</div>
+<p>and an element on a bound has a row of zeros in both.</p>
+<p><strong>Truncated draws</strong> are made by exact Hamiltonian Monte Carlo (Pakman and
+Paninski, 2014). Each draw starts from the last, <span class="math notranslate nohighlight">\(x_0\)</span>, with a velocity
+<span class="math notranslate nohighlight">\(v \sim N(0, \hat{S})\)</span>, and follows</p>
+<div class="math notranslate nohighlight">
+\[x(t) = \hat{x} + (x_0 - \hat{x}) \cos t + v \sin t\]</div>
+<p>for a quarter period, <span class="math notranslate nohighlight">\(t = \pi/2\)</span>. Each element’s time to reach its
+bound has a closed form; at the first bound reached, the velocity reflects
+and the path goes on. With no bound in the way, <span class="math notranslate nohighlight">\(x(\pi/2) = \hat{x} +
+v\)</span> is a draw independent of the start. There is no step size and no
+rejection. The draws are correlated only through the bounces: an element
+away from its bounds has about one independent draw per draw (a standard
+deviation from 2000 is good to about 1.5%), while one whose analytic
+estimate is one to four standard deviations outside its bound piles against
+it and mixes an order of magnitude slower.</p>
+<p><strong>Rectified draws</strong> use one fact: the analytic estimate of the problem with a
+drawn prior mean and drawn observations is an exact draw <span class="math notranslate nohighlight">\(x_s\)</span> of
+<span class="math notranslate nohighlight">\(N(\hat{x}, \hat{S})\)</span>, and that problem has the same <span class="math notranslate nohighlight">\(\hat{S}\)</span>.
+Its bounded estimate is therefore <span class="math notranslate nohighlight">\(x_s\)</span> moved onto the bounds by the
+same active set as the mode, with <span class="math notranslate nohighlight">\(x_s\)</span> in place of <span class="math notranslate nohighlight">\(\hat{x}\)</span>.
+So draw <code class="docutils literal notranslate"><span class="pre">k</span></code> of <code class="docutils literal notranslate"><span class="pre">rectified.sample(N,</span> <span class="pre">rng=5)</span></code> is draw <code class="docutils literal notranslate"><span class="pre">k</span></code> of
+<code class="docutils literal notranslate"><span class="pre">fips.solve(problem).sample(N,</span> <span class="pre">rng=5)</span></code>, unchanged where no bound binds. The
+draws are independent. Miller, Michalak and Levi (2014, section 3.3.1)
+propose realizations this way and then accept or reject each by a
+Metropolis-Hastings test, which fips does not; Bardsley and Fox (2012) solve
+a nonnegativity-constrained problem for each sample; Everink, Dong and
+Andersen (2023) call the resulting distribution a regularized Gaussian.</p>
+</section>
 <section id="references">
-<h3>References<a class="headerlink" href="#references" title="Link to this heading">#</a></h3>
-<p>Pakman, A., and Paninski, L. (2014). Exact Hamiltonian Monte Carlo for
-truncated multivariate Gaussians. <em>Journal of Computational and Graphical
-Statistics</em>, 23(2), 518-542. <a class="reference external" href="https://doi.org/10.1080/10618600.2013.788448">https://doi.org/10.1080/10618600.2013.788448</a></p>
+<h2><a class="toc-backref" href="#id8" role="doc-backlink">References</a><a class="headerlink" href="#references" title="Link to this heading">#</a></h2>
+<p>Bardsley and Fox (2012). <em>Inverse Problems in Science and
+Engineering</em>, 20(4), 477-498.</p>
+<p>Everink, Dong and Andersen (2023). <em>Inverse Problems</em>.
+<a class="reference external" href="https://doi.org/10.1088/1361-6420/acf9c5">https://doi.org/10.1088/1361-6420/acf9c5</a></p>
+<p>Lawson, C. L., and Hanson, R. J. (1974). <em>Solving Least Squares Problems</em>.
+Prentice-Hall.</p>
 <p>Miller, S. M., Michalak, A. M., and Levi, P. J. (2014). Atmospheric inverse
 modeling with known physical bounds: an example from trace gas emissions.
 <em>Geoscientific Model Development</em>, 7, 303-315.
 <a class="reference external" href="https://doi.org/10.5194/gmd-7-303-2014">https://doi.org/10.5194/gmd-7-303-2014</a></p>
-<p>Bardsley and Fox (2012). <em>Inverse Problems in Science and Engineering</em>,
-20(4), 477-498.</p>
-<p>Everink, Dong and Andersen (2023). <em>Inverse Problems</em>.
-<a class="reference external" href="https://doi.org/10.1088/1361-6420/acf9c5">https://doi.org/10.1088/1361-6420/acf9c5</a></p>
-</section>
+<p>Nocedal, J., and Wright, S. J. (2006). <em>Numerical Optimization</em>, second
+edition, chapter 16. Springer.</p>
+<p>Pakman, A., and Paninski, L. (2014). Exact Hamiltonian Monte Carlo for
+truncated multivariate Gaussians. <em>Journal of Computational and Graphical
+Statistics</em>, 23(2), 518-542. <a class="reference external" href="https://doi.org/10.1080/10618600.2013.788448">https://doi.org/10.1080/10618600.2013.788448</a></p>
 </section>
 </section>
 
@@ -969,20 +946,20 @@ modeling with known physical bounds: an example from trace gas emissions.
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="hierarchical.html"
+       href="methods.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">The uncertainty of the settings</p>
+        <p class="prev-next-title">Choosing a method</p>
       </div>
     </a>
     <a class="right-next"
-       href="nonlinear.html"
+       href="positive.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">A nonlinear forward model</p>
+        <p class="prev-next-title">Values that stay positive</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -1005,15 +982,18 @@ modeling with known physical bounds: an example from trace gas emissions.
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-bounded-posterior-is">What the bounded posterior is</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-small-problem">A small problem</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-posterior-says">What the posterior says</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#rectified-draws">Rectified draws</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-it-costs">What it costs</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#in-a-world-with-a-nonnegative-truth">In a world with a nonnegative truth</a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#references">References</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#when-to-use-it">When to use it</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#an-example">An example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-posterior-reports">What the posterior reports</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#options">Options</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#giving-the-bounds">Giving the bounds</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#truncated-or-rectified-draws">Truncated or rectified draws</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#warnings-and-checks">Warnings and checks</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cost">Cost</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-it-works">How it works</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#references">References</a></li>
 </ul>
   </nav></div>
 

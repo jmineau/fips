@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>A model with no Jacobian: the ensemble method &#8212; fips 0.2.0b3.dev33+g1b3edda40 documentation</title>
+    <title>A model without a Jacobian: the ensemble method &#8212; fips 0.2.0b3.dev34+g9a0704831 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=d42acb76"></script>
+    <script src="../_static/documentation_options.js?v=8e63224c"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -61,7 +61,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="A problem too large to factor: the variational method" href="variational.html" />
-    <link rel="prev" title="Choosing a method" href="comparison.html" />
+    <link rel="prev" title="A nonlinear forward model" href="nonlinear.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev33+g1b3edda40 documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev33+g1b3edda40 documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
   
   
 </a></div>
@@ -385,21 +385,33 @@
 <nav class="bd-docs-nav bd-links"
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
-  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="synthetic.html">Synthetic experiments</a></li>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Every problem</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="problem.html">Building a problem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="posterior.html">Reading the posterior</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Beyond the linear Gaussian problem</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="methods.html">Choosing a method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bounds.html">Bounds on the state</a></li>
+<li class="toctree-l1"><a class="reference internal" href="positive.html">Values that stay positive</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nonlinear.html">A nonlinear forward model</a></li>
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">A model without a Jacobian: the ensemble method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="variational.html">A problem too large to factor: the variational method</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Checking and tuning an inversion</span></p>
+<ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="settings.html">Fitting the covariance settings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hierarchical.html">The uncertainty of the settings</a></li>
-<li class="toctree-l1"><a class="reference internal" href="bounds.html">Bounds on the state</a></li>
-<li class="toctree-l1"><a class="reference internal" href="nonlinear.html">A nonlinear forward model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="positive.html">Values that stay positive</a></li>
-<li class="toctree-l1"><a class="reference internal" href="comparison.html">Choosing a method</a></li>
-<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">A model with no Jacobian: the ensemble method</a></li>
-<li class="toctree-l1"><a class="reference internal" href="variational.html">A problem too large to factor: the variational method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="synthetic.html">Synthetic experiments</a></li>
+</ul>
+<ul class="nav bd-sidenav">
 <li class="toctree-l1 has-children"><a class="reference internal" href="examples/index.html">Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="examples/gravity_2d.html">Gravity: density below the surface</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/flux_regional.html">A regional flux inversion</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/synthetic_truth.html">Does the inversion recover a known flux?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/data_worth.html">Which observations constrain a regional total?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/comparison.html">Comparing ways to keep a quantity positive</a></li>
 </ul>
 </details></li>
 </ul>
@@ -445,7 +457,7 @@
     
     <li class="breadcrumb-item"><a href="index.html" class="nav-link">User Guide</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">A model with no Jacobian: the ensemble method</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">A model without a Jacobian: the ensemble method</span></li>
   </ul>
 </nav>
 </div>
@@ -462,40 +474,52 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="a-model-with-no-jacobian-the-ensemble-method">
-<span id="ensemble"></span><h1>A model with no Jacobian: the ensemble method<a class="headerlink" href="#a-model-with-no-jacobian-the-ensemble-method" title="Link to this heading">#</a></h1>
-<p>Some forward models can only be run: a TM5 or WRF configuration has no
-<span class="math notranslate nohighlight">\(H\)</span> matrix and no Jacobian anyone can write by hand. The rule: <strong>draw
-members from the prior with</strong> <a class="reference internal" href="../reference/api/fips.Problem.ensemble.html#fips.Problem.ensemble" title="fips.Problem.ensemble"><code class="xref py py-meth docutils literal notranslate"><span class="pre">problem.ensemble</span></code></a>,
-<strong>run the model on each, and give the runs to</strong> <code class="docutils literal notranslate"><span class="pre">fips.solve(problem,</span>
-<span class="pre">&quot;ensemble&quot;,</span> <span class="pre">members=members,</span> <span class="pre">predicted=modeled)</span></code>. It updates the members with
-the observations, as CarbonTracker does (a deterministic square-root ensemble
-Kalman filter, EnSRF, applied to all the observations at once), and reports
-the posterior of the updated members: their mean, their spread, their gain.
-Its answer approaches the analytic posterior as the members grow, with an
-error that falls as <span class="math notranslate nohighlight">\(1/\sqrt{N}\)</span>.</p>
-<p><strong>When not to use it</strong>: with an explicit <span class="math notranslate nohighlight">\(H\)</span> (a STILT footprint is one),
-<code class="docutils literal notranslate"><span class="pre">fips.solve(problem)</span></code> gives the posterior exactly, at the cost of one
-factorization; the ensemble only approximates it. With a model whose Jacobian
-you can write, <code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code> finds the mode and draws the posterior exactly
-(<a class="reference internal" href="nonlinear.html"><span class="doc">A nonlinear forward model</span></a>).</p>
+  <section id="a-model-without-a-jacobian-the-ensemble-method">
+<span id="ensemble"></span><h1>A model without a Jacobian: the ensemble method<a class="headerlink" href="#a-model-without-a-jacobian-the-ensemble-method" title="Link to this heading">#</a></h1>
+<p>Some forward models can only be run. A transport or weather model maps a
+state to the observations it makes, but it has no matrix <span class="math notranslate nohighlight">\(H\)</span> and no
+Jacobian anyone can write. <strong>Draw members from the prior with</strong>
+<a class="reference internal" href="../reference/api/fips.Problem.ensemble.html#fips.Problem.ensemble" title="fips.Problem.ensemble"><code class="xref py py-meth docutils literal notranslate"><span class="pre">problem.ensemble(N)</span></code></a>, <strong>run the model on each,
+and give the runs to</strong> <code class="docutils literal notranslate"><span class="pre">fips.solve(problem,</span> <span class="pre">&quot;ensemble&quot;,</span> <span class="pre">members=members,</span>
+<span class="pre">predicted=predicted)</span></code>. The solve updates the members with the observations.
+The estimate is the mean of the updated members, and the uncertainty is their
+spread. With a linear model the answer approaches the analytic posterior as
+the members grow, with an error that falls as <span class="math notranslate nohighlight">\(1/\sqrt{N}\)</span>.</p>
 <nav class="contents local" id="on-this-page">
 <p class="topic-title">On this page</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="#a-model-that-can-only-be-run" id="id1">A model that can only be run</a></p></li>
-<li><p><a class="reference internal" href="#the-two-stages" id="id2">The two stages</a></p></li>
-<li><p><a class="reference internal" href="#how-close-it-is" id="id3">How close it is</a></p></li>
-<li><p><a class="reference internal" href="#localization" id="id4">Localization</a></p></li>
-<li><p><a class="reference internal" href="#the-update-and-what-it-costs" id="id5">The update, and what it costs</a></p></li>
+<li><p><a class="reference internal" href="#when-to-use-it" id="id1">When to use it</a></p></li>
+<li><p><a class="reference internal" href="#an-example" id="id2">An example</a></p></li>
+<li><p><a class="reference internal" href="#what-the-posterior-reports" id="id3">What the posterior reports</a></p></li>
+<li><p><a class="reference internal" href="#options" id="id4">Options</a></p></li>
+<li><p><a class="reference internal" href="#warnings-and-checks" id="id5">Warnings and checks</a></p></li>
+<li><p><a class="reference internal" href="#cost" id="id6">Cost</a></p></li>
+<li><p><a class="reference internal" href="#how-it-works" id="id7">How it works</a></p></li>
+<li><p><a class="reference internal" href="#references" id="id8">References</a></p></li>
 </ul>
 </nav>
-<section id="a-model-that-can-only-be-run">
-<h2><a class="toc-backref" href="#id1" role="doc-backlink">A model that can only be run</a><a class="headerlink" href="#a-model-that-can-only-be-run" title="Link to this heading">#</a></h2>
-<p>A line of 120 cells, one a kilometer, and 40 observations along it, each of
-which sees the cells upwind, the nearest most. <code class="docutils literal notranslate"><span class="pre">transport</span></code> stands in for the
-transport model: it takes the fluxes of one member and returns the
-observations they make. Here it is a line of numpy; in a real inversion it is
-a job on a cluster, and the members go to it as files.</p>
+<section id="when-to-use-it">
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">When to use it</a><a class="headerlink" href="#when-to-use-it" title="Link to this heading">#</a></h2>
+<p>Use it when the forward model can only be run, and a run costs enough that
+you can afford tens or hundreds of them, not one per state element.</p>
+<ul class="simple">
+<li><p>With a forward operator <span class="math notranslate nohighlight">\(H\)</span> (a matrix), use <code class="docutils literal notranslate"><span class="pre">&quot;analytic&quot;</span></code>
+(<a class="reference internal" href="posterior.html"><span class="doc">Reading the posterior</span></a>): it is exact, and the ensemble only approximates it.</p></li>
+<li><p>With a forward model whose Jacobian you can write, use <code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code>
+(<a class="reference internal" href="nonlinear.html"><span class="doc">A nonlinear forward model</span></a>): it finds the mode and draws the posterior itself.</p></li>
+<li><p>With a model that has a tangent linear and an adjoint, use
+<code class="docutils literal notranslate"><span class="pre">&quot;variational&quot;</span></code> (<a class="reference internal" href="variational.html"><span class="doc">A problem too large to factor: the variational method</span></a>).</p></li>
+<li><p>With bounds on the state, use <code class="docutils literal notranslate"><span class="pre">&quot;bounded&quot;</span></code> (<a class="reference internal" href="bounds.html"><span class="doc">Bounds on the state</span></a>): the ensemble
+method takes none.</p></li>
+</ul>
+</section>
+<section id="an-example">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">An example</a><a class="headerlink" href="#an-example" title="Link to this heading">#</a></h2>
+<p>Here the state is a flux along a line of 120 elements, one a kilometer, and
+40 sensors along the line each see the elements behind them, the nearest most.
+<code class="docutils literal notranslate"><span class="pre">run_model</span></code> stands in for the model: it takes one member and returns the
+observations that member makes. Here it is a line of numpy; a real model is a
+job on a cluster, and the members go to it as files.</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [1]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 <span class="gp">In [2]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
@@ -504,242 +528,136 @@ a job on a cluster, and the members go to it as files.</p>
 
 <span class="gp">In [4]: </span><span class="n">n</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="mi">120</span><span class="p">,</span> <span class="mi">40</span>
 
-<span class="gp">In [5]: </span><span class="n">cell_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>  <span class="c1"># km</span>
+<span class="gp">In [5]: </span><span class="n">position</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>  <span class="c1"># km</span>
 
-<span class="gp">In [6]: </span><span class="n">site_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="mf">3.0</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+<span class="gp">In [6]: </span><span class="n">site</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="mf">3.0</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
 
-<span class="gp">In [7]: </span><span class="n">upwind</span> <span class="o">=</span> <span class="n">site_x</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">-</span> <span class="n">cell_x</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
+<span class="gp">In [7]: </span><span class="n">behind</span> <span class="o">=</span> <span class="n">site</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">-</span> <span class="n">position</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
 
-<span class="gp">In [8]: </span><span class="n">footprint</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">upwind</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">upwind</span> <span class="o">/</span> <span class="mf">3.0</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
+<span class="gp">In [8]: </span><span class="n">weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">behind</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">behind</span> <span class="o">/</span> <span class="mf">3.0</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
 
-<span class="gp">In [9]: </span><span class="k">def</span><span class="w"> </span><span class="nf">transport</span><span class="p">(</span><span class="n">flux</span><span class="p">):</span>
-<span class="gp">   ...: </span><span class="w">    </span><span class="sd">"""Stand-in for a transport model run: the observations a member's fluxes make."""</span>
-<span class="gp">   ...: </span>    <span class="k">return</span> <span class="n">footprint</span> <span class="o">@</span> <span class="n">flux</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+<span class="gp">In [9]: </span><span class="k">def</span><span class="w"> </span><span class="nf">run_model</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="gp">   ...: </span><span class="w">    </span><span class="sd">"""Stand-in for one run of the model: the observations a member makes."""</span>
+<span class="gp">   ...: </span>    <span class="k">return</span> <span class="n">weights</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
 <span class="gp">   ...: </span>
 </pre></div>
 </div>
-<p>The problem still needs its forward map’s labels, so the model is a
-<a class="reference internal" href="../reference/api/fips.ForwardModel.html#fips.ForwardModel" title="fips.ForwardModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">ForwardModel</span></code></a> with <code class="docutils literal notranslate"><span class="pre">__call__</span></code> alone: the ensemble method needs
-no Jacobian. When given the runs, the solve never calls it; what does
-(<a class="reference internal" href="../reference/api/fips.Problem.simulate.html#fips.Problem.simulate" title="fips.Problem.simulate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">simulate()</span></code></a>, <a class="reference internal" href="../reference/api/fips.Posterior.modeled_obs.html#fips.Posterior.modeled_obs" title="fips.Posterior.modeled_obs"><code class="xref py py-attr docutils literal notranslate"><span class="pre">modeled_obs</span></code></a>) runs it
-once. A model that cannot run from Python at all can raise in <code class="docutils literal notranslate"><span class="pre">__call__</span></code>:
-the two-stage solve still works.</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [10]: </span><span class="n">cells</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"flux"</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">RangeIndex</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"cell"</span><span class="p">)})</span>
+<p>The problem still needs the labels of the state and of the observations, so
+the model is a <a class="reference internal" href="../reference/api/fips.ForwardModel.html#fips.ForwardModel" title="fips.ForwardModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">ForwardModel</span></code></a> that writes <code class="docutils literal notranslate"><span class="pre">__call__</span></code> alone: the
+ensemble method needs no Jacobian. Given the runs, the solve never calls the
+model, so a model that cannot run from Python may raise in <code class="docutils literal notranslate"><span class="pre">__call__</span></code>. The
+prior is 1 in every element with a standard deviation of 0.5, correlated over
+2 km; the observations are of a truth drawn from it.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [10]: </span><span class="n">state</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"flux"</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">RangeIndex</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"element"</span><span class="p">)})</span>
 
-<span class="gp">In [11]: </span><span class="n">observed</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"ch4"</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">RangeIndex</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"obs_id"</span><span class="p">)})</span>
+<span class="gp">In [11]: </span><span class="n">observed</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"obs"</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">RangeIndex</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"obs_id"</span><span class="p">)})</span>
 
-<span class="gp">In [12]: </span><span class="k">class</span><span class="w"> </span><span class="nc">Transport</span><span class="p">(</span><span class="n">fips</span><span class="o">.</span><span class="n">ForwardModel</span><span class="p">):</span>
+<span class="gp">In [12]: </span><span class="k">class</span><span class="w"> </span><span class="nc">Model</span><span class="p">(</span><span class="n">fips</span><span class="o">.</span><span class="n">ForwardModel</span><span class="p">):</span>
 <span class="gp">   ....: </span>    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-<span class="gp">   ....: </span>        <span class="k">return</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">transport</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">to_series</span><span class="p">()),</span> <span class="n">observed</span><span class="p">)</span>
+<span class="gp">   ....: </span>        <span class="k">return</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">run_model</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">values</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">)</span>
 <span class="gp">   ....: </span>
 
-<span class="gp">In [13]: </span><span class="n">model</span> <span class="o">=</span> <span class="n">Transport</span><span class="p">(</span><span class="n">observed</span><span class="p">,</span> <span class="n">cells</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>A prior of 1 in every cell with a standard deviation of 0.5, correlated over
-2 km (short: the footprints are longer), and observations of a truth drawn
-from it:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [14]: </span><span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">forward</span><span class="o">=</span><span class="n">model</span><span class="p">):</span>
+<span class="gp">In [13]: </span><span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">forward</span><span class="o">=</span><span class="n">Model</span><span class="p">(</span><span class="n">observed</span><span class="p">,</span> <span class="n">state</span><span class="p">)):</span>
 <span class="gp">   ....: </span>    <span class="k">return</span> <span class="n">fips</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span>
-<span class="gp">   ....: </span>        <span class="n">prior</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">cells</span><span class="p">),</span>
-<span class="gp">   ....: </span>        <span class="n">prior_cov</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">(</span><span class="s2">"cell"</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.5</span><span class="p">),</span>
+<span class="gp">   ....: </span>        <span class="n">prior</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">state</span><span class="p">),</span>
+<span class="gp">   ....: </span>        <span class="n">prior_cov</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">(</span><span class="s2">"element"</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.5</span><span class="p">),</span>
 <span class="gp">   ....: </span>        <span class="n">obs</span><span class="o">=</span><span class="n">obs</span><span class="p">,</span>
 <span class="gp">   ....: </span>        <span class="n">obs_cov</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Independent</span><span class="p">()</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.2</span><span class="p">),</span>
 <span class="gp">   ....: </span>        <span class="n">forward</span><span class="o">=</span><span class="n">forward</span><span class="p">,</span>
 <span class="gp">   ....: </span>    <span class="p">)</span>
 <span class="gp">   ....: </span>
 
-<span class="gp">In [15]: </span><span class="n">truth</span><span class="p">,</span> <span class="n">obs</span> <span class="o">=</span> <span class="n">build</span><span class="p">(</span><span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">m</span><span class="p">),</span> <span class="n">observed</span><span class="p">))</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="n">rng</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">In [14]: </span><span class="n">truth</span><span class="p">,</span> <span class="n">obs</span> <span class="o">=</span> <span class="n">build</span><span class="p">(</span><span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">m</span><span class="p">),</span> <span class="n">observed</span><span class="p">))</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="n">rng</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
-<span class="gp">In [16]: </span><span class="n">problem</span> <span class="o">=</span> <span class="n">build</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
+<span class="gp">In [15]: </span><span class="n">problem</span> <span class="o">=</span> <span class="n">build</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
 </pre></div>
 </div>
-</section>
-<section id="the-two-stages">
-<h2><a class="toc-backref" href="#id2" role="doc-backlink">The two stages</a><a class="headerlink" href="#the-two-stages" title="Link to this heading">#</a></h2>
-<p>Stage one, in fips: draw the members. Each is a column, labeled as the prior
-is; their mean is the prior exactly.</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [17]: </span><span class="n">members</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">ensemble</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<p><strong>Stage one, in fips: draw the members.</strong> Each member is a column, labeled as
+the prior is. Their mean is the prior exactly.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [16]: </span><span class="n">members</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">ensemble</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
-<span class="gp">In [18]: </span><span class="n">members</span><span class="o">.</span><span class="n">shape</span>
-<span class="gh">Out[18]: </span><span class="go">(120, 100)</span>
+<span class="gp">In [17]: </span><span class="n">members</span><span class="o">.</span><span class="n">shape</span>
+<span class="gh">Out[17]: </span><span class="go">(120, 100)</span>
 </pre></div>
 </div>
-<p>Stage two, outside fips: run the model on each member (<code class="docutils literal notranslate"><span class="pre">members[j]</span></code> is one
-member’s fluxes; write it out with <code class="docutils literal notranslate"><span class="pre">to_csv</span></code> or <code class="docutils literal notranslate"><span class="pre">to_xarray</span></code>), and put the
-runs in a DataFrame, one row per observation, labeled as <code class="docutils literal notranslate"><span class="pre">problem.obs.index</span></code>,
-one column per member, labeled as the members are (in any order). The runs are
+<p><strong>Stage two, outside fips: run the model on each member.</strong> <code class="docutils literal notranslate"><span class="pre">members[j]</span></code> is
+one member; write it out with <code class="docutils literal notranslate"><span class="pre">to_csv</span></code> or <code class="docutils literal notranslate"><span class="pre">to_xarray</span></code>. Put the runs in a
+DataFrame with one row per observation, labeled as <code class="docutils literal notranslate"><span class="pre">problem.obs.index</span></code>, and
+one column per member, labeled as the members are (in any order). A run is
 the model’s output, <span class="math notranslate nohighlight">\(F(x_j)\)</span>, without the problem’s offset.</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [19]: </span><span class="n">modeled</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
-<span class="gp">   ....: </span>    <span class="p">{</span><span class="n">j</span><span class="p">:</span> <span class="n">transport</span><span class="p">(</span><span class="n">members</span><span class="p">[</span><span class="n">j</span><span class="p">])</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">members</span><span class="o">.</span><span class="n">columns</span><span class="p">},</span>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [18]: </span><span class="n">predicted</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+<span class="gp">   ....: </span>    <span class="p">{</span><span class="n">j</span><span class="p">:</span> <span class="n">run_model</span><span class="p">(</span><span class="n">members</span><span class="p">[</span><span class="n">j</span><span class="p">])</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">members</span><span class="o">.</span><span class="n">columns</span><span class="p">},</span>
 <span class="gp">   ....: </span>    <span class="n">index</span><span class="o">=</span><span class="n">problem</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
 <span class="gp">   ....: </span><span class="p">)</span>
 <span class="gp">   ....: </span>
 </pre></div>
 </div>
-<p>Stage three, in fips: the update.</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [20]: </span><span class="n">post</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="s2">"ensemble"</span><span class="p">,</span> <span class="n">members</span><span class="o">=</span><span class="n">members</span><span class="p">,</span> <span class="n">predicted</span><span class="o">=</span><span class="n">modeled</span><span class="p">)</span>
+<p><strong>Stage three, in fips: update the members.</strong> Here the posterior of the sum of
+each quarter of the line:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [19]: </span><span class="n">post</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="s2">"ensemble"</span><span class="p">,</span> <span class="n">members</span><span class="o">=</span><span class="n">members</span><span class="p">,</span> <span class="n">predicted</span><span class="o">=</span><span class="n">predicted</span><span class="p">)</span>
 
-<span class="gp">In [21]: </span><span class="n">regions</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span>
-<span class="gp">   ....: </span>    <span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">//</span> <span class="mi">4</span><span class="p">))),</span>
-<span class="gp">   ....: </span>    <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"total"</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">([</span><span class="s2">"W"</span><span class="p">,</span> <span class="s2">"WC"</span><span class="p">,</span> <span class="s2">"EC"</span><span class="p">,</span> <span class="s2">"E"</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">"region"</span><span class="p">)}),</span>
-<span class="gp">   ....: </span>    <span class="n">cells</span><span class="p">,</span>
-<span class="gp">   ....: </span><span class="p">)</span>
-<span class="gp">   ....: </span>
+<span class="gp">In [20]: </span><span class="n">quarter</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">//</span> <span class="mi">30</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">RangeIndex</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"element"</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s2">"quarter"</span><span class="p">)</span>
 
-<span class="gp">In [22]: </span><span class="n">post</span><span class="o">.</span><span class="n">uncertainty</span><span class="p">(</span><span class="n">regions</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">In [21]: </span><span class="n">W</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">aggregate</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="n">quarter</span><span class="p">)</span>
+
+<span class="gp">In [22]: </span><span class="n">post</span><span class="o">.</span><span class="n">uncertainty</span><span class="p">(</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
 <span class="gh">Out[22]: </span>
-<span class="go">              prior_std  posterior_std  reduction  lower  upper</span>
-<span class="go">block region                                                   </span>
-<span class="go">total W            5.35           0.80       0.85  26.23  29.37</span>
-<span class="go">      WC           5.35           0.70       0.87  27.17  29.92</span>
-<span class="go">      EC           5.35           0.84       0.84  24.63  27.93</span>
-<span class="go">      E            5.35           0.97       0.82  28.11  31.92</span>
+<span class="go">               prior_std  posterior_std  reduction  lower  upper</span>
+<span class="go">block quarter                                                   </span>
+<span class="go">flux  0             5.35           0.80       0.85  26.23  29.37</span>
+<span class="go">      1             5.35           0.70       0.87  27.17  29.92</span>
+<span class="go">      2             5.35           0.84       0.84  24.63  27.93</span>
+<span class="go">      3             5.35           0.97       0.82  28.11  31.92</span>
 </pre></div>
 </div>
-<p>A problem whose forward runs in Python can skip the middle:
-<code class="docutils literal notranslate"><span class="pre">fips.solve(problem,</span> <span class="pre">&quot;ensemble&quot;,</span> <span class="pre">members=100,</span> <span class="pre">seed=0)</span></code> draws the members
-with that seed and runs the forward (a <a class="reference internal" href="../reference/api/fips.ForwardModel.html#fips.ForwardModel" title="fips.ForwardModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">ForwardModel</span></code></a>’s
-<code class="docutils literal notranslate"><span class="pre">__call__</span></code>, or an <a class="reference internal" href="../reference/api/fips.Operator.html#fips.Operator" title="fips.Operator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Operator</span></code></a>’s product) on each, and gives the
-same posterior.</p>
-<p>What the posterior is, for the ensemble:</p>
-<ul class="simple">
-<li><p><a class="reference internal" href="../reference/api/fips.Posterior.estimate.html#fips.Posterior.estimate" title="fips.Posterior.estimate"><code class="xref py py-attr docutils literal notranslate"><span class="pre">estimate</span></code></a> (and <a class="reference internal" href="../reference/api/fips.Posterior.mean.html#fips.Posterior.mean" title="fips.Posterior.mean"><code class="xref py py-attr docutils literal notranslate"><span class="pre">mean</span></code></a>) is the
-mean of the updated members; <a class="reference internal" href="../reference/api/fips.Posterior.variances.html#fips.Posterior.variances" title="fips.Posterior.variances"><code class="xref py py-attr docutils literal notranslate"><span class="pre">variances</span></code></a>,
-<a class="reference internal" href="../reference/api/fips.Posterior.cov.html#fips.Posterior.cov" title="fips.Posterior.cov"><code class="xref py py-meth docutils literal notranslate"><span class="pre">cov()</span></code></a> and <a class="reference internal" href="../reference/api/fips.Posterior.kalman_gain.html#fips.Posterior.kalman_gain" title="fips.Posterior.kalman_gain"><code class="xref py py-attr docutils literal notranslate"><span class="pre">kalman_gain</span></code></a> are
-those of the members, and <a class="reference internal" href="../reference/api/fips.Posterior.sample.html#fips.Posterior.sample" title="fips.Posterior.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a> returns the
-updated members themselves (it raises past their number);</p></li>
-<li><p><a class="reference internal" href="../reference/api/fips.Posterior.dofs.html#fips.Posterior.dofs" title="fips.Posterior.dofs"><code class="xref py py-attr docutils literal notranslate"><span class="pre">dofs</span></code></a>, <a class="reference internal" href="../reference/api/fips.Posterior.information_content.html#fips.Posterior.information_content" title="fips.Posterior.information_content"><code class="xref py py-attr docutils literal notranslate"><span class="pre">information_content</span></code></a>,
-<a class="reference internal" href="../reference/api/fips.Posterior.chi2.html#fips.Posterior.chi2" title="fips.Posterior.chi2"><code class="xref py py-attr docutils literal notranslate"><span class="pre">chi2</span></code></a> and <a class="reference internal" href="../reference/api/fips.Posterior.chi2_tests.html#fips.Posterior.chi2_tests" title="fips.Posterior.chi2_tests"><code class="xref py py-meth docutils literal notranslate"><span class="pre">chi2_tests()</span></code></a> are the
-analytic method’s formulas with the members’ covariance of the modeled
-observations in place of <span class="math notranslate nohighlight">\(H S_0 H^T\)</span>;</p></li>
-<li><p><a class="reference internal" href="../reference/api/fips.Posterior.with_data.html#fips.Posterior.with_data" title="fips.Posterior.with_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">with_data()</span></code></a> and <a class="reference internal" href="../reference/api/fips.Posterior.with_gamma.html#fips.Posterior.with_gamma" title="fips.Posterior.with_gamma"><code class="xref py py-meth docutils literal notranslate"><span class="pre">with_gamma()</span></code></a>
-reuse the runs, so <a class="reference internal" href="../reference/api/fips.Posterior.trials.html#fips.Posterior.trials" title="fips.Posterior.trials"><code class="xref py py-meth docutils literal notranslate"><span class="pre">trials()</span></code></a> runs the model only to make
-each trial’s data;</p></li>
-<li><p>what a Gaussian posterior gives and an ensemble’s does not
-(<a class="reference internal" href="../reference/api/fips.Posterior.recovery.html#fips.Posterior.recovery" title="fips.Posterior.recovery"><code class="xref py py-meth docutils literal notranslate"><span class="pre">recovery()</span></code></a>, <a class="reference internal" href="../reference/api/fips.Posterior.log_evidence.html#fips.Posterior.log_evidence" title="fips.Posterior.log_evidence"><code class="xref py py-attr docutils literal notranslate"><span class="pre">log_evidence</span></code></a>: the
-evidence of a sample covariance is not the evidence) is in <a class="reference internal" href="../reference/posterior.html#posterior-members"><span class="std std-ref">the table</span></a>, and what needs <span class="math notranslate nohighlight">\(H\)</span>
-(<a class="reference internal" href="../reference/api/fips.Posterior.averaging_kernel.html#fips.Posterior.averaging_kernel" title="fips.Posterior.averaging_kernel"><code class="xref py py-meth docutils literal notranslate"><span class="pre">averaging_kernel()</span></code></a>,
-<a class="reference internal" href="../reference/api/fips.Posterior.dofs_per_element.html#fips.Posterior.dofs_per_element" title="fips.Posterior.dofs_per_element"><code class="xref py py-attr docutils literal notranslate"><span class="pre">dofs_per_element</span></code></a>) raises for a model.</p></li>
-</ul>
-</section>
-<section id="how-close-it-is">
-<h2><a class="toc-backref" href="#id3" role="doc-backlink">How close it is</a><a class="headerlink" href="#how-close-it-is" title="Link to this heading">#</a></h2>
-<p>This stand-in is cheap and linear, so its <span class="math notranslate nohighlight">\(H\)</span> can be built from 120
-runs, one a cell, and the exact posterior compared with the ensemble’s. A real
-transport model is not cheap, which is why it is run per member and not per
-cell.</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [23]: </span><span class="n">H</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span>
-<span class="gp">   ....: </span>    <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span><span class="n">transport</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">n</span><span class="p">)[</span><span class="n">j</span><span class="p">]))</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)]),</span>
-<span class="gp">   ....: </span>    <span class="n">observed</span><span class="p">,</span>
-<span class="gp">   ....: </span>    <span class="n">cells</span><span class="p">,</span>
-<span class="gp">   ....: </span><span class="p">)</span>
+<p>When the forward runs in Python (an <a class="reference internal" href="../reference/api/fips.Operator.html#fips.Operator" title="fips.Operator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Operator</span></code></a>, or a
+<a class="reference internal" href="../reference/api/fips.ForwardModel.html#fips.ForwardModel" title="fips.ForwardModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">ForwardModel</span></code></a>’s <code class="docutils literal notranslate"><span class="pre">__call__</span></code>), one call does all three stages:
+<code class="docutils literal notranslate"><span class="pre">members=100,</span> <span class="pre">seed=0</span></code> draws the members with that seed and runs the forward
+on each. It gives the same posterior.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [23]: </span><span class="n">one_call</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="s2">"ensemble"</span><span class="p">,</span> <span class="n">members</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="gp">In [24]: </span><span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">one_call</span><span class="o">.</span><span class="n">estimate</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">post</span><span class="o">.</span><span class="n">estimate</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+<span class="gh">Out[24]: </span><span class="go">True</span>
+</pre></div>
+</div>
+<p>This stand-in model is linear, so the exact posterior is at hand: its matrix
+is <code class="docutils literal notranslate"><span class="pre">weights</span></code>. (A real model is run per member, not per element, because it
+cannot be run as often as there are elements.)</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [25]: </span><span class="n">exact</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">build</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">forward</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">observed</span><span class="p">,</span> <span class="n">state</span><span class="p">)))</span>
+
+<span class="gp">In [26]: </span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="gp">   ....: </span>    <span class="s2">"exact"</span><span class="p">:</span> <span class="n">exact</span><span class="o">.</span><span class="n">uncertainty</span><span class="p">(</span><span class="n">W</span><span class="p">)[</span><span class="s2">"posterior_std"</span><span class="p">],</span>
+<span class="gp">   ....: </span>    <span class="s2">"100 members"</span><span class="p">:</span> <span class="n">post</span><span class="o">.</span><span class="n">uncertainty</span><span class="p">(</span><span class="n">W</span><span class="p">)[</span><span class="s2">"posterior_std"</span><span class="p">],</span>
+<span class="gp">   ....: </span><span class="p">})</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
 <span class="gp">   ....: </span>
-
-<span class="gp">In [24]: </span><span class="n">exact</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">build</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">forward</span><span class="o">=</span><span class="n">H</span><span class="p">))</span>
-
-<span class="gp">In [25]: </span><span class="n">exact</span><span class="o">.</span><span class="n">uncertainty</span><span class="p">(</span><span class="n">regions</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
-<span class="gh">Out[25]: </span>
-<span class="go">              prior_std  posterior_std  reduction  lower  upper</span>
-<span class="go">block region                                                   </span>
-<span class="go">total W            5.35           0.86       0.84  25.92  29.29</span>
-<span class="go">      WC           5.35           0.78       0.85  26.97  30.04</span>
-<span class="go">      EC           5.35           0.91       0.83  24.56  28.11</span>
-<span class="go">      E            5.35           1.08       0.80  27.35  31.60</span>
+<span class="gh">Out[26]: </span>
+<span class="go">               exact  100 members</span>
+<span class="go">block quarter                    </span>
+<span class="go">flux  0         0.86         0.80</span>
+<span class="go">      1         0.78         0.70</span>
+<span class="go">      2         0.91         0.84</span>
+<span class="go">      3         1.08         0.97</span>
 </pre></div>
 </div>
-<p>The error of the regions’ totals over 16 ensembles of each size, the mean’s
-in posterior standard deviations and the standard deviation’s relative to the
-exact one:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [26]: </span><span class="n">exact_totals</span> <span class="o">=</span> <span class="p">(</span><span class="n">regions</span> <span class="o">@</span> <span class="n">exact</span><span class="o">.</span><span class="n">estimate</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
-
-<span class="gp">In [27]: </span><span class="n">exact_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">exact</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">regions</span><span class="p">)</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
-
-<span class="gp">In [28]: </span><span class="k">def</span><span class="w"> </span><span class="nf">error</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">seed</span><span class="p">):</span>
-<span class="gp">   ....: </span>    <span class="n">e</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="s2">"ensemble"</span><span class="p">,</span> <span class="n">members</span><span class="o">=</span><span class="n">N</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
-<span class="gp">   ....: </span>    <span class="n">mean</span> <span class="o">=</span> <span class="p">((</span><span class="n">regions</span> <span class="o">@</span> <span class="n">e</span><span class="o">.</span><span class="n">estimate</span><span class="p">)</span><span class="o">.</span><span class="n">values</span> <span class="o">-</span> <span class="n">exact_totals</span><span class="p">)</span> <span class="o">/</span> <span class="n">exact_std</span>
-<span class="gp">   ....: </span>    <span class="n">std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">regions</span><span class="p">)</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span><span class="p">)</span> <span class="o">/</span> <span class="n">exact_std</span> <span class="o">-</span> <span class="mf">1.0</span>
-<span class="gp">   ....: </span>    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">mean</span><span class="o">**</span><span class="mi">2</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">std</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
-<span class="gp">   ....: </span>
-
-<span class="gp">In [29]: </span><span class="n">sizes</span> <span class="o">=</span> <span class="p">[</span><span class="mi">25</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">200</span><span class="p">,</span> <span class="mi">400</span><span class="p">,</span> <span class="mi">800</span><span class="p">,</span> <span class="mi">1600</span><span class="p">]</span>
-
-<span class="gp">In [30]: </span><span class="n">curve</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
-<span class="gp">   ....: </span>    <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">square</span><span class="p">(</span><span class="n">error</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">s</span><span class="p">))</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">16</span><span class="p">)],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span> <span class="k">for</span> <span class="n">N</span> <span class="ow">in</span> <span class="n">sizes</span><span class="p">],</span>
-<span class="gp">   ....: </span>    <span class="n">index</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">sizes</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"members"</span><span class="p">),</span>
-<span class="gp">   ....: </span>    <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">"mean"</span><span class="p">,</span> <span class="s2">"std"</span><span class="p">],</span>
-<span class="gp">   ....: </span><span class="p">)</span>
-<span class="gp">   ....: </span>
-
-<span class="gp">In [31]: </span><span class="n">curve</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-<span class="gh">Out[31]: </span>
-<span class="go">          mean    std</span>
-<span class="go">members              </span>
-<span class="go">25       0.963  0.299</span>
-<span class="go">50       0.654  0.183</span>
-<span class="go">100      0.384  0.095</span>
-<span class="go">200      0.305  0.051</span>
-<span class="go">400      0.163  0.032</span>
-<span class="go">800      0.118  0.013</span>
-<span class="go">1600     0.074  0.011</span>
-
-<span class="gp">In [32]: </span><span class="n">np</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">sizes</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">curve</span><span class="p">),</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>  <span class="c1"># the slopes</span>
-<span class="gh">Out[32]: </span><span class="go">array([-0.62, -0.84])</span>
-</pre></div>
-</div>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [33]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
-
-<span class="gp">In [34]: </span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">))</span>
-
-<span class="gp">In [35]: </span><span class="n">ax</span><span class="o">.</span><span class="n">loglog</span><span class="p">(</span><span class="n">curve</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">curve</span><span class="p">[</span><span class="s2">"mean"</span><span class="p">],</span> <span class="s2">"o-"</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"mean (posterior sd)"</span><span class="p">)</span>
-<span class="gh">Out[35]: </span><span class="go">[&lt;matplotlib.lines.Line2D at 0x71d2512d0c20&gt;]</span>
-
-<span class="gp">In [36]: </span><span class="n">ax</span><span class="o">.</span><span class="n">loglog</span><span class="p">(</span><span class="n">curve</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">curve</span><span class="p">[</span><span class="s2">"std"</span><span class="p">],</span> <span class="s2">"s-"</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"std (relative)"</span><span class="p">)</span>
-<span class="gh">Out[36]: </span><span class="go">[&lt;matplotlib.lines.Line2D at 0x71d2512d3a10&gt;]</span>
-
-<span class="gp">In [37]: </span><span class="n">ax</span><span class="o">.</span><span class="n">loglog</span><span class="p">(</span><span class="n">sizes</span><span class="p">,</span> <span class="n">curve</span><span class="p">[</span><span class="s2">"mean"</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">sizes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">sizes</span><span class="p">)),</span> <span class="s2">"k:"</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">"$1/\sqrt</span><span class="si">{N}</span><span class="s2">$"</span><span class="p">)</span>
-<span class="gh">Out[37]: </span><span class="go">[&lt;matplotlib.lines.Line2D at 0x71d2512d34d0&gt;]</span>
-
-<span class="gp">In [38]: </span><span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">"members"</span><span class="p">)</span>
-<span class="gh">Out[38]: </span><span class="go">Text(0.5, 0, 'members')</span>
-
-<span class="gp">In [39]: </span><span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"error of the region totals"</span><span class="p">)</span>
-<span class="gh">Out[39]: </span><span class="go">Text(0, 0.5, 'error of the region totals')</span>
-
-<span class="gp">In [40]: </span><span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
-<span class="gh">Out[40]: </span><span class="go">&lt;matplotlib.legend.Legend at 0x71d2512d3b60&gt;</span>
-</pre></div>
-</div>
-<a class="reference internal image-reference" href="../_images/ensemble_convergence.png"><img alt="../_images/ensemble_convergence.png" src="../_images/ensemble_convergence.png" style="width: 5in;" />
-</a>
-<p>The mean’s error falls as <span class="math notranslate nohighlight">\(1/\sqrt{N}\)</span> (a slope of about -0.6 here,
-a little steeper at the smallest ensembles, where the gain’s error has a part
-that falls as <span class="math notranslate nohighlight">\(1/N\)</span>): four times the members for half the error. The
-standard deviation’s falls faster over these sizes: at small ensembles it is
-mostly a bias, a spread too small by a part that falls as <span class="math notranslate nohighlight">\(1/N\)</span> (the
-members’ sampling noise fits the data and is taken for information), and the
-random part, which falls as <span class="math notranslate nohighlight">\(1/\sqrt{N}\)</span>, takes over only at large
-ensembles. At 100 members the totals are within about four tenths of their
-posterior standard deviation of the exact ones, and their standard deviations
-about 10% small. (The tests hold the slopes of the mean and of the whole
-covariance to about -1/2 from 25 to 3200 members on an explicit-<span class="math notranslate nohighlight">\(H\)</span>
-problem.)</p>
-</section>
+<p>At 100 members the standard deviations of the sums are about a tenth too
+small. A small ensemble’s spread is too small, not only noisy: the members’
+sampling noise fits the data and is taken for information. The error falls as
+<span class="math notranslate nohighlight">\(1/\sqrt{N}\)</span>, so four times the members halve it.</p>
 <section id="localization">
-<h2><a class="toc-backref" href="#id4" role="doc-backlink">Localization</a><a class="headerlink" href="#localization" title="Link to this heading">#</a></h2>
-<p>An ensemble of <span class="math notranslate nohighlight">\(N\)</span> members has <span class="math notranslate nohighlight">\(N - 1\)</span> directions, far fewer than
-the cells, so its covariance between a cell and an observation far away is
-noise, not zero. The update follows that noise: it moves cells the observation
-cannot see, and shrinks their spread, so the posterior claims more certainty
-than it has. Localization multiplies the ensemble’s covariances by weights that
-fall to zero with distance (Houtekamer and Mitchell, 2001). fips computes no
-distances: the weights are yours, an <a class="reference internal" href="../reference/api/fips.Operator.html#fips.Operator" title="fips.Operator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Operator</span></code></a> of the state by
-the observations (<code class="docutils literal notranslate"><span class="pre">localization=</span></code>), and one of the observations by
-themselves (<code class="docutils literal notranslate"><span class="pre">obs_localization=</span></code>). Here, Gaspari and Cohn’s (1999)
-fifth-order function, which falls from 1 at no distance to 0 at twice its
-half-width:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [41]: </span><span class="k">def</span><span class="w"> </span><span class="nf">gaspari_cohn</span><span class="p">(</span><span class="n">distance</span><span class="p">,</span> <span class="n">half_width</span><span class="p">):</span>
-<span class="gp">   ....: </span><span class="w">    </span><span class="sd">"""Gaspari and Cohn's (1999) function of a distance, zero beyond twice the half-width."""</span>
+<h3>Localization<a class="headerlink" href="#localization" title="Link to this heading">#</a></h3>
+<p>An ensemble of <span class="math notranslate nohighlight">\(N\)</span> members spans <span class="math notranslate nohighlight">\(N - 1\)</span> directions, far fewer
+than the state’s elements. Its covariance between an element and an
+observation far away is noise, not zero, and the update follows that noise:
+it moves elements the observation cannot see and shrinks their spread, so the
+posterior claims more certainty than it has. <strong>Localization multiplies the
+ensemble’s covariances by weights that fall to zero with distance.</strong> fips
+computes no distances: the weights are yours, an <a class="reference internal" href="../reference/api/fips.Operator.html#fips.Operator" title="fips.Operator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Operator</span></code></a> of
+the state by the observations (<code class="docutils literal notranslate"><span class="pre">localization=</span></code>) and one of the observations
+by themselves (<code class="docutils literal notranslate"><span class="pre">obs_localization=</span></code>). Give both or neither. Here the weights
+are Gaspari and Cohn’s fifth-order function, which falls from 1 at no distance
+to 0 at twice its half-width:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [27]: </span><span class="k">def</span><span class="w"> </span><span class="nf">gaspari_cohn</span><span class="p">(</span><span class="n">distance</span><span class="p">,</span> <span class="n">half_width</span><span class="p">):</span>
+<span class="gp">   ....: </span><span class="w">    </span><span class="sd">"""Gaspari and Cohn's function of a distance, zero beyond twice the half-width."""</span>
 <span class="gp">   ....: </span>    <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">distance</span><span class="p">)</span> <span class="o">/</span> <span class="n">half_width</span>
 <span class="gp">   ....: </span>    <span class="n">w</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
 <span class="gp">   ....: </span>    <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">r</span> <span class="o">&lt;=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="p">(</span><span class="n">r</span> <span class="o">&gt;</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">r</span> <span class="o">&lt;</span> <span class="mf">2.0</span><span class="p">)</span>
@@ -748,81 +666,228 @@ half-width:</p>
 <span class="gp">   ....: </span>    <span class="k">return</span> <span class="n">w</span>
 <span class="gp">   ....: </span>
 
-<span class="gp">In [42]: </span><span class="k">def</span><span class="w"> </span><span class="nf">localized</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">half_width</span><span class="p">):</span>
+<span class="gp">In [28]: </span><span class="k">def</span><span class="w"> </span><span class="nf">localized</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">half_width</span><span class="p">):</span>
 <span class="gp">   ....: </span>    <span class="k">return</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span>
 <span class="gp">   ....: </span>        <span class="n">problem</span><span class="p">,</span> <span class="s2">"ensemble"</span><span class="p">,</span> <span class="n">members</span><span class="o">=</span><span class="n">N</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
-<span class="gp">   ....: </span>        <span class="n">localization</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="n">gaspari_cohn</span><span class="p">(</span><span class="n">cell_x</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">-</span> <span class="n">site_x</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:],</span> <span class="n">half_width</span><span class="p">),</span> <span class="n">cells</span><span class="p">,</span> <span class="n">observed</span><span class="p">),</span>
-<span class="gp">   ....: </span>        <span class="n">obs_localization</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="n">gaspari_cohn</span><span class="p">(</span><span class="n">site_x</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">-</span> <span class="n">site_x</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:],</span> <span class="n">half_width</span><span class="p">),</span> <span class="n">observed</span><span class="p">,</span> <span class="n">observed</span><span class="p">),</span>
+<span class="gp">   ....: </span>        <span class="n">localization</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="n">gaspari_cohn</span><span class="p">(</span><span class="n">position</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">-</span> <span class="n">site</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:],</span> <span class="n">half_width</span><span class="p">),</span> <span class="n">state</span><span class="p">,</span> <span class="n">observed</span><span class="p">),</span>
+<span class="gp">   ....: </span>        <span class="n">obs_localization</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="n">gaspari_cohn</span><span class="p">(</span><span class="n">site</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">-</span> <span class="n">site</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:],</span> <span class="n">half_width</span><span class="p">),</span> <span class="n">observed</span><span class="p">,</span> <span class="n">observed</span><span class="p">),</span>
 <span class="gp">   ....: </span>    <span class="p">)</span>
 <span class="gp">   ....: </span>
 </pre></div>
 </div>
-<p>The test is the one of <a class="reference internal" href="synthetic.html"><span class="doc">Synthetic experiments</span></a>: 200 sets of data from the problem’s
-own world, each solved with the same members (<code class="docutils literal notranslate"><span class="pre">with_data</span></code>), and how often
-each region’s 95% interval holds its true total. The analytic posterior’s
-holds it 95% of the time; the ensemble’s, with 40 members and no
-localization, much less, since it claims too small a spread:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [43]: </span><span class="k">def</span><span class="w"> </span><span class="nf">score</span><span class="p">(</span><span class="n">post</span><span class="p">):</span>
-<span class="gp">   ....: </span>    <span class="n">table</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">trials</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">W</span><span class="o">=</span><span class="n">regions</span><span class="p">)</span>
-<span class="gp">   ....: </span>    <span class="n">error</span> <span class="o">=</span> <span class="n">table</span><span class="p">[</span><span class="s2">"estimate"</span><span class="p">]</span> <span class="o">-</span> <span class="n">table</span><span class="p">[</span><span class="s2">"truth"</span><span class="p">]</span>
-<span class="gp">   ....: </span>    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">({</span>
-<span class="gp">   ....: </span>        <span class="s2">"coverage"</span><span class="p">:</span> <span class="p">(</span><span class="n">error</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="mf">1.96</span> <span class="o">*</span> <span class="n">table</span><span class="p">[</span><span class="s2">"posterior_std"</span><span class="p">])</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
-<span class="gp">   ....: </span>        <span class="s2">"rmse"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">error</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()),</span>
-<span class="gp">   ....: </span>        <span class="s2">"claimed_std"</span><span class="p">:</span> <span class="n">table</span><span class="p">[</span><span class="s2">"posterior_std"</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
-<span class="gp">   ....: </span>    <span class="p">})</span>
+<p>The check is the one of <a class="reference internal" href="synthetic.html"><span class="doc">Synthetic experiments</span></a>: 200 sets of data from the problem’s
+own world, each solved with the same members (<code class="docutils literal notranslate"><span class="pre">trials</span></code> reuses them), and how
+often each sum’s 95% interval holds its true value. The analytic posterior’s
+holds it about 95% of the time.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [29]: </span><span class="k">def</span><span class="w"> </span><span class="nf">coverage</span><span class="p">(</span><span class="n">post</span><span class="p">):</span>
+<span class="gp">   ....: </span><span class="w">    </span><span class="sd">"""How often the 95% interval of each sum holds its true value, over 200 sets of data."""</span>
+<span class="gp">   ....: </span>    <span class="n">table</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">trials</span><span class="p">(</span><span class="n">n</span><span class="o">=</span><span class="mi">200</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">W</span><span class="o">=</span><span class="n">W</span><span class="p">)</span>
+<span class="gp">   ....: </span>    <span class="k">return</span> <span class="n">table</span><span class="p">[</span><span class="s2">"truth"</span><span class="p">]</span><span class="o">.</span><span class="n">between</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="s2">"lower"</span><span class="p">],</span> <span class="n">table</span><span class="p">[</span><span class="s2">"upper"</span><span class="p">])</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
 <span class="gp">   ....: </span>
 
-<span class="gp">In [44]: </span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="gp">   ....: </span>    <span class="s2">"analytic"</span><span class="p">:</span> <span class="n">score</span><span class="p">(</span><span class="n">exact</span><span class="p">),</span>
-<span class="gp">   ....: </span>    <span class="s2">"40 members"</span><span class="p">:</span> <span class="n">score</span><span class="p">(</span><span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="s2">"ensemble"</span><span class="p">,</span> <span class="n">members</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">3</span><span class="p">)),</span>
-<span class="gp">   ....: </span>    <span class="s2">"40, localized 5 km"</span><span class="p">:</span> <span class="n">score</span><span class="p">(</span><span class="n">localized</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">)),</span>
-<span class="gp">   ....: </span>    <span class="s2">"40, localized 10 km"</span><span class="p">:</span> <span class="n">score</span><span class="p">(</span><span class="n">localized</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">)),</span>
-<span class="gp">   ....: </span>    <span class="s2">"40, localized 20 km"</span><span class="p">:</span> <span class="n">score</span><span class="p">(</span><span class="n">localized</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mf">20.0</span><span class="p">)),</span>
-<span class="gp">   ....: </span><span class="p">})</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">In [30]: </span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">({</span>
+<span class="gp">   ....: </span>    <span class="s2">"analytic"</span><span class="p">:</span> <span class="n">coverage</span><span class="p">(</span><span class="n">exact</span><span class="p">),</span>
+<span class="gp">   ....: </span>    <span class="s2">"40 members"</span><span class="p">:</span> <span class="n">coverage</span><span class="p">(</span><span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="s2">"ensemble"</span><span class="p">,</span> <span class="n">members</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">3</span><span class="p">)),</span>
+<span class="gp">   ....: </span>    <span class="s2">"40, localized 10 km"</span><span class="p">:</span> <span class="n">coverage</span><span class="p">(</span><span class="n">localized</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">)),</span>
+<span class="gp">   ....: </span>    <span class="s2">"40, localized 20 km"</span><span class="p">:</span> <span class="n">coverage</span><span class="p">(</span><span class="n">localized</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mf">20.0</span><span class="p">)),</span>
+<span class="gp">   ....: </span><span class="p">})</span>
 <span class="gp">   ....: </span>
-<span class="gh">Out[44]: </span>
-<span class="go">             analytic  40 members  40, localized 5 km  40, localized 10 km  40, localized 20 km</span>
-<span class="go">coverage         0.96        0.70                0.97                 0.96                 0.94</span>
-<span class="go">rmse             0.86        1.41                1.23                 1.08                 0.97</span>
-<span class="go">claimed_std      0.91        0.71                1.33                 1.10                 0.96</span>
+<span class="gh">Out[30]: </span>
+<span class="go">analytic               0.96125</span>
+<span class="go">40 members             0.69750</span>
+<span class="go">40, localized 10 km    0.95625</span>
+<span class="go">40, localized 20 km    0.94375</span>
+<span class="go">dtype: float64</span>
 </pre></div>
 </div>
-<p>Localized, the 40 members’ intervals hold the truth about as often as they
-claim to, and their totals are closer to the truth. The half-width is a
-choice: too short cuts real correlations (the footprints here reach about
-10 km upwind, and the prior’s correlation 2 km past that), so the update moves
-less than it should, and the error and the spread it claims are both larger (5
-km); longer comes closer to the analytic posterior (20 km, the best of the
-three here), until the noise is back (no localization at all is an infinite
-half-width). Choose it with <code class="docutils literal notranslate"><span class="pre">trials</span></code>, as here, in a world shaped like
-yours. With localization the
-updated members’ covariance is not the localized Kalman posterior (an ensemble
-of <span class="math notranslate nohighlight">\(N\)</span> members cannot hold a covariance of more than <span class="math notranslate nohighlight">\(N - 1\)</span>
-directions), and weights of one everywhere give the unlocalized update
-exactly.</p>
+<p>Without localization, 40 members claim too small a spread, and their intervals
+miss the truth far more often than they say. Localized, they hold it about as
+often as they claim. The half-width is a choice. Too short cuts real
+correlations (here an observation sees about 10 km behind it, and the prior’s
+correlation reaches 2 km past that), so the update moves less than it should.
+Too long lets the noise back in (no localization is an infinite half-width).
+Choose it with <code class="docutils literal notranslate"><span class="pre">trials</span></code>, as here, in a synthetic world shaped like yours.</p>
 </section>
-<section id="the-update-and-what-it-costs">
-<h2><a class="toc-backref" href="#id5" role="doc-backlink">The update, and what it costs</a><a class="headerlink" href="#the-update-and-what-it-costs" title="Link to this heading">#</a></h2>
-<p>The prior members’ deviations <span class="math notranslate nohighlight">\(A\)</span> and their runs’ <span class="math notranslate nohighlight">\(B\)</span> (each
-divided by <span class="math notranslate nohighlight">\(\sqrt{N - 1}\)</span>) give the ensemble’s covariances
-<span class="math notranslate nohighlight">\(P_{xy} = A B^T\)</span> and <span class="math notranslate nohighlight">\(P_{yy} = B B^T\)</span>, each localized by its
-weights. The mean moves by the ensemble gain, <span class="math notranslate nohighlight">\(K = P_{xy} (P_{yy} +
-S_z/\gamma)^{-1}\)</span>, and the deviations by the reduced gain of Whitaker and
-Hamill’s (2002) batch square-root filter, computed with the observations
-whitened by <span class="math notranslate nohighlight">\(S_z\)</span>: their covariance after the update is the Kalman
-posterior of the ensemble’s own covariance, exactly. Without localization the
-same update is the ensemble transform of the ETKF, <span class="math notranslate nohighlight">\(A^a = A (I + S^T
-S)^{-1/2}\)</span>, which fips computes from the thin SVD of the whitened runs
-(<span class="math notranslate nohighlight">\(O(m N \min(m, N))\)</span>); with localization it eigendecomposes the
-<span class="math notranslate nohighlight">\(m \times m\)</span> localized <span class="math notranslate nohighlight">\(P_{yy}\)</span> and forms the <span class="math notranslate nohighlight">\(n \times m\)</span>
-localized <span class="math notranslate nohighlight">\(P_{xy}\)</span>. A non-diagonal <span class="math notranslate nohighlight">\(S_z\)</span> is factored by Cholesky,
-dense. None of it depends on <span class="math notranslate nohighlight">\(\gamma\)</span> or the observations’ values, so
-<a class="reference internal" href="../reference/api/fips.Posterior.with_gamma.html#fips.Posterior.with_gamma" title="fips.Posterior.with_gamma"><code class="xref py py-meth docutils literal notranslate"><span class="pre">with_gamma()</span></code></a> and <a class="reference internal" href="../reference/api/fips.Posterior.with_data.html#fips.Posterior.with_data" title="fips.Posterior.with_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">with_data()</span></code></a> cost
-a product. The runs are the cost: <span class="math notranslate nohighlight">\(N\)</span> of them, once.</p>
-<p>What stays outside: assimilating window after window (CarbonTracker’s lag
-loop) is a loop of <code class="docutils literal notranslate"><span class="pre">fips.solve(...,</span> <span class="pre">&quot;ensemble&quot;)</span></code> calls, each starting from
-the last one’s updated members (<code class="docutils literal notranslate"><span class="pre">post.sample(N)</span></code>, with the next window’s
-prior added); no outlier rejection is made.</p>
+</section>
+<section id="what-the-posterior-reports">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">What the posterior reports</a><a class="headerlink" href="#what-the-posterior-reports" title="Link to this heading">#</a></h2>
+<p>The ensemble’s posterior is a Gaussian one, written from the updated members.
+The <a class="reference internal" href="../reference/posterior.html#posterior-members"><span class="std std-ref">members table</span></a> lists every member for every kind
+of answer; for the ensemble:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../reference/api/fips.Posterior.estimate.html#fips.Posterior.estimate" title="fips.Posterior.estimate"><code class="xref py py-attr docutils literal notranslate"><span class="pre">estimate</span></code></a> (and <a class="reference internal" href="../reference/api/fips.Posterior.mean.html#fips.Posterior.mean" title="fips.Posterior.mean"><code class="xref py py-attr docutils literal notranslate"><span class="pre">mean</span></code></a>) is the
+mean of the updated members. <a class="reference internal" href="../reference/api/fips.Posterior.variances.html#fips.Posterior.variances" title="fips.Posterior.variances"><code class="xref py py-attr docutils literal notranslate"><span class="pre">variances</span></code></a>,
+<a class="reference internal" href="../reference/api/fips.Posterior.cov.html#fips.Posterior.cov" title="fips.Posterior.cov"><code class="xref py py-meth docutils literal notranslate"><span class="pre">cov()</span></code></a> and <a class="reference internal" href="../reference/api/fips.Posterior.kalman_gain.html#fips.Posterior.kalman_gain" title="fips.Posterior.kalman_gain"><code class="xref py py-attr docutils literal notranslate"><span class="pre">kalman_gain</span></code></a> are
+those of the updated members.</p></li>
+<li><p><a class="reference internal" href="../reference/api/fips.Posterior.sample.html#fips.Posterior.sample" title="fips.Posterior.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a> returns the updated members themselves, so
+it raises when asked for more than there are.</p></li>
+<li><p><a class="reference internal" href="../reference/api/fips.Posterior.dofs.html#fips.Posterior.dofs" title="fips.Posterior.dofs"><code class="xref py py-attr docutils literal notranslate"><span class="pre">dofs</span></code></a>, <a class="reference internal" href="../reference/api/fips.Posterior.information_content.html#fips.Posterior.information_content" title="fips.Posterior.information_content"><code class="xref py py-attr docutils literal notranslate"><span class="pre">information_content</span></code></a>,
+<a class="reference internal" href="../reference/api/fips.Posterior.chi2.html#fips.Posterior.chi2" title="fips.Posterior.chi2"><code class="xref py py-attr docutils literal notranslate"><span class="pre">chi2</span></code></a> and <a class="reference internal" href="../reference/api/fips.Posterior.chi2_tests.html#fips.Posterior.chi2_tests" title="fips.Posterior.chi2_tests"><code class="xref py py-meth docutils literal notranslate"><span class="pre">chi2_tests()</span></code></a> are the
+analytic method’s formulas, with the members’ covariance of the modeled
+observations in place of <span class="math notranslate nohighlight">\(H S_0 H^T\)</span>.</p></li>
+<li><p><a class="reference internal" href="../reference/api/fips.Posterior.with_data.html#fips.Posterior.with_data" title="fips.Posterior.with_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">with_data()</span></code></a> and <a class="reference internal" href="../reference/api/fips.Posterior.with_gamma.html#fips.Posterior.with_gamma" title="fips.Posterior.with_gamma"><code class="xref py py-meth docutils literal notranslate"><span class="pre">with_gamma()</span></code></a>
+reuse the runs. <a class="reference internal" href="../reference/api/fips.Posterior.trials.html#fips.Posterior.trials" title="fips.Posterior.trials"><code class="xref py py-meth docutils literal notranslate"><span class="pre">trials()</span></code></a> runs the model only to make
+each trial’s data, so it needs a model that runs in Python.</p></li>
+<li><p><a class="reference internal" href="../reference/api/fips.Posterior.log_evidence.html#fips.Posterior.log_evidence" title="fips.Posterior.log_evidence"><code class="xref py py-attr docutils literal notranslate"><span class="pre">log_evidence</span></code></a> raises: the evidence of a sample
+covariance is not the evidence. <a class="reference internal" href="../reference/api/fips.Posterior.recovery.html#fips.Posterior.recovery" title="fips.Posterior.recovery"><code class="xref py py-meth docutils literal notranslate"><span class="pre">recovery()</span></code></a> and the
+data worth raise: the estimate is not claimed linear in the observations.</p></li>
+<li><p>What needs <span class="math notranslate nohighlight">\(H\)</span> (<a class="reference internal" href="../reference/api/fips.Posterior.averaging_kernel.html#fips.Posterior.averaging_kernel" title="fips.Posterior.averaging_kernel"><code class="xref py py-meth docutils literal notranslate"><span class="pre">averaging_kernel()</span></code></a>,
+<a class="reference internal" href="../reference/api/fips.Posterior.dofs_per_element.html#fips.Posterior.dofs_per_element" title="fips.Posterior.dofs_per_element"><code class="xref py py-attr docutils literal notranslate"><span class="pre">dofs_per_element</span></code></a>, the leverage, the innovation
+covariance) works when the forward is an <a class="reference internal" href="../reference/api/fips.Operator.html#fips.Operator" title="fips.Operator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Operator</span></code></a>, and
+raises <a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#TypeError" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeError</span></code></a> for a model.</p></li>
+</ul>
+</section>
+<section id="options">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Options</a><a class="headerlink" href="#options" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">fips.solve(problem,</span> <span class="pre">&quot;ensemble&quot;,</span> <span class="pre">**options)</span></code> takes
+(<a class="reference internal" href="../reference/api/fips.methods.ensemble.EnsembleOptions.html#fips.methods.ensemble.EnsembleOptions" title="fips.methods.ensemble.EnsembleOptions"><code class="xref py py-class docutils literal notranslate"><span class="pre">EnsembleOptions</span></code></a>):</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 14.0%" />
+<col style="width: 66.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>What it does</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">members</span></code></p></td>
+<td><p>required</p></td>
+<td><p>The prior members: the DataFrame <a class="reference internal" href="../reference/api/fips.Problem.ensemble.html#fips.Problem.ensemble" title="fips.Problem.ensemble"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ensemble()</span></code></a>
+returns (one row per state element, one column per member, at least
+two), or a number of members to draw. The update uses the members’
+own mean and covariance as the prior, not <code class="docutils literal notranslate"><span class="pre">problem.prior</span></code> and
+<code class="docutils literal notranslate"><span class="pre">problem.prior_cov</span></code>: members from an earlier update carry it
+forward.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">predicted</span></code></p></td>
+<td><p>None</p></td>
+<td><p>The model’s output for each member, without the offset: one row per
+observation, the members’ columns. Given, fips runs no model; it needs
+<code class="docutils literal notranslate"><span class="pre">members</span></code> as a DataFrame. None runs the problem’s forward on each
+member.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">localization</span></code></p></td>
+<td><p>None</p></td>
+<td><p>Weights on the ensemble’s covariance of the state with the modeled
+observations: an <a class="reference internal" href="../reference/api/fips.Operator.html#fips.Operator" title="fips.Operator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Operator</span></code></a>, state by observations.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">obs_localization</span></code></p></td>
+<td><p>None</p></td>
+<td><p>Weights on the ensemble’s covariance of the modeled observations: an
+<a class="reference internal" href="../reference/api/fips.Operator.html#fips.Operator" title="fips.Operator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Operator</span></code></a>, observations by observations, symmetric.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">seed</span></code></p></td>
+<td><p>0</p></td>
+<td><p>The seed of the members drawn when <code class="docutils literal notranslate"><span class="pre">members</span></code> is a number.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">gamma</span></code></p></td>
+<td><p>1.0</p></td>
+<td><p>The regularization factor: the observation covariance is divided by
+it, as for every method (<a class="reference internal" href="posterior.html"><span class="doc">Reading the posterior</span></a>).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="warnings-and-checks">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Warnings and checks</a><a class="headerlink" href="#warnings-and-checks" title="Link to this heading">#</a></h2>
+<p>The method warns about nothing. <strong>A spread too small for the number of
+members comes with no message</strong>: check it with
+<a class="reference internal" href="../reference/api/fips.Posterior.trials.html#fips.Posterior.trials" title="fips.Posterior.trials"><code class="xref py py-meth docutils literal notranslate"><span class="pre">trials()</span></code></a> in a synthetic world, as above. When fips runs
+the forward itself, it logs one INFO line, naming the model and the number of
+members. fips logs through <a class="reference external" href="https://docs.python.org/3/library/logging.html#module-logging" title="(in Python v3.15)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">logging</span></code></a>, silent until you configure it
+(<a class="reference internal" href="posterior.html#repeated-inversions"><span class="std std-ref">Repeated inversions, logging and saving</span></a>).</p>
+<p>It raises:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ValueError</span></code></a> when <code class="docutils literal notranslate"><span class="pre">members</span></code> is missing or holds fewer than two
+members, when two members share a label, when <code class="docutils literal notranslate"><span class="pre">predicted</span></code> comes with a
+number of members, or when only one of the two localizations is given;</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ValueError</span></code></a> when the rows of <code class="docutils literal notranslate"><span class="pre">members</span></code> or <code class="docutils literal notranslate"><span class="pre">predicted</span></code> are not
+the labels of the prior or of the observations (it names the labels on one
+side only), when the columns of <code class="docutils literal notranslate"><span class="pre">predicted</span></code> are not the members’ labels,
+or when a value, given or run, is not finite;</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ValueError</span></code></a> when <code class="docutils literal notranslate"><span class="pre">obs_localization</span></code> is not symmetric, or when its
+weights make the localized covariance of the modeled observations clearly
+negative (Gaspari and Cohn’s function never does);</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#TypeError" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeError</span></code></a> when <code class="docutils literal notranslate"><span class="pre">members</span></code> is neither a number nor a DataFrame,
+<code class="docutils literal notranslate"><span class="pre">predicted</span></code> is not a DataFrame, or a localization is not an
+<a class="reference internal" href="../reference/api/fips.Operator.html#fips.Operator" title="fips.Operator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Operator</span></code></a>;</p></li>
+<li><p><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.LinAlgError.html#scipy.linalg.LinAlgError" title="(in SciPy v1.18.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.linalg.LinAlgError</span></code></a> when the observation covariance is not
+positive definite: the update whitens the observations with its Cholesky
+factor.</p></li>
+</ul>
+</section>
+<section id="cost">
+<h2><a class="toc-backref" href="#id6" role="doc-backlink">Cost</a><a class="headerlink" href="#cost" title="Link to this heading">#</a></h2>
+<p><strong>The cost is the runs</strong>: <span class="math notranslate nohighlight">\(N\)</span> runs of the model, made by you, once.
+Everything fips does is small beside them. Without localization, the update
+is a thin SVD of the whitened runs, <span class="math notranslate nohighlight">\(O(m N \min(m, N))\)</span>, and products
+with the <span class="math notranslate nohighlight">\(n \times N\)</span> members. With localization, it eigendecomposes an
+<span class="math notranslate nohighlight">\(m \times m\)</span> matrix and holds an <span class="math notranslate nohighlight">\(n \times m\)</span> dense one. A
+non-diagonal observation covariance is factored once, dense. Another
+<span class="math notranslate nohighlight">\(\gamma\)</span> or other observation values cost a product, with no more runs.</p>
+</section>
+<section id="how-it-works">
+<h2><a class="toc-backref" href="#id7" role="doc-backlink">How it works</a><a class="headerlink" href="#how-it-works" title="Link to this heading">#</a></h2>
+<p>The update is a deterministic square-root ensemble Kalman filter (EnSRF)
+applied to every observation at once, as CarbonTracker does. Write <span class="math notranslate nohighlight">\(X\)</span>
+for the members (<span class="math notranslate nohighlight">\(n \times N\)</span>) and <span class="math notranslate nohighlight">\(Y\)</span> for their runs
+(<span class="math notranslate nohighlight">\(m \times N\)</span>, <span class="math notranslate nohighlight">\(Y_{\cdot j} = F(x_j)\)</span>). Their deviations from
+their means, scaled, are</p>
+<div class="math notranslate nohighlight">
+\[A = (X - \bar{x}) / \sqrt{N - 1}, \qquad B = (Y - \bar{y}) / \sqrt{N - 1},\]</div>
+<p>and they give the ensemble’s covariances <span class="math notranslate nohighlight">\(P_{xy} = A B^T\)</span> and
+<span class="math notranslate nohighlight">\(P_{yy} = B B^T\)</span>. With localization, each is multiplied element by
+element by its weights, <span class="math notranslate nohighlight">\(\rho_{xy} \circ P_{xy}\)</span> and <span class="math notranslate nohighlight">\(\rho_{yy}
+\circ P_{yy}\)</span>. With the innovation <span class="math notranslate nohighlight">\(d = z - c - \bar{y}\)</span> and
+<span class="math notranslate nohighlight">\(R = S_z / \gamma\)</span>, the mean moves by the ensemble’s gain:</p>
+<div class="math notranslate nohighlight">
+\[\bar{x}^a = \bar{x} + K d, \qquad K = P_{xy} (P_{yy} + R)^{-1}.\]</div>
+<p>The deviations move by the reduced gain of Whitaker and Hamill’s batch
+square-root filter, <span class="math notranslate nohighlight">\(A^a = A - \tilde{K} B\)</span>. With <span class="math notranslate nohighlight">\(S_z = L L^T\)</span>
+and <span class="math notranslate nohighlight">\(M = L^{-1} P_{yy} L^{-T}\)</span>,</p>
+<div class="math notranslate nohighlight">
+\[\tilde{K} = P_{xy} L^{-T} \, G^{-1/2} (G^{1/2} + \gamma^{-1/2} I)^{-1},
+\qquad G = M + I / \gamma,\]</div>
+<p>chosen so that the covariance of the updated deviations, <span class="math notranslate nohighlight">\(A^a A^{aT}\)</span>,
+is the Kalman posterior of the ensemble’s own covariance <span class="math notranslate nohighlight">\(A A^T\)</span>,
+exactly. Without localization the same update is the ensemble transform of
+the ETKF, <span class="math notranslate nohighlight">\(A^a = A (I + S^T S)^{-1/2}\)</span> with <span class="math notranslate nohighlight">\(S = \sqrt{\gamma}
+L^{-1} B\)</span>, which fips computes from the thin SVD of <span class="math notranslate nohighlight">\(L^{-1} B\)</span>. With
+localization it eigendecomposes the localized <span class="math notranslate nohighlight">\(M\)</span>. The updated
+deviations’ covariance is then not the localized Kalman posterior:
+<span class="math notranslate nohighlight">\(N\)</span> members cannot hold a covariance of more than <span class="math notranslate nohighlight">\(N - 1\)</span>
+directions; weights of one everywhere give the unlocalized update exactly.
+None of the factors depends on <span class="math notranslate nohighlight">\(\gamma\)</span> or on the observations’ values,
+which is why another <span class="math notranslate nohighlight">\(\gamma\)</span> or other data cost a product.</p>
+<p>Assimilating window after window is a loop of <code class="docutils literal notranslate"><span class="pre">fips.solve(...,</span>
+<span class="pre">&quot;ensemble&quot;)</span></code> calls, each starting from the members the last one updated
+(<code class="docutils literal notranslate"><span class="pre">post.sample(N)</span></code>), with the next window’s prior added. The method rejects
+no outliers.</p>
+</section>
+<section id="references">
+<h2><a class="toc-backref" href="#id8" role="doc-backlink">References</a><a class="headerlink" href="#references" title="Link to this heading">#</a></h2>
+<p>Gaspari, G., and Cohn, S. E. (1999). Construction of correlation functions in
+two and three dimensions. <em>Quarterly Journal of the Royal Meteorological
+Society</em>, 125(554), 723-757. <a class="reference external" href="https://doi.org/10.1002/qj.49712555417">https://doi.org/10.1002/qj.49712555417</a></p>
+<p>Houtekamer, P. L., and Mitchell, H. L. (2001). A sequential ensemble Kalman
+filter for atmospheric data assimilation. <em>Monthly Weather Review</em>, 129(1),
+123-137. <a class="reference external" href="https://doi.org/10.1175/1520-0493(2001">https://doi.org/10.1175/1520-0493(2001</a>)129&lt;0123:ASEKFF&gt;2.0.CO;2</p>
+<p>Peters, W., Miller, J. B., Whitaker, J., Denning, A. S., Hirsch, A., Krol,
+M. C., Zupanski, D., Bruhwiler, L., and Tans, P. P. (2005). An ensemble data
+assimilation system to estimate CO2 surface fluxes from atmospheric trace gas
+observations. <em>Journal of Geophysical Research</em>, 110, D24304.
+<a class="reference external" href="https://doi.org/10.1029/2005JD006157">https://doi.org/10.1029/2005JD006157</a></p>
+<p>Tippett, M. K., Anderson, J. L., Bishop, C. H., Hamill, T. M., and Whitaker,
+J. S. (2003). Ensemble square root filters. <em>Monthly Weather Review</em>, 131(7),
+1485-1490. <a class="reference external" href="https://doi.org/10.1175/1520-0493(2003">https://doi.org/10.1175/1520-0493(2003</a>)131&lt;1485:ESRF&gt;2.0.CO;2</p>
+<p>Whitaker, J. S., and Hamill, T. M. (2002). Ensemble data assimilation without
+perturbed observations. <em>Monthly Weather Review</em>, 130(7), 1913-1924.
+<a class="reference external" href="https://doi.org/10.1175/1520-0493(2002">https://doi.org/10.1175/1520-0493(2002</a>)130&lt;1913:EDAWPO&gt;2.0.CO;2</p>
 </section>
 </section>
 
@@ -837,12 +902,12 @@ prior added); no outlier rejection is made.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="comparison.html"
+       href="nonlinear.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Choosing a method</p>
+        <p class="prev-next-title">A nonlinear forward model</p>
       </div>
     </a>
     <a class="right-next"
@@ -873,11 +938,17 @@ prior added); no outlier rejection is made.</p>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-model-that-can-only-be-run">A model that can only be run</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-two-stages">The two stages</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-close-it-is">How close it is</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#localization">Localization</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-update-and-what-it-costs">The update, and what it costs</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#when-to-use-it">When to use it</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#an-example">An example</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#localization">Localization</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-posterior-reports">What the posterior reports</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#options">Options</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#warnings-and-checks">Warnings and checks</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cost">Cost</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-it-works">How it works</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#references">References</a></li>
 </ul>
   </nav></div>
 

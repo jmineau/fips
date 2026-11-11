@@ -4,33 +4,20 @@ Solving and Posterior
 
 .. currentmodule:: fips
 
-:func:`solve` solves a :class:`Problem` with a method and returns a
-:class:`Posterior`. The problem is the question and holds what needs no solve
-and no :math:`m \times m` matrix (:meth:`Problem.predict`); the posterior is
-the answer and holds what depends on the solve or on the :math:`m \times m`
-innovation covariance (:attr:`Posterior.innovation_cov`). Each method declares its options once (for ``"analytic"``,
-:class:`~fips.methods.analytic.AnalyticOptions`; for ``"bounded"``, the
-posterior with bounds on the state, :class:`~fips.methods.bounded.BoundedOptions`;
-for ``"gauss_newton"``, the mode of a problem with a forward model,
-:class:`~fips.methods.gauss_newton.GaussNewtonOptions`; for ``"ensemble"``, the
-update of members drawn from the prior, for a model that can only be run,
-:class:`~fips.methods.ensemble.EnsembleOptions`; for ``"variational"``, conjugate
-gradients and a low-rank posterior from products alone, for a problem too large to
-factor, :class:`~fips.methods.variational.VariationalOptions`), and an unknown method or option raises
-with the names it knows. The posterior labels the answer and the method keeps
-its own machinery: the posterior asks what the method kept from the solve (a
-:class:`~fips.posterior.Solution`) for unlabeled arrays and labels them with
-the problem's spaces. The analytic method keeps the factorization of its
-whitened system (:math:`m \times m`), or of its information system
-(:math:`n \times n`) when there are fewer state elements than observations,
-the model-data mismatch is dense, diagonal, sparse, block diagonal or
-Kronecker, and the prior error covariance has a square root (a
-positive-definite one does). In the whitened form nothing
-:math:`n \times n` is formed unless the full covariance or averaging kernel is
-asked for. The solve factors by
-Cholesky at its gamma; the first :meth:`Posterior.with_gamma` eigendecomposes
-once, and later ones reuse it. :meth:`Posterior.with_data` reuses the
-factorization in either form.
+:func:`solve` solves a :class:`Problem` by a method and returns a
+:class:`Posterior`. The problem is the question; the posterior is the answer,
+and holds everything that depends on the solve. Each method declares its
+options once, as a dataclass (below), and :func:`solve` checks the options it
+is given against them: an unknown method or option raises with the names it
+knows. :doc:`/user_guide/methods` says which method to use, and
+:doc:`/user_guide/posterior` how to read the answer.
+
+A posterior labels what its method computed: the method keeps what it needs
+from the solve (a :class:`~fips.posterior.Solution`), answers with unlabeled
+arrays, and the posterior puts the problem's labels on them and derives the
+rest (the averaging kernel, the innovation covariance, the diagnostics, the
+summary). So every method's posterior has the same members, and the table
+below says which each kind of answer can give.
 
 .. seealso::
 
@@ -189,13 +176,14 @@ without an :math:`n \times n` matrix.
 
 What a posterior can give
 ~~~~~~~~~~~~~~~~~~~~~~~~~
-A posterior's members belong to the kind of answer, not the method. There are
-three kinds: a *Gaussian* posterior (``estimate`` is its mean and the
+A posterior's members belong to its kind of answer, not to its method. There
+are three kinds: a *Gaussian* posterior (``estimate`` is its mean and the
 covariance is known), a *sampled* one (``estimate`` is the mode, and the mean,
-the spread and the intervals are those of draws) and a *low-rank* one (the
-covariance is kept as ``rank`` directions). A member its kind cannot give raises :class:`UnavailableError`, an
-:class:`AttributeError` and a :class:`TypeError`: ``hasattr(post,
-"at_bound")`` is False where it would raise.
+the spread and the intervals come from kept draws) and a *low-rank* one (the
+covariance is kept as ``rank`` directions). A member a kind cannot give raises
+:class:`UnavailableError`, which is both an :class:`AttributeError` and a
+:class:`TypeError`, so ``hasattr(post, "at_bound")`` is False where it would
+raise.
 
 .. list-table::
    :header-rows: 1

@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Choosing a method &#8212; fips 0.2.0b3.dev34+g9a0704831 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx_autodoc_typehints.css?v=057ac668" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=4b8357b6" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="../_static/documentation_options.js?v=8e63224c"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/methods';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/fips/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Bounds on the state" href="bounds.html" />
+    <link rel="prev" title="Reading the posterior" href="posterior.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.2" />
+  
+    
+    <script src="../_static/searchtools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/fips" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/fips" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Every problem</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="problem.html">Building a problem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="posterior.html">Reading the posterior</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Beyond the linear Gaussian problem</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Choosing a method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bounds.html">Bounds on the state</a></li>
+<li class="toctree-l1"><a class="reference internal" href="positive.html">Values that stay positive</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nonlinear.html">A nonlinear forward model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ensemble.html">A model without a Jacobian: the ensemble method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="variational.html">A problem too large to factor: the variational method</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Checking and tuning an inversion</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="settings.html">Fitting the covariance settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hierarchical.html">The uncertainty of the settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="synthetic.html">Synthetic experiments</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="examples/index.html">Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="examples/gravity_2d.html">Gravity: density below the surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/flux_regional.html">A regional flux inversion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/synthetic_truth.html">Does the inversion recover a known flux?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/data_worth.html">Which observations constrain a regional total?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/comparison.html">Comparing ways to keep a quantity positive</a></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">User Guide</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Choosing a method</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="choosing-a-method">
+<span id="methods"></span><h1>Choosing a method<a class="headerlink" href="#choosing-a-method" title="Link to this heading">#</a></h1>
+<p><code class="docutils literal notranslate"><span class="pre">fips.solve(problem,</span> <span class="pre">method,</span> <span class="pre">**options)</span></code> solves one <a class="reference internal" href="../reference/api/fips.Problem.html#fips.Problem" title="fips.Problem"><code class="xref py py-class docutils literal notranslate"><span class="pre">Problem</span></code></a>
+by one of five methods. The problem is the same for all of them: a prior and
+its covariance, observations and theirs, and a forward map. The methods
+differ in what they allow (bounds, a forward model that is not linear, a
+model that can only be run, a problem too large to factor) and so in what
+their answer is. <strong>Start with</strong> <code class="docutils literal notranslate"><span class="pre">&quot;analytic&quot;</span></code>, <strong>the default</strong>: it is exact,
+it gives every diagnostic, and every other method gives its answer when the
+problem is linear and nothing else is asked of it.</p>
+<nav class="contents local" id="on-this-page">
+<p class="topic-title">On this page</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#the-methods" id="id1">The methods</a></p></li>
+<li><p><a class="reference internal" href="#which-one" id="id2">Which one</a></p></li>
+<li><p><a class="reference internal" href="#three-kinds-of-answer" id="id3">Three kinds of answer</a></p></li>
+<li><p><a class="reference internal" href="#keeping-a-quantity-positive" id="id4">Keeping a quantity positive</a></p></li>
+<li><p><a class="reference internal" href="#reading-a-transformed-state" id="id5">Reading a transformed state</a></p></li>
+<li><p><a class="reference internal" href="#warnings" id="id6">Warnings</a></p></li>
+<li><p><a class="reference internal" href="#cost" id="id7">Cost</a></p></li>
+</ul>
+</nav>
+<section id="the-methods">
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">The methods</a><a class="headerlink" href="#the-methods" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 14.0%" />
+<col style="width: 26.0%" />
+<col style="width: 18.0%" />
+<col style="width: 22.0%" />
+<col style="width: 20.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head stub"><p>Method</p></th>
+<th class="head"><p>For a problem with</p></th>
+<th class="head"><p>The estimate is</p></th>
+<th class="head"><p>The uncertainty comes from</p></th>
+<th class="head"><p>Guide</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">&quot;analytic&quot;</span></code></p></th>
+<td><p>a forward operator <span class="math notranslate nohighlight">\(H\)</span>, small enough to factor an
+<span class="math notranslate nohighlight">\(m \times m\)</span> or <span class="math notranslate nohighlight">\(n \times n\)</span> matrix</p></td>
+<td><p>the posterior mean</p></td>
+<td><p>the exact posterior covariance</p></td>
+<td><p><a class="reference internal" href="posterior.html"><span class="doc">Reading the posterior</span></a></p></td>
+</tr>
+<tr class="row-odd"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">&quot;bounded&quot;</span></code></p></th>
+<td><p>a forward operator, and bounds on the state (<code class="docutils literal notranslate"><span class="pre">lower=</span></code>, <code class="docutils literal notranslate"><span class="pre">upper=</span></code>)</p></td>
+<td><p>the posterior mode</p></td>
+<td><p>kept draws of the bounded posterior</p></td>
+<td><p><a class="reference internal" href="bounds.html"><span class="doc">Bounds on the state</span></a></p></td>
+</tr>
+<tr class="row-even"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code></p></th>
+<td><p>a forward model <span class="math notranslate nohighlight">\(F(x)\)</span> and its Jacobian</p></td>
+<td><p>the posterior mode</p></td>
+<td><p>kept draws of the posterior</p></td>
+<td><p><a class="reference internal" href="nonlinear.html"><span class="doc">A nonlinear forward model</span></a>, <a class="reference internal" href="positive.html"><span class="doc">Values that stay positive</span></a></p></td>
+</tr>
+<tr class="row-odd"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">&quot;ensemble&quot;</span></code></p></th>
+<td><p>a forward model that can only be run, on members drawn from the prior</p></td>
+<td><p>the mean of the updated members</p></td>
+<td><p>the spread of the updated members</p></td>
+<td><p><a class="reference internal" href="ensemble.html"><span class="doc">A model without a Jacobian: the ensemble method</span></a></p></td>
+</tr>
+<tr class="row-even"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">&quot;variational&quot;</span></code></p></th>
+<td><p>a forward operator or model given by its products, too large to
+factor</p></td>
+<td><p>the posterior mean (the mode, for a forward model)</p></td>
+<td><p>a low-rank posterior covariance</p></td>
+<td><p><a class="reference internal" href="variational.html"><span class="doc">A problem too large to factor: the variational method</span></a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><a class="reference internal" href="../reference/api/fips.available_methods.html#fips.available_methods" title="fips.available_methods"><code class="xref py py-func docutils literal notranslate"><span class="pre">fips.available_methods()</span></code></a> lists the names, and each method’s options are
+in <a class="reference internal" href="../reference/posterior.html"><span class="doc">Solving and Posterior</span></a>.</p>
+</section>
+<section id="which-one">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Which one</a><a class="headerlink" href="#which-one" title="Link to this heading">#</a></h2>
+<p>Ask in this order:</p>
+<ol class="arabic simple">
+<li><p><strong>Can the forward map be written as a matrix, and does the problem fit in
+memory?</strong> Use <code class="docutils literal notranslate"><span class="pre">&quot;analytic&quot;</span></code>. Most problems stop here, and a large sparse
+forward operator with a Kronecker prior covariance still fits.</p></li>
+<li><p><strong>Must part of the state stay at or above a bound</strong> (a quantity that
+cannot be negative)? Use <code class="docutils literal notranslate"><span class="pre">&quot;bounded&quot;</span></code>, or solve for a transform of the
+state that is always positive (<a class="reference internal" href="../reference/api/fips.LogNormalForward.html#fips.LogNormalForward" title="fips.LogNormalForward"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogNormalForward</span></code></a>,
+<a class="reference internal" href="../reference/api/fips.SoftplusForward.html#fips.SoftplusForward" title="fips.SoftplusForward"><code class="xref py py-class docutils literal notranslate"><span class="pre">SoftplusForward</span></code></a>) with <code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code>. The two change
+the prior in different ways: <a class="reference internal" href="#keeping-a-quantity-positive">Keeping a quantity positive</a> below.</p></li>
+<li><p><strong>Is the forward map a model that is not linear, with a Jacobian you can
+write?</strong> Use <code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code>, after checking the Jacobian with
+<a class="reference internal" href="../reference/api/fips.taylortest.html#fips.taylortest" title="fips.taylortest"><code class="xref py py-func docutils literal notranslate"><span class="pre">fips.taylortest()</span></code></a>.</p></li>
+<li><p><strong>Can the model only be run</strong> (no matrix, no Jacobian)? Use
+<code class="docutils literal notranslate"><span class="pre">&quot;ensemble&quot;</span></code>: draw members, run the model on each, and update them.</p></li>
+<li><p><strong>Is the problem too large to factor</strong>, or is the model given by a tangent
+linear and an adjoint? Use <code class="docutils literal notranslate"><span class="pre">&quot;variational&quot;</span></code>.</p></li>
+</ol>
+<p>Two questions apply to every method: whether the covariance settings (the
+prior’s standard deviation and correlation length, the observation error)
+are right, which <a class="reference internal" href="settings.html"><span class="doc">Fitting the covariance settings</span></a> answers from the data, and whether their
+uncertainty matters to the answer, which <a class="reference internal" href="hierarchical.html"><span class="doc">The uncertainty of the settings</span></a> carries into it.</p>
+</section>
+<section id="three-kinds-of-answer">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Three kinds of answer</a><a class="headerlink" href="#three-kinds-of-answer" title="Link to this heading">#</a></h2>
+<p><strong>Every method returns a</strong> <a class="reference internal" href="../reference/api/fips.Posterior.html#fips.Posterior" title="fips.Posterior"><code class="xref py py-class docutils literal notranslate"><span class="pre">Posterior</span></code></a>, <strong>but not every posterior
+can answer every question.</strong> There are three kinds:</p>
+<ul class="simple">
+<li><p>a <strong>Gaussian</strong> posterior: the estimate is the mean and the covariance is
+known (<code class="docutils literal notranslate"><span class="pre">&quot;analytic&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;ensemble&quot;</span></code>, and <code class="docutils literal notranslate"><span class="pre">&quot;variational&quot;</span></code> when its rank
+holds every direction the data inform);</p></li>
+<li><p>a <strong>sampled</strong> posterior: the estimate is the mode, and the mean, the
+variances and the intervals come from draws the solve keeps (<code class="docutils literal notranslate"><span class="pre">&quot;bounded&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code>);</p></li>
+<li><p>a <strong>low-rank</strong> posterior: the covariance is the prior’s less the <code class="docutils literal notranslate"><span class="pre">rank</span></code>
+directions the observations inform most (<code class="docutils literal notranslate"><span class="pre">&quot;variational&quot;</span></code>).</p></li>
+</ul>
+<p><strong>Which interval you get follows from the kind.</strong> For a Gaussian or low-rank
+posterior, the <code class="docutils literal notranslate"><span class="pre">lower</span></code> and <code class="docutils literal notranslate"><span class="pre">upper</span></code> of <a class="reference internal" href="../reference/api/fips.Posterior.uncertainty.html#fips.Posterior.uncertainty" title="fips.Posterior.uncertainty"><code class="xref py py-meth docutils literal notranslate"><span class="pre">uncertainty()</span></code></a>
+and <a class="reference internal" href="../reference/api/fips.Posterior.trials.html#fips.Posterior.trials" title="fips.Posterior.trials"><code class="xref py py-meth docutils literal notranslate"><span class="pre">trials()</span></code></a> are the estimate plus or minus <code class="docutils literal notranslate"><span class="pre">z</span></code>
+standard deviations. For a sampled one they are quantiles of the draws, which
+follow the posterior’s skew. <strong>The</strong> <code class="docutils literal notranslate"><span class="pre">reduction</span></code> <strong>columns compare against the problem’s Gaussian
+prior.</strong> For <code class="docutils literal notranslate"><span class="pre">&quot;bounded&quot;</span></code> they include what the bounds remove, and for
+<code class="docutils literal notranslate"><span class="pre">&quot;ensemble&quot;</span></code> the members’ sampling error, so they are not zero even when
+the observations tell nothing; DOFS is the measure of what the observations
+told. A member a kind cannot give raises
+<a class="reference internal" href="../reference/api/fips.UnavailableError.html#fips.UnavailableError" title="fips.UnavailableError"><code class="xref py py-class docutils literal notranslate"><span class="pre">UnavailableError</span></code></a>; for example, the data worth needs an
+estimate linear in the observations, which only the analytic method gives.
+The <a class="reference internal" href="../reference/posterior.html#posterior-members"><span class="std std-ref">members table</span></a> lists every member for every
+kind.</p>
+</section>
+<section id="keeping-a-quantity-positive">
+<span id="methods-positive"></span><h2><a class="toc-backref" href="#id4" role="doc-backlink">Keeping a quantity positive</a><a class="headerlink" href="#keeping-a-quantity-positive" title="Link to this heading">#</a></h2>
+<p>A quantity that cannot be negative has three answers in fips, and they are
+not the same answer: each puts a different prior on the state.</p>
+<ul class="simple">
+<li><p><strong>The analytic posterior</strong> ignores the bound. Some elements may come out
+negative where the observations see little, but an aggregate of many
+elements is often close to Gaussian, and its estimate and interval can be
+trusted. It is also by far the cheapest.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;bounded&quot;</span></code> <strong>with</strong> <code class="docutils literal notranslate"><span class="pre">lower=0</span></code> keeps the Gaussian prior and cuts it at
+the bound. Its mode is the analytic estimate moved onto the bound along the
+posterior’s correlations. Its draws are of the cut posterior, whose mean is
+higher than the Gaussian’s wherever the data are weak, so an aggregate read
+from its draws sits above a prior mean you meant as the mean. Use it for an
+element-by-element estimate that must not cross the bound; read an aggregate
+from its draws only if the cut prior is the prior you mean.
+<a class="reference internal" href="bounds.html#bounds-rectified"><span class="std std-ref">Rectified draws</span></a> shift an aggregate less.</p></li>
+<li><p><a class="reference internal" href="../reference/api/fips.LogNormalForward.html#fips.LogNormalForward" title="fips.LogNormalForward"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogNormalForward</span></code></a> solves for the logarithm of a factor of a
+reference value, so the uncertainty is relative (“a factor of 2”), and an
+element whose reference is zero stays zero.
+<a class="reference internal" href="../reference/api/fips.SoftplusForward.html#fips.SoftplusForward" title="fips.SoftplusForward"><code class="xref py py-class docutils literal notranslate"><span class="pre">SoftplusForward</span></code></a> solves for a value that is itself where it is
+large and bends to stay positive near zero, so the uncertainty is additive
+(“10 ± 2”). Both keep the prior’s mean and standard deviation as you give
+them (<code class="docutils literal notranslate"><span class="pre">prior_for</span></code>), and draw the posterior exactly.</p></li>
+</ul>
+<p><a class="reference internal" href="examples/comparison.html"><span class="doc">Comparing ways to keep a quantity positive</span></a> runs all four on one synthetic problem, in worlds
+that match each prior and in one that matches only the lognormal. Its
+conclusions, for that problem: every method’s intervals hold the truth about
+as often as they claim in its own world; the analytic posterior’s aggregate is
+unbiased wherever the truth is correlated as the priors say, and its interval
+covers in every world tried; the lognormal transform gives the best element
+estimates when the truth is a factor of the reference; and the bounded
+method’s draws put an aggregate well above a truth whose mean is the prior’s.
+Run the same comparison on your own problem with <a class="reference internal" href="synthetic.html"><span class="doc">Synthetic experiments</span></a>.</p>
+</section>
+<section id="reading-a-transformed-state">
+<span id="methods-transformed"></span><h2><a class="toc-backref" href="#id5" role="doc-backlink">Reading a transformed state</a><a class="headerlink" href="#reading-a-transformed-state" title="Link to this heading">#</a></h2>
+<p>With <a class="reference internal" href="../reference/api/fips.LogNormalForward.html#fips.LogNormalForward" title="fips.LogNormalForward"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogNormalForward</span></code></a> or <a class="reference internal" href="../reference/api/fips.SoftplusForward.html#fips.SoftplusForward" title="fips.SoftplusForward"><code class="xref py py-class docutils literal notranslate"><span class="pre">SoftplusForward</span></code></a>, the
+state is the variable <span class="math notranslate nohighlight">\(u\)</span>, not the value. <code class="docutils literal notranslate"><span class="pre">model.transform</span></code> maps the
+estimate, or each draw, to the value. <strong>An aggregate of the value comes from
+the draws</strong>: transform the draws, then aggregate. <code class="docutils literal notranslate"><span class="pre">post.sample(n,</span> <span class="pre">W=W)</span></code>
+aggregates <span class="math notranslate nohighlight">\(u\)</span>, which is not an aggregate of the value. The same holds
+for <a class="reference internal" href="../reference/api/fips.Posterior.trials.html#fips.Posterior.trials" title="fips.Posterior.trials"><code class="xref py py-meth docutils literal notranslate"><span class="pre">trials()</span></code></a>, which aggregates the state: write the loop
+over draws yourself, as <a class="reference internal" href="examples/comparison.html"><span class="doc">Comparing ways to keep a quantity positive</span></a> does.</p>
+</section>
+<section id="warnings">
+<h2><a class="toc-backref" href="#id6" role="doc-backlink">Warnings</a><a class="headerlink" href="#warnings" title="Link to this heading">#</a></h2>
+<p>Each method logs a warning when something it found changes how far its answer
+can be trusted (a prior wide against its bounds, draws that mix slowly, steps
+that converge slowly, rank too small to hold what the data inform). The
+warnings go through <a class="reference external" href="https://docs.python.org/3/library/logging.html#module-logging" title="(in Python v3.15)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">logging</span></code></a> and are <strong>silent until your program
+configures logging</strong>: call <code class="docutils literal notranslate"><span class="pre">logging.basicConfig()</span></code> before you solve
+(<a class="reference internal" href="posterior.html#repeated-inversions"><span class="std std-ref">Repeated inversions, logging and saving</span></a>).</p>
+</section>
+<section id="cost">
+<h2><a class="toc-backref" href="#id7" role="doc-backlink">Cost</a><a class="headerlink" href="#cost" title="Link to this heading">#</a></h2>
+<p>The analytic method factors one matrix once; a few thousand state elements or
+observations take a fraction of a second, and a gamma sweep or new data reuse
+the factors. <code class="docutils literal notranslate"><span class="pre">&quot;bounded&quot;</span></code> finds its mode for little more, but its draws, made
+the first time a spread is asked for, cost a step of the state’s size for each
+time a draw meets a bound. <code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code> costs a solve per iteration
+(typically a handful) and then its draws, each several runs of the model and
+its Jacobian’s transpose. <code class="docutils literal notranslate"><span class="pre">&quot;ensemble&quot;</span></code> costs one run of the model per member,
+done by you. <code class="docutils literal notranslate"><span class="pre">&quot;variational&quot;</span></code> costs products with <span class="math notranslate nohighlight">\(H\)</span> and its transpose:
+one per conjugate-gradient step, and <code class="docutils literal notranslate"><span class="pre">rank</span></code> more for the uncertainty. Each
+method’s page says what it scales with.</p>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="posterior.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Reading the posterior</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="bounds.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Bounds on the state</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-methods">The methods</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#which-one">Which one</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#three-kinds-of-answer">Three kinds of answer</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#keeping-a-quantity-positive">Keeping a quantity positive</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reading-a-transformed-state">Reading a transformed state</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#warnings">Warnings</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cost">Cost</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/user_guide/methods.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025-2026, James Mineau.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

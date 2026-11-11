@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Terminology &#8212; fips 0.2.0b3.dev33+g1b3edda40 documentation</title>
+    <title>Terminology &#8212; fips 0.2.0b3.dev34+g9a0704831 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=d42acb76"></script>
+    <script src="../_static/documentation_options.js?v=8e63224c"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev33+g1b3edda40 documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev33+g1b3edda40 documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
   
   
 </a></div>
@@ -455,20 +455,27 @@
 same things. This page defines the words fips uses, once each, with the
 symbol, the name in the code, and the other names you may know them by. The
 rest of the documentation uses these words and no others.</p>
-<section id="the-linear-model">
-<span id="id1"></span><h2>The linear model<a class="headerlink" href="#the-linear-model" title="Link to this heading">#</a></h2>
-<p>fips solves the linear model</p>
+<section id="the-model">
+<span id="the-linear-model"></span><h2>The model<a class="headerlink" href="#the-model" title="Link to this heading">#</a></h2>
+<p>fips solves for a state <span class="math notranslate nohighlight">\(x\)</span> from observations <span class="math notranslate nohighlight">\(z\)</span>, where</p>
 <div class="math notranslate nohighlight">
-\[z = H x + c + \varepsilon\]</div>
-<p>for the state <span class="math notranslate nohighlight">\(x\)</span>, given the observations <span class="math notranslate nohighlight">\(z\)</span>, the forward
-operator <span class="math notranslate nohighlight">\(H\)</span>, the offset <span class="math notranslate nohighlight">\(c\)</span>, a prior <span class="math notranslate nohighlight">\(x_0\)</span> with its prior
-covariance <span class="math notranslate nohighlight">\(S_0\)</span>, and the observation covariance <span class="math notranslate nohighlight">\(S_z\)</span> (the
-covariance of the error <span class="math notranslate nohighlight">\(\varepsilon\)</span>). With <span class="math notranslate nohighlight">\(n\)</span> state elements and
-<span class="math notranslate nohighlight">\(m\)</span> observations, the answer is the posterior</p>
+\[z = F(x) + c + \varepsilon,\]</div>
+<p>given a forward map <span class="math notranslate nohighlight">\(F\)</span>, an offset <span class="math notranslate nohighlight">\(c\)</span>, a prior <span class="math notranslate nohighlight">\(x_0\)</span> with
+its prior covariance <span class="math notranslate nohighlight">\(S_0\)</span>, and the observation covariance <span class="math notranslate nohighlight">\(S_z\)</span>
+(the covariance of the observation error <span class="math notranslate nohighlight">\(\varepsilon\)</span>). The prior and
+the error are Gaussian. With <span class="math notranslate nohighlight">\(n\)</span> state elements and <span class="math notranslate nohighlight">\(m\)</span>
+observations, the main case is a <strong>linear</strong> forward map, <span class="math notranslate nohighlight">\(F(x) = H x\)</span>,
+whose posterior is Gaussian and has a closed form:</p>
 <div class="math notranslate nohighlight">
 \[\hat{x} = x_0 + K (z - H x_0 - c), \qquad
 \hat{S} = S_0 - K H S_0, \qquad
 K = S_0 H^T \left(H S_0 H^T + S_z / \gamma\right)^{-1}.\]</div>
+<p>The estimate <span class="math notranslate nohighlight">\(\hat{x}\)</span> is the point where the cost</p>
+<div class="math notranslate nohighlight">
+\[(x - x_0)^T S_0^{-1} (x - x_0) + \gamma\, (z - F(x) - c)^T S_z^{-1} (z - F(x) - c)\]</div>
+<p>is least. When <span class="math notranslate nohighlight">\(F\)</span> is not linear, or the state is held to bounds, the
+posterior is not Gaussian, and fips’s other methods answer it
+(<a class="reference internal" href="../user_guide/methods.html"><span class="doc">Choosing a method</span></a>).</p>
 <p>The letters follow one convention: lowercase for vectors, uppercase for
 matrices, a subscript <span class="math notranslate nohighlight">\(0\)</span> for the prior, a subscript <span class="math notranslate nohighlight">\(z\)</span> for the
 observations, and a hat for the posterior.</p>
@@ -504,28 +511,26 @@ measurement vector (Rodgers writes <span class="math notranslate nohighlight">\(
 </tr>
 <tr class="row-even"><td><p><strong>forward operator</strong></p></td>
 <td><p><span class="math notranslate nohighlight">\(H\)</span></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">forward</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">forward</span></code> (an <a class="reference internal" href="../reference/api/fips.Operator.html#fips.Operator" title="fips.Operator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Operator</span></code></a>)</p></td>
 <td><p>The matrix that maps a state to the observations it would produce,
-<span class="math notranslate nohighlight">\(m \times n\)</span>. Also called the Jacobian (of a nonlinear model,
-linearized), the observation operator, the sensitivity matrix or, in
-atmospheric transport, the footprints. <a class="reference internal" href="../reference/api/fips.Problem.predict.html#fips.Problem.predict" title="fips.Problem.predict"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Problem.predict</span></code></a> gives <span class="math notranslate nohighlight">\(H x + c\)</span> for any state.</p></td>
+<span class="math notranslate nohighlight">\(m \times n\)</span>. Also called the Jacobian, the observation
+operator, the sensitivity matrix or, in atmospheric transport, the
+footprints. <a class="reference internal" href="../reference/api/fips.Problem.predict.html#fips.Problem.predict" title="fips.Problem.predict"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Problem.predict</span></code></a> gives
+<span class="math notranslate nohighlight">\(H x + c\)</span> for any state.</p></td>
 </tr>
 <tr class="row-odd"><td><p><strong>forward model</strong></p></td>
 <td><p><span class="math notranslate nohighlight">\(F\)</span></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">forward</span></code> (a <a class="reference internal" href="../reference/api/fips.ForwardModel.html#fips.ForwardModel" title="fips.ForwardModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">ForwardModel</span></code></a>)</p></td>
-<td><p>A map from the state to the observations that is not linear,
-<span class="math notranslate nohighlight">\(z = F(x) + c + \varepsilon\)</span>, written with its Jacobian
-<span class="math notranslate nohighlight">\(J(x)\)</span>, the forward operator of the problem linearized at
-<span class="math notranslate nohighlight">\(x\)</span> (<a class="reference internal" href="../reference/api/fips.Problem.linearized.html#fips.Problem.linearized" title="fips.Problem.linearized"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Problem.linearized</span></code></a>). Its
-posterior’s estimate is the mode (<code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code>,
-<a class="reference internal" href="../user_guide/nonlinear.html"><span class="doc">A nonlinear forward model</span></a>). A forward operator is a forward model
-whose Jacobian is itself: <code class="docutils literal notranslate"><span class="pre">H(x)</span></code> is <code class="docutils literal notranslate"><span class="pre">H</span> <span class="pre">&#64;</span> <span class="pre">x</span></code>.</p></td>
+<td><p>A forward map that is not linear, written with its Jacobian
+<span class="math notranslate nohighlight">\(J(x) = \partial F / \partial x\)</span>, the forward operator of the
+problem linearized at <span class="math notranslate nohighlight">\(x\)</span> (<a class="reference internal" href="../reference/api/fips.Problem.linearized.html#fips.Problem.linearized" title="fips.Problem.linearized"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Problem.linearized</span></code></a>). A forward operator is the forward model
+whose Jacobian is itself. <a class="reference internal" href="../user_guide/nonlinear.html"><span class="doc">A nonlinear forward model</span></a>.</p></td>
 </tr>
 <tr class="row-even"><td><p><strong>offset</strong></p></td>
 <td><p><span class="math notranslate nohighlight">\(c\)</span></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">offset</span></code></p></td>
 <td><p>The part of the observations the state does not explain, added to
-<span class="math notranslate nohighlight">\(H x\)</span>: a background concentration, a known bias. Optional. An
+<span class="math notranslate nohighlight">\(F(x)\)</span>: a background concentration, a known bias. Optional. An
 offset the data should decide is a block of the state instead
 (<a class="reference internal" href="../reference/api/fips.offset_block.html#fips.offset_block" title="fips.offset_block"><code class="xref py py-func docutils literal notranslate"><span class="pre">offset_block()</span></code></a>).</p></td>
 </tr>
@@ -546,8 +551,8 @@ the prior error covariance (<span class="math notranslate nohighlight">\(B\)</sp
 <tr class="row-odd"><td><p><strong>observation covariance</strong></p></td>
 <td><p><span class="math notranslate nohighlight">\(S_z\)</span></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">obs_cov</span></code></p></td>
-<td><p>The covariance of the error <span class="math notranslate nohighlight">\(\varepsilon\)</span> between the
-observations and what the forward operator models, <span class="math notranslate nohighlight">\(m \times m\)</span>:
+<td><p>The covariance of the observation error <span class="math notranslate nohighlight">\(\varepsilon\)</span>, between
+the observations and what the forward map models, <span class="math notranslate nohighlight">\(m \times m\)</span>:
 measurement error plus the errors of the model and of representing the
 state. Also called the model-data mismatch or the observation error
 covariance (<span class="math notranslate nohighlight">\(R\)</span> in data assimilation, <span class="math notranslate nohighlight">\(S_\epsilon\)</span> in
@@ -555,39 +560,55 @@ Rodgers, <span class="math notranslate nohighlight">\(C_D\)</span> in Tarantola)
 </tr>
 <tr class="row-even"><td><p><strong>innovation</strong></p></td>
 <td><p><span class="math notranslate nohighlight">\(d\)</span></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">post.innovation_cov</span></code></p></td>
-<td><p>The observations minus what the prior models,
-<span class="math notranslate nohighlight">\(d = z - H x_0 - c\)</span>. Its covariance,
-<span class="math notranslate nohighlight">\(H S_0 H^T + S_z / \gamma\)</span>, is <span class="math notranslate nohighlight">\(m \times m\)</span>. The solve factors
-it, whitened by the model-data mismatch, unless there are fewer state
-elements than observations, the mismatch is dense, diagonal, sparse,
-block diagonal or Kronecker, and the prior error covariance has a
-square root (a positive-definite one does): it then factors an
-<span class="math notranslate nohighlight">\(n \times n\)</span> matrix instead.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">post.innovation_cov</span></code> (its covariance)</p></td>
+<td><p>The observations less what the prior models, <span class="math notranslate nohighlight">\(d = z - H x_0 -
+c\)</span>. Its covariance is <span class="math notranslate nohighlight">\(H S_0 H^T + S_z / \gamma\)</span>,
+<span class="math notranslate nohighlight">\(m \times m\)</span>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><strong>posterior</strong></p></td>
 <td><p><span class="math notranslate nohighlight">\(\hat{x}\)</span>, <span class="math notranslate nohighlight">\(\hat{S}\)</span></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">fips.solve(problem)</span></code>, a <a class="reference internal" href="../reference/api/fips.Posterior.html#fips.Posterior" title="fips.Posterior"><code class="xref py py-class docutils literal notranslate"><span class="pre">Posterior</span></code></a></p></td>
-<td><p>The answer: the state estimate <span class="math notranslate nohighlight">\(\hat{x}\)</span> (<code class="docutils literal notranslate"><span class="pre">post.estimate</span></code>) and
-its posterior covariance <span class="math notranslate nohighlight">\(\hat{S}\)</span> (<code class="docutils literal notranslate"><span class="pre">post.cov()</span></code>, whose
-diagonal is <code class="docutils literal notranslate"><span class="pre">post.variances</span></code>). Also called the <em>a posteriori</em>, the
-analysis or the retrieval. <code class="docutils literal notranslate"><span class="pre">post.modeled_obs</span></code> is
-<span class="math notranslate nohighlight">\(H \hat{x} + c\)</span>.</p></td>
+<td><p>The answer: the distribution of the state given the observations.
+Also called the <em>a posteriori</em>, the analysis or the retrieval.
+<code class="docutils literal notranslate"><span class="pre">post.modeled_obs</span></code> is <span class="math notranslate nohighlight">\(F(\hat{x}) + c\)</span>.</p></td>
 </tr>
-<tr class="row-even"><td><p><strong>gain</strong></p></td>
+<tr class="row-even"><td><p><strong>estimate</strong></p></td>
+<td><p><span class="math notranslate nohighlight">\(\hat{x}\)</span></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">post.estimate</span></code></p></td>
+<td><p>The posterior’s point estimate: its <strong>mean</strong> for a Gaussian posterior,
+its <strong>mode</strong> (the most probable state, where the cost is least) for
+a method whose posterior is not Gaussian. The two differ when the
+posterior is skewed.</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>posterior covariance</strong></p></td>
+<td><p><span class="math notranslate nohighlight">\(\hat{S}\)</span></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">post.cov()</span></code>, <code class="docutils literal notranslate"><span class="pre">post.variances</span></code></p></td>
+<td><p>The covariance of the state given the observations; its diagonal is
+<code class="docutils literal notranslate"><span class="pre">post.variances</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>draws</strong></p></td>
+<td></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">post.sample(n)</span></code></p></td>
+<td><p>States drawn from the posterior, one column each: the way to answer a
+question a covariance cannot (the chance an aggregate is above a value,
+a non-linear function of the state). A <em>sampled</em> posterior keeps a set
+of draws from its solve (<em>kept draws</em>) and reads its mean, variances
+and intervals from them.</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>gain</strong></p></td>
 <td><p><span class="math notranslate nohighlight">\(K\)</span></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">post.kalman_gain</span></code></p></td>
 <td><p>The <span class="math notranslate nohighlight">\(n \times m\)</span> matrix that weighs how much each observation
 moves the estimate (the Kalman gain, the contribution function).</p></td>
 </tr>
-<tr class="row-odd"><td><p><strong>averaging kernel</strong></p></td>
+<tr class="row-even"><td><p><strong>averaging kernel</strong></p></td>
 <td><p><span class="math notranslate nohighlight">\(A\)</span></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">post.averaging_kernel()</span></code></p></td>
 <td><p><span class="math notranslate nohighlight">\(A = K H\)</span>, how the estimate responds to the true state: a
 diagonal near 1 is a state element the observations constrain, near 0
 one left at its prior.</p></td>
 </tr>
-<tr class="row-even"><td><p><strong>DOFS</strong></p></td>
+<tr class="row-odd"><td><p><strong>DOFS</strong></p></td>
 <td><p><span class="math notranslate nohighlight">\(\operatorname{tr}(A)\)</span></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">post.dofs</span></code></p></td>
 <td><p>Degrees of freedom for signal: the number of independent pieces of
@@ -595,20 +616,35 @@ information the observations give about the state.
 <code class="docutils literal notranslate"><span class="pre">post.dofs_per_element</span></code> is the diagonal of <span class="math notranslate nohighlight">\(A\)</span>, each state
 element’s share, which sums to DOFS.</p></td>
 </tr>
-<tr class="row-odd"><td><p><strong>information content</strong></p></td>
+<tr class="row-even"><td><p><strong>information content</strong></p></td>
 <td><p><span class="math notranslate nohighlight">\(-\tfrac{1}{2} \ln \lvert I - A \rvert\)</span></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">post.information_content</span></code></p></td>
 <td><p>The Shannon information content, in nats (divide by <span class="math notranslate nohighlight">\(\ln 2\)</span>
 for bits): how much the observations shrink the volume of the state’s
 uncertainty, <span class="math notranslate nohighlight">\(\tfrac{1}{2} \ln (\lvert S_0 \rvert /
-\lvert \hat{S} \rvert)\)</span>, on a log scale.</p></td>
+\lvert \hat{S} \rvert)\)</span>.</p></td>
 </tr>
-<tr class="row-even"><td><p><strong>gamma</strong></p></td>
+<tr class="row-odd"><td><p><strong>gamma</strong></p></td>
 <td><p><span class="math notranslate nohighlight">\(\gamma\)</span></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">gamma</span></code>, <code class="docutils literal notranslate"><span class="pre">post.with_gamma(g)</span></code></p></td>
 <td><p>The regularization factor: the solve uses <span class="math notranslate nohighlight">\(S_z / \gamma\)</span>, so a
 gamma above 1 trusts the observations more and below 1 the prior
 more. 1 by default.</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>settings</strong></p></td>
+<td><p><span class="math notranslate nohighlight">\(s\)</span></p></td>
+<td><p>your own function’s arguments</p></td>
+<td><p>The numbers the covariances are built from: the prior’s standard
+deviation and correlation length, the observation error’s standard
+deviation. Also called hyperparameters. <a class="reference internal" href="../user_guide/settings.html"><span class="doc">Fitting the covariance settings</span></a>
+fits them; <a class="reference internal" href="../user_guide/hierarchical.html"><span class="doc">The uncertainty of the settings</span></a> carries their uncertainty.</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>evidence</strong></p></td>
+<td><p><span class="math notranslate nohighlight">\(p(z)\)</span></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">post.log_evidence</span></code></p></td>
+<td><p>The probability of the observations given the covariances, with the
+state integrated out. Also called the marginal likelihood. The
+settings that maximize it are the maximum-likelihood settings.</p></td>
 </tr>
 </tbody>
 </table>
@@ -630,25 +666,21 @@ more. 1 by default.</p></td>
 <tr class="row-even"><td><p>chi-squared</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">post.chi2</span></code></p></td>
 <td><p>The misfit of the estimate to the observations and to the prior, each
-weighed by its covariance; <code class="docutils literal notranslate"><span class="pre">post.reduced_chi2</span></code> divides it by
-<span class="math notranslate nohighlight">\(m\)</span>, and is near 1 when the covariances are right.
-<code class="docutils literal notranslate"><span class="pre">post.data_misfit</span></code> and <code class="docutils literal notranslate"><span class="pre">post.state_misfit</span></code> are its two terms (the
-first on <span class="math notranslate nohighlight">\(S_z\)</span> as given, without <span class="math notranslate nohighlight">\(\gamma\)</span>), the two axes
-of an L-curve.
-<code class="docutils literal notranslate"><span class="pre">post.chi2_tests()</span></code> gives its degrees of freedom and p-value, and
-the same test of three more vectors (Rodgers’ four tests): the
-residual <span class="math notranslate nohighlight">\(z - H \hat{x} - c\)</span>, the increment
-<span class="math notranslate nohighlight">\(\hat{x} - x_0\)</span>, and the modeled increment
-<span class="math notranslate nohighlight">\(H (\hat{x} - x_0)\)</span>, the increment as the observations see it.
-In a linear problem the residual’s test gives the innovation’s
-numbers and the modeled increment’s the increment’s.</p></td>
+weighed by its covariance: the cost above, at the estimate.
+<code class="docutils literal notranslate"><span class="pre">post.reduced_chi2</span></code> divides it by <span class="math notranslate nohighlight">\(m\)</span>, and is near 1 when the
+covariances are right. <code class="docutils literal notranslate"><span class="pre">post.data_misfit</span></code> and <code class="docutils literal notranslate"><span class="pre">post.state_misfit</span></code>
+are its two terms (the first on <span class="math notranslate nohighlight">\(S_z\)</span> as given, without
+<span class="math notranslate nohighlight">\(\gamma\)</span>), the two axes of an L-curve. <code class="docutils literal notranslate"><span class="pre">post.chi2_tests()</span></code>
+turns it into a test with degrees of freedom and a p-value, beside
+the same test of the residual <span class="math notranslate nohighlight">\(z - F(\hat{x}) - c\)</span>, the
+increment <span class="math notranslate nohighlight">\(\hat{x} - x_0\)</span>, and the modeled increment
+<span class="math notranslate nohighlight">\(H (\hat{x} - x_0)\)</span> (Rodgers’ four tests).</p></td>
 </tr>
 <tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(R^2\)</span>, RMSE</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">post.r2</span></code>, <code class="docutils literal notranslate"><span class="pre">post.rmse</span></code></p></td>
 <td><p>The squared correlation of the observations less the offset,
-<span class="math notranslate nohighlight">\(z - c\)</span>, with <span class="math notranslate nohighlight">\(H \hat{x}\)</span>, and the root mean square of
-<span class="math notranslate nohighlight">\(z - H \hat{x} - c\)</span>. With no offset, or a constant one, the
-squared correlation is that of <span class="math notranslate nohighlight">\(z\)</span> and <span class="math notranslate nohighlight">\(H \hat{x} + c\)</span>.</p></td>
+<span class="math notranslate nohighlight">\(z - c\)</span>, with <span class="math notranslate nohighlight">\(F(\hat{x})\)</span>, and the root mean square of
+the residual <span class="math notranslate nohighlight">\(z - F(\hat{x}) - c\)</span>.</p></td>
 </tr>
 <tr class="row-even"><td><p>uncertainty reduction</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">post.uncertainty_reduction</span></code></p></td>
@@ -656,14 +688,15 @@ squared correlation is that of <span class="math notranslate nohighlight">\(z\)<
 </tr>
 <tr class="row-odd"><td><p>Desroziers diagnostic</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">post.desroziers(by=...)</span></code></p></td>
-<td><p>The observation error variances the residuals <span class="math notranslate nohighlight">\(z - H \hat{x} - c\)</span>
-and the innovation diagnose, beside those the solve used.</p></td>
+<td><p>The observation error variances the residuals and the innovation
+diagnose, beside those the solve used.</p></td>
 </tr>
 <tr class="row-even"><td><p>synthetic experiment (OSSE)</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">problem.simulate</span></code>, <code class="docutils literal notranslate"><span class="pre">post.with_data</span></code>, <code class="docutils literal notranslate"><span class="pre">post.recovery</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">problem.simulate</span></code>, <code class="docutils literal notranslate"><span class="pre">post.with_data</span></code>, <code class="docutils literal notranslate"><span class="pre">post.recovery</span></code>,
+<code class="docutils literal notranslate"><span class="pre">post.trials</span></code></p></td>
 <td><p>A test on data whose answer is known: a <em>world</em> makes a truth and its
 observations, the inversion solves them with its own assumptions, and
-the error of each total is read as its bias, spread and coverage.
+the error of each aggregate is read as its bias, spread and coverage.
 Called an observing system simulation experiment (OSSE) in atmospheric
 science, a twin experiment in oceanography and a simulation study in
 statistics; <a class="reference internal" href="../user_guide/synthetic.html"><span class="doc">Synthetic experiments</span></a> is the guide.</p></td>
@@ -696,12 +729,27 @@ itself.</p>
 deviations, which a <a class="reference internal" href="../reference/api/fips.Problem.html#fips.Problem" title="fips.Problem"><code class="xref py py-class docutils literal notranslate"><span class="pre">Problem</span></code></a> puts on the prior’s or the
 observations’ space.</p>
 </dd>
-<dt><strong>aggregation</strong> (<span class="math notranslate nohighlight">\(W\)</span>)</dt><dd><p>An operator from a space to groups of its labels (sums or means): hourly
-observations to daily means, the state to monthly totals
-(<code class="xref py py-mod docutils literal notranslate"><span class="pre">fips.aggregate</span></code>).</p>
+<dt><strong>aggregation</strong> (<span class="math notranslate nohighlight">\(W\)</span>), <strong>aggregate</strong></dt><dd><p>An aggregation is an operator from a space to groups of its labels (sums
+or means): hourly observations to daily means, the state to monthly totals
+(<code class="xref py py-mod docutils literal notranslate"><span class="pre">fips.aggregate</span></code>). Each of its rows is an aggregate.</p>
 </dd>
-<dt><strong>method</strong></dt><dd><p>How <a class="reference internal" href="../reference/api/fips.solve.html#fips.solve" title="fips.solve"><code class="xref py py-func docutils literal notranslate"><span class="pre">fips.solve()</span></code></a> solves a problem. The one method is <code class="docutils literal notranslate"><span class="pre">&quot;analytic&quot;</span></code>,
-the closed-form Gaussian posterior.</p>
+<dt><strong>method</strong></dt><dd><p>How <a class="reference internal" href="../reference/api/fips.solve.html#fips.solve" title="fips.solve"><code class="xref py py-func docutils literal notranslate"><span class="pre">fips.solve()</span></code></a> solves a problem: <code class="docutils literal notranslate"><span class="pre">&quot;analytic&quot;</span></code> (the default, the
+exact Gaussian posterior), <code class="docutils literal notranslate"><span class="pre">&quot;bounded&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;ensemble&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;variational&quot;</span></code> (<a class="reference internal" href="../user_guide/methods.html"><span class="doc">Choosing a method</span></a>).</p>
+</dd>
+<dt><strong>kind of answer</strong></dt><dd><p>What a posterior can give, which follows from its method: <em>Gaussian</em> (the
+estimate is the mean, the covariance is exact), <em>sampled</em> (the estimate is
+the mode; the spread comes from kept draws) or <em>low-rank</em> (the covariance
+is the prior’s less a few directions). <a class="reference internal" href="../reference/posterior.html#posterior-members"><span class="std std-ref">What a posterior can give</span></a>.</p>
+</dd>
+<dt><strong>transform</strong></dt><dd><p>A forward model that solves for a variable <span class="math notranslate nohighlight">\(u\)</span> and makes the
+quantity a positive function of it (<a class="reference internal" href="../reference/api/fips.LogNormalForward.html#fips.LogNormalForward" title="fips.LogNormalForward"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogNormalForward</span></code></a>,
+<a class="reference internal" href="../reference/api/fips.SoftplusForward.html#fips.SoftplusForward" title="fips.SoftplusForward"><code class="xref py py-class docutils literal notranslate"><span class="pre">SoftplusForward</span></code></a>); <code class="docutils literal notranslate"><span class="pre">model.transform</span></code> maps <span class="math notranslate nohighlight">\(u\)</span> to the
+value. <a class="reference internal" href="../user_guide/positive.html"><span class="doc">Values that stay positive</span></a>.</p>
+</dd>
+<dt><strong>the Gaussian at the mode</strong></dt><dd><p>The analytic posterior of the problem linearized at the mode,
+<code class="docutils literal notranslate"><span class="pre">fips.solve(problem.linearized(post.estimate))</span></code>: the gain, the averaging
+kernel and DOFS of a <code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code> posterior are its.</p>
 </dd>
 </dl>
 <div class="admonition seealso">
@@ -762,7 +810,7 @@ the closed-form Gaussian posterior.</p>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-linear-model">The linear model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-model">The model</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-words">The words</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#fips-s-own-words">fips’s own words</a></li>
 </ul>

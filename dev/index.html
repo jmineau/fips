@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips 0.2.0b3.dev33+g1b3edda40 &#8212; fips 0.2.0b3.dev33+g1b3edda40 documentation</title>
+    <title>fips 0.2.0b3.dev34+g9a0704831 &#8212; fips 0.2.0b3.dev34+g9a0704831 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="_static/documentation_options.js?v=d42acb76"></script>
+    <script src="_static/documentation_options.js?v=8e63224c"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -134,8 +134,8 @@
       
     
     
-    <img src="_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev33+g1b3edda40 documentation - Home"/>
-    <img src="_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev33+g1b3edda40 documentation - Home"/>
+    <img src="_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
+    <img src="_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
   
   
 </a></div>
@@ -400,7 +400,7 @@
                 <article class="bd-article">
                   
   <section class="hidden-title" id="fips-release">
-<h1>fips 0.2.0b3.dev33+g1b3edda40<a class="headerlink" href="#fips-release" title="Link to this heading">#</a></h1>
+<h1>fips 0.2.0b3.dev34+g9a0704831<a class="headerlink" href="#fips-release" title="Link to this heading">#</a></h1>
 <a class="only-light reference internal image-reference" href="_images/logo.png"><img alt="fips logo" class="align-center only-light" src="_images/logo.png" style="width: 600px;" />
 </a>
 <a class="only-dark reference internal image-reference" href="_images/logo_dark.png"><img alt="fips logo" class="align-center only-dark" src="_images/logo_dark.png" style="width: 600px;" />
@@ -418,8 +418,8 @@
 <li><p><strong>Everything is matched by label</strong>: every value carries a <code class="docutils literal notranslate"><span class="pre">pandas</span></code> index (time, latitude, site, …). The inputs of a problem are matched by their labels, never by position, and a label on one side only is an error that names it.</p></li>
 <li><p><strong>Built from named blocks</strong>: a state of fluxes and offsets, observations from towers and satellites. Each block keeps its own labels, and a matrix is built block by block.</p></li>
 <li><p><strong>The standard linear model</strong>: observations are the forward operator times the state, plus an offset, plus an error. Plug in your forward operator (a Jacobian you computed), the prior and its covariance, and the observation covariance. Covariances are written as correlation models (exponential, Gaussian, Matérn, Kronecker products) with standard deviations.</p></li>
-<li><p><strong>And past it</strong>: bounds on the state (<code class="docutils literal notranslate"><span class="pre">&quot;bounded&quot;</span></code>, its mode and draws of the truncated posterior), and a forward model that is not linear, written with its Jacobian (<code class="docutils literal notranslate"><span class="pre">fips.ForwardModel</span></code>), whose posterior mode <code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code> finds.</p></li>
-<li><p><strong>Fast and exact</strong>: each matrix is kept in its cheapest form (dense, sparse, diagonal, or Kronecker factors), and fips computes the exact Gaussian posterior with direct linear algebra, not sampling, for large state spaces in seconds.</p></li>
+<li><p><strong>Fast and exact</strong>: each matrix is kept in its cheapest form (dense, sparse, diagonal, or Kronecker factors), and fips computes the exact Gaussian posterior with direct linear algebra, for large state spaces in seconds.</p></li>
+<li><p><strong>Past the linear Gaussian problem</strong>: bounds on the state, forward models that are not linear (with ready-made ones that keep a quantity positive), models that can only be run, and problems too large to factor, each a method of the same <code class="docutils literal notranslate"><span class="pre">fips.solve</span></code> on the same <code class="docutils literal notranslate"><span class="pre">Problem</span></code>; and covariance settings fitted from the data, with their uncertainty carried into the answer.</p></li>
 </ul>
 </section>
 <section id="installation">
@@ -443,7 +443,7 @@ uv<span class="w"> </span>sync
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">fips</span>
 
-<span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># made-up data, to show the calls</span>
 
 <span class="c1"># The state: monthly fluxes on a 3 x 3 grid, labeled by (time, lat, lon)</span>
 <span class="n">cells</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_product</span><span class="p">(</span>
@@ -481,13 +481,23 @@ uv<span class="w"> </span>sync
 
 <span class="nb">print</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">estimate</span><span class="o">.</span><span class="n">to_series</span><span class="p">(</span><span class="s2">"flux"</span><span class="p">))</span>  <span class="c1"># posterior fluxes, labeled by (time, lat, lon)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>  <span class="c1"># DOFS, chi-squared, R², RMSE, ... in one row</span>
+
+<span class="c1"># The monthly mean flux, prior and posterior, with one standard deviation (needs fips[viz])</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.visualization</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_comparison</span>
+
+<span class="n">monthly</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">aggregate</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="s2">"time"</span><span class="p">)</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plot_comparison</span><span class="p">(</span>
+    <span class="p">(</span><span class="n">monthly</span> <span class="o">@</span> <span class="n">prior</span><span class="p">)</span><span class="o">.</span><span class="n">to_series</span><span class="p">()</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="s2">"block"</span><span class="p">)</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="s2">"prior"</span><span class="p">),</span>
+    <span class="p">(</span><span class="n">monthly</span> <span class="o">@</span> <span class="n">post</span><span class="o">.</span><span class="n">estimate</span><span class="p">)</span><span class="o">.</span><span class="n">to_series</span><span class="p">()</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="s2">"block"</span><span class="p">)</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="s2">"posterior"</span><span class="p">),</span>
+    <span class="n">errors</span><span class="o">=</span><span class="p">[</span><span class="n">problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">monthly</span><span class="p">),</span> <span class="n">post</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">monthly</span><span class="p">)],</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 <p>The prior and the observations are <code class="docutils literal notranslate"><span class="pre">Vector</span></code>s, the forward operator is an <code class="docutils literal notranslate"><span class="pre">Operator</span></code>, the covariances are put on the labels by the <code class="docutils literal notranslate"><span class="pre">Problem</span></code>, and <code class="docutils literal notranslate"><span class="pre">fips.solve</span></code> returns the <code class="docutils literal notranslate"><span class="pre">Posterior</span></code>. Everything is matched by label: the Jacobian’s rows and columns could come in any order.</p>
 <p>More in the <a class="reference external" href="https://jmineau.github.io/fips/stable/">documentation</a>:</p>
 <ul class="simple">
 <li><p><a class="reference external" href="https://jmineau.github.io/fips/stable/getting_started/first_problem.html">A first problem</a>, step by step, with a state of two blocks.</p></li>
-<li><p><a class="reference external" href="https://jmineau.github.io/fips/stable/user_guide/index.html">The user guide</a>: correlated covariances (exponential, Matérn, Kronecker products), sparse Jacobians, offsets solved for with the state, aggregated observations, and repeated inversions.</p></li>
+<li><p><a class="reference external" href="https://jmineau.github.io/fips/stable/user_guide/index.html">The user guide</a>: building a problem (correlated covariances, sparse Jacobians, offsets, aggregated observations), reading the posterior, and choosing a method for bounds, nonlinear models and large problems.</p></li>
 <li><p><a class="reference external" href="https://jmineau.github.io/fips/stable/user_guide/examples/flux_regional.html">A regional flux inversion</a>, worked from start to finish.</p></li>
 </ul>
 </section>

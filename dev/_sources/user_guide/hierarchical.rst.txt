@@ -3,24 +3,309 @@
 The uncertainty of the settings
 ===============================
 
-:doc:`settings` fits the covariance settings and solves at the fit, which
-treats them as known. The rule: **give each setting a prior, and**
-:func:`fips.hierarchical` **draws the settings from their posterior and the
-state at each of those draws, so intervals read from its draws hold the
-uncertainty of the settings.** The answer is not one Gaussian posterior but a
-mixture of them, one for each draw of the settings, held by a
-:class:`~fips.Hierarchical`.
+A posterior at fitted settings (:doc:`settings`) treats them as known. **Give
+each setting a prior, and** :func:`fips.hierarchical` **draws the settings
+from their posterior and the state at each of those draws, so the state's
+intervals hold the uncertainty of the settings too.** The call takes the
+function that builds the problem from the settings, and a prior for each
+setting by name:
+
+.. code-block:: python
+
+   result = fips.hierarchical(build, {"std": LogNormal(np.log(0.5), 1.0), ...})
+
+What comes back is a :class:`~fips.Hierarchical`: the kept draws of the
+settings, and one draw of the state at each. Its estimate is the mean of the
+state's draws, and its spread and intervals are theirs. It is not a
+:class:`~fips.Posterior`: the posterior of the state is a mixture of
+Gaussians, one for each draw of the settings, and what is defined only for
+one Gaussian comes from the posterior at one setting,
+:meth:`result.at(settings) <fips.Hierarchical.at>`.
 
 .. contents:: On this page
    :local:
    :depth: 1
 
 
-The settings' posterior
------------------------
+When to use it
+--------------
+
+- **Few observations decide the settings, and the answer depends on them.**
+  The settings' uncertainty then widens the state's intervals. With many
+  observations it widens them little, and a fit (:doc:`settings`) is enough;
+  ``result.at(result.mode)`` shows the difference on your own problem.
+- **The only settings are a factor on the prior standard deviation and one
+  on the observation standard deviation.** Pass the problem itself and take
+  `The fast path`_, which costs about one eigendecomposition for the whole
+  run.
+- **For one best value of the settings**, maximize the evidence instead
+  (:doc:`settings`): it is cheaper, and the posterior at the fit has every
+  diagnostic.
+- **Not for a problem the analytic method cannot solve** (a forward model,
+  bounds, a problem too large to factor): each step needs the exact evidence
+  and exact draws of the analytic posterior.
+
+
+An example
+----------
+
+The example of :doc:`settings`: 150 state elements along a line, one unit
+apart, 200 observations of one to four neighboring elements, and
+observations drawn from a world at a prior standard deviation of 1, a
+correlation length of 5 and an observation standard deviation of 0.5.
+
+.. ipython:: python
+
+   import numpy as np
+   import pandas as pd
+   import fips
+   from fips.distributions import LogNormal
+
+   rng = np.random.default_rng(0)
+   n, m = 150, 200
+   line = fips.Space({"field": pd.Index(np.arange(n) + 0.5, name="x")})
+   observed = fips.Space({"obs": pd.RangeIndex(m, name="obs_id")})
+
+.. ipython:: python
+
+   weights = np.zeros((m, n))
+   for i, start in enumerate(rng.integers(0, n - 4, m)):
+       weights[i, start : start + rng.integers(1, 5)] = rng.uniform(0.5, 1.5)
+
+   H = fips.Operator(weights, observed, line)
+   prior = fips.Vector(np.full(n, 2.0), line, name="prior")
+
+The function takes the settings as a dict, by the names their priors have:
+
+.. ipython:: python
+
+   def build(settings, obs, H=H):
+       """Return the problem at the settings (prior std, correlation length, observation std)."""
+       return fips.Problem(
+           prior=prior,
+           prior_cov=fips.Exponential("x", settings["length"]).with_std(settings["std"]),
+           obs=obs,
+           obs_cov=fips.Independent().with_std(settings["noise"]),
+           forward=H,
+       )
+
+   true = {"std": 1.0, "length": 5.0, "noise": 0.5}
+   truth, obs = build(true, fips.Vector(np.zeros(m), observed)).simulate(rng)
+
+Each setting's prior is a :class:`~fips.distributions.LogNormal` that knows
+it to a factor of :math:`e` (a standard deviation of 1 in its log), centered
+a factor of two or more from the truth:
+
+.. ipython:: python
+
+   priors = {
+       "std": LogNormal(np.log(0.5), 1.0),
+       "length": LogNormal(np.log(2.0), 1.0),
+       "noise": LogNormal(np.log(1.0), 1.0),
+   }
+   result = fips.hierarchical(lambda s: build(s, obs), priors, draws=1000, burn_in=300, seed=0)
+   result.settings.quantile([0.025, 0.5, 0.975]).T.assign(true=pd.Series(true), mode=result.mode).round(3)
+
+The two standard deviations are known to within about a fifth, and each
+95% interval holds its truth. The correlation length is known only to a factor of about three,
+as the profile of :doc:`settings` found.
+
+
+Reading the result
+------------------
+
+**The settings.** :attr:`~fips.Hierarchical.settings` is the kept draws, one
+row per draw and one column per setting; :attr:`~fips.Hierarchical.mode` is
+the posterior mode in the coordinates the sampler works in (the log of a
+positive setting, the logit of a bounded one), mapped back: close to the fit
+of :doc:`settings`, but not the peak of the settings' density itself. Two
+numbers say whether the chain can be trusted:
+:attr:`~fips.Hierarchical.acceptance`, the fraction of proposals accepted
+(near 0.3 when the proposal is tuned), and :attr:`~fips.Hierarchical.ess`,
+each setting's effective sample size: about as many independent draws as the
+correlated ones are worth.
+
+.. ipython:: python
+
+   round(result.acceptance, 2), result.ess.round().to_dict()
+
+A setting's mean is known to its standard deviation over the root of its
+effective sample size. For a smaller error, ask for more ``draws``.
+
+**The state.** :attr:`~fips.Hierarchical.estimate`,
+:attr:`~fips.Hierarchical.variances`, :meth:`~fips.Hierarchical.cov`,
+:meth:`~fips.Hierarchical.uncertainty` and :meth:`~fips.Hierarchical.sample`
+read the state, or its aggregates with ``W``, from the draws, as a
+:class:`~fips.Posterior`'s members of the same names do. The intervals are the
+draws' quantiles, and ``uncertainty`` has no prior columns: the prior of the
+state depends on the settings.
+
+**One setting.** :meth:`~fips.Hierarchical.at` gives the ordinary posterior
+at one value of every setting: the gain, DOFS, the chi-squared tests, the
+evidence. At the mode, its intervals are those of a fit, which leave the
+settings' uncertainty out. Here, the sum over each third of the line, with
+and without the settings' uncertainty:
+
+.. ipython:: python
+
+   x = line.select("field")
+   parts = pd.Series(np.select([x < 50, x < 100], ["left", "middle"], "right"), index=x, name="part")
+   W = fips.aggregate.sum(line, by=parts)
+
+.. ipython:: python
+
+   def compare(result, truth, level=0.9):
+       """Each aggregate's truth, and its interval with the settings' uncertainty and at their mode."""
+       columns = ["posterior_std", "lower", "upper"]
+       with_settings = result.uncertainty(W, level=level)[columns]
+       at_mode = result.at(result.mode).uncertainty(W, level=level)[columns]
+       true_value = pd.DataFrame({"": (W @ truth).values}, index=with_settings.index)
+       table = pd.concat({"with settings": with_settings, "at mode": at_mode, "truth": true_value}, axis=1)
+       return table.droplevel("block")
+
+   compare(result, truth).round(2)
+
+The two agree closely: two hundred observations decide these aggregates, and
+the correlation length, the setting known least, moves how an aggregate
+splits among its elements more than the aggregate itself.
+
+
+The priors of the settings
+--------------------------
+
+A setting's prior is one of the three distributions of
+:mod:`fips.distributions`:
+
+- :class:`~fips.distributions.LogNormal` ``(mu, sigma)``: a positive setting
+  known to a factor, with median :math:`e^{\mu}`. The usual choice for a
+  standard deviation or a correlation length.
+- :class:`~fips.distributions.HalfNormal` ``(scale)``: a positive setting that
+  may be near zero.
+- :class:`~fips.distributions.Uniform` ``(low, high)``: a setting known only
+  to lie in an interval.
+
+The search for the settings' mode starts at the priors' medians. **A prior on
+a setting is a claim like any other, and the intervals are only as good as
+it.** A prior centered far from the truth pulls the settings toward it, and
+with few observations the data do not undo all of the pull.
+
+
+The fast path
+-------------
+
+When the only settings are a factor on the prior standard deviation and one
+on the observation standard deviation, pass the problem built at factors of
+1 instead of a function, and name the settings:
+
+- ``"prior_scale"``: the prior standard deviation is multiplied by it;
+- ``"obs_scale"``: the observation standard deviation is multiplied by it;
+  or ``"gamma"`` in its place: the observation covariance is divided by it.
+
+One eigendecomposition then gives the evidence at every step without a
+solve, and the state's draws at every kept step in one product, whatever the
+size of the problem.
+
+Fast or not, **the settings' uncertainty matters most when few observations
+decide them.** Fifteen observations, all in the left two thirds of the line,
+with the correlation length held at 5:
+
+.. ipython:: python
+
+   few = fips.Space({"obs": pd.RangeIndex(15, name="obs_id")})
+   sparse = np.zeros((15, n))
+   for i, start in enumerate(rng.integers(0, 96, 15)):
+       sparse[i, start : start + rng.integers(1, 5)] = rng.uniform(0.5, 1.5)
+
+   H_few = fips.Operator(sparse, few, line)
+   truth_few, obs_few = build(true, fips.Vector(np.zeros(15), few), H=H_few).simulate(rng)
+
+.. ipython:: python
+
+   unit = build({"std": 1.0, "length": 5.0, "noise": 1.0}, obs_few, H=H_few)
+   scales = {"prior_scale": LogNormal(np.log(0.5), 1.0), "obs_scale": LogNormal(0.0, 1.0)}
+   fast = fips.hierarchical(unit, scales, seed=0)
+   fast.settings.quantile([0.025, 0.5, 0.975]).round(3)
+   compare(fast, truth_few).round(2)
+
+Here each standard deviation is known only to a factor of several, and the
+intervals with the settings' uncertainty are wider than those at the mode.
+Over many such worlds whose settings are drawn from their priors, the
+intervals with the settings' uncertainty hold the truth about as often as
+they claim, and those at the mode less often.
+
+
+Options
+-------
+
+.. list-table::
+   :header-rows: 1
+   :widths: 18 18 64
+
+   * - Option
+     - Default
+     - What it does
+   * - ``build``
+     - (required)
+     - The function from a dict of settings to the :class:`~fips.Problem`, or
+       to its analytic posterior (``fips.solve(problem, gamma=s["gamma"])``
+       makes gamma a setting). Or the problem itself, for the fast path.
+   * - ``settings``
+     - (required)
+     - The prior of each setting, by the name ``build`` reads it by. Their
+       order is the order of the columns of ``result.settings``.
+   * - ``draws``
+     - 2000
+     - The kept steps of the chain, each with one draw of the state.
+   * - ``burn_in``
+     - 500
+     - The steps before them, which tune the proposal and are not kept.
+   * - ``seed``
+     - 0
+     - The seed of the chain and of the state's draws (an integer), so a run
+       is reproducible. The two have their own streams: the chain is the same
+       whatever the state's draws are.
+
+
+Warnings and checks
+-------------------
+
+- **The log posterior does not curve down in some direction at the mode**
+  (a warning): the data and the prior hardly decide a setting, or a
+  combination of them. The proposal takes a variance of 1 there and the
+  burn-in scales it, but the chain may be slow: look at the effective sample
+  sizes, and give that setting a narrower prior or hold it fixed.
+- **A low acceptance or a small effective sample size**: run more ``draws``
+  or a longer ``burn_in``. An ``INFO`` record gives both at the end of each
+  run, and another says when the search for the mode stopped early.
+- **A problem that does not solve at some settings** (a covariance that is
+  not positive definite) has no density there, and the chain does not step
+  to it. At the priors' medians it raises a :class:`ValueError`, because the
+  search for the mode starts there.
+- **A function that returns a posterior of another method** raises a
+  :class:`TypeError`: return the problem, or its analytic posterior. A prior
+  that is not one of :mod:`fips.distributions` raises a :class:`TypeError`.
+- **The fast path takes only its three names**, and only one of
+  ``"obs_scale"`` and ``"gamma"``; any other raises a :class:`ValueError`.
+  For other settings, pass a function.
+
+
+Cost
+----
+
+A step of the chain is one solve of the problem the function builds, so a
+run costs ``burn_in + draws`` solves, plus a few dozen for the search for the
+mode and its Hessian (more with more settings). A step of the fast path
+costs a sum over the smaller of the number of observations and the number of
+state elements, after one eigendecomposition. The draws of the state are kept
+as a ``state x draws`` array: 2000 draws of 30,000 elements take 480 MB, so
+for a large state ask for fewer draws, or keep the aggregates you need.
+
+
+How it works
+------------
 
 With a prior :math:`p(s)` on the settings, their posterior is the prior times
-the evidence of the problem built at them (:attr:`~fips.Posterior.log_evidence`,
+the evidence of the problem built at them (:ref:`the evidence <settings-evidence>`,
 exact for a linear problem):
 
 .. math::
@@ -35,255 +320,37 @@ the settings' posterior,
     p(x \mid z) = \int p(x \mid s, z) \, p(s \mid z) \, ds,
 
 so a draw of the settings from :math:`p(s \mid z)`, then of the state from
-:math:`p(x \mid s, z)` (exactly, :meth:`~fips.Posterior.sample`), is a draw
-of :math:`p(x \mid z)`. Its variance is
+:math:`p(x \mid s, z)` (exactly, as :meth:`~fips.Posterior.sample` draws it),
+is a draw of :math:`p(x \mid z)`. Its variance is
 
 .. math::
 
-    \operatorname{var}(x \mid z) = E\big[\hat{S}(s)\big] + \operatorname{var}\big[\hat{x}(s)\big],
+    \operatorname{var}(x \mid z) = E\big[\hat{S}(s)\big] + \operatorname{var}\big[\hat{x}(s)\big]
 
 over the settings' posterior: the average of each setting's posterior
-variance, and the spread of the estimates between settings. A solve at fitted
-settings gives the first term at one setting and leaves out the second.
+variance, and the spread of the estimates between settings. A solve at
+fitted settings gives the first term at one setting and leaves out the
+second.
 
-:func:`fips.hierarchical` draws the settings by a random-walk Metropolis, in
-the log of each positive setting. It starts at the settings' posterior mode,
-proposes steps from Laplace's approximation there (the inverse of a numerical
-Hessian of the log posterior), and during the burn-in scales the steps until
-about 0.3 of them are accepted. Each step solves one problem; at each kept
-step it draws the state once, at that step's settings.
+The settings are drawn by a random-walk Metropolis in unbounded coordinates:
+the log of a positive setting, the logit of a setting on an interval. The
+chain starts at the settings' posterior mode, found by L-BFGS-B from the
+priors' medians. It proposes steps from Laplace's approximation there (the
+inverse of a numerical Hessian of the log posterior), and during the burn-in
+scales them toward an acceptance of 0.3 (Gelman, Roberts and Gilks, 1996);
+the scale is fixed after, so the kept steps are a Markov chain of the exact
+posterior. At each kept step it draws the state once, at that step's
+settings. The effective sample size is Geyer's (1992) initial monotone
+sequence.
 
-
-A world at known settings
--------------------------
-
-The world of :doc:`settings`: a hundred and fifty cells along a line, 1 km
-apart, two hundred observations of one to four neighboring cells, and a truth
-drawn at a prior std of 1, a correlation length of 5 km and a mismatch std of
-0.5:
-
-.. ipython:: python
-
-   import numpy as np
-   import pandas as pd
-   from scipy.special import ndtri
-   import fips
-
-   rng = np.random.default_rng(0)
-   n_cells, n_obs = 150, 200
-   cells = fips.Space({"flux": pd.Index(np.arange(n_cells) + 0.5, name="x")})  # km
-   observed = fips.Space({"ch4": pd.RangeIndex(n_obs, name="obs_id")})
-
-.. ipython:: python
-
-   footprint = np.zeros((n_obs, n_cells))
-   for i, start in enumerate(rng.integers(0, n_cells - 4, n_obs)):
-       footprint[i, start : start + rng.integers(1, 5)] = rng.uniform(0.5, 1.5)
-
-   H = fips.Operator(footprint, observed, cells)
-   prior = fips.Vector(np.full(n_cells, 2.0), cells, name="prior")
-
-The function from the settings to the problem takes them as a dict, by name:
-
-.. ipython:: python
-
-   def build(settings, obs, H=H):
-       """The problem at the settings: the prior std, the correlation length (km), the mismatch std."""
-       return fips.Problem(
-           prior=prior,
-           prior_cov=fips.Exponential("x", settings["length"]).with_std(settings["std"]),
-           obs=obs,
-           obs_cov=fips.Independent().with_std(settings["noise"]),
-           forward=H,
-       )
-
-   true = pd.Series({"std": 1.0, "length": 5.0, "noise": 0.5})
-   world = build(true, fips.Vector(np.zeros(n_obs), observed))
-   truth, obs = world.simulate(rng)
-
-Each setting gets a prior that knows it to a factor of :math:`e` (a
-:class:`~fips.distributions.LogNormal` with a standard deviation of 1 in the log), about a
-guess that is off by a factor of two in the two standard deviations and 2.5 in
-the length. :class:`~fips.distributions.HalfNormal` and
-:class:`~fips.distributions.Uniform` are the other two
-(:mod:`fips.distributions`).
-
-.. ipython:: python
-
-   priors = {
-       "std": fips.distributions.LogNormal(np.log(0.5), 1.0),
-       "length": fips.distributions.LogNormal(np.log(2.0), 1.0),
-       "noise": fips.distributions.LogNormal(np.log(1.0), 1.0),
-   }
-   result = fips.hierarchical(lambda s: build(s, obs), priors, draws=2000, burn_in=500, seed=0)
-   table = result.settings.quantile([0.025, 0.5, 0.975]).T.set_axis(["2.5%", "median", "97.5%"], axis=1)
-   table.insert(0, "true", true)
-   table.assign(mode=result.mode).round(3)
-
-The two standard deviations are known to about 25% and 15% (their 95%
-intervals), each holding the truth. The length is known to a factor of three:
-from 1.8 to 5.8 km, about its median of 2.8 km, the fit :doc:`settings` found.
-:attr:`~fips.Hierarchical.mode` is the settings' posterior mode, where the
-chain started, close to that fit. The chain's diagnostics are its acceptance
-and the effective sample size of each setting, about as many independent
-draws as the 2000 correlated ones are worth:
-
-.. ipython:: python
-
-   round(result.acceptance, 2), result.ess.round().to_dict()
-
-A standard error of a setting's mean is its standard deviation over the root
-of its effective sample size: here about a tenth of its spread. Ask for more
-draws to make it smaller.
-
-
-Totals with and without the settings' uncertainty
--------------------------------------------------
-
-The flux of three regions of 50 km each:
-:meth:`~fips.Hierarchical.uncertainty` reads each total's mean, standard
-deviation and interval from the draws (here 90%), and
-:meth:`~fips.Hierarchical.at` gives the ordinary posterior at one setting, the
-mode, whose interval leaves the settings' uncertainty out:
-
-.. ipython:: python
-
-   x = cells.select("flux")
-   regions = pd.Series(np.select([x < 50, x < 100], ["west", "middle"], "east"), index=x, name="region")
-   W = fips.aggregate.sum(cells, by=regions)
-
-.. ipython:: python
-
-   def intervals(result, truth, level=0.9):
-       """Each region's truth, and its interval with the settings' uncertainty and at their mode."""
-       mixed = result.uncertainty(W, level=level)
-       at_mode = result.at(result.mode)
-       estimate = (W @ at_mode.estimate).values
-       std = at_mode.uncertainty(W)["posterior_std"].values
-       half = ndtri(0.5 + level / 2) * std
-       return pd.DataFrame(
-           {
-               "truth": (W @ truth).values,
-               "std": mixed["posterior_std"].values,
-               "lower": mixed["lower"].values,
-               "upper": mixed["upper"].values,
-               "std_at_mode": std,
-               "lower_at_mode": estimate - half,
-               "upper_at_mode": estimate + half,
-           },
-           index=W.rows.index.get_level_values("region"),
-       )
-
-   intervals(result, truth).round(2)
-
-The two agree to about 2%: two hundred observations pin these totals, and the
-length, the setting known least, moves how a total splits between its cells
-more than the total itself (the prior std of each region's total is 15.7; the
-posterior's is under 2).
-
-
-Few observations, and the fast path
------------------------------------
-
-The settings' uncertainty matters when few observations decide them. Fifteen
-observations, all in the western two regions:
-
-.. ipython:: python
-
-   few = fips.Space({"ch4": pd.RangeIndex(15, name="obs_id")})
-   sparse = np.zeros((15, n_cells))
-   for i, start in enumerate(rng.integers(0, 96, 15)):
-       sparse[i, start : start + rng.integers(1, 5)] = rng.uniform(0.5, 1.5)
-
-   H_few = fips.Operator(sparse, few, cells)
-   few_world = build(true, fips.Vector(np.zeros(15), few), H=H_few)
-   truth_few, obs_few = few_world.simulate(rng)
-
-Here the length is held at its true 5 km and the two standard deviations are
-the settings. When the only settings are a factor on the prior std and one on
-the mismatch's, pass the problem at factors of 1 instead of a function, and
-name them ``"prior_scale"`` and ``"obs_scale"`` (or ``"gamma"``): one
-eigendecomposition then gives the evidence at every step without a solve, and
-the state's draws at every kept step in one product. This run of 2500 steps
-takes about a tenth of a second, where the function would take a solve each:
-
-.. ipython:: python
-
-   unit = {"std": 1.0, "length": 5.0, "noise": 1.0}
-   scales = {"prior_scale": fips.distributions.LogNormal(np.log(0.5), 1.0), "obs_scale": fips.distributions.LogNormal(0.0, 1.0)}
-   fast = fips.hierarchical(build(unit, obs_few, H=H_few), scales, seed=0)
-   fast.settings.quantile([0.025, 0.5, 0.975]).round(3)
-   intervals(fast, truth_few).round(2)
-
-Each standard deviation is now known to a factor of three to six, and the
-totals' standard deviations with their uncertainty are 4% to 9% larger. Whether that is enough
-is a question of coverage: over worlds, how often each interval holds the
-true total. First in worlds at the true settings, then in worlds whose
-settings are drawn from their priors, 200 of each:
-
-.. ipython:: python
-
-   def coverage(make_world, trials=200):
-       """The fraction of worlds whose 90% interval holds each region's true total."""
-       rows = []
-       for k in range(trials):
-           truth_k, obs_k = make_world()
-           table = intervals(fips.hierarchical(build(unit, obs_k, H=H_few), scales, seed=k), truth_k)
-           rows.append(pd.DataFrame({
-               "with": table["lower"].le(table["truth"]) & table["truth"].le(table["upper"]),
-               "without": table["lower_at_mode"].le(table["truth"]) & table["truth"].le(table["upper_at_mode"]),
-           }))
-       return pd.concat(rows).groupby(level="region").mean()
-
-.. ipython:: python
-
-   coverage(lambda: few_world.simulate(rng))
-
-.. ipython:: python
-
-   def from_priors():
-       """A world whose two standard deviations are drawn from their priors."""
-       std, noise = (float(scales[name].sample(1, rng)[0]) for name in ("prior_scale", "obs_scale"))
-       world_k = build({"std": std, "length": 5.0, "noise": noise}, fips.Vector(np.zeros(15), few), H=H_few)
-       return world_k.simulate(rng)
-
-   coverage(from_priors)
-
-With 200 worlds a coverage is known to about 0.02. In the worlds drawn from
-the priors, the intervals with the settings' uncertainty cover at their level,
-89% to 93.5%, as a posterior must on average over its own prior; those at the
-mode cover 85% to 89%. At the true settings both cover less, 84.5% to 88.5%
-with the uncertainty and 82.5% to 84.5% without: there the priors pull each
-standard deviation towards their median, the prior std's (0.5) below the
-truth and the mismatch std's (1) above it, and fifteen observations do not
-undo all of the pull. With the prior std's prior median at the truth instead,
-the same worlds cover 87% to 91.5% with the uncertainty (a run not on this
-page). A prior on the settings is a claim like any other, and the intervals
-are only as good as it.
-
-
-What it costs, and what it does not do
---------------------------------------
-
-A step of the general path is a solve of the problem the function builds
-(here 4 ms for 150 cells and 200 observations, so the 2500 steps above took
-about 12 s), and the search for the mode and its Hessian about sixty more. A step of the
-fast path is :math:`O(m)` (or :math:`O(n)`, whichever is smaller) after one
-eigendecomposition, whatever the size of the problem. The draws of the state
-are kept, a ``state x draws`` array: 2000 draws of 30,000 cells are 480 MB.
-The settings' estimates have Monte Carlo errors that
-:attr:`~fips.Hierarchical.ess` measures; four hundred effective draws give a
-setting's mean to a twentieth of its spread.
-
-The posterior of the state is a mixture, so what is defined for one Gaussian
-(the gain, DOFS, the chi-squared tests, the evidence) is read from the
-posterior at one setting, ``result.at(settings)``. The method is the analytic
-one: a function that returns a ``"bounded"`` or ``"gauss_newton"`` posterior
-is refused, since neither gives the exact evidence and exact draws each step
-needs.
+On the fast path, with :math:`s` the prior scale, :math:`o` the observation
+scale and :math:`c = o^2 / \gamma`, the innovation covariance is :math:`s^2 H S_0
+H^T + c S_z = s^2 (H S_0 H^T + S_z / \gamma')` with :math:`\gamma' = s^2 /
+c`. The evidence at every :math:`(s, c)` is the problem's at gamma
+:math:`\gamma'`, rescaled, and one eigendecomposition gives it at every gamma.
 
 References
-~~~~~~~~~~
+----------
 
 Gelman, A., Roberts, G. O., and Gilks, W. R. (1996). Efficient Metropolis
 jumping rules. *Bayesian Statistics 5*, 599-607.

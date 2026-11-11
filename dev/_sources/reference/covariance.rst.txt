@@ -90,14 +90,14 @@ and :meth:`Covariance.block_diag` takes them by block name.
        fips.Exponential(["lat", "lon"], 20.0, metric="haversine"),
    )
    prior
-   mdm = fips.Independent().with_std(0.01) + fips.Exponential(
+   obs_cov = fips.Independent().with_std(0.01) + fips.Exponential(
        "obs_time", "2.8h", within=["site", "obs_time.date"]
    ).with_std(0.02)
-   mdm
+   obs_cov
 
 A smooth kernel on points close together for its scale is nearly singular:
-its smallest eigenvalues are roundoff. A prior error covariance may be
-singular, but a model-data mismatch must be positive-definite, and a solve with
+its smallest eigenvalues are roundoff. A prior covariance may be
+singular, but an observation covariance must be positive definite, and a solve with
 one loses about as many digits as the condition number of its correlation has:
 :func:`fips.solve` logs a warning when that is above ``1e10``. ``rtol=`` on the
 kernel raises the eigenvalues below ``rtol`` times the largest to that value

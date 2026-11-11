@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Covariances &#8212; fips 0.2.0b3.dev33+g1b3edda40 documentation</title>
+    <title>Covariances &#8212; fips 0.2.0b3.dev34+g9a0704831 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=d42acb76"></script>
+    <script src="../_static/documentation_options.js?v=8e63224c"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev33+g1b3edda40 documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev33+g1b3edda40 documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
   
   
 </a></div>
@@ -1164,18 +1164,18 @@ and <a class="reference internal" href="api/fips.Covariance.block_diag.html#fips
 <span class="gp">In [10]: </span><span class="n">prior</span>
 <span class="gh">Out[10]: </span><span class="go">Kronecker(factors=(Exponential(levels=('time',), within=(), rtol=None, scale=Timedelta('30 days 00:00:00'), metric='euclidean'), Exponential(levels=('lat', 'lon'), within=(), rtol=None, scale=20.0, metric='haversine')))</span>
 
-<span class="gp">In [11]: </span><span class="n">mdm</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Independent</span><span class="p">()</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span> <span class="o">+</span> <span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">(</span>
+<span class="gp">In [11]: </span><span class="n">obs_cov</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Independent</span><span class="p">()</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span> <span class="o">+</span> <span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">(</span>
 <span class="gp">   ....: </span>    <span class="s2">"obs_time"</span><span class="p">,</span> <span class="s2">"2.8h"</span><span class="p">,</span> <span class="n">within</span><span class="o">=</span><span class="p">[</span><span class="s2">"site"</span><span class="p">,</span> <span class="s2">"obs_time.date"</span><span class="p">]</span>
 <span class="gp">   ....: </span><span class="p">)</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.02</span><span class="p">)</span>
 <span class="gp">   ....: </span>
 
-<span class="gp">In [12]: </span><span class="n">mdm</span>
+<span class="gp">In [12]: </span><span class="n">obs_cov</span>
 <span class="gh">Out[12]: </span><span class="go">Independent().with_std(0.01) + Exponential(levels=('obs_time',), within=('site', 'obs_time.date'), rtol=None, scale=Timedelta('0 days 02:48:00'), metric='euclidean').with_std(0.02)</span>
 </pre></div>
 </div>
 <p>A smooth kernel on points close together for its scale is nearly singular:
-its smallest eigenvalues are roundoff. A prior error covariance may be
-singular, but a model-data mismatch must be positive-definite, and a solve with
+its smallest eigenvalues are roundoff. A prior covariance may be
+singular, but an observation covariance must be positive definite, and a solve with
 one loses about as many digits as the condition number of its correlation has:
 <a class="reference internal" href="api/fips.solve.html#fips.solve" title="fips.solve"><code class="xref py py-func docutils literal notranslate"><span class="pre">fips.solve()</span></code></a> logs a warning when that is above <code class="docutils literal notranslate"><span class="pre">1e10</span></code>. <code class="docutils literal notranslate"><span class="pre">rtol=</span></code> on the
 kernel raises the eigenvalues below <code class="docutils literal notranslate"><span class="pre">rtol</span></code> times the largest to that value
@@ -1190,7 +1190,7 @@ correlations too, and a warning says so past 1%. Adding an independent error
 <span class="gp">In [14]: </span><span class="n">times</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">"time"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">100.0</span><span class="p">)})</span>
 
 <span class="gp">In [15]: </span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">cond</span><span class="p">(</span><span class="n">fips</span><span class="o">.</span><span class="n">Gaussian</span><span class="p">(</span><span class="s2">"time"</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">)</span><span class="o">.</span><span class="n">correlation</span><span class="p">(</span><span class="n">times</span><span class="p">))</span>
-<span class="gh">Out[15]: </span><span class="go">np.float64(100000000.4799805)</span>
+<span class="gh">Out[15]: </span><span class="go">np.float64(100000000.4460426)</span>
 </pre></div>
 </div>
 <section id="kernels">

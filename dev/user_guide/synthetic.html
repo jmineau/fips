@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Synthetic experiments &#8212; fips 0.2.0b3.dev33+g1b3edda40 documentation</title>
+    <title>Synthetic experiments &#8212; fips 0.2.0b3.dev34+g9a0704831 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=d42acb76"></script>
+    <script src="../_static/documentation_options.js?v=8e63224c"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -60,8 +60,8 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Fitting the covariance settings" href="settings.html" />
-    <link rel="prev" title="User Guide" href="index.html" />
+    <link rel="next" title="Examples" href="examples/index.html" />
+    <link rel="prev" title="The uncertainty of the settings" href="hierarchical.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev33+g1b3edda40 documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev33+g1b3edda40 documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
   
   
 </a></div>
@@ -385,21 +385,33 @@
 <nav class="bd-docs-nav bd-links"
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
-  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
-<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Synthetic experiments</a></li>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Every problem</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="problem.html">Building a problem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="posterior.html">Reading the posterior</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Beyond the linear Gaussian problem</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="methods.html">Choosing a method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bounds.html">Bounds on the state</a></li>
+<li class="toctree-l1"><a class="reference internal" href="positive.html">Values that stay positive</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nonlinear.html">A nonlinear forward model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ensemble.html">A model without a Jacobian: the ensemble method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="variational.html">A problem too large to factor: the variational method</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Checking and tuning an inversion</span></p>
+<ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="settings.html">Fitting the covariance settings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="hierarchical.html">The uncertainty of the settings</a></li>
-<li class="toctree-l1"><a class="reference internal" href="bounds.html">Bounds on the state</a></li>
-<li class="toctree-l1"><a class="reference internal" href="nonlinear.html">A nonlinear forward model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="positive.html">Values that stay positive</a></li>
-<li class="toctree-l1"><a class="reference internal" href="comparison.html">Choosing a method</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ensemble.html">A model with no Jacobian: the ensemble method</a></li>
-<li class="toctree-l1"><a class="reference internal" href="variational.html">A problem too large to factor: the variational method</a></li>
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Synthetic experiments</a></li>
+</ul>
+<ul class="nav bd-sidenav">
 <li class="toctree-l1 has-children"><a class="reference internal" href="examples/index.html">Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="examples/gravity_2d.html">Gravity: density below the surface</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/flux_regional.html">A regional flux inversion</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/synthetic_truth.html">Does the inversion recover a known flux?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/data_worth.html">Which observations constrain a regional total?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/comparison.html">Comparing ways to keep a quantity positive</a></li>
 </ul>
 </details></li>
 </ul>
@@ -464,12 +476,19 @@
                   
   <section id="synthetic-experiments">
 <span id="synthetic-data"></span><h1>Synthetic experiments<a class="headerlink" href="#synthetic-experiments" title="Link to this heading">#</a></h1>
-<p>An inversion returns an estimate and a claim about how uncertain it is. The
-one way to check both is to give it data whose answer you know: make a truth,
-make the observations it would produce, solve them, and compare. Atmospheric
-science calls this an OSSE (an observing system simulation experiment),
-oceanography a twin experiment, and statistics a simulation study. fips uses
-the statistician’s parts, because every such experiment has the same four:</p>
+<p>An inversion returns an estimate and a claim about how uncertain it is. <strong>The
+one way to check both is to give it data whose answer you know</strong>: make a
+truth, make the observations it would give, solve them, and compare.
+<a class="reference internal" href="../reference/api/fips.Problem.simulate.html#fips.Problem.simulate" title="fips.Problem.simulate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">problem.simulate(rng)</span></code></a> makes a truth and its
+observations, and <a class="reference internal" href="../reference/api/fips.Posterior.with_data.html#fips.Posterior.with_data" title="fips.Posterior.with_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">post.with_data(obs)</span></code></a>
+solves them for the cost of a product. <a class="reference internal" href="../reference/api/fips.Posterior.recovery.html#fips.Posterior.recovery" title="fips.Posterior.recovery"><code class="xref py py-meth docutils literal notranslate"><span class="pre">post.recovery(world,</span> <span class="pre">W=W)</span></code></a> gives the answer of every such trial at once,
+exactly: the bias, the spread and the coverage of each aggregate, one row
+each. <a class="reference internal" href="../reference/api/fips.Posterior.trials.html#fips.Posterior.trials" title="fips.Posterior.trials"><code class="xref py py-meth docutils literal notranslate"><span class="pre">post.trials(world,</span> <span class="pre">n,</span> <span class="pre">rng,</span> <span class="pre">W=W)</span></code></a> gives
+the same by sampling, trial by trial, for what has no exact answer.</p>
+<p>Atmospheric science calls this an observing system simulation experiment
+(OSSE), oceanography a twin experiment, and statistics a simulation study.
+fips uses the statistician’s parts, because every such experiment has the
+same four:</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <colgroup>
 <col style="width: 16.0%" />
@@ -489,36 +508,36 @@ called the data-generating mechanism or the nature run.</p></td>
 <td><p>A <a class="reference internal" href="../reference/api/fips.Problem.html#fips.Problem" title="fips.Problem"><code class="xref py py-class docutils literal notranslate"><span class="pre">Problem</span></code></a>, through <a class="reference internal" href="../reference/api/fips.Problem.simulate.html#fips.Problem.simulate" title="fips.Problem.simulate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">simulate()</span></code></a>; or
 any function of a generator that returns a truth and observations.</p></td>
 </tr>
-<tr class="row-odd"><td><p><strong>totals</strong></p></td>
-<td><p>What you compare on: monthly totals, a regional total, a seasonal
-difference, or each state element. Also called the estimands.</p></td>
-<td><p>An aggregation <code class="docutils literal notranslate"><span class="pre">W</span></code> (<a class="reference internal" href="../reference/api/fips.aggregate.sum.html#fips.aggregate.sum" title="fips.aggregate.sum"><code class="xref py py-func docutils literal notranslate"><span class="pre">fips.aggregate.sum()</span></code></a>), one row per total.</p></td>
+<tr class="row-odd"><td><p><strong>aggregates</strong></p></td>
+<td><p>What you compare on: a monthly total, a regional mean, a difference
+between seasons, or each state element. Also called the estimands.</p></td>
+<td><p>An aggregation <code class="docutils literal notranslate"><span class="pre">W</span></code> (<a class="reference internal" href="../reference/api/fips.aggregate.sum.html#fips.aggregate.sum" title="fips.aggregate.sum"><code class="xref py py-func docutils literal notranslate"><span class="pre">fips.aggregate.sum()</span></code></a>,
+<a class="reference internal" href="../reference/api/fips.aggregate.mean.html#fips.aggregate.mean" title="fips.aggregate.mean"><code class="xref py py-func docutils literal notranslate"><span class="pre">mean()</span></code></a>), one row per aggregate.</p></td>
 </tr>
 <tr class="row-even"><td><p><strong>inversion</strong></p></td>
 <td><p>The method under test, with its own assumptions. Also called the
 estimator.</p></td>
-<td><p>A <a class="reference internal" href="../reference/api/fips.Posterior.html#fips.Posterior" title="fips.Posterior"><code class="xref py py-class docutils literal notranslate"><span class="pre">Posterior</span></code></a>; <code class="docutils literal notranslate"><span class="pre">post.with_data(obs)</span></code> runs it on other data.</p></td>
+<td><p>A <a class="reference internal" href="../reference/api/fips.Posterior.html#fips.Posterior" title="fips.Posterior"><code class="xref py py-class docutils literal notranslate"><span class="pre">Posterior</span></code></a>; <code class="docutils literal notranslate"><span class="pre">post.with_data(obs)</span></code> runs it on other
+data.</p></td>
 </tr>
 <tr class="row-odd"><td><p><strong>performance</strong></p></td>
-<td><p>How the estimate’s error behaves over worlds: its bias, its spread, the
-spread the inversion claims, and how often the claimed interval holds
-the truth.</p></td>
+<td><p>How the estimate’s error behaves over worlds: its bias, its spread,
+the spread the inversion claims, and how often the claimed interval
+holds the truth.</p></td>
 <td><p>The columns of <a class="reference internal" href="../reference/api/fips.Posterior.recovery.html#fips.Posterior.recovery" title="fips.Posterior.recovery"><code class="xref py py-meth docutils literal notranslate"><span class="pre">recovery()</span></code></a>, exactly; or the same
 columns summarized from the table of <a class="reference internal" href="../reference/api/fips.Posterior.trials.html#fips.Posterior.trials" title="fips.Posterior.trials"><code class="xref py py-meth docutils literal notranslate"><span class="pre">trials()</span></code></a>.</p></td>
 </tr>
 </tbody>
 </table>
 </div>
-<p>The inversion’s assumptions and the world’s may agree or differ, and that is
-the whole design space. When the world is the problem itself, the experiment
-asks whether the inversion is honest. When one input of the world differs from
-what the inversion assumes, it asks what that input costs. This page builds a
-small problem, makes worlds for it, reads the exact answer where there is one,
-and writes the loop where there is not.</p>
+<p><strong>The design is whether the world’s assumptions and the inversion’s agree.</strong>
+When the world is the problem itself, the experiment asks whether the
+inversion is honest. When one input of the world differs from what the
+inversion assumes, it asks what that input costs.</p>
 <nav class="contents local" id="on-this-page">
 <p class="topic-title">On this page</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="#a-problem-and-the-function-that-builds-it" id="id1">A problem, and the function that builds it</a></p></li>
+<li><p><a class="reference internal" href="#an-example-problem" id="id1">An example problem</a></p></li>
 <li><p><a class="reference internal" href="#a-world-makes-the-data" id="id2">A world makes the data</a></p></li>
 <li><p><a class="reference internal" href="#the-exact-answer" id="id3">The exact answer</a></p></li>
 <li><p><a class="reference internal" href="#when-you-need-trials" id="id4">When you need trials</a></p></li>
@@ -527,58 +546,56 @@ and writes the loop where there is not.</p>
 <li><p><a class="reference internal" href="#a-world-on-other-state-labels" id="id7">A world on other state labels</a></p></li>
 <li><p><a class="reference internal" href="#reading-the-table" id="id8">Reading the table</a></p></li>
 <li><p><a class="reference internal" href="#randomness" id="id9">Randomness</a></p></li>
+<li><p><a class="reference internal" href="#how-it-works" id="id10">How it works</a></p></li>
+<li><p><a class="reference internal" href="#references" id="id11">References</a></p></li>
 </ul>
 </nav>
-<section id="a-problem-and-the-function-that-builds-it">
-<h2><a class="toc-backref" href="#id1" role="doc-backlink">A problem, and the function that builds it</a><a class="headerlink" href="#a-problem-and-the-function-that-builds-it" title="Link to this heading">#</a></h2>
-<p>Three months of fluxes in four cells along a line, observed by 24
-measurements, each seeing the cells of its own month with random weights. The
-state has a <code class="docutils literal notranslate"><span class="pre">month</span></code> level and an <code class="docutils literal notranslate"><span class="pre">x</span></code> level, so monthly totals are a sum over
-<code class="docutils literal notranslate"><span class="pre">x</span></code>:</p>
+<section id="an-example-problem">
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">An example problem</a><a class="headerlink" href="#an-example-problem" title="Link to this heading">#</a></h2>
+<p>Three months of a quantity at four positions along a line, observed 24
+times, each observation a weighted sum of the positions in its own month. The
+state has a <code class="docutils literal notranslate"><span class="pre">month</span></code> level and an <code class="docutils literal notranslate"><span class="pre">x</span></code> level, so a monthly total is a sum
+over <code class="docutils literal notranslate"><span class="pre">x</span></code>:</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [1]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 <span class="gp">In [2]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
-<span class="gp">In [3]: </span><span class="kn">from</span><span class="w"> </span><span class="nn">scipy.stats</span><span class="w"> </span><span class="kn">import</span> <span class="n">norm</span>
+<span class="gp">In [3]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">fips</span>
 
-<span class="gp">In [4]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">fips</span>
+<span class="gp">In [4]: </span><span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 
-<span class="gp">In [5]: </span><span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">In [5]: </span><span class="n">months</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="s2">"2024-01-01"</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">"MS"</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"month"</span><span class="p">)</span>
 
-<span class="gp">In [6]: </span><span class="n">months</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="s2">"2024-01-01"</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">"MS"</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"month"</span><span class="p">)</span>
+<span class="gp">In [6]: </span><span class="n">positions</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">"x"</span><span class="p">)</span>
 
-<span class="gp">In [7]: </span><span class="n">cells</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">"x"</span><span class="p">)</span>  <span class="c1"># km</span>
+<span class="gp">In [7]: </span><span class="n">state</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_product</span><span class="p">([</span><span class="n">months</span><span class="p">,</span> <span class="n">positions</span><span class="p">])</span>
 
-<span class="gp">In [8]: </span><span class="n">state</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_product</span><span class="p">([</span><span class="n">months</span><span class="p">,</span> <span class="n">cells</span><span class="p">])</span>
+<span class="gp">In [8]: </span><span class="n">prior</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="o">.</span><span class="n">from_series</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">state</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"prior"</span><span class="p">),</span> <span class="n">block</span><span class="o">=</span><span class="s2">"field"</span><span class="p">)</span>
 
-<span class="gp">In [9]: </span><span class="n">prior</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="o">.</span><span class="n">from_series</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">state</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"prior"</span><span class="p">),</span> <span class="n">block</span><span class="o">=</span><span class="s2">"flux"</span><span class="p">)</span>
-
-<span class="gp">In [10]: </span><span class="n">obs_labels</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">24</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s2">"obs_id"</span><span class="p">)</span>
-
-<span class="gp">In [11]: </span><span class="n">obs_space</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"conc"</span><span class="p">:</span> <span class="n">obs_labels</span><span class="p">})</span>
+<span class="gp">In [9]: </span><span class="n">obs_space</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"obs"</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">RangeIndex</span><span class="p">(</span><span class="mi">24</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"obs_id"</span><span class="p">)})</span>
 </pre></div>
 </div>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [12]: </span><span class="n">weights</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="p">(</span><span class="mi">24</span><span class="p">,</span> <span class="mi">12</span><span class="p">))</span>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [10]: </span><span class="n">weights</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="p">(</span><span class="mi">24</span><span class="p">,</span> <span class="mi">12</span><span class="p">))</span>
 
-<span class="gp">In [13]: </span><span class="n">sees_month</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="mi">8</span><span class="p">)[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="mi">4</span><span class="p">)[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
+<span class="gp">In [11]: </span><span class="n">own_month</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="mi">8</span><span class="p">)[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="mi">4</span><span class="p">)[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
 
-<span class="gp">In [14]: </span><span class="n">forward</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="n">weights</span> <span class="o">*</span> <span class="n">sees_month</span><span class="p">,</span> <span class="n">obs_space</span><span class="p">,</span> <span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">)</span>
+<span class="gp">In [12]: </span><span class="n">forward</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="n">weights</span> <span class="o">*</span> <span class="n">own_month</span><span class="p">,</span> <span class="n">obs_space</span><span class="p">,</span> <span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The builder is the function that makes a <a class="reference internal" href="../reference/api/fips.Problem.html#fips.Problem" title="fips.Problem"><code class="xref py py-class docutils literal notranslate"><span class="pre">Problem</span></code></a> from its
-inputs. Every repeated inversion has one (<a class="reference internal" href="index.html#repeated-inversions"><span class="std std-ref">Repeated inversions, logging and saving</span></a>), and a
-synthetic experiment leans on it: a world with one input changed is the same
-call with one argument changed. The observations are zeros, because a world
-makes the real ones and the inversion only needs their labels:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [15]: </span><span class="k">def</span><span class="w"> </span><span class="nf">build_problem</span><span class="p">(</span><span class="n">obs_std</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">prior_std</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
-<span class="gp">   ....: </span><span class="w">    </span><span class="sd">"""Return the problem, with the given mismatch, background and prior spread."""</span>
+<p><strong>A synthetic experiment leans on the function that builds the problem</strong>
+(every repeated inversion has one, <a class="reference internal" href="posterior.html#repeated-inversions"><span class="std std-ref">Repeated inversions, logging and saving</span></a>): a world with
+one input changed is the same call with one argument changed. The
+observations are zeros, because a world makes the real ones and the
+inversion needs only their labels:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [13]: </span><span class="k">def</span><span class="w"> </span><span class="nf">build_problem</span><span class="p">(</span><span class="n">obs_std</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">prior_std</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
+<span class="gp">   ....: </span><span class="w">    </span><span class="sd">"""Return the problem, with the given observation error, offset and prior spread."""</span>
 <span class="gp">   ....: </span>    <span class="n">prior_cov</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Kronecker</span><span class="p">(</span>
 <span class="gp">   ....: </span>        <span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">(</span><span class="s2">"month"</span><span class="p">,</span> <span class="s2">"45D"</span><span class="p">),</span> <span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">(</span><span class="s2">"x"</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
 <span class="gp">   ....: </span>    <span class="p">)</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="n">prior_std</span><span class="p">)</span>
 <span class="gp">   ....: </span>    <span class="k">return</span> <span class="n">fips</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span>
 <span class="gp">   ....: </span>        <span class="n">prior</span><span class="o">=</span><span class="n">prior</span><span class="p">,</span>
 <span class="gp">   ....: </span>        <span class="n">prior_cov</span><span class="o">=</span><span class="n">prior_cov</span><span class="p">,</span>
-<span class="gp">   ....: </span>        <span class="n">obs</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">24</span><span class="p">),</span> <span class="n">obs_space</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"conc"</span><span class="p">),</span>
+<span class="gp">   ....: </span>        <span class="n">obs</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">24</span><span class="p">),</span> <span class="n">obs_space</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"obs"</span><span class="p">),</span>
 <span class="gp">   ....: </span>        <span class="n">obs_cov</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Independent</span><span class="p">()</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="n">obs_std</span><span class="p">),</span>
 <span class="gp">   ....: </span>        <span class="n">forward</span><span class="o">=</span><span class="n">forward</span><span class="p">,</span>
 <span class="gp">   ....: </span>        <span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">,</span>
@@ -586,36 +603,32 @@ makes the real ones and the inversion only needs their labels:</p>
 <span class="gp">   ....: </span>
 </pre></div>
 </div>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [16]: </span><span class="n">problem</span> <span class="o">=</span> <span class="n">build_problem</span><span class="p">()</span>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [14]: </span><span class="n">problem</span> <span class="o">=</span> <span class="n">build_problem</span><span class="p">()</span>
 
-<span class="gp">In [17]: </span><span class="n">post</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span>
+<span class="gp">In [15]: </span><span class="n">post</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span>
 
-<span class="gp">In [18]: </span><span class="n">W</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">aggregate</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="s2">"month"</span><span class="p">)</span>  <span class="c1"># the totals: one row per month</span>
+<span class="gp">In [16]: </span><span class="n">W</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">aggregate</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="s2">"month"</span><span class="p">)</span>  <span class="c1"># one row per monthly total</span>
 </pre></div>
 </div>
 </section>
 <section id="a-world-makes-the-data">
 <h2><a class="toc-backref" href="#id2" role="doc-backlink">A world makes the data</a><a class="headerlink" href="#a-world-makes-the-data" title="Link to this heading">#</a></h2>
-<p>A <a class="reference internal" href="../reference/api/fips.Problem.html#fips.Problem" title="fips.Problem"><code class="xref py py-class docutils literal notranslate"><span class="pre">Problem</span></code></a> is a world through <a class="reference internal" href="../reference/api/fips.Problem.simulate.html#fips.Problem.simulate" title="fips.Problem.simulate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">simulate()</span></code></a>: it
-draws a truth from its prior, <span class="math notranslate nohighlight">\(x \sim N(x_0, S_0)\)</span>, and the observations
-that truth gives, <span class="math notranslate nohighlight">\(z = H x + c + e\)</span> with <span class="math notranslate nohighlight">\(e \sim N(0, S_z)\)</span>, and
-returns the two as vectors. <a class="reference internal" href="../reference/api/fips.Problem.predict.html#fips.Problem.predict" title="fips.Problem.predict"><code class="xref py py-meth docutils literal notranslate"><span class="pre">predict()</span></code></a> is the same without
-the error. The draws are <a class="reference internal" href="../reference/api/fips.Covariance.sample.html#fips.Covariance.sample" title="fips.Covariance.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Covariance.sample</span></code></a>,
-which draws from <span class="math notranslate nohighlight">\(N(0, S)\)</span> without forming <span class="math notranslate nohighlight">\(S\)</span> where its form has a
-cheaper root (a Kronecker covariance draws through its factors). The inversion
-then runs on the world’s data with <code class="docutils literal notranslate"><span class="pre">post.with_data(obs)</span></code>, which costs one
-product, not a new solve, because the factorization depends on where the
-observations are and how uncertain they are, not on their values:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [19]: </span><span class="n">truth</span><span class="p">,</span> <span class="n">obs</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span>
+<p><strong>A</strong> <a class="reference internal" href="../reference/api/fips.Problem.html#fips.Problem" title="fips.Problem"><code class="xref py py-class docutils literal notranslate"><span class="pre">Problem</span></code></a> <strong>is a world.</strong> <a class="reference internal" href="../reference/api/fips.Problem.simulate.html#fips.Problem.simulate" title="fips.Problem.simulate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">simulate()</span></code></a>
+draws a truth from its prior, <span class="math notranslate nohighlight">\(x \sim N(x_0, S_0)\)</span>, and the
+observations that truth gives, <span class="math notranslate nohighlight">\(z = H x + c + e\)</span> with <span class="math notranslate nohighlight">\(e \sim
+N(0, S_z)\)</span>, and returns the two as vectors (<a class="reference internal" href="../reference/api/fips.Problem.predict.html#fips.Problem.predict" title="fips.Problem.predict"><code class="xref py py-meth docutils literal notranslate"><span class="pre">predict()</span></code></a> is
+the same without the error). The inversion then solves the world’s data with
+<code class="docutils literal notranslate"><span class="pre">post.with_data(obs)</span></code>, which costs one product, not a new solve:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [17]: </span><span class="n">truth</span><span class="p">,</span> <span class="n">obs</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span>
 
-<span class="gp">In [20]: </span><span class="n">trial</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">with_data</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
+<span class="gp">In [18]: </span><span class="n">trial</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">with_data</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
 
-<span class="gp">In [21]: </span><span class="n">miss</span> <span class="o">=</span> <span class="p">(</span><span class="n">W</span> <span class="o">@</span> <span class="n">trial</span><span class="o">.</span><span class="n">estimate</span> <span class="o">-</span> <span class="n">W</span> <span class="o">@</span> <span class="n">truth</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
+<span class="gp">In [19]: </span><span class="n">miss</span> <span class="o">=</span> <span class="p">(</span><span class="n">W</span> <span class="o">@</span> <span class="n">trial</span><span class="o">.</span><span class="n">estimate</span> <span class="o">-</span> <span class="n">W</span> <span class="o">@</span> <span class="n">truth</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
 
-<span class="gp">In [22]: </span><span class="n">claimed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+<span class="gp">In [20]: </span><span class="n">claimed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
 
-<span class="gp">In [23]: </span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">"miss"</span><span class="p">:</span> <span class="n">miss</span><span class="p">,</span> <span class="s2">"claimed_std"</span><span class="p">:</span> <span class="n">claimed</span><span class="p">},</span> <span class="n">index</span><span class="o">=</span><span class="n">months</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-<span class="gh">Out[23]: </span>
+<span class="gp">In [21]: </span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">"miss"</span><span class="p">:</span> <span class="n">miss</span><span class="p">,</span> <span class="s2">"claimed_std"</span><span class="p">:</span> <span class="n">claimed</span><span class="p">},</span> <span class="n">index</span><span class="o">=</span><span class="n">months</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gh">Out[21]: </span>
 <span class="go">             miss  claimed_std</span>
 <span class="go">month                         </span>
 <span class="go">2024-01-01  0.183        0.203</span>
@@ -623,40 +636,40 @@ observations are and how uncertain they are, not on their values:</p>
 <span class="go">2024-03-01 -0.128        0.205</span>
 </pre></div>
 </div>
-<p>One trial says little; its point is the shape of every experiment: the world
+<p>One trial says little. Its point is the shape of every experiment: the world
 makes the data, the inversion solves them with its own assumptions, and the
-totals of the two are compared. There are four kinds of world, and each is a
-<code class="docutils literal notranslate"><span class="pre">Problem</span></code> or a given truth:</p>
+aggregates of the two are compared. There are four kinds of world:</p>
 <ul class="simple">
 <li><p><strong>The problem itself</strong>, <code class="docutils literal notranslate"><span class="pre">problem.simulate(rng)</span></code>: the inversion’s
 assumptions are true. The test is whether it is honest.</p></li>
-<li><p><strong>A chosen truth</strong>, <code class="docutils literal notranslate"><span class="pre">problem.simulate(rng,</span> <span class="pre">truth=inventory)</span></code>: another
-inventory, or 1.5 times the prior, on the prior’s labels in any order. Only
-the observation error is drawn. The test is how much of that truth is
-recovered.</p></li>
-<li><p><strong>One input wrong</strong>, <code class="docutils literal notranslate"><span class="pre">build_problem(obs_std=1.2).simulate(rng)</span></code>: your
-builder with one argument changed (the mismatch, the background, the prior
-spread, a forward operator scaled by a transport error). The inversion keeps
-its assumptions; the test is what the wrong input costs.</p></li>
-<li><p><strong>Another observing system</strong>: a separate <code class="docutils literal notranslate"><span class="pre">Problem</span></code> with other observations
-and its own solve, compared on the uncertainty of the totals
+<li><p><strong>A chosen truth</strong>, <code class="docutils literal notranslate"><span class="pre">problem.simulate(rng,</span> <span class="pre">truth=x)</span></code>: another prior
+estimate, or 1.5 times the prior, on the prior’s labels in any order. Only
+the observation error is drawn. The test is how much of that truth the
+inversion recovers.</p></li>
+<li><p><strong>One input wrong</strong>, <code class="docutils literal notranslate"><span class="pre">build_problem(obs_std=1.2).simulate(rng)</span></code>: the
+builder with one argument changed (the observation error, the offset, the
+prior spread, a forward operator scaled by a model error). The inversion
+keeps its own assumptions; the test is what the wrong input costs.</p></li>
+<li><p><strong>Another observing system</strong>: a separate problem with other observations
+and its own solve, compared on the uncertainty of the aggregates
 (<a class="reference internal" href="../reference/api/fips.Posterior.uncertainty.html#fips.Posterior.uncertainty" title="fips.Posterior.uncertainty"><code class="xref py py-meth docutils literal notranslate"><span class="pre">uncertainty()</span></code></a>, <a class="reference internal" href="../reference/api/fips.Posterior.data_worth.html#fips.Posterior.data_worth" title="fips.Posterior.data_worth"><code class="xref py py-meth docutils literal notranslate"><span class="pre">data_worth()</span></code></a>).
-No synthetic data is needed for that comparison.</p></li>
+That comparison needs no synthetic data.</p></li>
 </ul>
 <p>A world whose truth is not a Gaussian draw, or whose error changes from trial
-to trial in a way no covariance describes, is a function: <a class="reference internal" href="#function-worlds"><span class="std std-ref">Worlds no Problem can describe</span></a>.</p>
+to trial in a way no covariance describes, is a function:
+<a class="reference internal" href="#function-worlds"><span class="std std-ref">Worlds no Problem can describe</span></a>.</p>
 </section>
 <section id="the-exact-answer">
 <h2><a class="toc-backref" href="#id3" role="doc-backlink">The exact answer</a><a class="headerlink" href="#the-exact-answer" title="Link to this heading">#</a></h2>
-<p>The analytic method’s estimate is linear in the observations,
-<span class="math notranslate nohighlight">\(\hat{x} = x_0 + K (z - H x_0 - c)\)</span>, so when a Gaussian world makes the
-data, the error of every total is Gaussian too, and its mean and covariance
-have a closed form. <a class="reference internal" href="../reference/api/fips.Posterior.recovery.html#fips.Posterior.recovery" title="fips.Posterior.recovery"><code class="xref py py-meth docutils literal notranslate"><span class="pre">recovery()</span></code></a> returns that form, one
-row per total: no trials, no sampling noise.</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [24]: </span><span class="n">honest</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">recovery</span><span class="p">(</span><span class="n">W</span><span class="o">=</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="s2">"block"</span><span class="p">)</span>
+<p><strong>For the analytic method,</strong> <a class="reference internal" href="../reference/api/fips.Posterior.recovery.html#fips.Posterior.recovery" title="fips.Posterior.recovery"><code class="xref py py-meth docutils literal notranslate"><span class="pre">recovery()</span></code></a> <strong>gives the
+answer of every trial at once.</strong> The estimate is linear in the observations,
+so when a Gaussian world makes the data, the error of every aggregate is
+Gaussian too, with a mean and a spread in closed form: no trials, no
+sampling noise. One row per aggregate:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [22]: </span><span class="n">honest</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">recovery</span><span class="p">(</span><span class="n">W</span><span class="o">=</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="s2">"block"</span><span class="p">)</span>
 
-<span class="gp">In [25]: </span><span class="n">honest</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-<span class="gh">Out[25]: </span>
+<span class="gp">In [23]: </span><span class="n">honest</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gh">Out[23]: </span>
 <span class="go">            prior  truth  estimate  bias    std  posterior_std  coverage</span>
 <span class="go">month                                                                   </span>
 <span class="go">2024-01-01    4.0    4.0       4.0   0.0  0.203          0.203      0.95</span>
@@ -666,24 +679,25 @@ row per total: no trials, no sampling noise.</p>
 </div>
 <p>The columns are the performance measures of a simulation study:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">bias</span></code>, the mean of <code class="docutils literal notranslate"><span class="pre">estimate</span> <span class="pre">-</span> <span class="pre">truth</span></code>: zero when the inversion’s
-assumptions hold at <code class="docutils literal notranslate"><span class="pre">gamma</span></code> 1.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">std</span></code>, the real spread of the error over worlds (the empirical standard
-error).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">posterior_std</span></code>, the spread the inversion claims (the model standard
-error, <span class="math notranslate nohighlight">\(\sqrt{\operatorname{diag} W \hat{S} W^T}\)</span>).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">coverage</span></code>, the probability that the posterior’s interval at <code class="docutils literal notranslate"><span class="pre">level</span></code>
-holds the truth: 0.95 for an honest inversion at the default level.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bias</span></code>: the mean of <code class="docutils literal notranslate"><span class="pre">estimate</span> <span class="pre">-</span> <span class="pre">truth</span></code>, zero when the inversion’s
+assumptions hold at a gamma of 1;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">std</span></code>: the real spread of the error over worlds (the empirical standard
+error);</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">posterior_std</span></code>: the spread the inversion claims (the model standard
+error, <span class="math notranslate nohighlight">\(\sqrt{\operatorname{diag} W \hat{S} W^T}\)</span>);</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">coverage</span></code>: the probability that the posterior’s interval at <code class="docutils literal notranslate"><span class="pre">level</span></code>
+(0.95 by default) holds the truth.</p></li>
 </ul>
-<p>In its own world the bias is zero, <code class="docutils literal notranslate"><span class="pre">std</span></code> equals <code class="docutils literal notranslate"><span class="pre">posterior_std</span></code>, and the
-coverage is the level. Each other world is the same call with the world as the
-first argument. The world’s mismatch four times what the inversion assumes
-makes the inversion overconfident: the real spread is larger than the claimed
-one, and the 95% interval holds the truth far less often than claimed:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [26]: </span><span class="n">noisy</span> <span class="o">=</span> <span class="n">build_problem</span><span class="p">(</span><span class="n">obs_std</span><span class="o">=</span><span class="mf">1.2</span><span class="p">)</span>
+<p>In its own world, as here, the bias is zero, <code class="docutils literal notranslate"><span class="pre">std</span></code> equals
+<code class="docutils literal notranslate"><span class="pre">posterior_std</span></code>, and the coverage is the level. <strong>Any other world is the
+same call with the world as the first argument.</strong> A world whose observation
+error is four times what the inversion assumes makes the inversion
+overconfident: the real spread is larger than the claimed one, and the
+interval holds the truth far less often than it claims:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [24]: </span><span class="n">noisy</span> <span class="o">=</span> <span class="n">build_problem</span><span class="p">(</span><span class="n">obs_std</span><span class="o">=</span><span class="mf">1.2</span><span class="p">)</span>
 
-<span class="gp">In [27]: </span><span class="n">post</span><span class="o">.</span><span class="n">recovery</span><span class="p">(</span><span class="n">noisy</span><span class="p">,</span> <span class="n">W</span><span class="o">=</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="s2">"block"</span><span class="p">)[[</span><span class="s2">"bias"</span><span class="p">,</span> <span class="s2">"std"</span><span class="p">,</span> <span class="s2">"posterior_std"</span><span class="p">,</span> <span class="s2">"coverage"</span><span class="p">]]</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-<span class="gh">Out[27]: </span>
+<span class="gp">In [25]: </span><span class="n">post</span><span class="o">.</span><span class="n">recovery</span><span class="p">(</span><span class="n">noisy</span><span class="p">,</span> <span class="n">W</span><span class="o">=</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="s2">"block"</span><span class="p">)[[</span><span class="s2">"bias"</span><span class="p">,</span> <span class="s2">"std"</span><span class="p">,</span> <span class="s2">"posterior_std"</span><span class="p">,</span> <span class="s2">"coverage"</span><span class="p">]]</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gh">Out[25]: </span>
 <span class="go">            bias    std  posterior_std  coverage</span>
 <span class="go">month                                           </span>
 <span class="go">2024-01-01   0.0  0.772          0.203     0.393</span>
@@ -691,25 +705,24 @@ one, and the 95% interval holds the truth far less often than claimed:</p>
 <span class="go">2024-03-01   0.0  0.794          0.205     0.388</span>
 </pre></div>
 </div>
-<p>A chosen truth fixes the state and leaves only the observation error random.
-With 1.5 times the prior, the bias is the part of the change the inversion does
-not recover, and <code class="docutils literal notranslate"><span class="pre">(estimate</span> <span class="pre">-</span> <span class="pre">prior)</span> <span class="pre">/</span> <span class="pre">(truth</span> <span class="pre">-</span> <span class="pre">prior)</span></code> is the recovered
-fraction. A second inversion, whose prior is trusted five times more, shows
-what regularization costs: it pulls the estimate back toward the prior it
-believes, and recovers about three quarters of a change it did not expect
-where the first recovers nearly all of it:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [28]: </span><span class="n">bigger</span> <span class="o">=</span> <span class="mf">1.5</span> <span class="o">*</span> <span class="n">prior</span>
+<p><strong>A chosen truth</strong> fixes the state and leaves only the observation error
+random. With 1.5 times the prior, the bias is the part of the change the
+inversion does not recover, and <code class="docutils literal notranslate"><span class="pre">(estimate</span> <span class="pre">-</span> <span class="pre">prior)</span> <span class="pre">/</span> <span class="pre">(truth</span> <span class="pre">-</span> <span class="pre">prior)</span></code> is
+the fraction it does. A second inversion, whose prior spread is five times
+smaller, shows what a tight prior costs: it pulls the estimate back toward a
+prior it trusts, and recovers less of a change it did not expect:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [26]: </span><span class="n">bigger</span> <span class="o">=</span> <span class="mf">1.5</span> <span class="o">*</span> <span class="n">prior</span>
 
-<span class="gp">In [29]: </span><span class="n">post_tight</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">build_problem</span><span class="p">(</span><span class="n">prior_std</span><span class="o">=</span><span class="mf">0.1</span><span class="p">))</span>
+<span class="gp">In [27]: </span><span class="n">post_tight</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">build_problem</span><span class="p">(</span><span class="n">prior_std</span><span class="o">=</span><span class="mf">0.1</span><span class="p">))</span>
 
-<span class="gp">In [30]: </span><span class="k">def</span><span class="w"> </span><span class="nf">recovered</span><span class="p">(</span><span class="n">post</span><span class="p">):</span>
+<span class="gp">In [28]: </span><span class="k">def</span><span class="w"> </span><span class="nf">recovered</span><span class="p">(</span><span class="n">post</span><span class="p">):</span>
 <span class="gp">   ....: </span><span class="w">    </span><span class="sd">"""Return the fraction of the change from the prior to `bigger` that `post` recovers."""</span>
 <span class="gp">   ....: </span>    <span class="n">table</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">recovery</span><span class="p">(</span><span class="n">truth</span><span class="o">=</span><span class="n">bigger</span><span class="p">,</span> <span class="n">W</span><span class="o">=</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="s2">"block"</span><span class="p">)</span>
 <span class="gp">   ....: </span>    <span class="k">return</span> <span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="s2">"estimate"</span><span class="p">]</span> <span class="o">-</span> <span class="n">table</span><span class="p">[</span><span class="s2">"prior"</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="s2">"truth"</span><span class="p">]</span> <span class="o">-</span> <span class="n">table</span><span class="p">[</span><span class="s2">"prior"</span><span class="p">])</span>
 <span class="gp">   ....: </span>
 
-<span class="gp">In [31]: </span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">"loose prior"</span><span class="p">:</span> <span class="n">recovered</span><span class="p">(</span><span class="n">post</span><span class="p">),</span> <span class="s2">"tight prior"</span><span class="p">:</span> <span class="n">recovered</span><span class="p">(</span><span class="n">post_tight</span><span class="p">)})</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-<span class="gh">Out[31]: </span>
+<span class="gp">In [29]: </span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">"loose prior"</span><span class="p">:</span> <span class="n">recovered</span><span class="p">(</span><span class="n">post</span><span class="p">),</span> <span class="s2">"tight prior"</span><span class="p">:</span> <span class="n">recovered</span><span class="p">(</span><span class="n">post_tight</span><span class="p">)})</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gh">Out[29]: </span>
 <span class="go">            loose prior  tight prior</span>
 <span class="go">month                               </span>
 <span class="go">2024-01-01        0.980        0.743</span>
@@ -717,79 +730,80 @@ where the first recovers nearly all of it:</p>
 <span class="go">2024-03-01        0.981        0.737</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">recovery</span></code> takes a world with the posterior’s observation labels, a method
-whose estimate is linear in the observations, and a Gaussian or fixed truth. A
-world whose state has other labels is compared on totals that both add up to
-(<a class="reference internal" href="#other-state-labels"><span class="std std-ref">A world on other state labels</span></a>). Everything else is a loop.</p>
+<p><code class="docutils literal notranslate"><span class="pre">recovery</span></code> needs a world whose forward map is an operator, with the
+posterior’s observation labels, and a Gaussian or fixed truth. It needs an
+estimate linear in the observations, which only the analytic method gives
+(the <a class="reference internal" href="../reference/posterior.html#posterior-members"><span class="std std-ref">members table</span></a>); any other method raises
+<a class="reference internal" href="../reference/api/fips.UnavailableError.html#fips.UnavailableError" title="fips.UnavailableError"><code class="xref py py-class docutils literal notranslate"><span class="pre">UnavailableError</span></code></a>. A world whose state has other labels is
+compared on aggregates both states add up to (<a class="reference internal" href="#other-state-labels"><span class="std std-ref">A world on other state labels</span></a>).
+Everything else is a loop of trials.</p>
 </section>
 <section id="when-you-need-trials">
 <h2><a class="toc-backref" href="#id4" role="doc-backlink">When you need trials</a><a class="headerlink" href="#when-you-need-trials" title="Link to this heading">#</a></h2>
-<p>Three things have no closed form: a statistic <code class="docutils literal notranslate"><span class="pre">recovery</span></code> does not give (the
-reduced chi-squared of each trial), a world whose truth is not Gaussian or
-whose error is not additive, and a method whose estimate is not linear in the
-observations. For those, sample: <a class="reference internal" href="../reference/api/fips.Posterior.trials.html#fips.Posterior.trials" title="fips.Posterior.trials"><code class="xref py py-meth docutils literal notranslate"><span class="pre">post.trials</span></code></a>
+<p><strong>Three things have no exact answer</strong>: a statistic <code class="docutils literal notranslate"><span class="pre">recovery</span></code> does not give
+(the reduced chi-squared of each trial), a world whose truth is not Gaussian
+or whose error is not additive, and a method whose estimate is not linear in
+the observations. For those, sample. <a class="reference internal" href="../reference/api/fips.Posterior.trials.html#fips.Posterior.trials" title="fips.Posterior.trials"><code class="xref py py-meth docutils literal notranslate"><span class="pre">post.trials</span></code></a>
 is the loop <code class="docutils literal notranslate"><span class="pre">recovery</span></code> answers exactly, kept trial by trial. It takes the
-same arguments (the world, <code class="docutils literal notranslate"><span class="pre">W</span></code> and <code class="docutils literal notranslate"><span class="pre">W_world</span></code>), plus the number of trials
-and a seed. Each trial the world makes the data, the inversion solves them
-with <code class="docutils literal notranslate"><span class="pre">with_data</span></code>, and the totals of the two go into one row per total:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [32]: </span><span class="n">table</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">trials</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="mi">400</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">W</span><span class="o">=</span><span class="n">W</span><span class="p">)</span>
+same world, <code class="docutils literal notranslate"><span class="pre">W</span></code> and <code class="docutils literal notranslate"><span class="pre">W_world</span></code>, plus the number of trials and a seed. In
+each trial the world makes the data, the inversion solves them with
+<code class="docutils literal notranslate"><span class="pre">with_data</span></code>, and the aggregates of the two go into one row per aggregate:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [30]: </span><span class="n">table</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">trials</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="mi">400</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">W</span><span class="o">=</span><span class="n">W</span><span class="p">)</span>
 
-<span class="gp">In [33]: </span><span class="n">table</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
-<span class="gh">Out[33]: </span>
+<span class="gp">In [31]: </span><span class="n">table</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+<span class="gh">Out[31]: </span>
 <span class="go">                           truth  estimate  posterior_std     lower     upper  reduced_chi2</span>
 <span class="go">trial block month                                                                          </span>
-<span class="go">0     flux  2024-01-01  4.461368  4.261741       0.202810  3.864241  4.659241      0.671470</span>
+<span class="go">0     field 2024-01-01  4.461368  4.261741       0.202810  3.864241  4.659241      0.671470</span>
 <span class="go">            2024-02-01  5.188488  5.270503       0.224721  4.830058  5.710948      0.671470</span>
 <span class="go">            2024-03-01  3.085033  3.099524       0.205108  2.697520  3.501527      0.671470</span>
-<span class="go">1     flux  2024-01-01  4.594656  4.688300       0.202810  4.290800  5.085800      1.303863</span>
+<span class="go">1     field 2024-01-01  4.594656  4.688300       0.202810  4.290800  5.085800      1.303863</span>
 <span class="go">            2024-02-01  5.422497  5.264394       0.224721  4.823949  5.704839      1.303863</span>
 <span class="go">            2024-03-01  6.299730  6.373827       0.205108  5.971824  6.775830      1.303863</span>
 </pre></div>
 </div>
-<p>The table is long: one row per trial and total, with the spread the posterior
-claims, its 95% interval (<code class="docutils literal notranslate"><span class="pre">lower</span></code> and <code class="docutils literal notranslate"><span class="pre">upper</span></code>, the draws’ quantiles for a
-sampled posterior) and the trial’s reduced chi-squared, so pandas does the rest. The
-performance measures come from a <code class="docutils literal notranslate"><span class="pre">groupby</span></code> over the totals, with the Monte
-Carlo standard error of each (Morris, White and Crowther, 2019): with <code class="docutils literal notranslate"><span class="pre">n</span></code>
-trials a bias is known to <code class="docutils literal notranslate"><span class="pre">std</span> <span class="pre">/</span> <span class="pre">sqrt(n)</span></code> and a coverage near 0.95 to about
-<code class="docutils literal notranslate"><span class="pre">0.22</span> <span class="pre">/</span> <span class="pre">sqrt(n)</span></code>.</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [34]: </span><span class="k">def</span><span class="w"> </span><span class="nf">performance</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="mf">0.95</span><span class="p">):</span>
+<p>The table is long: one row per trial and aggregate, with the spread the
+posterior claims, its interval (<code class="docutils literal notranslate"><span class="pre">lower</span></code> and <code class="docutils literal notranslate"><span class="pre">upper</span></code>, as
+<a class="reference internal" href="../reference/api/fips.Posterior.uncertainty.html#fips.Posterior.uncertainty" title="fips.Posterior.uncertainty"><code class="xref py py-meth docutils literal notranslate"><span class="pre">uncertainty()</span></code></a> gives them: the kept draws’ quantiles for
+a sampled posterior) and the trial’s reduced chi-squared. pandas does the
+rest. The performance measures are a <code class="docutils literal notranslate"><span class="pre">groupby</span></code> over the aggregates, each
+with its Monte Carlo standard error (Morris, White and Crowther, 2019): with
+<code class="docutils literal notranslate"><span class="pre">n</span></code> trials a bias is known to <code class="docutils literal notranslate"><span class="pre">std</span> <span class="pre">/</span> <span class="pre">sqrt(n)</span></code>, and a coverage near 0.95 to
+about <code class="docutils literal notranslate"><span class="pre">0.22</span> <span class="pre">/</span> <span class="pre">sqrt(n)</span></code>.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [32]: </span><span class="k">def</span><span class="w"> </span><span class="nf">performance</span><span class="p">(</span><span class="n">table</span><span class="p">):</span>
 <span class="gp">   ....: </span><span class="w">    </span><span class="sd">"""Return recovery's columns from a table of trials, with their Monte Carlo standard errors."""</span>
-<span class="gp">   ....: </span>    <span class="n">z</span> <span class="o">=</span> <span class="n">norm</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">level</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+<span class="gp">   ....: </span>    <span class="n">by</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">names</span> <span class="k">if</span> <span class="n">name</span> <span class="o">!=</span> <span class="s2">"trial"</span><span class="p">]</span>  <span class="c1"># the aggregates</span>
+<span class="gp">   ....: </span>    <span class="k">def</span><span class="w"> </span><span class="nf">per_row</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>  <span class="c1"># dropna=False: a level a block lacks is NaN</span>
+<span class="gp">   ....: </span>        <span class="k">return</span> <span class="n">values</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">by</span><span class="p">,</span> <span class="n">dropna</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="gp">   ....: </span>    <span class="n">error</span> <span class="o">=</span> <span class="n">table</span><span class="p">[</span><span class="s2">"estimate"</span><span class="p">]</span> <span class="o">-</span> <span class="n">table</span><span class="p">[</span><span class="s2">"truth"</span><span class="p">]</span>
-<span class="gp">   ....: </span>    <span class="n">inside</span> <span class="o">=</span> <span class="n">error</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="n">z</span> <span class="o">*</span> <span class="n">table</span><span class="p">[</span><span class="s2">"posterior_std"</span><span class="p">]</span>
-<span class="gp">   ....: </span>    <span class="n">by</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">names</span> <span class="k">if</span> <span class="n">name</span> <span class="o">!=</span> <span class="s2">"trial"</span><span class="p">]</span>  <span class="c1"># the totals</span>
-<span class="gp">   ....: </span>    <span class="n">n</span> <span class="o">=</span> <span class="n">error</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">by</span><span class="p">,</span> <span class="n">dropna</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
+<span class="gp">   ....: </span>    <span class="n">inside</span> <span class="o">=</span> <span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="s2">"lower"</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">table</span><span class="p">[</span><span class="s2">"truth"</span><span class="p">])</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="s2">"truth"</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">table</span><span class="p">[</span><span class="s2">"upper"</span><span class="p">])</span>
 <span class="gp">   ....: </span>    <span class="n">out</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
-<span class="gp">   ....: </span>        <span class="s2">"bias"</span><span class="p">:</span> <span class="n">error</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">by</span><span class="p">,</span> <span class="n">dropna</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
-<span class="gp">   ....: </span>        <span class="s2">"std"</span><span class="p">:</span> <span class="n">error</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">by</span><span class="p">,</span> <span class="n">dropna</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">std</span><span class="p">(),</span>
-<span class="gp">   ....: </span>        <span class="s2">"posterior_std"</span><span class="p">:</span> <span class="n">table</span><span class="p">[</span><span class="s2">"posterior_std"</span><span class="p">]</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">by</span><span class="p">,</span> <span class="n">dropna</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">(),</span>
-<span class="gp">   ....: </span>        <span class="s2">"coverage"</span><span class="p">:</span> <span class="n">inside</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">by</span><span class="p">,</span> <span class="n">dropna</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
-<span class="gp">   ....: </span>        <span class="s2">"reduced_chi2"</span><span class="p">:</span> <span class="n">table</span><span class="p">[</span><span class="s2">"reduced_chi2"</span><span class="p">]</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">by</span><span class="p">,</span> <span class="n">dropna</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
+<span class="gp">   ....: </span>        <span class="s2">"bias"</span><span class="p">:</span> <span class="n">per_row</span><span class="p">(</span><span class="n">error</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
+<span class="gp">   ....: </span>        <span class="s2">"std"</span><span class="p">:</span> <span class="n">per_row</span><span class="p">(</span><span class="n">error</span><span class="p">)</span><span class="o">.</span><span class="n">std</span><span class="p">(),</span>
+<span class="gp">   ....: </span>        <span class="s2">"posterior_std"</span><span class="p">:</span> <span class="n">per_row</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="s2">"posterior_std"</span><span class="p">])</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
+<span class="gp">   ....: </span>        <span class="s2">"coverage"</span><span class="p">:</span> <span class="n">per_row</span><span class="p">(</span><span class="n">inside</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
+<span class="gp">   ....: </span>        <span class="s2">"reduced_chi2"</span><span class="p">:</span> <span class="n">per_row</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="s2">"reduced_chi2"</span><span class="p">])</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
 <span class="gp">   ....: </span>    <span class="p">})</span>
-<span class="gp">   ....: </span>    <span class="n">out</span><span class="p">[</span><span class="s2">"bias_se"</span><span class="p">]</span> <span class="o">=</span> <span class="n">out</span><span class="p">[</span><span class="s2">"std"</span><span class="p">]</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
-<span class="gp">   ....: </span>    <span class="n">out</span><span class="p">[</span><span class="s2">"coverage_se"</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">out</span><span class="p">[</span><span class="s2">"coverage"</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">out</span><span class="p">[</span><span class="s2">"coverage"</span><span class="p">])</span> <span class="o">/</span> <span class="n">n</span><span class="p">)</span>
-<span class="gp">   ....: </span>    <span class="k">return</span> <span class="n">out</span>
+<span class="gp">   ....: </span>    <span class="n">n</span> <span class="o">=</span> <span class="n">per_row</span><span class="p">(</span><span class="n">error</span><span class="p">)</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
+<span class="gp">   ....: </span>    <span class="k">return</span> <span class="n">out</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">bias_se</span><span class="o">=</span><span class="n">out</span><span class="p">[</span><span class="s2">"std"</span><span class="p">]</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">coverage_se</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">out</span><span class="p">[</span><span class="s2">"coverage"</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">out</span><span class="p">[</span><span class="s2">"coverage"</span><span class="p">])</span> <span class="o">/</span> <span class="n">n</span><span class="p">))</span>
 <span class="gp">   ....: </span>
 </pre></div>
 </div>
 <p>The honest world, sampled and exact, side by side. The sampled coverage is
-within its standard error of 0.95, and the reduced chi-squared averages 1, the
-one number the exact table does not have:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [35]: </span><span class="n">sampled</span> <span class="o">=</span> <span class="n">performance</span><span class="p">(</span><span class="n">table</span><span class="p">)</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="s2">"block"</span><span class="p">)</span>
+within its standard error of the exact one, and the reduced chi-squared
+averages 1, the one number the exact table does not have:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [33]: </span><span class="n">sampled</span> <span class="o">=</span> <span class="n">performance</span><span class="p">(</span><span class="n">table</span><span class="p">)</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="s2">"block"</span><span class="p">)</span>
 
-<span class="gp">In [36]: </span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">"sampled"</span><span class="p">:</span> <span class="n">sampled</span><span class="p">[</span><span class="s2">"coverage"</span><span class="p">],</span> <span class="s2">"exact"</span><span class="p">:</span> <span class="n">honest</span><span class="p">[</span><span class="s2">"coverage"</span><span class="p">],</span>
-<span class="gp">   ....: </span>              <span class="s2">"se"</span><span class="p">:</span> <span class="n">sampled</span><span class="p">[</span><span class="s2">"coverage_se"</span><span class="p">]})</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-<span class="gp">   ....: </span>
-<span class="gh">Out[36]: </span>
+<span class="gp">In [34]: </span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">"sampled"</span><span class="p">:</span> <span class="n">sampled</span><span class="p">[</span><span class="s2">"coverage"</span><span class="p">],</span> <span class="s2">"exact"</span><span class="p">:</span> <span class="n">honest</span><span class="p">[</span><span class="s2">"coverage"</span><span class="p">],</span> <span class="s2">"se"</span><span class="p">:</span> <span class="n">sampled</span><span class="p">[</span><span class="s2">"coverage_se"</span><span class="p">]})</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gh">Out[34]: </span>
 <span class="go">            sampled  exact     se</span>
 <span class="go">month                            </span>
 <span class="go">2024-01-01    0.960   0.95  0.010</span>
 <span class="go">2024-02-01    0.952   0.95  0.011</span>
 <span class="go">2024-03-01    0.948   0.95  0.011</span>
 
-<span class="gp">In [37]: </span><span class="n">sampled</span><span class="p">[</span><span class="s2">"reduced_chi2"</span><span class="p">]</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-<span class="gh">Out[37]: </span>
+<span class="gp">In [35]: </span><span class="n">sampled</span><span class="p">[</span><span class="s2">"reduced_chi2"</span><span class="p">]</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gh">Out[35]: </span>
 <span class="go">month</span>
 <span class="go">2024-01-01    1.0</span>
 <span class="go">2024-02-01    1.0</span>
@@ -797,10 +811,10 @@ one number the exact table does not have:</p>
 <span class="go">Name: reduced_chi2, dtype: float64</span>
 </pre></div>
 </div>
-<p>The noisy world, sampled, gives the chi-squared that says in which direction
-the mismatch is wrong, beside the coverage that says what it costs:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [38]: </span><span class="n">performance</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">trials</span><span class="p">(</span><span class="n">noisy</span><span class="p">,</span> <span class="mi">400</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">W</span><span class="o">=</span><span class="n">W</span><span class="p">))</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="s2">"block"</span><span class="p">)[[</span><span class="s2">"coverage"</span><span class="p">,</span> <span class="s2">"reduced_chi2"</span><span class="p">]]</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-<span class="gh">Out[38]: </span>
+<p>In the noisy world, the reduced chi-squared says which way the observation
+error is wrong, beside the coverage that says what it costs:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [36]: </span><span class="n">performance</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">trials</span><span class="p">(</span><span class="n">noisy</span><span class="p">,</span> <span class="mi">400</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">W</span><span class="o">=</span><span class="n">W</span><span class="p">))</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="s2">"block"</span><span class="p">)[[</span><span class="s2">"coverage"</span><span class="p">,</span> <span class="s2">"reduced_chi2"</span><span class="p">]]</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gh">Out[36]: </span>
 <span class="go">            coverage  reduced_chi2</span>
 <span class="go">month                             </span>
 <span class="go">2024-01-01     0.390        11.433</span>
@@ -809,34 +823,34 @@ the mismatch is wrong, beside the coverage that says what it costs:</p>
 </pre></div>
 </div>
 <p>Use the exact table where it applies and <code class="docutils literal notranslate"><span class="pre">trials</span></code> for what it lacks. Where
-both apply they agree within the standard errors, which is also how <code class="docutils literal notranslate"><span class="pre">trials</span></code>
-is tested.</p>
+both apply they agree within the standard errors.</p>
 </section>
 <section id="worlds-no-problem-can-describe">
 <span id="function-worlds"></span><h2><a class="toc-backref" href="#id5" role="doc-backlink">Worlds no Problem can describe</a><a class="headerlink" href="#worlds-no-problem-can-describe" title="Link to this heading">#</a></h2>
-<p>A world is anything that takes a generator and returns a truth and
-observations. <code class="docutils literal notranslate"><span class="pre">Problem.simulate</span></code> is one; a function of your own is another,
-and <code class="docutils literal notranslate"><span class="pre">trials</span></code> takes either. Two worlds a real experiment needs and a
-<code class="docutils literal notranslate"><span class="pre">Problem</span></code> cannot describe: a truth that is lognormal about the prior (so it
-stays positive and its spread scales with the prior), and an error the
-inversion cannot see, such as a transport error that scales every observation
-of a trial by one factor. Each is a few lines, since vectors do arithmetic by label:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [39]: </span><span class="n">field</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Kronecker</span><span class="p">(</span><span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">(</span><span class="s2">"month"</span><span class="p">,</span> <span class="s2">"45D"</span><span class="p">),</span> <span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">(</span><span class="s2">"x"</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">))</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.4</span><span class="p">)</span>
+<p><strong>A world is anything that takes a generator and returns a truth and
+observations.</strong> <code class="docutils literal notranslate"><span class="pre">Problem.simulate</span></code> is one; a function of your own is
+another, and <code class="docutils literal notranslate"><span class="pre">trials</span></code> takes either. Two worlds an experiment often needs
+and a problem cannot describe: a truth that is lognormal about the prior (so
+it stays positive and its spread scales with the prior), and an error the
+inversion cannot see, such as a model error that scales every observation of
+a trial by one factor. Each is a few lines, because vectors do arithmetic by
+label:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [37]: </span><span class="n">field</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Kronecker</span><span class="p">(</span><span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">(</span><span class="s2">"month"</span><span class="p">,</span> <span class="s2">"45D"</span><span class="p">),</span> <span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">(</span><span class="s2">"x"</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">))</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.4</span><span class="p">)</span>
 
-<span class="gp">In [40]: </span><span class="n">field_cov</span> <span class="o">=</span> <span class="n">field</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">)</span>
+<span class="gp">In [38]: </span><span class="n">field_cov</span> <span class="o">=</span> <span class="n">field</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">)</span>
 
-<span class="gp">In [41]: </span><span class="n">half_var</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">field_cov</span><span class="o">.</span><span class="n">variances</span>  <span class="c1"># so the truth's mean is the prior</span>
+<span class="gp">In [39]: </span><span class="n">half_var</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">field_cov</span><span class="o">.</span><span class="n">variances</span>  <span class="c1"># so the truth's mean is the prior</span>
 
-<span class="gp">In [42]: </span><span class="k">def</span><span class="w"> </span><span class="nf">lognormal_world</span><span class="p">(</span><span class="n">rng</span><span class="p">):</span>
-<span class="gp">   ....: </span><span class="w">    </span><span class="sd">"""A lognormal truth about the prior, and a transport error of 10% the inversion cannot see."""</span>
+<span class="gp">In [40]: </span><span class="k">def</span><span class="w"> </span><span class="nf">lognormal_world</span><span class="p">(</span><span class="n">rng</span><span class="p">):</span>
+<span class="gp">   ....: </span><span class="w">    </span><span class="sd">"""Return a lognormal truth about the prior, and its observations with a 10% model error the inversion cannot see."""</span>
 <span class="gp">   ....: </span>    <span class="n">truth</span> <span class="o">=</span> <span class="n">prior</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">field_cov</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span> <span class="o">-</span> <span class="n">half_var</span><span class="p">)</span>
 <span class="gp">   ....: </span>    <span class="n">scale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.10</span><span class="p">))</span>
 <span class="gp">   ....: </span>    <span class="n">obs</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">truth</span><span class="p">)</span> <span class="o">*</span> <span class="n">scale</span> <span class="o">+</span> <span class="n">problem</span><span class="o">.</span><span class="n">obs_cov</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span>
 <span class="gp">   ....: </span>    <span class="k">return</span> <span class="n">truth</span><span class="p">,</span> <span class="n">obs</span>
 <span class="gp">   ....: </span>
 
-<span class="gp">In [43]: </span><span class="n">performance</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">trials</span><span class="p">(</span><span class="n">lognormal_world</span><span class="p">,</span> <span class="mi">400</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">W</span><span class="o">=</span><span class="n">W</span><span class="p">))</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="s2">"block"</span><span class="p">)[[</span><span class="s2">"bias"</span><span class="p">,</span> <span class="s2">"std"</span><span class="p">,</span> <span class="s2">"posterior_std"</span><span class="p">,</span> <span class="s2">"coverage"</span><span class="p">]]</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-<span class="gh">Out[43]: </span>
+<span class="gp">In [41]: </span><span class="n">performance</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">trials</span><span class="p">(</span><span class="n">lognormal_world</span><span class="p">,</span> <span class="mi">400</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">W</span><span class="o">=</span><span class="n">W</span><span class="p">))</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="s2">"block"</span><span class="p">)[[</span><span class="s2">"bias"</span><span class="p">,</span> <span class="s2">"std"</span><span class="p">,</span> <span class="s2">"posterior_std"</span><span class="p">,</span> <span class="s2">"coverage"</span><span class="p">]]</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gh">Out[41]: </span>
 <span class="go">             bias    std  posterior_std  coverage</span>
 <span class="go">month                                            </span>
 <span class="go">2024-01-01  0.032  0.436          0.203     0.662</span>
@@ -844,29 +858,27 @@ of a trial by one factor. Each is a few lines, since vectors do arithmetic by la
 <span class="go">2024-03-01  0.040  0.442          0.205     0.665</span>
 </pre></div>
 </div>
-<p>The error the inversion cannot see lands in the totals: the real spread is
-twice the claimed one, and the 95% interval holds the truth two times in three.
-The bias is small and positive because the transport factor averages a little
-above one (it is the exponential of a zero-mean normal).</p>
-<p>A truth with a chosen amplitude, a seasonal cycle or a sector-by-sector factor
-is the same kind of function. What the world does is yours to write; what fips
-gives is the draw from any of its covariance models (<a class="reference internal" href="../reference/api/fips.Covariance.sample.html#fips.Covariance.sample" title="fips.Covariance.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Covariance.sample</span></code></a>), the noise-free observations of any truth
-(<a class="reference internal" href="../reference/api/fips.Problem.predict.html#fips.Problem.predict" title="fips.Problem.predict"><code class="xref py py-meth docutils literal notranslate"><span class="pre">predict()</span></code></a>), and the solve of any data at the cost of a
-product (<a class="reference internal" href="../reference/api/fips.Posterior.with_data.html#fips.Posterior.with_data" title="fips.Posterior.with_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">with_data()</span></code></a>).</p>
+<p>The error the inversion cannot see lands in the aggregates: the real spread
+is well above the claimed one, and the interval holds the truth much less
+often than it claims.</p>
+<p>A truth with a chosen amplitude, a seasonal cycle or a factor per part of the
+state is the same kind of function. What the world does is yours to write.
+What fips gives is a draw from any of its covariance models
+(<a class="reference internal" href="../reference/api/fips.Covariance.sample.html#fips.Covariance.sample" title="fips.Covariance.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Covariance.sample</span></code></a>), the noise-free
+observations of any truth (<a class="reference internal" href="../reference/api/fips.Problem.predict.html#fips.Problem.predict" title="fips.Problem.predict"><code class="xref py py-meth docutils literal notranslate"><span class="pre">predict()</span></code></a>), and the solve of
+any data for the cost of a product (<a class="reference internal" href="../reference/api/fips.Posterior.with_data.html#fips.Posterior.with_data" title="fips.Posterior.with_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">with_data()</span></code></a>).</p>
 </section>
 <section id="two-inversions-on-the-same-data">
 <h2><a class="toc-backref" href="#id6" role="doc-backlink">Two inversions on the same data</a><a class="headerlink" href="#two-inversions-on-the-same-data" title="Link to this heading">#</a></h2>
-<p>To compare two inversions, give them the same data. The world does not depend
-on the inversion, so the same seed gives both the same truths and the same
-observations, trial for trial; <code class="docutils literal notranslate"><span class="pre">pd.concat</span></code> with a key pairs them. Here the
-two inversions above, the loose prior and the tight one, are compared on the
-honest world of the first:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [44]: </span><span class="n">both</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">({</span><span class="s2">"loose"</span><span class="p">:</span> <span class="n">post</span><span class="o">.</span><span class="n">trials</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="mi">400</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">W</span><span class="o">=</span><span class="n">W</span><span class="p">),</span>
-<span class="gp">   ....: </span>                  <span class="s2">"tight"</span><span class="p">:</span> <span class="n">post_tight</span><span class="o">.</span><span class="n">trials</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="mi">400</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">W</span><span class="o">=</span><span class="n">W</span><span class="p">)},</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">"inversion"</span><span class="p">])</span>
-<span class="gp">   ....: </span>
+<p><strong>To compare two inversions, give them the same data.</strong> The world does not
+depend on the inversion, so the same seed gives both the same truths and the
+same observations, trial for trial, and <code class="docutils literal notranslate"><span class="pre">pd.concat</span></code> with a key pairs them.
+Here the loose prior and the tight one, in the honest world of the loose
+one:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [42]: </span><span class="n">both</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">({</span><span class="s2">"loose"</span><span class="p">:</span> <span class="n">post</span><span class="o">.</span><span class="n">trials</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="mi">400</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">W</span><span class="o">=</span><span class="n">W</span><span class="p">),</span> <span class="s2">"tight"</span><span class="p">:</span> <span class="n">post_tight</span><span class="o">.</span><span class="n">trials</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="mi">400</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">W</span><span class="o">=</span><span class="n">W</span><span class="p">)},</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">"inversion"</span><span class="p">])</span>
 
-<span class="gp">In [45]: </span><span class="n">performance</span><span class="p">(</span><span class="n">both</span><span class="p">)</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="s2">"block"</span><span class="p">)[[</span><span class="s2">"bias"</span><span class="p">,</span> <span class="s2">"std"</span><span class="p">,</span> <span class="s2">"posterior_std"</span><span class="p">,</span> <span class="s2">"coverage"</span><span class="p">]]</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-<span class="gh">Out[45]: </span>
+<span class="gp">In [43]: </span><span class="n">performance</span><span class="p">(</span><span class="n">both</span><span class="p">)</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="s2">"block"</span><span class="p">)[[</span><span class="s2">"bias"</span><span class="p">,</span> <span class="s2">"std"</span><span class="p">,</span> <span class="s2">"posterior_std"</span><span class="p">,</span> <span class="s2">"coverage"</span><span class="p">]]</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gh">Out[43]: </span>
 <span class="go">                       bias    std  posterior_std  coverage</span>
 <span class="go">inversion month                                            </span>
 <span class="go">loose     2024-01-01  0.007  0.202          0.203     0.960</span>
@@ -877,58 +889,58 @@ honest world of the first:</p>
 <span class="go">          2024-03-01 -0.022  0.493          0.153     0.425</span>
 </pre></div>
 </div>
-<p>In a world drawn from the loose prior, the tight inversion has no bias on
-average but claims a third of the spread it has, so its 95% interval holds the
-truth less than half the time: the prior it trusts is not the one the world
-drew from. <a class="reference internal" href="comparison.html"><span class="doc">Choosing a method</span></a> pairs four methods this way.</p>
+<p>The tight inversion has no bias on average, but it claims much less spread
+than it has, so its interval holds the truth far less often than it claims:
+the prior it trusts is not the one the world drew from.
+<a class="reference internal" href="examples/comparison.html"><span class="doc">Comparing ways to keep a quantity positive</span></a> pairs four methods this way.</p>
 </section>
 <section id="a-world-on-other-state-labels">
 <span id="other-state-labels"></span><h2><a class="toc-backref" href="#id7" role="doc-backlink">A world on other state labels</a><a class="headerlink" href="#a-world-on-other-state-labels" title="Link to this heading">#</a></h2>
-<p>The two inversions above share a state. Two that do not (a gridded and a
-basin inversion, a monthly and an annual one, the whole state and the part
-the solve was restricted to) are compared on totals that both add up to: each
-state has its own aggregation to the same rows. <code class="docutils literal notranslate"><span class="pre">recovery</span></code> and <code class="docutils literal notranslate"><span class="pre">trials</span></code>
-take the world’s as <code class="docutils literal notranslate"><span class="pre">W_world</span></code>, and the error of each total,
-<span class="math notranslate nohighlight">\(W \hat{x} - W_w x\)</span>, keeps its closed form.</p>
-<p>The question a year of data raises: does an annual inversion, fed the
-observations of a seasonal flux, recover the mean flux, or does it alias the
-season through a footprint that is stronger in some months? The annual
-inversion has one flux per cell, and its forward operator is the monthly one
-with each cell’s three columns added. The totals are each cell’s flux: the
-identity on the annual state, the mean over the months on the monthly one.</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [46]: </span><span class="n">annual_space</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"flux"</span><span class="p">:</span> <span class="n">cells</span><span class="p">})</span>
+<p><strong>Two inversions whose states differ are compared on aggregates both add up
+to.</strong> A fine and a coarse grid, a monthly and an annual state, the whole state
+and the part a solve was restricted to: each state has its own aggregation
+to the same rows. <code class="docutils literal notranslate"><span class="pre">recovery</span></code> and <code class="docutils literal notranslate"><span class="pre">trials</span></code> take the world’s as
+<code class="docutils literal notranslate"><span class="pre">W_world</span></code>, and the error of each aggregate, <span class="math notranslate nohighlight">\(W \hat{x} - W_w x\)</span>, keeps
+its closed form.</p>
+<p>For example: does an annual inversion, fed the observations of a truth with a
+season, recover the mean, or does it alias the season through weights that
+are larger in some months? The annual inversion has one value per position,
+and its forward operator is the monthly one with each position’s three
+columns added. The aggregates are each position’s value: the identity on the
+annual state, the mean over the months on the monthly one.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [44]: </span><span class="n">annual_space</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"field"</span><span class="p">:</span> <span class="n">positions</span><span class="p">})</span>
 
-<span class="gp">In [47]: </span><span class="n">per_cell</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>  <span class="c1"># a monthly element -&gt; its annual cell</span>
+<span class="gp">In [45]: </span><span class="n">per_position</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>  <span class="c1"># a monthly element -&gt; its position</span>
 
-<span class="gp">In [48]: </span><span class="n">annual</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span>
+<span class="gp">In [46]: </span><span class="n">annual</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span>
 <span class="gp">   ....: </span>    <span class="n">prior</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="n">annual_space</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"prior"</span><span class="p">),</span>
 <span class="gp">   ....: </span>    <span class="n">prior_cov</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">(</span><span class="s2">"x"</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.5</span><span class="p">),</span>
-<span class="gp">   ....: </span>    <span class="n">obs</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">24</span><span class="p">),</span> <span class="n">obs_space</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"conc"</span><span class="p">),</span>
+<span class="gp">   ....: </span>    <span class="n">obs</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">24</span><span class="p">),</span> <span class="n">obs_space</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"obs"</span><span class="p">),</span>
 <span class="gp">   ....: </span>    <span class="n">obs_cov</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Independent</span><span class="p">()</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.3</span><span class="p">),</span>
-<span class="gp">   ....: </span>    <span class="n">forward</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="p">((</span><span class="n">weights</span> <span class="o">*</span> <span class="n">sees_month</span><span class="p">)</span> <span class="o">@</span> <span class="n">per_cell</span><span class="p">,</span> <span class="n">obs_space</span><span class="p">,</span> <span class="n">annual_space</span><span class="p">),</span>
+<span class="gp">   ....: </span>    <span class="n">forward</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="p">((</span><span class="n">weights</span> <span class="o">*</span> <span class="n">own_month</span><span class="p">)</span> <span class="o">@</span> <span class="n">per_position</span><span class="p">,</span> <span class="n">obs_space</span><span class="p">,</span> <span class="n">annual_space</span><span class="p">),</span>
 <span class="gp">   ....: </span><span class="p">)</span>
 <span class="gp">   ....: </span>
 
-<span class="gp">In [49]: </span><span class="n">post_annual</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">annual</span><span class="p">)</span>
+<span class="gp">In [47]: </span><span class="n">post_annual</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">annual</span><span class="p">)</span>
 
-<span class="gp">In [50]: </span><span class="n">W_annual</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">aggregate</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">annual_space</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="s2">"x"</span><span class="p">)</span>  <span class="c1"># each cell's annual flux</span>
+<span class="gp">In [48]: </span><span class="n">W_annual</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">aggregate</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">annual_space</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="s2">"x"</span><span class="p">)</span>  <span class="c1"># each position's value</span>
 
-<span class="gp">In [51]: </span><span class="n">W_monthly</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">aggregate</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="s2">"x"</span><span class="p">)</span>  <span class="c1"># the mean over the months</span>
+<span class="gp">In [49]: </span><span class="n">W_monthly</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">aggregate</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="s2">"x"</span><span class="p">)</span>  <span class="c1"># the mean over the months</span>
 </pre></div>
 </div>
-<p>A truth of 1.5 times the prior with a season (one month at 1.3 times its mean,
-the other two at 0.85) and no noise, against the same truth recovered by the
-monthly inversion and averaged over the months:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [52]: </span><span class="k">def</span><span class="w"> </span><span class="nf">aliasing</span><span class="p">(</span><span class="n">season</span><span class="p">):</span>
-<span class="gp">   ....: </span><span class="w">    </span><span class="sd">"""Return the bias of each cell's flux from the annual and the monthly inversion."""</span>
+<p>A truth of 1.5 times the prior, flat or with a season (one month at 1.3 times
+its mean, the other two at 0.85), with no observation error, against the same
+truth recovered by the monthly inversion and averaged over the months:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [50]: </span><span class="k">def</span><span class="w"> </span><span class="nf">aliasing</span><span class="p">(</span><span class="n">season</span><span class="p">):</span>
+<span class="gp">   ....: </span><span class="w">    </span><span class="sd">"""Return the bias of each position's value from the annual and the monthly inversion."""</span>
 <span class="gp">   ....: </span>    <span class="n">truth</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="mf">1.5</span> <span class="o">*</span> <span class="n">prior</span><span class="o">.</span><span class="n">values</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">season</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">)</span>
 <span class="gp">   ....: </span>    <span class="n">annual_bias</span> <span class="o">=</span> <span class="n">post_annual</span><span class="o">.</span><span class="n">recovery</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">truth</span><span class="o">=</span><span class="n">truth</span><span class="p">,</span> <span class="n">W</span><span class="o">=</span><span class="n">W_annual</span><span class="p">,</span> <span class="n">W_world</span><span class="o">=</span><span class="n">W_monthly</span><span class="p">)[</span><span class="s2">"bias"</span><span class="p">]</span>
 <span class="gp">   ....: </span>    <span class="n">monthly_bias</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">recovery</span><span class="p">(</span><span class="n">truth</span><span class="o">=</span><span class="n">truth</span><span class="p">,</span> <span class="n">W</span><span class="o">=</span><span class="n">W_monthly</span><span class="p">)[</span><span class="s2">"bias"</span><span class="p">]</span>
 <span class="gp">   ....: </span>    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">"annual"</span><span class="p">:</span> <span class="n">annual_bias</span><span class="p">,</span> <span class="s2">"monthly, averaged"</span><span class="p">:</span> <span class="n">monthly_bias</span><span class="p">})</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="s2">"block"</span><span class="p">)</span>
 <span class="gp">   ....: </span>
 
-<span class="gp">In [53]: </span><span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">({</span><span class="s2">"flat"</span><span class="p">:</span> <span class="n">aliasing</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]),</span> <span class="s2">"first month high"</span><span class="p">:</span> <span class="n">aliasing</span><span class="p">([</span><span class="mf">1.3</span><span class="p">,</span> <span class="mf">0.85</span><span class="p">,</span> <span class="mf">0.85</span><span class="p">])},</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-<span class="gh">Out[53]: </span>
+<span class="gp">In [51]: </span><span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">({</span><span class="s2">"flat"</span><span class="p">:</span> <span class="n">aliasing</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]),</span> <span class="s2">"first month high"</span><span class="p">:</span> <span class="n">aliasing</span><span class="p">([</span><span class="mf">1.3</span><span class="p">,</span> <span class="mf">0.85</span><span class="p">,</span> <span class="mf">0.85</span><span class="p">])},</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gh">Out[51]: </span>
 <span class="go">      flat                   first month high                  </span>
 <span class="go">    annual monthly, averaged           annual monthly, averaged</span>
 <span class="go">x                                                              </span>
@@ -939,13 +951,13 @@ monthly inversion and averaged over the months:</p>
 </pre></div>
 </div>
 <p>With a flat truth both inversions are nearly unbiased. With a season, the
-annual inversion’s biases are several times its spread while the monthly
-inversion’s stay small: the season is aliased, because the footprint weights
-differ between the months and the annual state cannot tell a strong month from
-a strong cell. The honest world of the monthly problem says the same about the
-annual inversion’s claimed spread:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [54]: </span><span class="n">post_annual</span><span class="o">.</span><span class="n">recovery</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">W</span><span class="o">=</span><span class="n">W_annual</span><span class="p">,</span> <span class="n">W_world</span><span class="o">=</span><span class="n">W_monthly</span><span class="p">)</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="s2">"block"</span><span class="p">)[[</span><span class="s2">"std"</span><span class="p">,</span> <span class="s2">"posterior_std"</span><span class="p">,</span> <span class="s2">"coverage"</span><span class="p">]]</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-<span class="gh">Out[54]: </span>
+annual inversion’s biases grow well past its claimed spread while the monthly
+inversion’s stay small: the annual state cannot tell a strong month from a
+strong position, because the weights differ between the months. The honest
+world of the monthly problem says the same of the annual inversion’s claimed
+spread:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [52]: </span><span class="n">post_annual</span><span class="o">.</span><span class="n">recovery</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">W</span><span class="o">=</span><span class="n">W_annual</span><span class="p">,</span> <span class="n">W_world</span><span class="o">=</span><span class="n">W_monthly</span><span class="p">)</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="s2">"block"</span><span class="p">)[[</span><span class="s2">"std"</span><span class="p">,</span> <span class="s2">"posterior_std"</span><span class="p">,</span> <span class="s2">"coverage"</span><span class="p">]]</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gh">Out[52]: </span>
 <span class="go">       std  posterior_std  coverage</span>
 <span class="go">x                                  </span>
 <span class="go">0.5  0.192          0.176     0.928</span>
@@ -957,8 +969,8 @@ annual inversion’s claimed spread:</p>
 <p>The annual inversion’s prior has no room for the month-to-month variation the
 world draws, so its intervals are too narrow. <code class="docutils literal notranslate"><span class="pre">trials</span></code> takes the same
 <code class="docutils literal notranslate"><span class="pre">W_world</span></code>, and agrees:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [55]: </span><span class="n">performance</span><span class="p">(</span><span class="n">post_annual</span><span class="o">.</span><span class="n">trials</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="mi">400</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">W</span><span class="o">=</span><span class="n">W_annual</span><span class="p">,</span> <span class="n">W_world</span><span class="o">=</span><span class="n">W_monthly</span><span class="p">))</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="s2">"block"</span><span class="p">)[[</span><span class="s2">"std"</span><span class="p">,</span> <span class="s2">"posterior_std"</span><span class="p">,</span> <span class="s2">"coverage"</span><span class="p">]]</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-<span class="gh">Out[55]: </span>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [53]: </span><span class="n">performance</span><span class="p">(</span><span class="n">post_annual</span><span class="o">.</span><span class="n">trials</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="mi">400</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">W</span><span class="o">=</span><span class="n">W_annual</span><span class="p">,</span> <span class="n">W_world</span><span class="o">=</span><span class="n">W_monthly</span><span class="p">))</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="s2">"block"</span><span class="p">)[[</span><span class="s2">"std"</span><span class="p">,</span> <span class="s2">"posterior_std"</span><span class="p">,</span> <span class="s2">"coverage"</span><span class="p">]]</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gh">Out[53]: </span>
 <span class="go">       std  posterior_std  coverage</span>
 <span class="go">x                                  </span>
 <span class="go">0.5  0.183          0.176     0.942</span>
@@ -970,41 +982,80 @@ world draws, so its intervals are too narrow. <code class="docutils literal notr
 </section>
 <section id="reading-the-table">
 <h2><a class="toc-backref" href="#id8" role="doc-backlink">Reading the table</a><a class="headerlink" href="#reading-the-table" title="Link to this heading">#</a></h2>
-<p>Two questions a real experiment asks are read off the table with pandas.
-<strong>Where does the real retrieval fall among worlds consistent with the prior?</strong>
-Run the honest world and find the quantile of the real estimate in the
-<code class="docutils literal notranslate"><span class="pre">estimate</span></code> column of each total: a real number that almost no honest world
-reaches says the truth was not within the prior’s spread. <strong>What truth is
-consistent with what was retrieved?</strong> Regress the truth on the estimate over
-the trials and read the fit at the real number; the quantiles of the residuals
-are its interval. For the tight inversion the slope is above 1, because its
-estimates move less than the truth does, and the fit undoes that shrinkage:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [56]: </span><span class="n">tight</span> <span class="o">=</span> <span class="n">both</span><span class="o">.</span><span class="n">xs</span><span class="p">(</span><span class="s2">"tight"</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">"inversion"</span><span class="p">)</span>
+<p>Two more questions an experiment asks are read off the table of trials with
+pandas.</p>
+<ul class="simple">
+<li><p><strong>Where does the real estimate fall among worlds consistent with the
+prior?</strong> Run the honest world and find the quantile of the real estimate
+in each aggregate’s <code class="docutils literal notranslate"><span class="pre">estimate</span></code> column. A real value that almost no honest
+world reaches says the truth was not within the prior’s spread.</p></li>
+<li><p><strong>What truth is consistent with the estimate?</strong> Regress the truth on the
+estimate over the trials and read the fit at the real value; the quantiles
+of the residuals are its interval. For the tight inversion the slope is
+above 1, because its estimates move less than the truth does, and the fit
+undoes that shrinkage:</p></li>
+</ul>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [54]: </span><span class="n">tight</span> <span class="o">=</span> <span class="n">both</span><span class="o">.</span><span class="n">xs</span><span class="p">(</span><span class="s2">"tight"</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">"inversion"</span><span class="p">)</span>
 
-<span class="gp">In [57]: </span><span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tight</span><span class="p">)),</span> <span class="n">tight</span><span class="p">[</span><span class="s2">"estimate"</span><span class="p">]])</span>
+<span class="gp">In [55]: </span><span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tight</span><span class="p">)),</span> <span class="n">tight</span><span class="p">[</span><span class="s2">"estimate"</span><span class="p">]])</span>
 
-<span class="gp">In [58]: </span><span class="n">beta</span><span class="p">,</span> <span class="o">*</span><span class="n">_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">lstsq</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">tight</span><span class="p">[</span><span class="s2">"truth"</span><span class="p">],</span> <span class="n">rcond</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<span class="gp">In [56]: </span><span class="n">beta</span><span class="p">,</span> <span class="o">*</span><span class="n">_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">lstsq</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">tight</span><span class="p">[</span><span class="s2">"truth"</span><span class="p">],</span> <span class="n">rcond</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 
-<span class="gp">In [59]: </span><span class="n">residual</span> <span class="o">=</span> <span class="n">tight</span><span class="p">[</span><span class="s2">"truth"</span><span class="p">]</span> <span class="o">-</span> <span class="n">X</span> <span class="o">@</span> <span class="n">beta</span>
+<span class="gp">In [57]: </span><span class="n">residual</span> <span class="o">=</span> <span class="n">tight</span><span class="p">[</span><span class="s2">"truth"</span><span class="p">]</span> <span class="o">-</span> <span class="n">X</span> <span class="o">@</span> <span class="n">beta</span>
 
-<span class="gp">In [60]: </span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">residual</span><span class="p">,</span> <span class="p">[</span><span class="mi">16</span><span class="p">,</span> <span class="mi">84</span><span class="p">]),</span> <span class="mi">3</span><span class="p">)</span>
-<span class="gh">Out[60]: </span><span class="go">(array([-1.556,  1.389]), array([-0.327,  0.323]))</span>
+<span class="gp">In [58]: </span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">beta</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">residual</span><span class="p">,</span> <span class="p">[</span><span class="mi">16</span><span class="p">,</span> <span class="mi">84</span><span class="p">]),</span> <span class="mi">3</span><span class="p">)</span>
+<span class="gh">Out[58]: </span><span class="go">(array([-1.556,  1.389]), array([-0.327,  0.323]))</span>
 </pre></div>
 </div>
-<p>With two inversions paired on the same worlds (a gridded and a basin one, say),
-the same regression on both estimates reads the truth off the retrieved pair.</p>
+<p>With two inversions paired on the same worlds, the same regression on both
+estimates reads the truth off the pair.</p>
 </section>
 <section id="randomness">
 <h2><a class="toc-backref" href="#id9" role="doc-backlink">Randomness</a><a class="headerlink" href="#randomness" title="Link to this heading">#</a></h2>
 <p>Every draw takes <code class="docutils literal notranslate"><span class="pre">rng</span></code>: a seed, a <a class="reference external" href="https://numpy.org/doc/stable/reference/random/generator.html#numpy.random.Generator" title="(in NumPy v2.5)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.random.Generator</span></code></a>, or None
 for fresh entropy, through <a class="reference external" href="https://numpy.org/doc/stable/reference/random/generator.html#numpy.random.default_rng" title="(in NumPy v2.5)"><code class="xref py py-func docutils literal notranslate"><span class="pre">numpy.random.default_rng()</span></code></a>, as SciPy’s
 <code class="docutils literal notranslate"><span class="pre">rng</span></code> argument does. One generator passed to every call of a loop gives
-independent trials; a seed gives the same draws again for the same covariance
-forms (a Kronecker covariance on part of its grid draws on the whole grid, so
-changing a model’s form changes the draws). For trials in parallel, spawn one
+independent trials. A seed gives the same draws again for the same covariance
+forms; a Kronecker covariance on part of its grid draws on the whole grid, so
+changing a model’s form changes the draws. For trials in parallel, spawn one
 generator per worker, <code class="docutils literal notranslate"><span class="pre">np.random.SeedSequence(seed).spawn(k)</span></code>, and keep each
 worker’s trials in the table with a <code class="docutils literal notranslate"><span class="pre">worker</span></code> key, so the run is reproducible
 whatever the scheduling.</p>
+</section>
+<section id="how-it-works">
+<h2><a class="toc-backref" href="#id10" role="doc-backlink">How it works</a><a class="headerlink" href="#how-it-works" title="Link to this heading">#</a></h2>
+<p>The analytic estimate is linear in the observations, <span class="math notranslate nohighlight">\(\hat{x} = x_0 + K
+(z - H x_0 - c)\)</span>, with the gain <span class="math notranslate nohighlight">\(K\)</span> of the posterior (its problem’s
+<span class="math notranslate nohighlight">\(H\)</span>, <span class="math notranslate nohighlight">\(c\)</span>, <span class="math notranslate nohighlight">\(S_0\)</span> and <span class="math notranslate nohighlight">\(S_z / \gamma\)</span>). When a world
+makes the data, with a truth <span class="math notranslate nohighlight">\(x \sim N(\mu, P)\)</span> (its prior, or a given
+truth with <span class="math notranslate nohighlight">\(P = 0\)</span>) and observations <span class="math notranslate nohighlight">\(z = H_w x + c_w + e\)</span>,
+<span class="math notranslate nohighlight">\(e \sim N(0, R_w)\)</span> (its forward operator, offset and observation
+covariance), the error <span class="math notranslate nohighlight">\(\hat{x} - x\)</span> is Gaussian, with mean and
+covariance</p>
+<div class="math notranslate nohighlight">
+\[b = (x_0 - \mu) + K (H_w \mu + c_w - H x_0 - c), \qquad
+V = (K H_w - I) P (K H_w - I)^T + K R_w K^T.\]</div>
+<p><code class="docutils literal notranslate"><span class="pre">recovery</span></code> reports <span class="math notranslate nohighlight">\(W b\)</span> and the root of the diagonal of <span class="math notranslate nohighlight">\(W V
+W^T\)</span>, and the coverage of an error <span class="math notranslate nohighlight">\(N(\text{bias}, \text{std}^2)\)</span> by
+the interval <span class="math notranslate nohighlight">\(\pm z_{level}\)</span> <code class="docutils literal notranslate"><span class="pre">posterior_std</span></code>. It computes them from
+<span class="math notranslate nohighlight">\(W K\)</span> and <span class="math notranslate nohighlight">\(W K H_w - W\)</span>, with <span class="math notranslate nohighlight">\(P\)</span> and <span class="math notranslate nohighlight">\(R_w\)</span> applied
+in their own forms, so it forms nothing <span class="math notranslate nohighlight">\(n \times n\)</span> or <span class="math notranslate nohighlight">\(m \times
+m\)</span> beyond what the posterior holds. When the world is the problem itself and
+gamma is 1, <span class="math notranslate nohighlight">\(b = 0\)</span> and <span class="math notranslate nohighlight">\(V = \hat{S}\)</span>. With <code class="docutils literal notranslate"><span class="pre">W_world</span></code>, the
+error of an aggregate is <span class="math notranslate nohighlight">\(W \hat{x} - W_w x\)</span>, and the same formula
+holds with each side’s own <span class="math notranslate nohighlight">\(W\)</span>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">trials</span></code> makes the data with the world, solves them with
+<a class="reference internal" href="../reference/api/fips.Posterior.with_data.html#fips.Posterior.with_data" title="fips.Posterior.with_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">with_data()</span></code></a> (one product with the factors, because they
+depend on where the observations are and how uncertain they are, not on
+their values) and keeps each trial’s aggregates. For a method whose estimate
+is not linear in the observations, each trial’s claimed spread and interval
+are its own posterior’s.</p>
+</section>
+<section id="references">
+<h2><a class="toc-backref" href="#id11" role="doc-backlink">References</a><a class="headerlink" href="#references" title="Link to this heading">#</a></h2>
+<p>Morris, T. P., White, I. R., and Crowther, M. J. (2019). Using simulation
+studies to evaluate statistical methods. <em>Statistics in Medicine</em>, 38(11),
+2074-2102. <a class="reference external" href="https://doi.org/10.1002/sim.8086">https://doi.org/10.1002/sim.8086</a></p>
 </section>
 </section>
 
@@ -1019,20 +1070,20 @@ whatever the scheduling.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="index.html"
+       href="hierarchical.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">User Guide</p>
+        <p class="prev-next-title">The uncertainty of the settings</p>
       </div>
     </a>
     <a class="right-next"
-       href="settings.html"
+       href="examples/index.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Fitting the covariance settings</p>
+        <p class="prev-next-title">Examples</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -1055,7 +1106,7 @@ whatever the scheduling.</p>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-problem-and-the-function-that-builds-it">A problem, and the function that builds it</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#an-example-problem">An example problem</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-world-makes-the-data">A world makes the data</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-exact-answer">The exact answer</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#when-you-need-trials">When you need trials</a></li>
@@ -1064,6 +1115,8 @@ whatever the scheduling.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-world-on-other-state-labels">A world on other state labels</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reading-the-table">Reading the table</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#randomness">Randomness</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-it-works">How it works</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#references">References</a></li>
 </ul>
   </nav></div>
 
