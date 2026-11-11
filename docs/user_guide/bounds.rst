@@ -137,6 +137,11 @@ mean. Here it misses the true total, which the analytic interval holds.
    (W @ truth).values.round(3)
    pd.concat({"analytic": analytic.uncertainty(W), "bounded": post.uncertainty(W)}).round(3)
 
+The two ``prior_std`` differ too: each method's is the prior it used. The
+bounded one is the spread of the prior cut at zero, narrower than the
+Gaussian's, so its ``reduction`` is what the observations took off that
+prior, not what the bounds did.
+
 **The mode is not the mean.** The draws spread on the side of the bound away
 from the mode, so their mean is above it. A question about the distribution
 (the mean of a total, the chance it is below a value) is read off new draws,
@@ -166,6 +171,13 @@ A bounded posterior is a *sampled* one: the
   reproducible. The interval is the draws' quantiles, not the mode plus or
   minus a multiple of the standard deviation. An element on its bound still
   has spread, on one side of the bound.
+- **The prior side of** :meth:`~fips.Posterior.uncertainty` (``prior_std``
+  and ``reduction``) **and** :attr:`~fips.Posterior.uncertainty_reduction`
+  **is the prior with the bounds**: the spread of draws of the bounded
+  problem with no observations, the prior cut at the bounds (truncated) or
+  set to them (rectified), as many as the kept draws and from the same seed,
+  made the first time one is needed. Observations that tell nothing reduce
+  nothing, and what the bounds remove is not counted as reduced.
 - :meth:`~fips.Posterior.sample` makes new draws, for any function of the
   state.
 - **The gain, the averaging kernel, DOFS and the information content are

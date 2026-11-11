@@ -60,7 +60,9 @@ once, not once per trial.
 
 The solution (:class:`Ensemble`) answers from the ensemble: the estimate is
 the mean of the updated members (``estimate_is_mean``); the variances, the
-covariance of aggregates and the gain are those of the deviations; DOFS,
+covariance of aggregates and the gain are those of the deviations, and the
+prior's variances (which the reduction of uncertainty is measured against)
+those of the prior members, :math:`A A^T`; DOFS,
 :math:`\operatorname{tr}(P_{yy} (P_{yy} + R)^{-1})`, the information content
 and chi-squared, :math:`d^T (P_{yy} + R)^{-1} d`, are those of the
 ensemble's covariances, which equal :math:`H P H^T` with a linear model;
@@ -286,7 +288,9 @@ class Ensemble:
     - the estimate is the mean of the updated members, the posterior mean of
       the ensemble (``estimate_is_mean``); the variances and the covariance
       of aggregates are those of the updated deviations, :math:`A^a A^{aT}`;
-      :meth:`sample` returns updated members, at most :math:`N`;
+      :meth:`sample` returns updated members, at most :math:`N`; the prior's
+      variances, which the reduction of uncertainty is measured against, are
+      those of the prior members, :math:`A A^T`, the prior the update used;
     - the gain is the ensemble's :math:`K`; DOFS is :math:`\sum_k w_k
       \lambda_k = \operatorname{tr}(P_{yy} (P_{yy} + R)^{-1})`, the
       information content :math:`\tfrac{1}{2} \sum_k \ln(1 + \gamma
@@ -390,6 +394,15 @@ class Ensemble:
         updated = self._updated()
         Y = updated if W is None else np.asarray(W @ updated, dtype=float)
         return Y @ Y.T
+
+    def used_prior_variances(self, W: LinearOperator | None = None) -> np.ndarray:
+        """Return the variances of the prior members (``n``), or of their aggregates ``W x`` (``k``): the prior the update used, which the reduction of uncertainty is measured against."""
+        Y = (
+            self.deviations
+            if W is None
+            else np.asarray(W @ self.deviations, dtype=float)
+        )
+        return np.einsum("ij,ij->i", Y, Y)
 
     def gain(self, W: LinearOperator | None = None) -> np.ndarray:
         r"""Return the ensemble's gain, :math:`K = P_{xy} (P_{yy} + R)^{-1}`, ``n x m``, or :math:`W K`."""

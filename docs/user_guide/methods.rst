@@ -108,11 +108,12 @@ can answer every question.** There are three kinds:
 posterior, the ``lower`` and ``upper`` of :meth:`~fips.Posterior.uncertainty`
 and :meth:`~fips.Posterior.trials` are the estimate plus or minus ``z``
 standard deviations. For a sampled one they are quantiles of the draws, which
-follow the posterior's skew. **The** ``reduction`` **columns compare against the problem's Gaussian
-prior.** For ``"bounded"`` they include what the bounds remove, and for
-``"ensemble"`` the members' sampling error, so they are not zero even when
-the observations tell nothing; DOFS is the measure of what the observations
-told. A member a kind cannot give raises
+follow the posterior's skew. **The** ``reduction`` **columns compare against the prior the
+method used**, so observations that tell nothing reduce nothing: for
+``"bounded"`` the prior with the bounds (cut at them, or set to them for
+rectified draws), from draws of it made as the posterior's are; for
+``"ensemble"`` the spread of its prior members; for the others the problem's
+prior. A member a kind cannot give raises
 :class:`~fips.UnavailableError`; for example, the data worth needs an
 estimate linear in the observations, which only the analytic method gives.
 The :ref:`members table <posterior-members>` lists every member for every
