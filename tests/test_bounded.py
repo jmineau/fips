@@ -1391,9 +1391,9 @@ def test_what_a_bounded_posterior_cannot_give():
         post.recovery()
     W = _halves(problem.prior.space)
     with pytest.raises(TypeError, match="innovation_precision"):
-        post.data_worth("obs_id", W)
+        post.data_worth("obs_id", W=W)
     with pytest.raises(TypeError, match="estimate_is_linear"):
-        post.candidate_worth(problem.forward, problem.obs_cov, "obs_id", W)
+        post.candidate_worth(problem.forward, problem.obs_cov, "obs_id", W=W)
     with pytest.raises(TypeError, match="no at_bound"):
         _ = fips.solve(problem).at_bound
     analytic = fips.solve(problem)

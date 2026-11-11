@@ -1224,7 +1224,8 @@ class Posterior:
         -------
         pandas.DataFrame
             One row per aggregate, on the aggregation's rows (or the state's
-            labels): ``prior_std`` (of the prior the method used, as above),
+            labels): ``estimate`` (:attr:`estimate`, or ``W`` times it),
+            ``prior_std`` (of the prior the method used, as above),
             ``posterior_std`` and ``reduction``,
             :math:`1 - \sigma_{posterior} / \sigma_{prior}` (a fraction; NaN
             where the prior standard deviation is 0), then ``lower`` and
@@ -1277,17 +1278,17 @@ class Posterior:
         >>> post = fips.solve(problem)
         >>> monthly = fips.aggregate.sum(prior.space, by="month")
         >>> post.uncertainty(monthly).droplevel("block").round(3).reset_index()
-           month  prior_std  posterior_std  reduction  lower  upper
-        0      1      0.707          0.528      0.253 -0.370  1.701
-        1      2      0.707          0.586      0.171 -0.225  2.072
+           month  estimate  prior_std  posterior_std  reduction  lower  upper
+        0      1     0.666      0.707          0.528      0.253 -0.370  1.701
+        1      2     0.924      0.707          0.586      0.171 -0.225  2.072
         >>> change = fips.Operator(
         ...     np.array([[-1.0, 1.0]]),
         ...     fips.Space({"change": pd.Index(["2 - 1"], name="months")}),
         ...     monthly.rows,
         ... )
         >>> post.uncertainty(change @ monthly).round(3).reset_index()
-            block months  prior_std  posterior_std  reduction  lower  upper
-        0  change  2 - 1        1.0          0.921      0.079 -1.547  2.063
+            block months  estimate  prior_std  posterior_std  reduction  lower  upper
+        0  change  2 - 1     0.258        1.0          0.921      0.079 -1.547  2.063
 
         The change is more uncertain than either month's total: the two
         totals' posterior errors are negatively correlated (the observations
@@ -1310,8 +1311,12 @@ class Posterior:
         with np.errstate(divide="ignore", invalid="ignore"):
             reduction = np.where(prior_std > 0, 1.0 - posterior_std / prior_std, np.nan)
         lower, upper = self._interval(W_form, posterior_std, level)
+        estimate = self.estimate.values
+        if W_form is not None:
+            estimate = np.asarray(W_form @ estimate, dtype=float)
         return pd.DataFrame(
             {
+                "estimate": estimate,
                 "prior_std": prior_std,
                 "posterior_std": posterior_std,
                 "reduction": reduction,
@@ -1488,7 +1493,7 @@ class Posterior:
             values, index=index, columns=pd.RangeIndex(int(n), name="draw")
         )
 
-    def data_worth(self, by: Any, W: Operator) -> pd.DataFrame:
+    def data_worth(self, by: Any, *, W: Operator) -> pd.DataFrame:
         r"""
         Return what each group of observations adds to the certainty of each aggregate, and its share of DOFS.
 
@@ -1684,6 +1689,7 @@ class Posterior:
         forward: Operator,
         obs_cov: "Covariance | CovarianceModel",
         by: Any,
+        *,
         W: Operator,
     ) -> pd.DataFrame:
         r"""
@@ -2379,7 +2385,7 @@ class Posterior:
     @property
     def log_evidence(self) -> float:
         r"""
-        The log of the evidence: the probability density of the observations given the problem's settings, with the state integrated out.
+        The log of the evidence: the probability density of the observations given the problem's hyperparameters, with the state integrated out.
 
         A Gaussian posterior has it (not an ensemble's), ``"gauss_newton"``
         (a sampled posterior) gives Laplace's, and a low-rank one has it
@@ -2409,13 +2415,13 @@ class Posterior:
         It holds for a singular :math:`S_0`; :math:`S_z` must be
         positive-definite.
 
-        It is the likelihood of the settings the problem was built with, the
+        It is the likelihood of the hyperparameters the problem was built with, the
         prior covariance, the observation covariance and gamma: the
-        settings that maximize it are their maximum-likelihood estimates
+        hyperparameters that maximize it are their maximum-likelihood estimates
         (Michalak et al., 2005). Write a function that builds the problem from
-        the settings and maximize this over them, with
+        the hyperparameters and maximize this over them, with
         :func:`scipy.optimize.minimize` on its negative
-        (:doc:`/user_guide/settings`). The difference between two settings'
+        (:doc:`/user_guide/hyperparameters`). The difference between two hyperparameters'
         values is the log of their Bayes factor. It is a density of the
         observations, so it depends on their units: compare only problems of
         the same observations.
@@ -2436,7 +2442,7 @@ class Posterior:
         problem at full rank. Below the problem's rank it leaves out
         :math:`\tfrac{1}{2} \sum \ln(1 + \tilde\lambda_j)` of the pairs not
         kept, so it is biased high, more for a larger prior; a maximum over
-        the settings would choose too large a prior. It is refused when the
+        the hyperparameters would choose too large a prior. It is refused when the
         last pair kept still has an eigenvalue above 1 (the solve warns of
         it): raise ``rank`` until the last eigenvalues of :attr:`eigenvalues`
         are well below 1.

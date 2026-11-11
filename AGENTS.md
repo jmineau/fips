@@ -23,7 +23,7 @@ with a Gaussian prior and Gaussian errors, `z = H x + c + e` (or `F(x)`, a
 observations are labeled by pandas indexes in named blocks: exact for a linear
 problem; with bounds on the state, its mode and draws of the Gaussian truncated
 to the bounds; with a forward model, its mode by Gauss-Newton and draws of its
-posterior; with priors on the covariance settings, draws of the settings and
+posterior; with priors on the covariance hyperparameters, draws of the hyperparameters and
 of the state at each (`fips.hierarchical`); for a model that can only be run,
 an ensemble square-root update of members drawn from the prior (`"ensemble"`); too large to factor, CG and a
 low-rank posterior from products alone (`"variational"`). fips samples the posteriors it
@@ -54,8 +54,8 @@ src/fips/
   problem.py        Problem: the inputs, checked once; predict, linearized, aggregate, restrict
   posterior.py      Posterior (labels a method's answer); the Solution and Options protocols
   aggregate.py      sum, mean (an aggregation W), offset_block
-  distributions.py  LogNormal, HalfNormal, Uniform: the priors of a setting, on `_Distribution`
-  settings.py       hierarchical, Hierarchical: the settings by Metropolis on the exact evidence,
+  distributions.py  LogNormal, HalfNormal, Uniform: the priors of a hyperparameter, on `_Distribution`
+  hyperparameters.py  hierarchical, Hierarchical: the hyperparameters by Metropolis on the exact evidence,
                     the state drawn at each kept step; `_Built` (the caller's function) or
                     `_Scales` (a Problem: the fast path)
   visualization.py  plot_comparison, the one plot (the `viz` extra: matplotlib)
@@ -84,7 +84,7 @@ docs/               Sphinx: guides, reference/ (by topic), examples/ (notebooks)
 ```
 
 Imports run one way: `space` < `vector`, `linalg` < `operator` < `forward` < `transforms`, `covariance` <
-`problem` < `posterior` < `methods` < `settings`, with `aggregate` and `visualization` on top; `distributions`
+`problem` < `posterior` < `methods` < `hyperparameters`, with `aggregate` and `visualization` on top; `distributions`
 and `_errors` import nothing of fips's. No import inside a function to dodge a cycle, none under `TYPE_CHECKING`.
 `Covariance` does not import the models: `models.py` sets
 `Covariance._block_diag_models`, so `Covariance.block_diag` takes model parts.
@@ -194,7 +194,11 @@ with a `gamma` field, values checked in `__post_init__`), its solution (answers
 `_METHODS` in `methods/__init__.py`; its docstring says how a lognormal or an
 ensemble method fits. **A solve has a `seed` (an int, in its options), a draw takes an
 `rng`** (`int | Generator | None`, through `np.random.default_rng`): `sample`, `simulate`,
-`ensemble`, `trials`, `taylortest`, `dottest`. **A method's default options on a linear, unbounded
+`ensemble`, `trials`, `taylortest`, `dottest`, `Hierarchical.sample`. **The same kind of argument has one
+name, in one place**: a number of draws is `n` (always given), an aggregation `W` and a known `truth`
+are keyword-only (`W` is positional only where it is the one argument: `cov`, `averaging_kernel`,
+`uncertainty`). `tests/data/public_signatures.txt` holds every public signature; a change to one
+regenerates it with `FIPS_WRITE_SIGNATURES=1 pytest tests/test_pkg.py`. **A method's default options on a linear, unbounded
 problem give the analytic posterior** (`"bounded"` with no finite bound and
 `"gauss_newton"` with an operator return the analytic solution itself):
 `tests/test_oracle.py` runs every registered method, with its defaults, against the closed-form posterior and the

@@ -174,19 +174,19 @@ The words
      - The regularization factor: the solve uses :math:`S_z / \gamma`, so a
        gamma above 1 trusts the observations more and below 1 the prior
        more. 1 by default.
-   * - **settings**
+   * - **hyperparameters**
      - :math:`s`
      - your own function's arguments
      - The numbers the covariances are built from: the prior's standard
        deviation and correlation length, the observation error's standard
-       deviation. Also called hyperparameters. :doc:`/user_guide/settings`
-       fits them; :doc:`/user_guide/hierarchical` carries their uncertainty.
+       deviation. :doc:`/user_guide/hyperparameters` fits them;
+       :doc:`/user_guide/hierarchical` carries their uncertainty.
    * - **evidence**
      - :math:`p(z)`
      - ``post.log_evidence``
      - The probability of the observations given the covariances, with the
        state integrated out. Also called the marginal likelihood. The
-       settings that maximize it are the maximum-likelihood settings.
+       hyperparameters that maximize it are the maximum-likelihood hyperparameters.
 
 The posterior also has these statistics:
 

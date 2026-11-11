@@ -471,6 +471,7 @@ class Problem:
     def simulate(
         self,
         rng: "int | np.random.Generator | None" = None,
+        *,
         truth: "Vector | None" = None,
     ) -> tuple[Vector, Vector]:
         r"""

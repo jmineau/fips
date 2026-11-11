@@ -847,7 +847,7 @@ def test_the_posterior_refuses_what_its_method_cannot_give():
         post.recovery()
     W = fips.aggregate.sum(problem.prior.space, by="cell")
     with pytest.raises(TypeError, match="data worth"):
-        post.data_worth("obs_id", W)
+        post.data_worth("obs_id", W=W)
     analytic = fips.solve(linear_problem(Arrays.random(14, 4, 6), model=False))
     with pytest.raises(TypeError, match=r"world.*model.*trials"):
         analytic.recovery(problem)

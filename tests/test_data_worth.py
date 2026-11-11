@@ -181,12 +181,16 @@ def test_uncertainty_matches_the_closed_form(prior, mismatch, gamma):
     table = post.uncertainty(W)
     assert table.index.equals(W.rows.index)
     assert list(table.columns) == [
+        "estimate",
         "prior_std",
         "posterior_std",
         "reduction",
         "lower",
         "upper",
     ]
+    np.testing.assert_allclose(
+        table["estimate"], Wd @ post.estimate.values, rtol=1e-10, atol=1e-12
+    )
     prior_std = np.sqrt(np.diag(Wd @ S0 @ Wd.T))
     posterior_std = np.sqrt(np.diag(Wd @ S_hat @ Wd.T))
     np.testing.assert_allclose(table["prior_std"], prior_std, rtol=1e-10)
@@ -197,6 +201,7 @@ def test_uncertainty_matches_the_closed_form(prior, mismatch, gamma):
 
     each = post.uncertainty()
     assert each.index.equals(STATE.index)
+    np.testing.assert_array_equal(each["estimate"], post.estimate.values)
     np.testing.assert_allclose(each["prior_std"], np.sqrt(np.diag(S0)), rtol=1e-10)
     np.testing.assert_allclose(
         each["posterior_std"], np.sqrt(np.diag(S_hat)), rtol=1e-10

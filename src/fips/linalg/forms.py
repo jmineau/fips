@@ -1438,7 +1438,7 @@ def as_linear_operator(x: LinearOperatorLike) -> LinearOperator:
 def dottest(
     op: _SciPyLinearOperator,
     rtol: float = 1e-12,
-    rng: int | np.random.Generator | None = 0,
+    rng: int | np.random.Generator | None = None,
 ) -> bool:
     """
     Check that ``op.rmatvec`` is the adjoint of ``op.matvec``.
@@ -1454,10 +1454,10 @@ def dottest(
         them.
     rtol : float, default 1e-12
         Relative tolerance.
-    rng : int, numpy.random.Generator or None, default 0
+    rng : int, numpy.random.Generator or None, default None
         A seed, or the generator to draw the random vectors from (used as
-        given, so a generator passed on is advanced; None draws from fresh
-        entropy), as :meth:`fips.Posterior.sample` takes it. A solve has a
+        given, so a generator passed on is advanced; None, the default, draws
+        from fresh entropy), as :meth:`fips.Posterior.sample` takes it. A solve has a
         ``seed``, a draw takes an ``rng``; this check draws.
 
     Returns

@@ -311,6 +311,10 @@ Options
      - For a forward model, the steps stop when one moves the estimate by
        less than ``tol`` times :math:`n`, measured in the posterior
        covariance (Rodgers' rule, as for ``"gauss_newton"``).
+   * - ``seed``
+     - 0
+     - The seed of Lanczos's starting vector, so that a solve is
+       reproducible.
    * - ``gamma``
      - 1.0
      - The regularization factor: the observation covariance is divided by
@@ -343,7 +347,7 @@ along a step however short it is made: the products are not the derivative
 of the model; check them with :func:`fips.taylortest`.
 
 It raises :class:`ValueError` for an option out of range (``cg_tol`` must be
-below 1), and :class:`~fips.UnavailableError` for a member it cannot give
+below 1, ``seed`` a nonnegative integer), and :class:`~fips.UnavailableError` for a member it cannot give
 (above).
 
 
