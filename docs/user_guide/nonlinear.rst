@@ -92,7 +92,7 @@ that prior:
 :meth:`~fips.Problem.predict` and :meth:`~fips.Problem.simulate` run the model,
 and :meth:`~fips.Problem.aggregate` follows it with the aggregation (the model
 of the aggregated problem is :math:`W F(x)`). :meth:`~fips.Problem.restrict`
-refuses a model: holding cells at their prior puts what they add to the
+refuses a model: holding elements at their prior puts what they add to the
 observations into the offset, which is a constant only for a linear forward.
 
 
@@ -240,10 +240,10 @@ whose length the ``burn_in`` tunes to accept 90% of the paths. A model that is
 linear has no rest: every path is a quarter turn of one step and is accepted,
 and the draws are exact and independent. The more the model bends over the
 posterior's spread, the more steps a path takes (a median of 16 over 200 data
-sets of a Salt Lake Valley-shaped flux problem with a log standard deviation
-of 1, at most 38). No inverse of
-the prior covariance is formed, so a prior with zero spread somewhere (a
-cell with no inventory) works.
+sets of :doc:`comparison`'s 400-cell flux problem with a log standard
+deviation of 1, at most 38). No inverse of
+the prior covariance is formed, so a prior with zero spread somewhere (an
+element with no reference) works.
 
 Each step evaluates the model and the product of its Jacobian's transpose with
 a vector (``fips.LognormalForward`` and ``fips.SoftplusForward`` form no

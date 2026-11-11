@@ -153,7 +153,7 @@ about the truth; their medians, over ten worlds, are within 2% of it:
 
 The scatter of the fits is the uncertainty of the settings, which the
 posterior at the fitted settings leaves out: it treats them as known. To carry
-it into the flux, the settings need a prior of their own and draws over them:
+it into the estimate, the settings need a prior of their own and draws over them:
 :doc:`hierarchical` draws them.
 
 
@@ -201,8 +201,8 @@ The other methods
 
 ``"gauss_newton"`` (:doc:`nonlinear`, :doc:`positive`) gives Laplace's
 approximation of the evidence: the same formula with the cost at the mode and
-the information content of the Gaussian there. For a lognormal model in four
-cells with a log-std of 0.8, it was within about 0.1 of an importance-sampling
+the information content of the Gaussian there. For a lognormal model of four
+elements with a log-std of 0.8, it was within about 0.1 of an importance-sampling
 estimate, a small error next to the differences between settings above; it is
 exact for a linear model, and it leaves out the skew of the posterior. Fit
 lognormal settings with it as above. ``"bounded"`` (:doc:`bounds`) raises: the

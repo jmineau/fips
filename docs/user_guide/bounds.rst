@@ -3,15 +3,16 @@
 Bounds on the state
 ===================
 
-A flux of methane cannot be negative, yet the Gaussian posterior of a flux
-inversion often is in cells where the prior is small and the observations see
-little. ``fips.solve(problem, "bounded", lower={"flux": 0.0})`` holds the
-state to bounds. The rule: **the bounded estimate is the analytic one moved
+Some quantities cannot be negative (a flux, a concentration, a rate), yet the
+Gaussian posterior of a problem that estimates them often is negative where
+the prior is small and the observations see little.
+``fips.solve(problem, "bounded", lower={"flux": 0.0})`` holds the state to
+bounds (here, a block named ``flux`` at or above zero). The rule: **the bounded estimate is the analytic one moved
 onto the bounds along the posterior's correlations.** An element the analytic
 estimate puts below its bound goes to the bound, and its neighbors move by what
 the posterior says they would if that element were known to be at its bound.
 A neighbor the move would push out is held at its bound too. Clipping (setting
-the negative cells to zero and nothing else) is not this: it always raises the
+the negative elements to zero and nothing else) is not this: it always raises the
 total, while moving along the correlations can lower it as well.
 
 .. contents:: On this page
@@ -53,7 +54,7 @@ smaller shift of the prior set to its bounds.
 
 The bounds are ``lower`` and ``upper``: a number for every element, a
 :class:`~fips.Vector` with an element's own bound (``-inf`` or ``inf`` for
-none), or a dict by block. ``{"flux": 0.0}`` bounds the fluxes and leaves the
+none), or a dict by block. ``{"flux": 0.0}`` bounds the ``flux`` block and leaves the
 other blocks free, as a bias block must be. Bounds go to the solve, not to the
 :class:`~fips.Problem`: the problem is the Gaussian question, and the bounds
 are how the method answers it.
@@ -312,8 +313,8 @@ the truth is not a draw of the truncated prior, and as often where it is; the
 analytic total held it in every world, while the rectified total fell short of
 95% where the truth could be negative (0.77 and 0.84) and, with weak data,
 where it had exact zeros (0.88).** For a total, read the analytic posterior. The rectified draws suit
-the cells of a map near zero: where the truth has exact zeros, 96% of their
-cells' intervals held it, against 77% for the truncated draws, which never
+the elements of a map near zero: where the truth has exact zeros, 96% of
+their intervals held it, against 77% for the truncated draws, which never
 reach zero.
 
 How they are made: the analytic estimate of the perturbed problem is an exact
@@ -364,7 +365,7 @@ a bounded posterior draws in every trial: keep ``draws`` small there.
 In a world with a nonnegative truth
 -----------------------------------
 
-Does holding the fluxes at or above zero give a better answer? It depends on
+Does holding the state at or above zero give a better answer? It depends on
 what is asked, and :meth:`~fips.Posterior.trials` (see :doc:`synthetic`)
 measures it: the same data, trial for trial (the same seed), solved with and
 without the bounds, in a world whose truth is lognormal, most of it near zero,
@@ -424,10 +425,10 @@ whose total is above this world's wherever the data see little. That is the
 pattern to expect: **bounds mostly improve maps and can move totals**, and since the
 estimate is the mode of a skewed posterior, a total read from it is not the
 posterior's mean total (above, the draws'). Which matters depends on the
-question. For a basin total, read the analytic posterior: the draws' total is
-that of the truncated prior wherever the data see little, above an inventory
-that is the mean, and :doc:`comparison` measures it far above in a Salt Lake
-Valley-shaped problem. The world here is a toy: the trials of an inversion's
+question. For a total of the state, read the analytic posterior: the draws'
+total is that of the truncated prior wherever the data see little, above a
+prior that is the mean, and :doc:`comparison` measures it far above in its
+400-cell example. The world here is a toy: the trials of an inversion's
 own problem, at its own size, say what its bounds do.
 
 References

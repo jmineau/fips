@@ -8,7 +8,7 @@ itself), kept in its cheapest form. A covariance is written as a correlation
 model with standard deviations: ``Exponential("time", "30D").with_std(std)``.
 A :class:`Problem` puts the prior, the observations, the forward operator (or
 a :class:`ForwardModel` that is not linear, with its Jacobian;
-:class:`LognormalForward` and :class:`SoftplusForward` keep a flux positive)
+:class:`LognormalForward` and :class:`SoftplusForward` keep a block positive)
 and the covariances together, and :func:`solve` returns its :class:`Posterior`.
 With priors on the covariance settings, :func:`hierarchical` draws them from
 their posterior and the state at each draw (:class:`Hierarchical`).

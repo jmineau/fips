@@ -1045,7 +1045,7 @@ def test_a_singular_softplus_newton_matrix_is_a_runtime_error(monkeypatch):
         raise np.linalg.LinAlgError("Singular matrix")
 
     monkeypatch.setattr(np.linalg, "solve", singular)
-    with pytest.raises(RuntimeError, match=r"did not match .* in 3 cells.*'a'.*'c'"):
+    with pytest.raises(RuntimeError, match=r"did not match .* at 3 labels.*'a'.*'c'"):
         softplus.prior_for(1.0, 1.0)
 
 
