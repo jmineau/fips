@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>A model without a Jacobian: the ensemble method &#8212; fips 0.2.0b3.dev41+g3c34b0298 documentation</title>
+    <title>A model without a Jacobian: the ensemble method &#8212; fips 0.2.0b3.dev42+g5347e97e0 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=045c8eee"></script>
+    <script src="../_static/documentation_options.js?v=5a88ebcd"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev41+g3c34b0298 documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev41+g3c34b0298 documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev42+g5347e97e0 documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev42+g5347e97e0 documentation - Home"/>
   
   
 </a></div>
@@ -604,10 +604,10 @@ each quarter of the line:</p>
 <span class="gh">Out[22]: </span>
 <span class="go">               prior_std  posterior_std  reduction  lower  upper</span>
 <span class="go">block quarter                                                   </span>
-<span class="go">flux  0             5.35           0.80       0.85  26.23  29.37</span>
-<span class="go">      1             5.35           0.70       0.87  27.17  29.92</span>
-<span class="go">      2             5.35           0.84       0.84  24.63  27.93</span>
-<span class="go">      3             5.35           0.97       0.82  28.11  31.92</span>
+<span class="go">flux  0             4.98           0.80       0.84  26.23  29.37</span>
+<span class="go">      1             5.37           0.70       0.87  27.17  29.92</span>
+<span class="go">      2             5.25           0.84       0.84  24.63  27.93</span>
+<span class="go">      3             5.41           0.97       0.82  28.11  31.92</span>
 </pre></div>
 </div>
 <p>When the forward runs in Python (an <a class="reference internal" href="../reference/api/fips.Operator.html#fips.Operator" title="fips.Operator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Operator</span></code></a>, or a
@@ -719,6 +719,11 @@ of answer; for the ensemble:</p>
 mean of the updated members. <a class="reference internal" href="../reference/api/fips.Posterior.variances.html#fips.Posterior.variances" title="fips.Posterior.variances"><code class="xref py py-attr docutils literal notranslate"><span class="pre">variances</span></code></a>,
 <a class="reference internal" href="../reference/api/fips.Posterior.cov.html#fips.Posterior.cov" title="fips.Posterior.cov"><code class="xref py py-meth docutils literal notranslate"><span class="pre">cov()</span></code></a> and <a class="reference internal" href="../reference/api/fips.Posterior.kalman_gain.html#fips.Posterior.kalman_gain" title="fips.Posterior.kalman_gain"><code class="xref py py-attr docutils literal notranslate"><span class="pre">kalman_gain</span></code></a> are
 those of the updated members.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">prior_std</span></code> and <code class="docutils literal notranslate"><span class="pre">reduction</span></code> of <a class="reference internal" href="../reference/api/fips.Posterior.uncertainty.html#fips.Posterior.uncertainty" title="fips.Posterior.uncertainty"><code class="xref py py-meth docutils literal notranslate"><span class="pre">uncertainty()</span></code></a>,
+and <a class="reference internal" href="../reference/api/fips.Posterior.uncertainty_reduction.html#fips.Posterior.uncertainty_reduction" title="fips.Posterior.uncertainty_reduction"><code class="xref py py-attr docutils literal notranslate"><span class="pre">uncertainty_reduction</span></code></a>, compare with the <strong>prior
+members’ spread</strong>, the prior the update used, not with <span class="math notranslate nohighlight">\(S_0\)</span>: so
+observations that tell nothing reduce nothing, and the members’ sampling
+error is on both sides.</p></li>
 <li><p><a class="reference internal" href="../reference/api/fips.Posterior.sample.html#fips.Posterior.sample" title="fips.Posterior.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a> returns the updated members themselves, so
 it raises when asked for more than there are.</p></li>
 <li><p><a class="reference internal" href="../reference/api/fips.Posterior.dofs.html#fips.Posterior.dofs" title="fips.Posterior.dofs"><code class="xref py py-attr docutils literal notranslate"><span class="pre">dofs</span></code></a>, <a class="reference internal" href="../reference/api/fips.Posterior.information_content.html#fips.Posterior.information_content" title="fips.Posterior.information_content"><code class="xref py py-attr docutils literal notranslate"><span class="pre">information_content</span></code></a>,

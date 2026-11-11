@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.Posterior.uncertainty &#8212; fips 0.2.0b3.dev41+g3c34b0298 documentation</title>
+    <title>fips.Posterior.uncertainty &#8212; fips 0.2.0b3.dev42+g5347e97e0 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=045c8eee"></script>
+    <script src="../../_static/documentation_options.js?v=5a88ebcd"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev41+g3c34b0298 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev41+g3c34b0298 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev42+g5347e97e0 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev42+g5347e97e0 documentation - Home"/>
   
   
 </a></div>
@@ -1054,6 +1054,15 @@ any linear combination of the state: a sum, a mean, or a combination
 of aggregates such as a trend or the difference of two seasons
 (<code class="docutils literal notranslate"><span class="pre">C</span> <span class="pre">&#64;</span> <span class="pre">W</span></code>, with <code class="docutils literal notranslate"><span class="pre">C</span></code> the weights of the rows of <code class="docutils literal notranslate"><span class="pre">W</span></code>), whose
 uncertainty includes the covariance between the aggregates.</p>
+<p>The prior side is the prior the method used, so observations that
+tell nothing reduce nothing. For <code class="docutils literal notranslate"><span class="pre">&quot;bounded&quot;</span></code> with a finite bound
+it is the spread of draws of the prior with the bounds, the bounded
+problem with no observations: <span class="math notranslate nohighlight">\(N(x_0, S_0)\)</span> cut at the bounds
+(<code class="docutils literal notranslate"><span class="pre">distribution=&quot;truncated&quot;</span></code>) or set to them (<code class="docutils literal notranslate"><span class="pre">&quot;rectified&quot;</span></code>),
+drawn as many times as the posterior and from the same seed. For
+<code class="docutils literal notranslate"><span class="pre">&quot;ensemble&quot;</span></code> it is the spread of the prior members, whose
+covariance the update used. For every other method it is
+<span class="math notranslate nohighlight">\(S_0\)</span>.</p>
 <p>The interval is the posterior’s own. For a sampled posterior
 (<code class="docutils literal notranslate"><span class="pre">&quot;bounded&quot;</span></code> with a finite bound, <code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code> with a forward
 model) it is from quantiles of the kept draws of <span class="math notranslate nohighlight">\(W x\)</span>, which
@@ -1072,7 +1081,8 @@ default, one row per state element.</p></li>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>One row per aggregate, on the aggregation’s rows (or the state’s
-labels): <code class="docutils literal notranslate"><span class="pre">prior_std</span></code>, <code class="docutils literal notranslate"><span class="pre">posterior_std</span></code> and <code class="docutils literal notranslate"><span class="pre">reduction</span></code>,
+labels): <code class="docutils literal notranslate"><span class="pre">prior_std</span></code> (of the prior the method used, as above),
+<code class="docutils literal notranslate"><span class="pre">posterior_std</span></code> and <code class="docutils literal notranslate"><span class="pre">reduction</span></code>,
 <span class="math notranslate nohighlight">\(1 - \sigma_{posterior} / \sigma_{prior}\)</span> (a fraction; NaN
 where the prior standard deviation is 0), then <code class="docutils literal notranslate"><span class="pre">lower</span></code> and
 <code class="docutils literal notranslate"><span class="pre">upper</span></code>, the ends of the posterior interval of probability
@@ -1100,7 +1110,7 @@ in <a class="reference internal" href="fips.Posterior.recovery.html#fips.Posteri
 </dd>
 <dt><a class="reference internal" href="fips.Covariance.aggregate.html#fips.Covariance.aggregate" title="fips.Covariance.aggregate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fips.Covariance.aggregate</span></code></a></dt><dd><p>The prior covariance of aggregates, <code class="docutils literal notranslate"><span class="pre">problem.prior_cov.aggregate(W)</span></code>.</p>
 </dd>
-<dt><a class="reference internal" href="fips.Posterior.uncertainty_reduction.html#fips.Posterior.uncertainty_reduction" title="fips.Posterior.uncertainty_reduction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">uncertainty_reduction</span></code></a></dt><dd><p>One number for the whole state.</p>
+<dt><a class="reference internal" href="fips.Posterior.uncertainty_reduction.html#fips.Posterior.uncertainty_reduction" title="fips.Posterior.uncertainty_reduction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">uncertainty_reduction</span></code></a></dt><dd><p>One number for the whole state, measured against the same prior.</p>
 </dd>
 </dl>
 </div>

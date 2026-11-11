@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.methods.ensemble &#8212; fips 0.2.0b3.dev41+g3c34b0298 documentation</title>
+    <title>fips.methods.ensemble &#8212; fips 0.2.0b3.dev42+g5347e97e0 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../../_static/documentation_options.js?v=045c8eee"></script>
+    <script src="../../../_static/documentation_options.js?v=5a88ebcd"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev41+g3c34b0298 documentation - Home"/>
-    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev41+g3c34b0298 documentation - Home"/>
+    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev42+g5347e97e0 documentation - Home"/>
+    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev42+g5347e97e0 documentation - Home"/>
   
   
 </a></div>
@@ -486,7 +486,9 @@
 
 <span class="sd">The solution (:class:`Ensemble`) answers from the ensemble: the estimate is</span>
 <span class="sd">the mean of the updated members (``estimate_is_mean``); the variances, the</span>
-<span class="sd">covariance of aggregates and the gain are those of the deviations; DOFS,</span>
+<span class="sd">covariance of aggregates and the gain are those of the deviations, and the</span>
+<span class="sd">prior's variances (which the reduction of uncertainty is measured against)</span>
+<span class="sd">those of the prior members, :math:`A A^T`; DOFS,</span>
 <span class="sd">:math:`\operatorname{tr}(P_{yy} (P_{yy} + R)^{-1})`, the information content</span>
 <span class="sd">and chi-squared, :math:`d^T (P_{yy} + R)^{-1} d`, are those of the</span>
 <span class="sd">ensemble's covariances, which equal :math:`H P H^T` with a linear model;</span>
@@ -715,7 +717,9 @@
 <span class="sd">    - the estimate is the mean of the updated members, the posterior mean of</span>
 <span class="sd">      the ensemble (``estimate_is_mean``); the variances and the covariance</span>
 <span class="sd">      of aggregates are those of the updated deviations, :math:`A^a A^{aT}`;</span>
-<span class="sd">      :meth:`sample` returns updated members, at most :math:`N`;</span>
+<span class="sd">      :meth:`sample` returns updated members, at most :math:`N`; the prior's</span>
+<span class="sd">      variances, which the reduction of uncertainty is measured against, are</span>
+<span class="sd">      those of the prior members, :math:`A A^T`, the prior the update used;</span>
 <span class="sd">    - the gain is the ensemble's :math:`K`; DOFS is :math:`\sum_k w_k</span>
 <span class="sd">      \lambda_k = \operatorname{tr}(P_{yy} (P_{yy} + R)^{-1})`, the</span>
 <span class="sd">      information content :math:`\tfrac{1}{2} \sum_k \ln(1 + \gamma</span>
@@ -819,6 +823,15 @@
         <span class="n">updated</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_updated</span><span class="p">()</span>
         <span class="n">Y</span> <span class="o">=</span> <span class="n">updated</span> <span class="k">if</span> <span class="n">W</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">W</span> <span class="o">@</span> <span class="n">updated</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">Y</span> <span class="o">@</span> <span class="n">Y</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">used_prior_variances</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">LinearOperator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the variances of the prior members (``n``), or of their aggregates ``W x`` (``k``): the prior the update used, which the reduction of uncertainty is measured against."""</span>
+        <span class="n">Y</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">deviations</span>
+            <span class="k">if</span> <span class="n">W</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">W</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">deviations</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">"ij,ij-&gt;i"</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">gain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">LinearOperator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""Return the ensemble's gain, :math:`K = P_{xy} (P_{yy} + R)^{-1}`, ``n x m``, or :math:`W K`."""</span>

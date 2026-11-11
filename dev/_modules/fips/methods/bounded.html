@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.methods.bounded &#8212; fips 0.2.0b3.dev41+g3c34b0298 documentation</title>
+    <title>fips.methods.bounded &#8212; fips 0.2.0b3.dev42+g5347e97e0 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../../_static/documentation_options.js?v=045c8eee"></script>
+    <script src="../../../_static/documentation_options.js?v=5a88ebcd"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev41+g3c34b0298 documentation - Home"/>
-    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev41+g3c34b0298 documentation - Home"/>
+    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev42+g5347e97e0 documentation - Home"/>
+    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev42+g5347e97e0 documentation - Home"/>
   
   
 </a></div>
@@ -457,9 +457,12 @@
 
 <span class="sd">The gain, DOFS and the information content are those of the analytic posterior</span>
 <span class="sd">with the elements on a bound held there (the Gaussian at the mode); the</span>
-<span class="sd">chi-squared and the misfits are the analytic cost's terms at the mode. With no</span>
-<span class="sd">finite bound, the posterior is the analytic one, and ``_bounded`` returns the</span>
-<span class="sd">analytic solution itself.</span>
+<span class="sd">chi-squared and the misfits are the analytic cost's terms at the mode. The</span>
+<span class="sd">prior's spread, which the reduction of uncertainty is measured against, is</span>
+<span class="sd">that of draws of the prior with the bounds (the bounded problem with no</span>
+<span class="sd">observations: ``Bounded.prior_draws``), so observations that tell nothing</span>
+<span class="sd">reduce nothing. With no finite bound, the posterior is the analytic one, and</span>
+<span class="sd">``_bounded`` returns the analytic solution itself.</span>
 
 <span class="sd">References</span>
 <span class="sd">----------</span>
@@ -820,6 +823,47 @@
 <span class="sd">"""What the too-few-draws warning of the kept rectified draws says of the cause and the remedy."""</span>
 
 
+<span class="k">class</span><span class="w"> </span><span class="nc">_Prior</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    The prior :math:`N(x_0, S_0)`, answering what the active set and the sampler read of the analytic posterior: the posterior of the problem with no observations.</span>
+
+<span class="sd">    The bounded method's prior is this Gaussian with the bounds (cut at them,</span>
+<span class="sd">    or set to them for rectified draws), and its spread is that of draws of</span>
+<span class="sd">    the bounded problem with no observations (:meth:`Bounded.prior_draws`),</span>
+<span class="sd">    made by the same machinery as the posterior's draws with this in place of</span>
+<span class="sd">    the analytic factors. :meth:`sample` draws as ``analytic.sample`` does,</span>
+<span class="sd">    the prior's normals first and then the observations', which it does not</span>
+<span class="sd">    use: so the prior's draw ``k`` and the posterior's draw ``k`` from one</span>
+<span class="sd">    seed share their normals, and where the observations tell nothing the</span>
+<span class="sd">    two are the same draws.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problem</span><span class="p">:</span> <span class="n">Problem</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">problem</span> <span class="o">=</span> <span class="n">problem</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the prior mean, :math:`x_0`."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">values</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">variances</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the prior variances, the diagonal of :math:`S_0`."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">diagonal</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_cov_times</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">V</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return :math:`S_0 V` for a block `V` (``n x k``)."""</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">data</span> <span class="o">@</span> <span class="n">V</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return `N` draws of :math:`N(x_0, S_0)` (``n x N``), drawing from `rng` the normals ``analytic.sample`` would."""</span>
+        <span class="n">prior_root</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">_root</span>
+        <span class="n">obs_root</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">obs_cov</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">_root</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+            <span class="n">prior_root</span> <span class="o">@</span> <span class="n">rng</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">((</span><span class="n">prior_root</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">N</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span>
+        <span class="p">)</span>
+        <span class="n">rng</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">((</span><span class="n">obs_root</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">N</span><span class="p">))</span>  <span class="c1"># the observations' normals</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimate</span><span class="p">()[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">+</span> <span class="n">delta</span>
+
+
 <span class="k">class</span><span class="w"> </span><span class="nc">_Columns</span><span class="p">:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Columns of the analytic posterior covariance :math:`\hat{S}`, computed from the factors in blocks and kept.</span>
@@ -833,10 +877,11 @@
 <span class="sd">    is the same after a pickle. They are kept in one Fortran-ordered array, so</span>
 <span class="sd">    a column is a contiguous view. One cache serves every posterior of other</span>
 <span class="sd">    observations (``with_data``): :math:`\hat{S}` does not depend on their</span>
-<span class="sd">    values.</span>
+<span class="sd">    values. Given the prior (:class:`_Prior`), they are columns of</span>
+<span class="sd">    :math:`S_0`.</span>
 <span class="sd">    """</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">analytic</span><span class="p">:</span> <span class="s2">"Whitened | Information"</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">analytic</span><span class="p">:</span> <span class="s2">"Whitened | Information | _Prior"</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_analytic</span> <span class="o">=</span> <span class="n">analytic</span>
         <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">analytic</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_slot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">intp</span><span class="p">)</span>
@@ -1230,12 +1275,13 @@
 <span class="sd">    of the start. The velocities are the analytic method's exact draws less</span>
 <span class="sd">    :math:`\hat{x}` (``analytic.sample``), :data:`_BLOCK` at a time; only the</span>
 <span class="sd">    bounded elements are checked for a hit, and only the columns of the</span>
-<span class="sd">    elements that hit are used, from ``columns``.</span>
+<span class="sd">    elements that hit are used, from ``columns``. Given the prior</span>
+<span class="sd">    (:class:`_Prior`) for ``analytic``, it draws the prior cut at the bounds.</span>
 <span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">analytic</span><span class="p">:</span> <span class="s2">"Whitened | Information"</span><span class="p">,</span>
+        <span class="n">analytic</span><span class="p">:</span> <span class="s2">"Whitened | Information | _Prior"</span><span class="p">,</span>
         <span class="n">lower</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
         <span class="n">upper</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
         <span class="n">columns</span><span class="p">:</span> <span class="n">_Columns</span><span class="p">,</span>
@@ -1332,9 +1378,9 @@
 <span class="sd">    \lambda_a` (``_mode``). The :class:`~fips.Posterior` asks it for every</span>
 <span class="sd">    array it reports: it is the bounded method's</span>
 <span class="sd">    :class:`~fips.posterior.Solution`. The draws (of the truncated</span>
-<span class="sd">    posterior, or rectified: ``distribution``) are made at their first use</span>
-<span class="sd">    and kept (not pickled: a posterior read back draws them again, the same,</span>
-<span class="sd">    from the seed).</span>
+<span class="sd">    posterior, or rectified: ``distribution``), and those of the prior with</span>
+<span class="sd">    the bounds, are made at their first use and kept (not pickled: a</span>
+<span class="sd">    posterior read back draws them again, the same, from the seed).</span>
 
 <span class="sd">    Its answers, by what each needs:</span>
 
@@ -1344,6 +1390,9 @@
 <span class="sd">      draws (:meth:`kept`: ``draws`` of them from ``seed``, after ``burn_in``</span>
 <span class="sd">      for the truncated chain), and so are the posterior's mean and</span>
 <span class="sd">      intervals (the draws' quantiles); :meth:`sample` draws more;</span>
+<span class="sd">    - the prior's variances, which the reduction of uncertainty is measured</span>
+<span class="sd">      against, are those of draws of the prior with the bounds, the bounded</span>
+<span class="sd">      problem with no observations (:meth:`used_prior_variances`);</span>
 <span class="sd">    - the gain, DOFS, DOFS per element and the information content are those</span>
 <span class="sd">      of the analytic posterior with the elements on a bound held there,</span>
 <span class="sd">      :math:`x_a = b_a` (the Gaussian at the mode), with :math:`C =</span>
@@ -1483,7 +1532,8 @@
         <span class="k">return</span> <span class="p">{</span>
             <span class="n">name</span><span class="p">:</span> <span class="n">value</span>
             <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-            <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"_columns_"</span><span class="p">,</span> <span class="s2">"_sampler_"</span><span class="p">,</span> <span class="s2">"_draws"</span><span class="p">,</span> <span class="s2">"_conditioned_"</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">name</span>
+            <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"_columns_"</span><span class="p">,</span> <span class="s2">"_sampler_"</span><span class="p">,</span> <span class="s2">"_draws"</span><span class="p">,</span> <span class="s2">"_conditioned_"</span><span class="p">,</span> <span class="s2">"_prior_draws"</span><span class="p">)</span>
         <span class="p">}</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -1534,53 +1584,58 @@
 <span class="sd">        (:meth:`_rectify`).</span>
 <span class="sd">        """</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">distribution</span> <span class="o">==</span> <span class="s2">"rectified"</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rectify</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">rng</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">_rectify</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">upper</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_columns</span><span class="p">(),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">rng</span><span class="p">),</span>
+            <span class="p">)</span>
         <span class="n">sampler</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sampler</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">sampler</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">sampler</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">),</span> <span class="n">N</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">burn_in</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_rectify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">draws</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">prior_draws</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">        Return the analytic posterior's draws `draws` (``n x N``, overwritten) each moved onto the bounds as the mode is: the bounded problem solved again for a draw of the prior and the data.</span>
+<span class="sd">        Return draws of the prior with the bounds (``n x draws``), which the prior's variances are read from: drawn from the seed at the first call, and kept.</span>
 
-<span class="sd">        The analytic estimate of the problem with the prior mean drawn from</span>
-<span class="sd">        :math:`N(x_0, S_0)` and the observations from :math:`N(z, S_z /</span>
-<span class="sd">        \gamma)` is an exact draw :math:`x_s` of :math:`N(\hat{x}, \hat{S})`</span>
-<span class="sd">        (``analytic.sample``), and the perturbed problem has the same</span>
-<span class="sd">        :math:`\hat{S}`, so its bounded estimate is the point of the box</span>
-<span class="sd">        nearest :math:`x_s` in the metric of :math:`\hat{S}`: ``_mode`` at</span>
-<span class="sd">        :math:`x_s` in place of :math:`\hat{x}`, checked by its optimality</span>
-<span class="sd">        conditions. An element the posterior fixes (no variance) keeps the</span>
-<span class="sd">        analytic estimate's value, as the mode does: the draw's roundoff</span>
-<span class="sd">        there could put it a hair outside a bound it sits on.</span>
-
-<span class="sd">        Raises</span>
-<span class="sd">        ------</span>
-<span class="sd">        numpy.linalg.LinAlgError</span>
-<span class="sd">            If a draw's active set fails or ends off the optimality</span>
-<span class="sd">            conditions (``_checked_mode``), naming the draw.</span>
+<span class="sd">        The prior the bounded method uses is :math:`N(x_0, S_0)` with the</span>
+<span class="sd">        bounds, as its draws treat it: the bounded problem with no</span>
+<span class="sd">        observations, whose posterior is that prior. Truncated, the prior cut</span>
+<span class="sd">        at the bounds: a chain of it, from its mode, as the kept draws are</span>
+<span class="sd">        made. Rectified, the prior set to its bounds: each draw of</span>
+<span class="sd">        :math:`N(x_0, S_0)` moved onto the bounds as the mode is (an element</span>
+<span class="sd">        outside them onto its bound, the others along the prior's</span>
+<span class="sd">        correlations), which is what a rectified draw is when the</span>
+<span class="sd">        observations tell nothing. The draws are as many as the kept ones,</span>
+<span class="sd">        from the same seed, and share their normals (:class:`_Prior`), so</span>
+<span class="sd">        where the observations tell nothing they are the kept draws, and the</span>
+<span class="sd">        reduction of uncertainty is zero.</span>
 <span class="sd">        """</span>
-        <span class="n">columns</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_columns</span><span class="p">()</span>
-        <span class="n">variances</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">variances</span><span class="p">()</span>
-        <span class="n">fixed</span> <span class="o">=</span> <span class="o">~</span><span class="p">(</span><span class="n">variances</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
-        <span class="n">x_hat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">estimate</span><span class="p">()</span>
-        <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper</span>
-        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">draws</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
-            <span class="n">x</span> <span class="o">=</span> <span class="n">draws</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span>
-            <span class="n">x</span><span class="p">[</span><span class="n">fixed</span><span class="p">]</span> <span class="o">=</span> <span class="n">x_hat</span><span class="p">[</span><span class="n">fixed</span><span class="p">]</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">draws</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">_checked_mode</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="n">variances</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="k">except</span> <span class="n">LinAlgError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">LinAlgError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">"Rectified draw </span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2"> of </span><span class="si">{</span><span class="n">draws</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2"> could not be moved "</span>
-                    <span class="sa">f</span><span class="s2">"onto the bounds: </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">"</span>
-                <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">err</span>
-        <span class="k">return</span> <span class="n">draws</span>
+        <span class="n">kept</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"_prior_draws"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">kept</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">prior</span> <span class="o">=</span> <span class="n">_Prior</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">problem</span><span class="p">)</span>
+            <span class="n">columns</span> <span class="o">=</span> <span class="n">_Columns</span><span class="p">(</span><span class="n">prior</span><span class="p">)</span>
+            <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">distribution</span> <span class="o">==</span> <span class="s2">"rectified"</span><span class="p">:</span>
+                <span class="n">kept</span> <span class="o">=</span> <span class="n">_rectify</span><span class="p">(</span>
+                    <span class="n">prior</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">upper</span><span class="p">,</span>
+                    <span class="n">columns</span><span class="p">,</span>
+                    <span class="n">prior</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">draws</span><span class="p">,</span> <span class="n">rng</span><span class="p">),</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">mode</span> <span class="o">=</span> <span class="n">_checked_mode</span><span class="p">(</span>
+                    <span class="n">prior</span><span class="o">.</span><span class="n">estimate</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="n">prior</span><span class="o">.</span><span class="n">variances</span><span class="p">()</span>
+                <span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">sampler</span> <span class="o">=</span> <span class="n">_Sampler</span><span class="p">(</span><span class="n">prior</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper</span><span class="p">,</span> <span class="n">columns</span><span class="p">)</span>
+                <span class="n">kept</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">sampler</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="n">mode</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">draws</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">burn_in</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
+            <span class="n">kept</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">"_prior_draws"</span><span class="p">]</span> <span class="o">=</span> <span class="n">_read_only</span><span class="p">(</span><span class="n">kept</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">kept</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">variances</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Return the variances of the kept draws."""</span>
-        <span class="n">kept</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kept</span><span class="p">()</span>
-        <span class="n">centered</span> <span class="o">=</span> <span class="n">kept</span> <span class="o">-</span> <span class="n">kept</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">"ij,ij-&gt;i"</span><span class="p">,</span> <span class="n">centered</span><span class="p">,</span> <span class="n">centered</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">kept</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_variances</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">kept</span><span class="p">())</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">cov</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">LinearOperator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Return the covariance of the kept draws, ``n x n``, or of their aggregates ``W x``, ``k x k``."""</span>
@@ -1589,6 +1644,11 @@
         <span class="n">centered</span> <span class="o">=</span> <span class="n">Y</span> <span class="o">-</span> <span class="n">Y</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">S</span> <span class="o">=</span> <span class="n">centered</span> <span class="o">@</span> <span class="n">centered</span><span class="o">.</span><span class="n">T</span> <span class="o">/</span> <span class="p">(</span><span class="n">Y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
         <span class="k">return</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">S</span> <span class="o">+</span> <span class="n">S</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">used_prior_variances</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">LinearOperator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the variances of the prior with the bounds (``n``), or of its aggregates ``W x`` (``k``): those of :meth:`prior_draws`."""</span>
+        <span class="n">draws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prior_draws</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">_variances</span><span class="p">(</span><span class="n">draws</span> <span class="k">if</span> <span class="n">W</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">W</span> <span class="o">@</span> <span class="n">draws</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_gain_rows</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">active</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""Return the rows of the analytic gain at `active`, :math:`K_{a:}` (``|a| x m``)."""</span>
@@ -1721,29 +1781,92 @@
         <span class="p">}</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">with_gamma</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Bounded"</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Return the solution at `gamma`: the active set again, on the analytic factors read at `gamma`."""</span>
-        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">with_gamma</span><span class="p">(</span><span class="n">gamma</span><span class="p">),</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">upper</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">draws</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">burn_in</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">distribution</span><span class="p">,</span>
+<span class="w">        </span><span class="sd">"""Return the solution at `gamma`: the active set again, on the analytic factors read at `gamma`, sharing the prior's draws."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sharing_the_prior</span><span class="p">(</span>
+            <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">with_gamma</span><span class="p">(</span><span class="n">gamma</span><span class="p">),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">upper</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">draws</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">burn_in</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">distribution</span><span class="p">,</span>
+            <span class="p">)</span>
         <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">with_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problem</span><span class="p">:</span> <span class="n">Problem</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Bounded"</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Return the solution of `problem`, this one's with other observation values: the active set again, sharing the kept columns."""</span>
-        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">with_data</span><span class="p">(</span><span class="n">problem</span><span class="p">),</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">upper</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">draws</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">burn_in</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">distribution</span><span class="p">,</span>
-            <span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_columns</span><span class="p">(),</span>
+<span class="w">        </span><span class="sd">"""Return the solution of `problem`, this one's with other observation values: the active set again, sharing the kept columns and the prior's draws."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sharing_the_prior</span><span class="p">(</span>
+            <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">with_data</span><span class="p">(</span><span class="n">problem</span><span class="p">),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">upper</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">draws</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">burn_in</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">distribution</span><span class="p">,</span>
+                <span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_columns</span><span class="p">(),</span>
+            <span class="p">)</span>
         <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_sharing_the_prior</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">"Bounded"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Bounded"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return `other` with this solution's prior draws, if made: the prior depends on neither gamma nor the observations' values."""</span>
+        <span class="n">prior_draws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"_prior_draws"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">prior_draws</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">other</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">"_prior_draws"</span><span class="p">]</span> <span class="o">=</span> <span class="n">prior_draws</span>
+        <span class="k">return</span> <span class="n">other</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_variances</span><span class="p">(</span><span class="n">draws</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return the variance of each row of `draws` (``n x N``), with ``N - 1`` in the denominator."""</span>
+    <span class="n">centered</span> <span class="o">=</span> <span class="n">draws</span> <span class="o">-</span> <span class="n">draws</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">"ij,ij-&gt;i"</span><span class="p">,</span> <span class="n">centered</span><span class="p">,</span> <span class="n">centered</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">draws</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_rectify</span><span class="p">(</span>
+    <span class="n">analytic</span><span class="p">:</span> <span class="s2">"Whitened | Information | _Prior"</span><span class="p">,</span>
+    <span class="n">lower</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">upper</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">columns</span><span class="p">:</span> <span class="n">_Columns</span><span class="p">,</span>
+    <span class="n">draws</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Return the analytic posterior's draws `draws` (``n x N``, overwritten) each moved onto the bounds as the mode is: the bounded problem solved again for a draw of the prior and the data.</span>
+
+<span class="sd">    The analytic estimate of the problem with the prior mean drawn from</span>
+<span class="sd">    :math:`N(x_0, S_0)` and the observations from :math:`N(z, S_z /</span>
+<span class="sd">    \gamma)` is an exact draw :math:`x_s` of :math:`N(\hat{x}, \hat{S})`</span>
+<span class="sd">    (``analytic.sample``), and the perturbed problem has the same</span>
+<span class="sd">    :math:`\hat{S}`, so its bounded estimate is the point of the box</span>
+<span class="sd">    nearest :math:`x_s` in the metric of :math:`\hat{S}`: ``_mode`` at</span>
+<span class="sd">    :math:`x_s` in place of :math:`\hat{x}`, checked by its optimality</span>
+<span class="sd">    conditions. An element the posterior fixes (no variance) keeps the</span>
+<span class="sd">    analytic estimate's value, as the mode does: the draw's roundoff</span>
+<span class="sd">    there could put it a hair outside a bound it sits on. `columns` are</span>
+<span class="sd">    the cached columns of `analytic`'s covariance. With the prior</span>
+<span class="sd">    (:class:`_Prior`) for `analytic`, the problem has no observations, and</span>
+<span class="sd">    the draws are those of the prior set to its bounds.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    numpy.linalg.LinAlgError</span>
+<span class="sd">        If a draw's active set fails or ends off the optimality</span>
+<span class="sd">        conditions (``_checked_mode``), naming the draw.</span>
+<span class="sd">    """</span>
+    <span class="n">variances</span> <span class="o">=</span> <span class="n">analytic</span><span class="o">.</span><span class="n">variances</span><span class="p">()</span>
+    <span class="n">fixed</span> <span class="o">=</span> <span class="o">~</span><span class="p">(</span><span class="n">variances</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">x_hat</span> <span class="o">=</span> <span class="n">analytic</span><span class="o">.</span><span class="n">estimate</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">draws</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">draws</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span>
+        <span class="n">x</span><span class="p">[</span><span class="n">fixed</span><span class="p">]</span> <span class="o">=</span> <span class="n">x_hat</span><span class="p">[</span><span class="n">fixed</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">draws</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">_checked_mode</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="n">variances</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">except</span> <span class="n">LinAlgError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">LinAlgError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Rectified draw </span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2"> of </span><span class="si">{</span><span class="n">draws</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2"> could not be moved "</span>
+                <span class="sa">f</span><span class="s2">"onto the bounds: </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">"</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">err</span>
+    <span class="k">return</span> <span class="n">draws</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_logdet</span><span class="p">(</span><span class="n">S</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>

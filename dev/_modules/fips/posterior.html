@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.posterior &#8212; fips 0.2.0b3.dev41+g3c34b0298 documentation</title>
+    <title>fips.posterior &#8212; fips 0.2.0b3.dev42+g5347e97e0 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=045c8eee"></script>
+    <script src="../../_static/documentation_options.js?v=5a88ebcd"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev41+g3c34b0298 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev41+g3c34b0298 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev42+g5347e97e0 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev42+g5347e97e0 documentation - Home"/>
   
   
 </a></div>
@@ -525,9 +525,9 @@
 <span class="sd">    observations (``problem.obs``). The posterior labels them, and computes</span>
 <span class="sd">    each one once.</span>
 
-<span class="sd">    Ten members are optional, and a posterior whose solution lacks one says</span>
-<span class="sd">    so when it is asked for the feature (or, for ``linearized``, uses its own</span>
-<span class="sd">    problem):</span>
+<span class="sd">    Eleven members are optional, and a posterior whose solution lacks one says</span>
+<span class="sd">    so when it is asked for the feature (or, for ``linearized`` and</span>
+<span class="sd">    ``used_prior_variances``, uses its own problem):</span>
 
 <span class="sd">    - ``with_gamma(gamma) -&gt; Solution``: the solution at another</span>
 <span class="sd">      regularization factor, without solving again (:meth:`Posterior.with_gamma`).</span>
@@ -561,6 +561,13 @@
 <span class="sd">      linearized where its last solve was made). The averaging kernel and</span>
 <span class="sd">      the innovation covariance read their forward operator from it; without</span>
 <span class="sd">      it, from the posterior's problem.</span>
+<span class="sd">    - ``used_prior_variances(W=None) -&gt; np.ndarray``: for a method whose prior is</span>
+<span class="sd">      not the problem's Gaussian :math:`N(x_0, S_0)`, the variances of the</span>
+<span class="sd">      prior it used, of the state (``n``) or of the aggregates ``W x``</span>
+<span class="sd">      (``k``). The ``prior_std`` and ``reduction`` of</span>
+<span class="sd">      :meth:`Posterior.uncertainty` and :attr:`Posterior.uncertainty_reduction`</span>
+<span class="sd">      are measured against them, so that observations that tell nothing</span>
+<span class="sd">      reduce nothing; without it, against :math:`S_0`.</span>
 
 <span class="sd">    And a solution whose :meth:`estimate` is the posterior mean says so with a</span>
 <span class="sd">    class attribute ``estimate_is_mean = True``; without it, a posterior's</span>
@@ -581,7 +588,9 @@
 <span class="sd">    its mean, variances, covariances and intervals are those of the draws it</span>
 <span class="sd">    keeps (of its posterior, a Gaussian truncated to the bounds, or, with</span>
 <span class="sd">    ``distribution="rectified"``, of the bounded estimate with the prior mean</span>
-<span class="sd">    and the data redrawn); its gain,</span>
+<span class="sd">    and the data redrawn); its prior's variances are those of draws of the</span>
+<span class="sd">    prior with the bounds (cut at them, or for rectified draws set to them);</span>
+<span class="sd">    its gain,</span>
 <span class="sd">    DOFS and information content are those of the Gaussian at the mode, with</span>
 <span class="sd">    the elements on a bound held there; and its chi-squared terms are those</span>
 <span class="sd">    of the mode. The ``"gauss_newton"`` method's estimate is the mode; its</span>
@@ -590,8 +599,9 @@
 <span class="sd">    the Gaussian at the mode; and its chi-squared terms those of the model at</span>
 <span class="sd">    its estimate. The ``"ensemble"`` method's estimate is the mean of its</span>
 <span class="sd">    updated members; its variances, covariances and gain are those of the</span>
-<span class="sd">    members, and its DOFS, information content and chi-squared the analytic</span>
-<span class="sd">    formulas with the members' covariance of the modeled observations. The</span>
+<span class="sd">    members, its prior's variances those of the prior members, and its</span>
+<span class="sd">    DOFS, information content and chi-squared the analytic formulas with</span>
+<span class="sd">    the members' covariance of the modeled observations. The</span>
 <span class="sd">    ``"variational"`` method's estimate is the solution of conjugate</span>
 <span class="sd">    gradients (the mode, with a forward model); its variances, covariances,</span>
 <span class="sd">    gain, DOFS and information content are those of its low-rank posterior,</span>
@@ -987,6 +997,12 @@
 <span class="sd">         - the estimate plus or minus ``z`` standard deviations</span>
 <span class="sd">         - the kept draws' quantiles</span>
 <span class="sd">         - the estimate plus or minus ``z`` standard deviations</span>
+<span class="sd">       * - ``prior_std``, ``reduction`` (``uncertainty``),</span>
+<span class="sd">           ``uncertainty_reduction``</span>
+<span class="sd">         - against :math:`S_0`; ``"ensemble"``: against its prior members</span>
+<span class="sd">         - ``"bounded"``: against draws of the prior with the bounds;</span>
+<span class="sd">           ``"gauss_newton"``: against :math:`S_0`</span>
+<span class="sd">         - against :math:`S_0`</span>
 <span class="sd">       * - ``with_gamma``</span>
 <span class="sd">         - yes</span>
 <span class="sd">         - ``"bounded"``: yes; ``"gauss_newton"``: raises (its linearization</span>
@@ -1629,6 +1645,23 @@
         <span class="n">Wt</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">W_form</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">W_form</span><span class="o">.</span><span class="n">_transpose</span><span class="p">()</span><span class="o">.</span><span class="n">dense</span><span class="p">()</span>  <span class="c1"># n x k</span>
         <span class="k">return</span> <span class="n">_largest_variance</span><span class="p">(</span><span class="n">Wt</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_prior_variances</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">Operator</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">W_form</span><span class="p">:</span> <span class="n">LinearOperator</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return the variances of the prior the method used, of the state (`W` None) or of the aggregates ``W x``.</span>
+
+<span class="sd">        The solution's ``used_prior_variances`` when it has one (a method whose</span>
+<span class="sd">        prior is not the problem's Gaussian), at `W_form`, the aggregation</span>
+<span class="sd">        `W` as a form; otherwise those of :math:`S_0`.</span>
+<span class="sd">        """</span>
+        <span class="n">own</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_solution</span><span class="p">,</span> <span class="s2">"used_prior_variances"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">own</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">own</span><span class="p">(</span><span class="n">W_form</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">W</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span>
+
 <div class="viewcode-block" id="Posterior.uncertainty">
 <a class="viewcode-back" href="../../reference/api/fips.Posterior.uncertainty.html#fips.Posterior.uncertainty">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">uncertainty</span><span class="p">(</span>
@@ -1646,6 +1679,16 @@
 <span class="sd">        of aggregates such as a trend or the difference of two seasons</span>
 <span class="sd">        (``C @ W``, with ``C`` the weights of the rows of ``W``), whose</span>
 <span class="sd">        uncertainty includes the covariance between the aggregates.</span>
+
+<span class="sd">        The prior side is the prior the method used, so observations that</span>
+<span class="sd">        tell nothing reduce nothing. For ``"bounded"`` with a finite bound</span>
+<span class="sd">        it is the spread of draws of the prior with the bounds, the bounded</span>
+<span class="sd">        problem with no observations: :math:`N(x_0, S_0)` cut at the bounds</span>
+<span class="sd">        (``distribution="truncated"``) or set to them (``"rectified"``),</span>
+<span class="sd">        drawn as many times as the posterior and from the same seed. For</span>
+<span class="sd">        ``"ensemble"`` it is the spread of the prior members, whose</span>
+<span class="sd">        covariance the update used. For every other method it is</span>
+<span class="sd">        :math:`S_0`.</span>
 
 <span class="sd">        The interval is the posterior's own. For a sampled posterior</span>
 <span class="sd">        (``"bounded"`` with a finite bound, ``"gauss_newton"`` with a forward</span>
@@ -1668,7 +1711,8 @@
 <span class="sd">        -------</span>
 <span class="sd">        pandas.DataFrame</span>
 <span class="sd">            One row per aggregate, on the aggregation's rows (or the state's</span>
-<span class="sd">            labels): ``prior_std``, ``posterior_std`` and ``reduction``,</span>
+<span class="sd">            labels): ``prior_std`` (of the prior the method used, as above),</span>
+<span class="sd">            ``posterior_std`` and ``reduction``,</span>
 <span class="sd">            :math:`1 - \sigma_{posterior} / \sigma_{prior}` (a fraction; NaN</span>
 <span class="sd">            where the prior standard deviation is 0), then ``lower`` and</span>
 <span class="sd">            ``upper``, the ends of the posterior interval of probability</span>
@@ -1690,7 +1734,7 @@
 <span class="sd">        --------</span>
 <span class="sd">        cov : The posterior covariance, of the state or of aggregates.</span>
 <span class="sd">        fips.Covariance.aggregate : The prior covariance of aggregates, ``problem.prior_cov.aggregate(W)``.</span>
-<span class="sd">        uncertainty_reduction : One number for the whole state.</span>
+<span class="sd">        uncertainty_reduction : One number for the whole state, measured against the same prior.</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
@@ -1739,15 +1783,14 @@
 <span class="sd">        """</span>
         <span class="n">level</span> <span class="o">=</span> <span class="n">_checked_level</span><span class="p">(</span><span class="n">level</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">W</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">prior</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span>
             <span class="n">posterior</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span>
             <span class="n">W_form</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">index</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">posterior</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span>  <span class="c1"># checks W against the state</span>
-            <span class="n">prior</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span>
             <span class="n">W_form</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_aggregation</span><span class="p">(</span><span class="n">W</span><span class="p">)</span>
             <span class="n">index</span> <span class="o">=</span> <span class="n">W</span><span class="o">.</span><span class="n">rows</span><span class="o">.</span><span class="n">index</span>
+        <span class="n">prior</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prior_variances</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="n">W_form</span><span class="p">)</span>
         <span class="n">scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prior_scale</span><span class="p">(</span><span class="n">W_form</span><span class="p">)</span>
         <span class="n">prior_std</span> <span class="o">=</span> <span class="n">_std</span><span class="p">(</span><span class="n">prior</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="s2">"prior variances"</span><span class="p">)</span>
         <span class="n">posterior_std</span> <span class="o">=</span> <span class="n">_std</span><span class="p">(</span><span class="n">posterior</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="s2">"posterior variances"</span><span class="p">)</span>
@@ -3211,9 +3254,21 @@
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        One minus the ratio of the posterior to the prior total error.</span>
 
-<span class="sd">        :math:`1 - \sqrt{\operatorname{tr}(\hat{S})} / \sqrt{\operatorname{tr}(S_0)}`.</span>
+<span class="sd">        :math:`1 - \sqrt{\operatorname{tr}(\hat{S})} / \sqrt{\operatorname{tr}(S_0)}`,</span>
+<span class="sd">        with the prior side the prior the method used, as in</span>
+<span class="sd">        :meth:`uncertainty`: for ``"bounded"`` with a finite bound the</span>
+<span class="sd">        variances of draws of the prior with the bounds, for ``"ensemble"``</span>
+<span class="sd">        those of the prior members, in place of :math:`\operatorname{tr}(S_0)`.</span>
+<span class="sd">        Observations that tell nothing (no DOFS) give 0, for a sampled</span>
+<span class="sd">        posterior within the Monte Carlo error of its draws.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        uncertainty : The same reduction for each element or aggregate.</span>
+<span class="sd">        dofs : What the observations told, in degrees of freedom.</span>
 <span class="sd">        """</span>
-        <span class="n">prior</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">trace</span><span class="p">()</span>
+        <span class="n">own</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_solution</span><span class="p">,</span> <span class="s2">"used_prior_variances"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">prior</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">trace</span><span class="p">()</span> <span class="k">if</span> <span class="n">own</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">own</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
         <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">prior</span><span class="p">))</span>
 
 <div class="viewcode-block" id="Posterior.summary">
