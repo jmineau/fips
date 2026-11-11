@@ -708,7 +708,7 @@ def test_recovery_of_a_prior_that_is_not_positive_semidefinite_is_nan(caplog):
     observed = Space({"ch4": pd.Index(range(m), name="obs_id")})
     positive = (Q * np.r_[np.linspace(1.0, 2.0, n - 1), 0.0]) @ Q.T
     positive = 0.5 * (positive + positive.T)
-    prior_cov = Covariance(positive, state) - Covariance(0.3 * np.outer(q, q), state)
+    prior_cov = Covariance._computed(positive - 0.3 * np.outer(q, q), state)
     problem = Problem(
         prior=Vector(np.zeros(n), state),
         prior_cov=prior_cov,

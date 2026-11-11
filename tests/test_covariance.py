@@ -25,6 +25,7 @@ from fips import (
     Independent,
     Kronecker,
     Operator,
+    Problem,
     Space,
     Vector,
 )
@@ -530,7 +531,7 @@ class TestArithmeticAndBlocks:
 
     @EACH_FORM
     def test_sum_of_covariances(self, form):
-        """The sum or difference of two covariances, in any order, is a covariance."""
+        """The sum of two covariances, in any order, is a covariance."""
         S = COVS[form]
         other = _shuffled(S.space)
         T = Covariance.diagonal(1.0, other)
@@ -538,8 +539,14 @@ class TestArithmeticAndBlocks:
         assert isinstance(total, Covariance) and total.space is S.space
         assert total.name is None  # the names differ
         np.testing.assert_allclose(total.dense(), S.dense() + np.eye(len(S.space)))
+
+    @EACH_FORM
+    def test_difference_is_an_operator(self, form):
+        """A difference need not be positive semidefinite, so it is a plain operator with the right values."""
+        S = COVS[form]
+        T = Covariance.diagonal(1.0, _shuffled(S.space))
         difference = S - T
-        assert isinstance(difference, Covariance)
+        assert type(difference) is Operator and difference.rows is S.space
         np.testing.assert_allclose(difference.dense(), S.dense() - np.eye(len(S.space)))
 
     def test_sum_with_an_operator_is_an_operator(self):
@@ -555,7 +562,7 @@ class TestArithmeticAndBlocks:
 
     @EACH_FORM
     def test_scalars_keep_a_covariance(self, form):
-        """``*``, ``/`` and unary ``-`` give a covariance in the same form."""
+        """``*`` and ``/`` by a positive scalar, and ``0 *``, give a covariance in the same form."""
         S = COVS[form]
         for result, expected in [
             (S * 2.0, 2.0 * S.dense()),
@@ -565,7 +572,37 @@ class TestArithmeticAndBlocks:
             assert isinstance(result, Covariance) and result.space is S.space
             assert isinstance(result.data, FORM_TYPES[form])
             np.testing.assert_allclose(result.dense(), expected, rtol=1e-14)
-        assert isinstance(-S, Covariance)
+        assert isinstance(0.0 * S, Covariance)
+
+    @EACH_FORM
+    def test_negative_scalars_make_an_operator(self, form):
+        """``-S``, ``(-1) * S``, ``S * -2`` and ``S / -2`` are plain operators in the same form."""
+        S = COVS[form]
+        for result, expected in [
+            (-S, -S.dense()),
+            ((-1) * S, -S.dense()),
+            (S * -2.0, -2.0 * S.dense()),
+            (S / -2.0, -S.dense() / 2.0),
+        ]:
+            assert type(result) is Operator and result.rows is S.space
+            assert result.name == S.name
+            if form != "kronecker":  # a negative Kronecker form has no factors: dense
+                assert isinstance(result.data, FORM_TYPES[form])
+            np.testing.assert_allclose(result.dense(), expected, rtol=1e-14)
+
+    def test_a_negated_covariance_is_not_a_prior(self):
+        """A problem takes a covariance, so the negation of one is refused instead of solved."""
+        S = COVS["dense"]
+        y = Space({"obs": pd.RangeIndex(2, name="j")})
+        for bad in (-S, (-1) * S, S - S):
+            with pytest.raises(TypeError, match="prior_cov must be a Covariance"):
+                Problem(
+                    Vector(np.zeros(len(S.space)), S.space),
+                    bad,
+                    Vector([1.0, 2.0], y),
+                    Independent().with_std(1.0),
+                    Operator(np.ones((2, len(S.space))), y, S.space),
+                )
 
     def test_diagonal_block_is_a_covariance(self):
         """``cov[b, b]`` is a covariance on that block; ``cov[a, b]`` an operator."""

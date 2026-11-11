@@ -177,8 +177,10 @@ class Covariance(Operator):
     of a Kronecker one, or the square roots of a diagonal. A singular matrix,
     which has no Cholesky factor, is eigendecomposed instead (several times
     the cost), with one INFO line. A covariance fips builds from a correlation
-    model or computes (a sum, a reordering, a posterior) is positive
-    semidefinite by construction and is not checked.
+    model or computes (a sum, a nonnegative multiple, a reordering, a
+    posterior) is positive semidefinite by construction and is not checked.
+    What need not be one is a plain :class:`~fips.Operator`: ``-cov``, a
+    negative multiple and the difference of two covariances.
 
     See Also
     --------

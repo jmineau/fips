@@ -133,10 +133,12 @@ inversion is a function that builds the `Problem`.
   and `KroneckerOperator` its factors. It then builds `form._root`, which
   refuses an eigenvalue below zero by more than `n * eps * max|lambda|`, for
   every fips form, and keeps it for `sample`. What fips computes from
-  covariances or models (a sum, a reordering, a block diagonal, `W S W^T`, a
-  posterior, a model's `build`) is built with `Covariance._computed`, which
-  skips both checks: its roundoff can come near 1e-10, and a model is
-  positive semidefinite by construction. A variance a posterior reports as a
+  covariances or models (a sum, a nonnegative multiple, a reordering, a block
+  diagonal, `W S W^T`, a posterior, a model's `build`) is built with
+  `Covariance._computed`, which skips both checks: its roundoff can come near
+  1e-10, and each is positive semidefinite by construction. What need not be
+  (`-C`, a negative multiple, `C - D`) is a plain `Operator`, which `Problem`
+  refuses as a covariance. A variance a posterior reports as a
   standard deviation goes through `posterior._std`: below zero by up to
   `sqrt(eps)` of `(sum_i |x_i| sigma_i)^2` it is 0, further below it is NaN, logged.
 - **Sparse stays sparse.** A sparse matrix is a SciPy matrix, never a

@@ -296,10 +296,16 @@ class TestArithmetic:
         assert isinstance(G.data, SparseOperator)
         assert G.rows == OBS and G.cols == OBS
         np.testing.assert_allclose(G.dense(), Ha @ Sa @ Ha.T + 0.5 * np.eye(M))
-        for total, expected in [(S_0 + S_0, 2 * Sa), (S_0 - S_0 * 0.5, 0.5 * Sa)]:
-            assert isinstance(total, Covariance)
-            assert isinstance(total.data, SparseOperator)
-            np.testing.assert_allclose(total.dense(), expected)
+        total = S_0 + S_0
+        assert isinstance(total, Covariance)
+        assert isinstance(total.data, SparseOperator)
+        np.testing.assert_allclose(total.dense(), 2 * Sa)
+        difference = (
+            S_0 - S_0 * 0.5
+        )  # not necessarily positive semidefinite: an operator
+        assert type(difference) is Operator
+        assert isinstance(difference.data, SparseOperator)
+        np.testing.assert_allclose(difference.dense(), 0.5 * Sa)
         # A dense side makes the sum dense
         assert isinstance((S_0 + Covariance(np.eye(N), STATE)).data, DenseOperator)
 
