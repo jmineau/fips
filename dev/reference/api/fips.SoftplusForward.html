@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.SoftplusForward &#8212; fips 0.2.0b3.dev30+gc9b9ff2f6 documentation</title>
+    <title>fips.SoftplusForward &#8212; fips 0.2.0b3.dev31+g6c1b40a3d documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=34f5c268"></script>
+    <script src="../../_static/documentation_options.js?v=84f0c1a0"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev30+gc9b9ff2f6 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev30+gc9b9ff2f6 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev31+g6c1b40a3d documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev31+g6c1b40a3d documentation - Home"/>
   
   
 </a></div>
@@ -1031,7 +1031,7 @@
 <h1>fips.SoftplusForward<a class="headerlink" href="#fips-softplusforward" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="fips.SoftplusForward">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">fips.</span></span><span class="sig-name descname"><span class="pre">SoftplusForward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">H</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fips/transforms.html#SoftplusForward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fips.SoftplusForward" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">fips.</span></span><span class="sig-name descname"><span class="pre">SoftplusForward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">H</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fips/transforms.html#SoftplusForward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fips.SoftplusForward" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">_Transformed</span></code></p>
 <p>A forward model whose state on one block is a flux that bends to stay above zero: <span class="math notranslate nohighlight">\(s \log(1 + e^{u/s})\)</span>.</p>
 <p>The observations are <span class="math notranslate nohighlight">\(F(x) = H\, [s \log(1 + e^{u/s}); \text{the
@@ -1046,7 +1046,7 @@ are computed without overflow for any <span class="math notranslate nohighlight"
 <code class="docutils literal notranslate"><span class="pre">scipy.special.expit</span></code>).</p>
 <p><cite>scale</cite> is in the flux’s units and says where the bend is: the transform
 is not the same in other units (<span class="math notranslate nohighlight">\(\log(1 + e^u)\)</span> bends within 1 of
-zero, whatever 1 is). A scale near the prior’s standard deviation of
+zero, whatever 1 is), so it has no default. A scale near the prior’s standard deviation of
 the flux in the cells near zero bends where the prior says the flux
 could be zero. <a class="reference internal" href="fips.SoftplusForward.prior_for.html#fips.SoftplusForward.prior_for" title="fips.SoftplusForward.prior_for"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prior_for()</span></code></a> gives the prior on <span class="math notranslate nohighlight">\(u\)</span> whose flux
 has a mean and a standard deviation; <a class="reference internal" href="fips.SoftplusForward.transform.html#fips.SoftplusForward.transform" title="fips.SoftplusForward.transform"><code class="xref py py-meth docutils literal notranslate"><span class="pre">transform()</span></code></a> maps the
@@ -1056,9 +1056,12 @@ estimate, or draws of the posterior, to the flux.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>H</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="fips.Operator.html#fips.Operator" title="fips.operator.Operator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Operator</span></code></a></span>) – The forward operator: its rows the observations’ labels, its columns
 the whole state’s (the block and any other).</p></li>
+<li><p><strong>scale</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span>) – The scale <span class="math notranslate nohighlight">\(s\)</span> of the bend, positive, in the units of the
+transformed value: within a few <span class="math notranslate nohighlight">\(s\)</span> of zero the value bends
+away from zero, and above that it is <span class="math notranslate nohighlight">\(u\)</span>. It has no default,
+since no number is right in every unit.</p></li>
 <li><p><strong>block</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span>) – The block of the state that is <span class="math notranslate nohighlight">\(u\)</span>. By default the state’s one
 block.</p></li>
-<li><p><strong>scale</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span>) – The scale <span class="math notranslate nohighlight">\(s\)</span> of the bend, in the flux’s units, positive.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>

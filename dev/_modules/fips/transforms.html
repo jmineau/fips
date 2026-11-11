@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.transforms &#8212; fips 0.2.0b3.dev30+gc9b9ff2f6 documentation</title>
+    <title>fips.transforms &#8212; fips 0.2.0b3.dev31+g6c1b40a3d documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=34f5c268"></script>
+    <script src="../../_static/documentation_options.js?v=84f0c1a0"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev30+gc9b9ff2f6 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev30+gc9b9ff2f6 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev31+g6c1b40a3d documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev31+g6c1b40a3d documentation - Home"/>
   
   
 </a></div>
@@ -1256,7 +1256,7 @@
 
 <span class="sd">    `scale` is in the flux's units and says where the bend is: the transform</span>
 <span class="sd">    is not the same in other units (:math:`\log(1 + e^u)` bends within 1 of</span>
-<span class="sd">    zero, whatever 1 is). A scale near the prior's standard deviation of</span>
+<span class="sd">    zero, whatever 1 is), so it has no default. A scale near the prior's standard deviation of</span>
 <span class="sd">    the flux in the cells near zero bends where the prior says the flux</span>
 <span class="sd">    could be zero. :meth:`prior_for` gives the prior on :math:`u` whose flux</span>
 <span class="sd">    has a mean and a standard deviation; :meth:`transform` maps the</span>
@@ -1267,11 +1267,14 @@
 <span class="sd">    H : Operator</span>
 <span class="sd">        The forward operator: its rows the observations' labels, its columns</span>
 <span class="sd">        the whole state's (the block and any other).</span>
+<span class="sd">    scale : float</span>
+<span class="sd">        The scale :math:`s` of the bend, positive, in the units of the</span>
+<span class="sd">        transformed value: within a few :math:`s` of zero the value bends</span>
+<span class="sd">        away from zero, and above that it is :math:`u`. It has no default,</span>
+<span class="sd">        since no number is right in every unit.</span>
 <span class="sd">    block : str, optional</span>
 <span class="sd">        The block of the state that is :math:`u`. By default the state's one</span>
 <span class="sd">        block.</span>
-<span class="sd">    scale : float, default 1.0</span>
-<span class="sd">        The scale :math:`s` of the bend, in the flux's units, positive.</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
@@ -1311,7 +1314,7 @@
 <span class="sd">    True</span>
 <span class="sd">    """</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">H</span><span class="p">:</span> <span class="n">Operator</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">H</span><span class="p">:</span> <span class="n">Operator</span><span class="p">,</span> <span class="n">scale</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">block</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span>
@@ -1487,7 +1490,7 @@
 <span class="sd">        &gt;&gt;&gt; H = fips.Operator(</span>
 <span class="sd">        ...     np.ones((1, 1)), fips.Space({"ch4": pd.RangeIndex(1, name="i")}), state</span>
 <span class="sd">        ... )</span>
-<span class="sd">        &gt;&gt;&gt; mu, sigma = fips.SoftplusForward(H).prior_for(mean=1.0, std=1.0)</span>
+<span class="sd">        &gt;&gt;&gt; mu, sigma = fips.SoftplusForward(H, scale=1.0).prior_for(mean=1.0, std=1.0)</span>
 <span class="sd">        &gt;&gt;&gt; mu.values.round(3), sigma.values.round(3)</span>
 <span class="sd">        (array([-0.059]), array([1.872]))</span>
 <span class="sd">        """</span>
