@@ -287,10 +287,10 @@ three quarters of the cells with an averaging kernel below 0.1, a log standard
 deviation of 1), over 200 trials with 1000 kept draws each, the 95% interval
 of the total held the truth in 95.5% of them for ``LognormalForward`` and 96%
 for ``SoftplusForward`` (21% and 40% from the Gaussian at the mode), and each
-cell's 95% interval, the quantiles of its draws, in 94.7% and 94.6%. Read
-symmetrically about the mode with the draws' standard deviation, as
-:meth:`~fips.Posterior.trials` reads it, a cell's interval held the truth in
-92%: the posterior is skewed there.
+cell's 95% interval, the quantiles of its draws (as
+:meth:`~fips.Posterior.trials` reads it), in 94.7% and 94.6%. Read
+symmetrically about the mode with the draws' standard deviation, a cell's
+interval held the truth in 92%: the posterior is skewed there.
 
 So: report the total and its interval from the posterior's draws, and each
 cell's interval from its draws (or from :attr:`~fips.Posterior.variances`).

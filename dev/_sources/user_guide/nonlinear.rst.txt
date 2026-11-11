@@ -182,18 +182,19 @@ What the posterior reports
 
 The **estimate** is the mode: the state where the cost :math:`(x - x_0)^T
 S_0^{-1} (x - x_0) + \gamma (z - F(x) - c)^T S_z^{-1} (z - F(x) - c)` is least.
-``post.mean`` raises. The rest comes from three places:
+``post.mean`` is the mean of the draws (below). The rest comes from three places:
 
 - **the model at the mode**: :attr:`~fips.Posterior.modeled_obs` is
   :math:`F(\hat{x}) + c`, and the residuals, :attr:`~fips.Posterior.rmse`,
   :attr:`~fips.Posterior.r2`, :attr:`~fips.Posterior.chi2` (the cost at the
   mode) and its two misfits are the model's;
 - **draws of the posterior**, :math:`p(x \mid z) \propto e^{-\chi^2(x)/2}`:
-  :attr:`~fips.Posterior.variances`, :meth:`~fips.Posterior.cov` (of the
-  state, or of aggregates :math:`W x`), :meth:`~fips.Posterior.uncertainty`
-  and :meth:`~fips.Posterior.sample`. The variances and covariances are those
-  of ``draws`` (2000) kept draws, made at their first use from ``seed``, after
-  a ``burn_in`` (200) that tunes the sampler;
+  :attr:`~fips.Posterior.mean`, :attr:`~fips.Posterior.variances`,
+  :meth:`~fips.Posterior.cov` (of the state, or of aggregates :math:`W x`),
+  :meth:`~fips.Posterior.uncertainty` (whose interval is the draws'
+  quantiles) and :meth:`~fips.Posterior.sample`. They are read from ``draws``
+  (2000) kept draws, made at their first use from ``seed``, after a
+  ``burn_in`` (200) that tunes the sampler;
 - **the Gaussian at the mode**, the analytic posterior of the problem
   linearized at the last step, one step of :math:`d^2 < \mathrm{tol} \cdot n`
   from the mode: the gain, the averaging kernel, DOFS, the information
@@ -285,9 +286,11 @@ page quick; each cell's interval is the quantiles of its draws:
    pd.DataFrame({std: own_world(std) for std in (0.3, 1.5)}).T.round(3)
 
 Both cover about as they claim (40 trials of 10 cells know a coverage to
-about 0.02). :meth:`~fips.Posterior.trials` runs the same loop and reads each
-trial's interval as the mode plus or minus a multiple of the draws' standard
-deviation: where the posterior is skewed that is not the posterior's interval,
-and at 1.5 it held the truth 93% of the time at 95% (the Gaussian at the mode,
-read the same way, 92%). For a total, read the draws' quantiles too
-(:doc:`positive`); :doc:`comparison` reads every method that way.
+about 0.02). :meth:`~fips.Posterior.trials` runs the same loop, and its
+``lower`` and ``upper`` are each trial's draws' quantiles, as here. Read
+instead as the mode plus or minus a multiple of the draws' standard
+deviation, the interval is not the posterior's where it is skewed: at 1.5 it
+held the truth 93% of the time at 95% (the Gaussian at the mode, read the
+same way, 92%). A total of a transform's flux is not a total of the state, so
+read it from the draws (:doc:`positive`); :doc:`comparison` reads every
+method that way.

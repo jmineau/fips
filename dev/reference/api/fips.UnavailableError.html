@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.UnavailableError &#8212; fips 0.2.0b3.dev25+gb7302ec4c documentation</title>
+    <title>fips.UnavailableError &#8212; fips 0.2.0b3.dev26+g4d65592e7 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=673372a1"></script>
+    <script src="../../_static/documentation_options.js?v=05a089fb"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -135,8 +135,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev25+gb7302ec4c documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev25+gb7302ec4c documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev26+g4d65592e7 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev26+g4d65592e7 documentation - Home"/>
   
   
 </a></div>
@@ -1018,7 +1018,8 @@
 <p>A <a class="reference internal" href="fips.Posterior.html#fips.Posterior" title="fips.Posterior"><code class="xref py py-class docutils literal notranslate"><span class="pre">Posterior</span></code></a> has every member for every method except those that
 need more of the method than a <code class="xref py py-class docutils literal notranslate"><span class="pre">Solution</span></code> gives (its docstring
 lists them, and which method has which): <a class="reference internal" href="fips.Posterior.mean.html#fips.Posterior.mean" title="fips.Posterior.mean"><code class="xref py py-attr docutils literal notranslate"><span class="pre">mean</span></code></a> of a
-method whose estimate is a mode, <a class="reference internal" href="fips.Posterior.at_bound.html#fips.Posterior.at_bound" title="fips.Posterior.at_bound"><code class="xref py py-attr docutils literal notranslate"><span class="pre">at_bound</span></code></a> of one with
+method whose estimate is a mode it keeps no draws of,
+<a class="reference internal" href="fips.Posterior.at_bound.html#fips.Posterior.at_bound" title="fips.Posterior.at_bound"><code class="xref py py-attr docutils literal notranslate"><span class="pre">at_bound</span></code></a> of one with
 no bounds, <a class="reference internal" href="fips.Posterior.log_evidence.html#fips.Posterior.log_evidence" title="fips.Posterior.log_evidence"><code class="xref py py-attr docutils literal notranslate"><span class="pre">log_evidence</span></code></a> of one whose posterior is not
 the Gaussian at its estimate, and so on. It is an <a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#AttributeError" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">AttributeError</span></code></a>,
 so <code class="docutils literal notranslate"><span class="pre">hasattr(post,</span> <span class="pre">&quot;at_bound&quot;)</span></code> is False and generic code can ask a
@@ -1048,7 +1049,7 @@ were before it.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">bounded</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="s2">"bounded"</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">hasattr</span><span class="p">(</span><span class="n">analytic</span><span class="p">,</span> <span class="s2">"at_bound"</span><span class="p">),</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">bounded</span><span class="p">,</span> <span class="s2">"at_bound"</span><span class="p">)</span>
 <span class="go">(False, True)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="nb">hasattr</span><span class="p">(</span><span class="n">bounded</span><span class="p">,</span> <span class="s2">"mean"</span><span class="p">)</span>  <span class="c1"># the bounded estimate is a mode</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">hasattr</span><span class="p">(</span><span class="n">bounded</span><span class="p">,</span> <span class="s2">"log_evidence"</span><span class="p">)</span>  <span class="c1"># no exact evidence with bounds</span>
 <span class="go">False</span>
 </pre></div>
 </div>

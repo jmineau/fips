@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.posterior &#8212; fips 0.2.0b3.dev25+gb7302ec4c documentation</title>
+    <title>fips.posterior &#8212; fips 0.2.0b3.dev26+g4d65592e7 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=673372a1"></script>
+    <script src="../../_static/documentation_options.js?v=05a089fb"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev25+gb7302ec4c documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev25+gb7302ec4c documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev26+g4d65592e7 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev26+g4d65592e7 documentation - Home"/>
   
   
 </a></div>
@@ -474,7 +474,8 @@
 <span class="sd">    A :class:`Posterior` has every member for every method except those that</span>
 <span class="sd">    need more of the method than a :class:`Solution` gives (its docstring</span>
 <span class="sd">    lists them, and which method has which): :attr:`~Posterior.mean` of a</span>
-<span class="sd">    method whose estimate is a mode, :attr:`~Posterior.at_bound` of one with</span>
+<span class="sd">    method whose estimate is a mode it keeps no draws of,</span>
+<span class="sd">    :attr:`~Posterior.at_bound` of one with</span>
 <span class="sd">    no bounds, :attr:`~Posterior.log_evidence` of one whose posterior is not</span>
 <span class="sd">    the Gaussian at its estimate, and so on. It is an :class:`AttributeError`,</span>
 <span class="sd">    so ``hasattr(post, "at_bound")`` is False and generic code can ask a</span>
@@ -503,7 +504,7 @@
 <span class="sd">    &gt;&gt;&gt; bounded = fips.solve(problem, "bounded", lower=0.0)</span>
 <span class="sd">    &gt;&gt;&gt; hasattr(analytic, "at_bound"), hasattr(bounded, "at_bound")</span>
 <span class="sd">    (False, True)</span>
-<span class="sd">    &gt;&gt;&gt; hasattr(bounded, "mean")  # the bounded estimate is a mode</span>
+<span class="sd">    &gt;&gt;&gt; hasattr(bounded, "log_evidence")  # no exact evidence with bounds</span>
 <span class="sd">    False</span>
 <span class="sd">    """</span></div>
 
@@ -522,7 +523,7 @@
 <span class="sd">    observations (``problem.obs``). The posterior labels them, and computes</span>
 <span class="sd">    each one once.</span>
 
-<span class="sd">    Nine members are optional, and a posterior whose solution lacks one says</span>
+<span class="sd">    Ten members are optional, and a posterior whose solution lacks one says</span>
 <span class="sd">    so when it is asked for the feature (or, for ``linearized``, uses its own</span>
 <span class="sd">    problem):</span>
 
@@ -539,6 +540,11 @@
 <span class="sd">    - ``sample(N, rng) -&gt; np.ndarray``: ``N`` draws from the posterior, one per</span>
 <span class="sd">      column (``n x N``), made with the :class:`numpy.random.Generator`</span>
 <span class="sd">      `rng` (:meth:`Posterior.sample`).</span>
+<span class="sd">    - ``kept() -&gt; np.ndarray``: for a sampled posterior, the draws it keeps</span>
+<span class="sd">      (``n x N``) and reads its variances and covariances from. The posterior</span>
+<span class="sd">      reads its :attr:`~Posterior.mean` and its intervals (the ``lower`` and</span>
+<span class="sd">      ``upper`` of :meth:`Posterior.uncertainty` and :meth:`Posterior.trials`)</span>
+<span class="sd">      from them too: their mean and their quantiles.</span>
 <span class="sd">    - ``at_bound() -&gt; np.ndarray``: which state elements sit on a bound at the</span>
 <span class="sd">      estimate, booleans (``n``; :attr:`Posterior.at_bound`).</span>
 <span class="sd">    - ``iterations() -&gt; tuple[np.ndarray, ...]``: for each iteration of</span>
@@ -555,8 +561,9 @@
 <span class="sd">      it, from the posterior's problem.</span>
 
 <span class="sd">    And a solution whose :meth:`estimate` is the posterior mean says so with a</span>
-<span class="sd">    class attribute ``estimate_is_mean = True``; without it, a posterior has</span>
-<span class="sd">    no :attr:`~Posterior.mean`. One whose estimate is linear in the</span>
+<span class="sd">    class attribute ``estimate_is_mean = True``; without it, a posterior's</span>
+<span class="sd">    :attr:`~Posterior.mean` is that of the ``kept`` draws, and without those</span>
+<span class="sd">    it has none. One whose estimate is linear in the</span>
 <span class="sd">    observations, :math:`\hat{x} = x_0 + K (z - H x_0 - c)` with the</span>
 <span class="sd">    :math:`K` of :meth:`gain` whatever the values of :math:`z`, says so with</span>
 <span class="sd">    ``estimate_is_linear = True``; without it, a posterior has no</span>
@@ -569,14 +576,14 @@
 
 <span class="sd">    A method whose posterior is not Gaussian in closed form answers each</span>
 <span class="sd">    question as its docstring says. The bounded method's estimate is the mode;</span>
-<span class="sd">    its variances and covariances are those of draws of its posterior (a</span>
-<span class="sd">    Gaussian truncated to the bounds); its gain, DOFS and information content</span>
-<span class="sd">    are those of the Gaussian at the mode, with the elements on a bound held</span>
-<span class="sd">    there; and its chi-squared terms are those of the mode. The</span>
-<span class="sd">    ``"gauss_newton"`` method's estimate is the mode; its variances and</span>
-<span class="sd">    covariances are those of draws of its posterior; its gain, DOFS and</span>
-<span class="sd">    information content those of the Gaussian of the problem linearized where</span>
-<span class="sd">    its last step was made; and its chi-squared terms those of the model at</span>
+<span class="sd">    its mean, variances, covariances and intervals are those of the draws it</span>
+<span class="sd">    keeps of its posterior (a Gaussian truncated to the bounds); its gain,</span>
+<span class="sd">    DOFS and information content are those of the Gaussian at the mode, with</span>
+<span class="sd">    the elements on a bound held there; and its chi-squared terms are those</span>
+<span class="sd">    of the mode. The ``"gauss_newton"`` method's estimate is the mode; its</span>
+<span class="sd">    mean, variances, covariances and intervals are those of the draws it</span>
+<span class="sd">    keeps of its posterior; its gain, DOFS and information content those of</span>
+<span class="sd">    the Gaussian of the problem linearized where its last step was made; and its chi-squared terms those of the model at</span>
 <span class="sd">    its estimate. The ``"ensemble"`` method's estimate is the mean of its</span>
 <span class="sd">    updated members; its variances, covariances and gain are those of the</span>
 <span class="sd">    members, and its DOFS, information content and chi-squared the analytic</span>
@@ -860,6 +867,24 @@
     <span class="k">return</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">Xt</span><span class="p">)</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">sigma</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_checked_level</span><span class="p">(</span><span class="n">level</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return `level`, the probability of an interval, as a float.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If it is not a number strictly between 0 and 1.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="nb">isinstance</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span>
+        <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">numbers</span><span class="o">.</span><span class="n">Real</span><span class="p">)</span>
+        <span class="ow">or</span> <span class="ow">not</span> <span class="mf">0.0</span> <span class="o">&lt;</span> <span class="n">level</span> <span class="o">&lt;</span> <span class="mf">1.0</span>
+    <span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"level is a probability between 0 and 1, got </span><span class="si">{</span><span class="n">level</span><span class="si">!r}</span><span class="s2">."</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">level</span><span class="p">)</span>
+
+
 <span class="n">_VARIANCE_RTOL</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span><span class="p">))</span>
 <span class="sd">"""How far below zero a variance may be and be roundoff: 1.5e-8 of its scale (:func:`_std`)."""</span>
 
@@ -920,9 +945,10 @@
 <span class="sd">    **A posterior's members belong to the kind of answer, not the method.**</span>
 <span class="sd">    There are three kinds: a *Gaussian* posterior (``estimate`` is its mean</span>
 <span class="sd">    and the covariance is known), a *sampled* one (``estimate`` is the mode,</span>
-<span class="sd">    and the spread is that of draws) and a *low-rank* one (the covariance is</span>
-<span class="sd">    kept as ``rank`` directions). A member its kind cannot give raises</span>
-<span class="sd">    :class:`~fips.UnavailableError` (for a property, ``hasattr`` is then False):</span>
+<span class="sd">    and the mean, the spread and the intervals are those of draws) and a</span>
+<span class="sd">    *low-rank* one (the covariance is kept as ``rank`` directions). A member</span>
+<span class="sd">    its kind cannot give raises :class:`~fips.UnavailableError` (for a</span>
+<span class="sd">    property, ``hasattr`` is then False):</span>
 
 <span class="sd">    .. list-table::</span>
 <span class="sd">       :header-rows: 1</span>
@@ -950,8 +976,12 @@
 <span class="sd">         - the prior's less ``rank`` pairs: too large below the problem's rank</span>
 <span class="sd">       * - ``mean``</span>
 <span class="sd">         - yes</span>
-<span class="sd">         - raises</span>
+<span class="sd">         - the kept draws' mean</span>
 <span class="sd">         - yes (linear problem); raises (forward model)</span>
+<span class="sd">       * - ``lower``, ``upper`` (``uncertainty``, ``trials``)</span>
+<span class="sd">         - the estimate plus or minus ``z`` standard deviations</span>
+<span class="sd">         - the kept draws' quantiles</span>
+<span class="sd">         - the estimate plus or minus ``z`` standard deviations</span>
 <span class="sd">       * - ``with_gamma``</span>
 <span class="sd">         - yes</span>
 <span class="sd">         - ``"bounded"``: yes; ``"gauss_newton"``: raises (its linearization</span>
@@ -1132,31 +1162,69 @@
         <span class="k">return</span> <span class="n">Vector</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"estimate"</span><span class="p">)</span></div>
 
 
-    <span class="nd">@property</span>
+<div class="viewcode-block" id="Posterior.mean">
+<a class="viewcode-back" href="../../reference/api/fips.Posterior.mean.html#fips.Posterior.mean">[docs]</a>
+    <span class="nd">@cached_property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">mean</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vector</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        The posterior mean, :attr:`estimate` itself.</span>
+<span class="sd">        The posterior mean, on the prior's space.</span>
 
-<span class="sd">        A Gaussian posterior (the analytic method, an ensemble) has its mean</span>
-<span class="sd">        as its estimate, and so does the variational method's on a linear</span>
-<span class="sd">        problem. A sampled posterior (``"bounded"`` with a finite bound,</span>
-<span class="sd">        ``"gauss_newton"``) and the variational method's with a forward model</span>
-<span class="sd">        give a mode, which is not the mean: they raise</span>
-<span class="sd">        :class:`~fips.UnavailableError`. The tiers are in the table on</span>
-<span class="sd">        :class:`Posterior`.</span>
+<span class="sd">        A Gaussian posterior (the analytic method, an ensemble, the variational</span>
+<span class="sd">        method's on a linear problem) has its mean as its estimate: this is</span>
+<span class="sd">        :attr:`estimate` itself. A sampled posterior (``"bounded"`` with a</span>
+<span class="sd">        finite bound, ``"gauss_newton"`` with a forward model) has the mode as</span>
+<span class="sd">        its estimate, and its mean is that of the draws it keeps, the center of</span>
+<span class="sd">        the spread its :attr:`variances` measure (a Monte Carlo estimate, as</span>
+<span class="sd">        they are). The mean of aggregates is ``W @ post.mean``. The variational</span>
+<span class="sd">        method's posterior with a forward model gives a mode and keeps no</span>
+<span class="sd">        draws: it raises :class:`~fips.UnavailableError`. The tiers are in the</span>
+<span class="sd">        table on :class:`Posterior`.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        UnavailableError</span>
-<span class="sd">            If the method's estimate is not the posterior mean (an</span>
-<span class="sd">            :class:`AttributeError`).</span>
+<span class="sd">            If the method's estimate is not the posterior mean and it keeps no</span>
+<span class="sd">            draws (an :class:`AttributeError`).</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        estimate : The point estimate: the mean, or the mode.</span>
+<span class="sd">        uncertainty : The standard deviations and intervals, of the state or of aggregates.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        A bounded posterior whose analytic estimate is below the bound: the</span>
+<span class="sd">        mode is on the bound, and the mean of the draws inside the box.</span>
+
+<span class="sd">        &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">        &gt;&gt;&gt; import fips</span>
+<span class="sd">        &gt;&gt;&gt; state = fips.Space({"flux": pd.Index(["a", "b"], name="cell")})</span>
+<span class="sd">        &gt;&gt;&gt; observed = fips.Space({"co2": pd.RangeIndex(1, name="obs_id")})</span>
+<span class="sd">        &gt;&gt;&gt; problem = fips.Problem(</span>
+<span class="sd">        ...     prior=fips.Vector([0.5, 0.5], state),</span>
+<span class="sd">        ...     prior_cov=fips.Independent().with_std(0.5),</span>
+<span class="sd">        ...     obs=fips.Vector([-0.4], observed),</span>
+<span class="sd">        ...     obs_cov=fips.Independent().with_std(0.1),</span>
+<span class="sd">        ...     forward=fips.Operator(np.ones((1, 2)), observed, state),</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; post = fips.solve(problem, "bounded", lower=0.0)</span>
+<span class="sd">        &gt;&gt;&gt; post.estimate.values.tolist()  # the mode</span>
+<span class="sd">        [0.0, 0.0]</span>
+<span class="sd">        &gt;&gt;&gt; post.mean.values.round(2).tolist()  # the draws' mean</span>
+<span class="sd">        [0.02, 0.02]</span>
 <span class="sd">        """</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_solution</span><span class="p">,</span> <span class="s2">"estimate_is_mean"</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_solution</span><span class="p">,</span> <span class="s2">"estimate_is_mean"</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimate</span>
+        <span class="n">kept</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_solution</span><span class="p">,</span> <span class="s2">"kept"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">kept</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">UnavailableError</span><span class="p">(</span>
                 <span class="s2">"The method that solved this problem does not give the posterior "</span>
-                <span class="s2">"mean; its point estimate is `estimate`."</span>
+                <span class="s2">"mean (its estimate is a mode, and it keeps no draws); its point "</span>
+                <span class="s2">"estimate is `estimate`."</span>
             <span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimate</span>
+        <span class="k">return</span> <span class="n">Vector</span><span class="p">(</span><span class="n">kept</span><span class="p">()</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"mean"</span><span class="p">)</span></div>
+
 
 <div class="viewcode-block" id="Posterior.variances">
 <a class="viewcode-back" href="../../reference/api/fips.Posterior.variances.html#fips.Posterior.variances">[docs]</a>
@@ -1172,7 +1240,7 @@
 <span class="sd">        default 2000 a standard deviation good to about 1.5% away from the</span>
 <span class="sd">        bounds and to about 12% for an element whose analytic estimate is one</span>
 <span class="sd">        to four standard deviations outside its bound; the solve warns past</span>
-<span class="sd">        10%), about their mean, not about the mode; the ``"gauss_newton"`` method those</span>
+<span class="sd">        10%), about their mean (:attr:`mean`), not about the mode; the ``"gauss_newton"`` method those</span>
 <span class="sd">        of its kept draws of the posterior of its forward model, the same</span>
 <span class="sd">        way; the ``"ensemble"`` method those of its updated members.</span>
 
@@ -1183,6 +1251,35 @@
         <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solution</span><span class="o">.</span><span class="n">variances</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">Vector</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"variance"</span><span class="p">)</span></div>
 
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_interval</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">W_form</span><span class="p">:</span> <span class="n">LinearOperator</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">std</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">level</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Return the lower and upper ends of the central interval of probability `level` of each state element or each row of `W_form`.</span>
+
+<span class="sd">        A sampled posterior's (one whose solution keeps draws, ``kept``) is</span>
+<span class="sd">        from the ``(1 - level) / 2`` quantile of its draws (aggregated first,</span>
+<span class="sd">        :math:`W x`) to their ``(1 + level) / 2`` one: the posterior's own</span>
+<span class="sd">        interval, wherever it is skewed or piled against a bound. Any other's</span>
+<span class="sd">        is the estimate plus or minus :math:`z` times `std`, its standard</span>
+<span class="sd">        deviations, with :math:`z` the normal's ``(1 + level) / 2`` quantile</span>
+<span class="sd">        (1.96 for 0.95): the Gaussian's interval.</span>
+<span class="sd">        """</span>
+        <span class="n">kept</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_solution</span><span class="p">,</span> <span class="s2">"kept"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">kept</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">draws</span> <span class="o">=</span> <span class="n">kept</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">W_form</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">draws</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">W_form</span> <span class="o">@</span> <span class="n">draws</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+            <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span>
+                <span class="n">draws</span><span class="p">,</span> <span class="p">[(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">level</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">,</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">level</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span>
+        <span class="n">center</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimate</span><span class="o">.</span><span class="n">values</span>
+        <span class="k">if</span> <span class="n">W_form</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">W_form</span> <span class="o">@</span> <span class="n">center</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">half</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">ndtri</span><span class="p">((</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">level</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">))</span> <span class="o">*</span> <span class="n">std</span>
+        <span class="k">return</span> <span class="n">center</span> <span class="o">-</span> <span class="n">half</span><span class="p">,</span> <span class="n">center</span> <span class="o">+</span> <span class="n">half</span>
 
 <div class="viewcode-block" id="Posterior.at_bound">
 <a class="viewcode-back" href="../../reference/api/fips.Posterior.at_bound.html#fips.Posterior.at_bound">[docs]</a>
@@ -1530,9 +1627,11 @@
 
 <div class="viewcode-block" id="Posterior.uncertainty">
 <a class="viewcode-back" href="../../reference/api/fips.Posterior.uncertainty.html#fips.Posterior.uncertainty">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">uncertainty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">Operator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">uncertainty</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">Operator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">level</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.95</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">        Return the prior and posterior uncertainty of each aggregate, and how much the observations reduce it.</span>
+<span class="sd">        Return the prior and posterior uncertainty of each aggregate, how much the observations reduce it, and its posterior interval.</span>
 
 <span class="sd">        The standard deviation of each row of :math:`W x` before the</span>
 <span class="sd">        observations, :math:`\sqrt{\operatorname{diag} W S_0 W^T}`, and after,</span>
@@ -1544,11 +1643,22 @@
 <span class="sd">        with ``C`` the weights of the rows of ``W``), whose uncertainty</span>
 <span class="sd">        includes the covariance between the totals.</span>
 
+<span class="sd">        The interval is the posterior's own. For a sampled posterior</span>
+<span class="sd">        (``"bounded"`` with a finite bound, ``"gauss_newton"`` with a forward</span>
+<span class="sd">        model) it is from quantiles of the kept draws of :math:`W x`, which</span>
+<span class="sd">        need not be centered on the estimate (the mode) nor symmetric about</span>
+<span class="sd">        it; for any other it is the estimate plus or minus :math:`z`</span>
+<span class="sd">        posterior standard deviations, with :math:`z` the normal's quantile</span>
+<span class="sd">        (1.96 for 0.95).</span>
+
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        W : Operator, optional</span>
 <span class="sd">            An aggregation, as :meth:`cov` takes it: one row per aggregate. By</span>
 <span class="sd">            default, one row per state element.</span>
+<span class="sd">        level : float, default 0.95</span>
+<span class="sd">            The probability of the interval, between 0 and 1: from the</span>
+<span class="sd">            ``(1 - level) / 2`` quantile to the ``(1 + level) / 2`` one.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1556,18 +1666,21 @@
 <span class="sd">            One row per aggregate, on the aggregation's rows (or the state's</span>
 <span class="sd">            labels): ``prior_std``, ``posterior_std`` and ``reduction``,</span>
 <span class="sd">            :math:`1 - \sigma_{posterior} / \sigma_{prior}` (a fraction; NaN</span>
-<span class="sd">            where the prior standard deviation is 0). A variance below zero by</span>
-<span class="sd">            more than roundoff, which only a prior error or model-data</span>
-<span class="sd">            mismatch covariance that is not positive semidefinite can give,</span>
-<span class="sd">            makes its standard deviation and the reduction NaN, with a</span>
-<span class="sd">            logged warning (as in :meth:`recovery`).</span>
+<span class="sd">            where the prior standard deviation is 0), then ``lower`` and</span>
+<span class="sd">            ``upper``, the ends of the posterior interval of probability</span>
+<span class="sd">            `level`. A variance below zero by more than roundoff, which only</span>
+<span class="sd">            a prior error or model-data mismatch covariance that is not</span>
+<span class="sd">            positive semidefinite can give, makes its standard deviation, the</span>
+<span class="sd">            reduction and a Gaussian interval NaN, with a logged warning (as</span>
+<span class="sd">            in :meth:`recovery`).</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        TypeError</span>
 <span class="sd">            If `W` is not an Operator.</span>
 <span class="sd">        ValueError</span>
-<span class="sd">            If the columns of `W` do not have exactly the state's labels.</span>
+<span class="sd">            If the columns of `W` do not have exactly the state's labels, or</span>
+<span class="sd">            `level` is not between 0 and 1.</span>
 
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>
@@ -1603,42 +1716,47 @@
 <span class="sd">        &gt;&gt;&gt; post = fips.solve(problem)</span>
 <span class="sd">        &gt;&gt;&gt; monthly = fips.aggregate.sum(prior.space, by="month")</span>
 <span class="sd">        &gt;&gt;&gt; post.uncertainty(monthly).droplevel("block").round(3).reset_index()</span>
-<span class="sd">           month  prior_std  posterior_std  reduction</span>
-<span class="sd">        0      1      0.707          0.528      0.253</span>
-<span class="sd">        1      2      0.707          0.586      0.171</span>
+<span class="sd">           month  prior_std  posterior_std  reduction  lower  upper</span>
+<span class="sd">        0      1      0.707          0.528      0.253 -0.370  1.701</span>
+<span class="sd">        1      2      0.707          0.586      0.171 -0.225  2.072</span>
 <span class="sd">        &gt;&gt;&gt; change = fips.Operator(</span>
 <span class="sd">        ...     np.array([[-1.0, 1.0]]),</span>
 <span class="sd">        ...     fips.Space({"change": pd.Index(["2 - 1"], name="months")}),</span>
 <span class="sd">        ...     monthly.rows,</span>
 <span class="sd">        ... )</span>
 <span class="sd">        &gt;&gt;&gt; post.uncertainty(change @ monthly).round(3).reset_index()</span>
-<span class="sd">            block months  prior_std  posterior_std  reduction</span>
-<span class="sd">        0  change  2 - 1        1.0          0.921      0.079</span>
+<span class="sd">            block months  prior_std  posterior_std  reduction  lower  upper</span>
+<span class="sd">        0  change  2 - 1        1.0          0.921      0.079 -1.547  2.063</span>
 
 <span class="sd">        The change is more uncertain than either month's total: the two</span>
 <span class="sd">        totals' posterior errors are negatively correlated (the observations</span>
 <span class="sd">        see their sum better than how it splits), and the covariance between</span>
 <span class="sd">        the rows enters the change's variance.</span>
 <span class="sd">        """</span>
+        <span class="n">level</span> <span class="o">=</span> <span class="n">_checked_level</span><span class="p">(</span><span class="n">level</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">W</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">prior</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span>
             <span class="n">posterior</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span>
-            <span class="n">scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prior_scale</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+            <span class="n">W_form</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">index</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">posterior</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span>  <span class="c1"># checks W against the state</span>
             <span class="n">prior</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span>
-            <span class="n">scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prior_scale</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_aggregation</span><span class="p">(</span><span class="n">W</span><span class="p">))</span>
+            <span class="n">W_form</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_aggregation</span><span class="p">(</span><span class="n">W</span><span class="p">)</span>
             <span class="n">index</span> <span class="o">=</span> <span class="n">W</span><span class="o">.</span><span class="n">rows</span><span class="o">.</span><span class="n">index</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prior_scale</span><span class="p">(</span><span class="n">W_form</span><span class="p">)</span>
         <span class="n">prior_std</span> <span class="o">=</span> <span class="n">_std</span><span class="p">(</span><span class="n">prior</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="s2">"prior variances"</span><span class="p">)</span>
         <span class="n">posterior_std</span> <span class="o">=</span> <span class="n">_std</span><span class="p">(</span><span class="n">posterior</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="s2">"posterior variances"</span><span class="p">)</span>
         <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">divide</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">,</span> <span class="n">invalid</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">):</span>
             <span class="n">reduction</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">prior_std</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">posterior_std</span> <span class="o">/</span> <span class="n">prior_std</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+        <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_interval</span><span class="p">(</span><span class="n">W_form</span><span class="p">,</span> <span class="n">posterior_std</span><span class="p">,</span> <span class="n">level</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
             <span class="p">{</span>
                 <span class="s2">"prior_std"</span><span class="p">:</span> <span class="n">prior_std</span><span class="p">,</span>
                 <span class="s2">"posterior_std"</span><span class="p">:</span> <span class="n">posterior_std</span><span class="p">,</span>
                 <span class="s2">"reduction"</span><span class="p">:</span> <span class="n">reduction</span><span class="p">,</span>
+                <span class="s2">"lower"</span><span class="p">:</span> <span class="n">lower</span><span class="p">,</span>
+                <span class="s2">"upper"</span><span class="p">:</span> <span class="n">upper</span><span class="p">,</span>
             <span class="p">},</span>
             <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span>
         <span class="p">)</span></div>
@@ -3630,9 +3748,10 @@
         <span class="o">*</span><span class="p">,</span>
         <span class="n">W</span><span class="p">:</span> <span class="n">Operator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">W_world</span><span class="p">:</span> <span class="n">Operator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">level</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.95</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">        Return the truth and the estimate of each total in `n` trials of data made by `world`: the sampled :meth:`recovery`.</span>
+<span class="sd">        Return the truth, the estimate and the interval of each total in `n` trials of data made by `world`: the sampled :meth:`recovery`.</span>
 
 <span class="sd">        Each trial, the world makes a truth and its observations, this</span>
 <span class="sd">        posterior solves the observations with its own assumptions</span>
@@ -3644,7 +3763,11 @@
 <span class="sd">        estimate is not linear in the observations (the spread it claims is</span>
 <span class="sd">        then each trial's own). Where both apply, the</span>
 <span class="sd">        table's bias, spread and coverage agree with ``recovery`` within their</span>
-<span class="sd">        Monte Carlo standard errors.</span>
+<span class="sd">        Monte Carlo standard errors. Each trial's interval is its posterior's</span>
+<span class="sd">        own, as :meth:`uncertainty` gives it: for a sampled posterior</span>
+<span class="sd">        (``"bounded"`` with a finite bound, ``"gauss_newton"`` with a forward</span>
+<span class="sd">        model) the quantiles of the trial's draws, not the estimate (the mode)</span>
+<span class="sd">        plus or minus a multiple of the standard deviation.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -3671,6 +3794,9 @@
 <span class="sd">            The aggregation of the world's state to the same totals, as</span>
 <span class="sd">            :meth:`recovery` takes it, for a world whose state has other</span>
 <span class="sd">            labels than the posterior's.</span>
+<span class="sd">        level : float, default 0.95</span>
+<span class="sd">            The probability of each trial's interval, between 0 and 1, as</span>
+<span class="sd">            :meth:`uncertainty` takes it.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -3682,14 +3808,15 @@
 <span class="sd">            :math:`\sqrt{\operatorname{diag} W \hat{S} W^T}`: the same in</span>
 <span class="sd">            every trial of a method whose estimate is linear in the</span>
 <span class="sd">            observations, and for any other that of the trial's own</span>
-<span class="sd">            posterior) and ``reduced_chi2`` (the trial's</span>
+<span class="sd">            posterior), ``lower`` and ``upper`` (the ends of the trial's</span>
+<span class="sd">            posterior interval of probability `level`, as</span>
+<span class="sd">            :meth:`uncertainty` gives them) and ``reduced_chi2`` (the trial's</span>
 <span class="sd">            :attr:`reduced_chi2`, the same on every row of a trial). Its</span>
 <span class="sd">            ``groupby`` over the totals (with ``dropna=False``: a state of</span>
 <span class="sd">            several blocks is NaN on the levels a block lacks) gives the</span>
 <span class="sd">            performance measures: the mean of ``estimate - truth`` is the</span>
 <span class="sd">            bias, its standard deviation the spread, and the fraction of</span>
-<span class="sd">            trials with ``|estimate - truth| &lt;= z * posterior_std`` the</span>
-<span class="sd">            coverage.</span>
+<span class="sd">            trials with ``lower &lt;= truth &lt;= upper`` the coverage.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
@@ -3699,10 +3826,11 @@
 <span class="sd">            method cannot take new observations (its solution has no</span>
 <span class="sd">            ``with_data``).</span>
 <span class="sd">        ValueError</span>
-<span class="sd">            If `n` is not a positive integer; if the world's observations do</span>
-<span class="sd">            not have exactly this posterior's labels, or its truth not the</span>
-<span class="sd">            state's (without `W_world`); if `W_world` is given without `W`,</span>
-<span class="sd">            or its columns are not the truth's labels or its rows not `W`'s.</span>
+<span class="sd">            If `n` is not a positive integer, or `level` not between 0 and 1;</span>
+<span class="sd">            if the world's observations do not have exactly this posterior's</span>
+<span class="sd">            labels, or its truth not the state's (without `W_world`); if</span>
+<span class="sd">            `W_world` is given without `W`, or its columns are not the</span>
+<span class="sd">            truth's labels or its rows not `W`'s.</span>
 
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>
@@ -3750,6 +3878,7 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">"n is the number of trials, a positive integer, got </span><span class="si">{</span><span class="n">n</span><span class="si">!r}</span><span class="s2">."</span>
             <span class="p">)</span>
+        <span class="n">level</span> <span class="o">=</span> <span class="n">_checked_level</span><span class="p">(</span><span class="n">level</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">W_world</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">W</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s2">"W_world needs W: a world on other state labels is compared on "</span>
@@ -3787,7 +3916,7 @@
         <span class="n">claimed</span> <span class="o">=</span> <span class="n">claims</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="k">if</span> <span class="n">linear</span> <span class="k">else</span> <span class="kc">None</span>
         <span class="k">del</span> <span class="n">resolve</span>  <span class="c1"># with_data checks the observations' labels each trial</span>
 
-        <span class="n">truths</span><span class="p">,</span> <span class="n">estimates</span><span class="p">,</span> <span class="n">chi2</span><span class="p">,</span> <span class="n">stds</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+        <span class="n">truths</span><span class="p">,</span> <span class="n">estimates</span><span class="p">,</span> <span class="n">chi2</span><span class="p">,</span> <span class="n">stds</span><span class="p">,</span> <span class="n">lowers</span><span class="p">,</span> <span class="n">uppers</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
             <span class="n">drawn</span> <span class="o">=</span> <span class="n">make</span><span class="p">(</span><span class="n">generator</span><span class="p">)</span>
             <span class="k">if</span> <span class="p">(</span>
@@ -3832,8 +3961,12 @@
                 <span class="n">estimate</span> <span class="k">if</span> <span class="n">W_form</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">W_form</span> <span class="o">@</span> <span class="n">estimate</span><span class="p">)</span>
             <span class="p">)</span>
             <span class="n">chi2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">trial</span><span class="o">.</span><span class="n">reduced_chi2</span><span class="p">)</span>
+            <span class="n">std</span> <span class="o">=</span> <span class="n">claims</span><span class="p">(</span><span class="n">trial</span><span class="p">)</span> <span class="k">if</span> <span class="n">claimed</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">claimed</span>
             <span class="k">if</span> <span class="n">claimed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">stds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">claims</span><span class="p">(</span><span class="n">trial</span><span class="p">))</span>
+                <span class="n">stds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">std</span><span class="p">)</span>
+            <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span> <span class="o">=</span> <span class="n">trial</span><span class="o">.</span><span class="n">_interval</span><span class="p">(</span><span class="n">W_form</span><span class="p">,</span> <span class="n">std</span><span class="p">,</span> <span class="n">level</span><span class="p">)</span>
+            <span class="n">lowers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lower</span><span class="p">)</span>
+            <span class="n">uppers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">upper</span><span class="p">)</span>
         <span class="n">k</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
         <span class="n">rows</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_arrays</span><span class="p">(</span>
             <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">k</span><span class="p">)]</span>
@@ -3850,6 +3983,8 @@
                 <span class="s2">"posterior_std"</span><span class="p">:</span> <span class="p">(</span>
                     <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">claimed</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="k">if</span> <span class="n">claimed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">stds</span><span class="p">)</span>
                 <span class="p">),</span>
+                <span class="s2">"lower"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">lowers</span><span class="p">),</span>
+                <span class="s2">"upper"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">uppers</span><span class="p">),</span>
                 <span class="s2">"reduced_chi2"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">chi2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span> <span class="n">k</span><span class="p">),</span>
             <span class="p">},</span>
             <span class="n">index</span><span class="o">=</span><span class="n">rows</span><span class="p">,</span>

@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Synthetic experiments &#8212; fips 0.2.0b3.dev25+gb7302ec4c documentation</title>
+    <title>Synthetic experiments &#8212; fips 0.2.0b3.dev26+g4d65592e7 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=673372a1"></script>
+    <script src="../_static/documentation_options.js?v=05a089fb"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev25+gb7302ec4c documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev25+gb7302ec4c documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev26+g4d65592e7 documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev26+g4d65592e7 documentation - Home"/>
   
   
 </a></div>
@@ -736,18 +736,19 @@ with <code class="docutils literal notranslate"><span class="pre">with_data</spa
 
 <span class="gp">In [33]: </span><span class="n">table</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
 <span class="gh">Out[33]: </span>
-<span class="go">                           truth  estimate  posterior_std  reduced_chi2</span>
-<span class="go">trial block month                                                      </span>
-<span class="go">0     flux  2024-01-01  4.461368  4.261741       0.202810      0.671470</span>
-<span class="go">            2024-02-01  5.188488  5.270503       0.224721      0.671470</span>
-<span class="go">            2024-03-01  3.085033  3.099524       0.205108      0.671470</span>
-<span class="go">1     flux  2024-01-01  4.594656  4.688300       0.202810      1.303863</span>
-<span class="go">            2024-02-01  5.422497  5.264394       0.224721      1.303863</span>
-<span class="go">            2024-03-01  6.299730  6.373827       0.205108      1.303863</span>
+<span class="go">                           truth  estimate  posterior_std     lower     upper  reduced_chi2</span>
+<span class="go">trial block month                                                                          </span>
+<span class="go">0     flux  2024-01-01  4.461368  4.261741       0.202810  3.864241  4.659241      0.671470</span>
+<span class="go">            2024-02-01  5.188488  5.270503       0.224721  4.830058  5.710948      0.671470</span>
+<span class="go">            2024-03-01  3.085033  3.099524       0.205108  2.697520  3.501527      0.671470</span>
+<span class="go">1     flux  2024-01-01  4.594656  4.688300       0.202810  4.290800  5.085800      1.303863</span>
+<span class="go">            2024-02-01  5.422497  5.264394       0.224721  4.823949  5.704839      1.303863</span>
+<span class="go">            2024-03-01  6.299730  6.373827       0.205108  5.971824  6.775830      1.303863</span>
 </pre></div>
 </div>
 <p>The table is long: one row per trial and total, with the spread the posterior
-claims and the trial’s reduced chi-squared, so pandas does the rest. The
+claims, its 95% interval (<code class="docutils literal notranslate"><span class="pre">lower</span></code> and <code class="docutils literal notranslate"><span class="pre">upper</span></code>, the draws’ quantiles for a
+sampled posterior) and the trial’s reduced chi-squared, so pandas does the rest. The
 performance measures come from a <code class="docutils literal notranslate"><span class="pre">groupby</span></code> over the totals, with the Monte
 Carlo standard error of each (Morris, White and Crowther, 2019): with <code class="docutils literal notranslate"><span class="pre">n</span></code>
 trials a bias is known to <code class="docutils literal notranslate"><span class="pre">std</span> <span class="pre">/</span> <span class="pre">sqrt(n)</span></code> and a coverage near 0.95 to about

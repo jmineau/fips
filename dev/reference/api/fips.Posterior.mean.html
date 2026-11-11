@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.Posterior.mean &#8212; fips 0.2.0b3.dev25+gb7302ec4c documentation</title>
+    <title>fips.Posterior.mean &#8212; fips 0.2.0b3.dev26+g4d65592e7 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=673372a1"></script>
+    <script src="../../_static/documentation_options.js?v=05a089fb"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -135,8 +135,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev25+gb7302ec4c documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev25+gb7302ec4c documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev26+g4d65592e7 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev26+g4d65592e7 documentation - Home"/>
   
   
 </a></div>
@@ -1016,21 +1016,55 @@
 <h1>fips.Posterior.mean<a class="headerlink" href="#fips-posterior-mean" title="Link to this heading">#</a></h1>
 <dl class="py property">
 <dt class="sig sig-object py" id="fips.Posterior.mean">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">Posterior.</span></span><span class="sig-name descname"><span class="pre">mean</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="fips.Vector.html#fips.Vector" title="fips.vector.Vector"><span class="pre">Vector</span></a></span><a class="headerlink" href="#fips.Posterior.mean" title="Link to this definition">#</a></dt>
-<dd><p>The posterior mean, <a class="reference internal" href="fips.Posterior.estimate.html#fips.Posterior.estimate" title="fips.Posterior.estimate"><code class="xref py py-attr docutils literal notranslate"><span class="pre">estimate</span></code></a> itself.</p>
-<p>A Gaussian posterior (the analytic method, an ensemble) has its mean
-as its estimate, and so does the variational method’s on a linear
-problem. A sampled posterior (<code class="docutils literal notranslate"><span class="pre">&quot;bounded&quot;</span></code> with a finite bound,
-<code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code>) and the variational method’s with a forward model
-give a mode, which is not the mean: they raise
-<a class="reference internal" href="fips.UnavailableError.html#fips.UnavailableError" title="fips.UnavailableError"><code class="xref py py-class docutils literal notranslate"><span class="pre">UnavailableError</span></code></a>. The tiers are in the table on
-<a class="reference internal" href="fips.Posterior.html#fips.Posterior" title="fips.Posterior"><code class="xref py py-class docutils literal notranslate"><span class="pre">Posterior</span></code></a>.</p>
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">Posterior.</span></span><span class="sig-name descname"><span class="pre">mean</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="fips.Vector.html#fips.Vector" title="fips.vector.Vector"><span class="pre">Vector</span></a></span><a class="reference internal" href="../../_modules/fips/posterior.html#Posterior.mean"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fips.Posterior.mean" title="Link to this definition">#</a></dt>
+<dd><p>The posterior mean, on the prior’s space.</p>
+<p>A Gaussian posterior (the analytic method, an ensemble, the variational
+method’s on a linear problem) has its mean as its estimate: this is
+<a class="reference internal" href="fips.Posterior.estimate.html#fips.Posterior.estimate" title="fips.Posterior.estimate"><code class="xref py py-attr docutils literal notranslate"><span class="pre">estimate</span></code></a> itself. A sampled posterior (<code class="docutils literal notranslate"><span class="pre">&quot;bounded&quot;</span></code> with a
+finite bound, <code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code> with a forward model) has the mode as
+its estimate, and its mean is that of the draws it keeps, the center of
+the spread its <a class="reference internal" href="fips.Posterior.variances.html#fips.Posterior.variances" title="fips.Posterior.variances"><code class="xref py py-attr docutils literal notranslate"><span class="pre">variances</span></code></a> measure (a Monte Carlo estimate, as
+they are). The mean of aggregates is <code class="docutils literal notranslate"><span class="pre">W</span> <span class="pre">&#64;</span> <span class="pre">post.mean</span></code>. The variational
+method’s posterior with a forward model gives a mode and keeps no
+draws: it raises <a class="reference internal" href="fips.UnavailableError.html#fips.UnavailableError" title="fips.UnavailableError"><code class="xref py py-class docutils literal notranslate"><span class="pre">UnavailableError</span></code></a>. The tiers are in the
+table on <a class="reference internal" href="fips.Posterior.html#fips.Posterior" title="fips.Posterior"><code class="xref py py-class docutils literal notranslate"><span class="pre">Posterior</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="fips.UnavailableError.html#fips.UnavailableError" title="fips.UnavailableError"><strong>UnavailableError</strong></a> – If the method’s estimate is not the posterior mean (an
-    <a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#AttributeError" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">AttributeError</span></code></a>).</p>
+<dd class="field-odd"><p><a class="reference internal" href="fips.UnavailableError.html#fips.UnavailableError" title="fips.UnavailableError"><strong>UnavailableError</strong></a> – If the method’s estimate is not the posterior mean and it keeps no
+    draws (an <a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#AttributeError" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">AttributeError</span></code></a>).</p>
 </dd>
 </dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="fips.Posterior.estimate.html#fips.Posterior.estimate" title="fips.Posterior.estimate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">estimate</span></code></a></dt><dd><p>The point estimate: the mean, or the mode.</p>
+</dd>
+<dt><a class="reference internal" href="fips.Posterior.uncertainty.html#fips.Posterior.uncertainty" title="fips.Posterior.uncertainty"><code class="xref py py-obj docutils literal notranslate"><span class="pre">uncertainty</span></code></a></dt><dd><p>The standard deviations and intervals, of the state or of aggregates.</p>
+</dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<p>A bounded posterior whose analytic estimate is below the bound: the
+mode is on the bound, and the mean of the draws inside the box.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">fips</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">state</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"flux"</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">([</span><span class="s2">"a"</span><span class="p">,</span> <span class="s2">"b"</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">"cell"</span><span class="p">)})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">observed</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"co2"</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">RangeIndex</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"obs_id"</span><span class="p">)})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">problem</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">prior</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="n">state</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">prior_cov</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Independent</span><span class="p">()</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.5</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">obs</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">([</span><span class="o">-</span><span class="mf">0.4</span><span class="p">],</span> <span class="n">observed</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">obs_cov</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Independent</span><span class="p">()</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.1</span><span class="p">),</span>
+<span class="gp">... </span>    <span class="n">forward</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span> <span class="n">observed</span><span class="p">,</span> <span class="n">state</span><span class="p">),</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">post</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="s2">"bounded"</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">post</span><span class="o">.</span><span class="n">estimate</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>  <span class="c1"># the mode</span>
+<span class="go">[0.0, 0.0]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">post</span><span class="o">.</span><span class="n">mean</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>  <span class="c1"># the draws' mean</span>
+<span class="go">[0.02, 0.02]</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </section>

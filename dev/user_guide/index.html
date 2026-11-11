@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; fips 0.2.0b3.dev25+gb7302ec4c documentation</title>
+    <title>User Guide &#8212; fips 0.2.0b3.dev26+g4d65592e7 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=673372a1"></script>
+    <script src="../_static/documentation_options.js?v=05a089fb"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev25+gb7302ec4c documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev25+gb7302ec4c documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev26+g4d65592e7 documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev26+g4d65592e7 documentation - Home"/>
   
   
 </a></div>
@@ -998,12 +998,12 @@ total flux of each week:</p>
 
 <span class="gp">In [56]: </span><span class="n">post</span><span class="o">.</span><span class="n">uncertainty</span><span class="p">(</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
 <span class="gh">Out[56]: </span>
-<span class="go">                  prior_std  posterior_std  reduction</span>
-<span class="go">block time                                           </span>
-<span class="go">flux  2024-01-01      1.416          0.789      0.443</span>
-<span class="go">      2024-01-08      1.416          0.590      0.583</span>
-<span class="go">      2024-01-15      1.416          0.643      0.546</span>
-<span class="go">      2024-01-22      1.416          0.713      0.496</span>
+<span class="go">                  prior_std  posterior_std  reduction  lower  upper</span>
+<span class="go">block time                                                         </span>
+<span class="go">flux  2024-01-01      1.416          0.789      0.443 -1.214  1.879</span>
+<span class="go">      2024-01-08      1.416          0.590      0.583  1.051  3.365</span>
+<span class="go">      2024-01-15      1.416          0.643      0.546  0.268  2.790</span>
+<span class="go">      2024-01-22      1.416          0.713      0.496  0.019  2.815</span>
 
 <span class="gp">In [57]: </span><span class="n">post</span><span class="o">.</span><span class="n">averaging_kernel</span><span class="p">(</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="n">dense</span><span class="p">()</span><span class="o">.</span><span class="n">diagonal</span><span class="p">()</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
 <span class="gh">Out[57]: </span><span class="go">array([0.488, 0.549, 0.488, 0.586])</span>
@@ -1022,9 +1022,9 @@ week to the next is not the root of the two weeks’ variances summed:</p>
 
 <span class="gp">In [59]: </span><span class="n">post</span><span class="o">.</span><span class="n">uncertainty</span><span class="p">(</span><span class="n">change</span> <span class="o">@</span> <span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
 <span class="gh">Out[59]: </span>
-<span class="go">                        prior_std  posterior_std  reduction</span>
-<span class="go">block  what                                                </span>
-<span class="go">change week 2 - week 1      1.256           1.03       0.18</span>
+<span class="go">                        prior_std  posterior_std  reduction  lower  upper</span>
+<span class="go">block  what                                                              </span>
+<span class="go">change week 2 - week 1      1.256           1.03       0.18 -0.144  3.894</span>
 </pre></div>
 </div>
 <p><strong>Draws, for a question a covariance cannot answer.</strong> <code class="docutils literal notranslate"><span class="pre">post.cov(W)</span></code> gives the

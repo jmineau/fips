@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.Posterior.uncertainty &#8212; fips 0.2.0b3.dev25+gb7302ec4c documentation</title>
+    <title>fips.Posterior.uncertainty &#8212; fips 0.2.0b3.dev26+g4d65592e7 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=673372a1"></script>
+    <script src="../../_static/documentation_options.js?v=05a089fb"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev25+gb7302ec4c documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev25+gb7302ec4c documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev26+g4d65592e7 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev26+g4d65592e7 documentation - Home"/>
   
   
 </a></div>
@@ -1018,8 +1018,8 @@
 <h1>fips.Posterior.uncertainty<a class="headerlink" href="#fips-posterior-uncertainty" title="Link to this heading">#</a></h1>
 <dl class="py method">
 <dt class="sig sig-object py" id="fips.Posterior.uncertainty">
-<span class="sig-prename descclassname"><span class="pre">Posterior.</span></span><span class="sig-name descname"><span class="pre">uncertainty</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">W</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fips/posterior.html#Posterior.uncertainty"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fips.Posterior.uncertainty" title="Link to this definition">#</a></dt>
-<dd><p>Return the prior and posterior uncertainty of each aggregate, and how much the observations reduce it.</p>
+<span class="sig-prename descclassname"><span class="pre">Posterior.</span></span><span class="sig-name descname"><span class="pre">uncertainty</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">W</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.95</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fips/posterior.html#Posterior.uncertainty"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fips.Posterior.uncertainty" title="Link to this definition">#</a></dt>
+<dd><p>Return the prior and posterior uncertainty of each aggregate, how much the observations reduce it, and its posterior interval.</p>
 <p>The standard deviation of each row of <span class="math notranslate nohighlight">\(W x\)</span> before the
 observations, <span class="math notranslate nohighlight">\(\sqrt{\operatorname{diag} W S_0 W^T}\)</span>, and after,
 <span class="math notranslate nohighlight">\(\sqrt{\operatorname{diag} W \hat{S} W^T}\)</span>, from
@@ -1029,20 +1029,33 @@ any linear combination of the state: a total, a mean, or a combination
 of totals such as a trend or the difference of two seasons (<code class="docutils literal notranslate"><span class="pre">C</span> <span class="pre">&#64;</span> <span class="pre">W</span></code>,
 with <code class="docutils literal notranslate"><span class="pre">C</span></code> the weights of the rows of <code class="docutils literal notranslate"><span class="pre">W</span></code>), whose uncertainty
 includes the covariance between the totals.</p>
+<p>The interval is the posterior’s own. For a sampled posterior
+(<code class="docutils literal notranslate"><span class="pre">&quot;bounded&quot;</span></code> with a finite bound, <code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code> with a forward
+model) it is from quantiles of the kept draws of <span class="math notranslate nohighlight">\(W x\)</span>, which
+need not be centered on the estimate (the mode) nor symmetric about
+it; for any other it is the estimate plus or minus <span class="math notranslate nohighlight">\(z\)</span>
+posterior standard deviations, with <span class="math notranslate nohighlight">\(z\)</span> the normal’s quantile
+(1.96 for 0.95).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>W</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="fips.Operator.html#fips.Operator" title="fips.operator.Operator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Operator</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span>) – An aggregation, as <a class="reference internal" href="fips.Posterior.cov.html#fips.Posterior.cov" title="fips.Posterior.cov"><code class="xref py py-meth docutils literal notranslate"><span class="pre">cov()</span></code></a> takes it: one row per aggregate. By
-default, one row per state element.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>W</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="fips.Operator.html#fips.Operator" title="fips.operator.Operator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Operator</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span>) – An aggregation, as <a class="reference internal" href="fips.Posterior.cov.html#fips.Posterior.cov" title="fips.Posterior.cov"><code class="xref py py-meth docutils literal notranslate"><span class="pre">cov()</span></code></a> takes it: one row per aggregate. By
+default, one row per state element.</p></li>
+<li><p><strong>level</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span>) – The probability of the interval, between 0 and 1: from the
+<code class="docutils literal notranslate"><span class="pre">(1</span> <span class="pre">-</span> <span class="pre">level)</span> <span class="pre">/</span> <span class="pre">2</span></code> quantile to the <code class="docutils literal notranslate"><span class="pre">(1</span> <span class="pre">+</span> <span class="pre">level)</span> <span class="pre">/</span> <span class="pre">2</span></code> one.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>One row per aggregate, on the aggregation’s rows (or the state’s
 labels): <code class="docutils literal notranslate"><span class="pre">prior_std</span></code>, <code class="docutils literal notranslate"><span class="pre">posterior_std</span></code> and <code class="docutils literal notranslate"><span class="pre">reduction</span></code>,
 <span class="math notranslate nohighlight">\(1 - \sigma_{posterior} / \sigma_{prior}\)</span> (a fraction; NaN
-where the prior standard deviation is 0). A variance below zero by
-more than roundoff, which only a prior error or model-data
-mismatch covariance that is not positive semidefinite can give,
-makes its standard deviation and the reduction NaN, with a
-logged warning (as in <a class="reference internal" href="fips.Posterior.recovery.html#fips.Posterior.recovery" title="fips.Posterior.recovery"><code class="xref py py-meth docutils literal notranslate"><span class="pre">recovery()</span></code></a>).</p>
+where the prior standard deviation is 0), then <code class="docutils literal notranslate"><span class="pre">lower</span></code> and
+<code class="docutils literal notranslate"><span class="pre">upper</span></code>, the ends of the posterior interval of probability
+<cite>level</cite>. A variance below zero by more than roundoff, which only
+a prior error or model-data mismatch covariance that is not
+positive semidefinite can give, makes its standard deviation, the
+reduction and a Gaussian interval NaN, with a logged warning (as
+in <a class="reference internal" href="fips.Posterior.recovery.html#fips.Posterior.recovery" title="fips.Posterior.recovery"><code class="xref py py-meth docutils literal notranslate"><span class="pre">recovery()</span></code></a>).</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a></span></p>
@@ -1050,7 +1063,8 @@ logged warning (as in <a class="reference internal" href="fips.Posterior.recover
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
 <li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#TypeError" title="(in Python v3.15)"><strong>TypeError</strong></a> – If <cite>W</cite> is not an Operator.</p></li>
-<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – If the columns of <cite>W</cite> do not have exactly the state’s labels.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – If the columns of <cite>W</cite> do not have exactly the state’s labels, or
+    <cite>level</cite> is not between 0 and 1.</p></li>
 </ul>
 </dd>
 </dl>
@@ -1091,17 +1105,17 @@ and the change from the first month to the second:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">post</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">monthly</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">aggregate</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="s2">"month"</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">post</span><span class="o">.</span><span class="n">uncertainty</span><span class="p">(</span><span class="n">monthly</span><span class="p">)</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="s2">"block"</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
-<span class="go">   month  prior_std  posterior_std  reduction</span>
-<span class="go">0      1      0.707          0.528      0.253</span>
-<span class="go">1      2      0.707          0.586      0.171</span>
+<span class="go">   month  prior_std  posterior_std  reduction  lower  upper</span>
+<span class="go">0      1      0.707          0.528      0.253 -0.370  1.701</span>
+<span class="go">1      2      0.707          0.586      0.171 -0.225  2.072</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">change</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span>
 <span class="gp">... </span>    <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]]),</span>
 <span class="gp">... </span>    <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"change"</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">([</span><span class="s2">"2 - 1"</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">"months"</span><span class="p">)}),</span>
 <span class="gp">... </span>    <span class="n">monthly</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span>
 <span class="gp">... </span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">post</span><span class="o">.</span><span class="n">uncertainty</span><span class="p">(</span><span class="n">change</span> <span class="o">@</span> <span class="n">monthly</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
-<span class="go">    block months  prior_std  posterior_std  reduction</span>
-<span class="go">0  change  2 - 1        1.0          0.921      0.079</span>
+<span class="go">    block months  prior_std  posterior_std  reduction  lower  upper</span>
+<span class="go">0  change  2 - 1        1.0          0.921      0.079 -1.547  2.063</span>
 </pre></div>
 </div>
 <p>The change is more uncertain than either month’s total: the two

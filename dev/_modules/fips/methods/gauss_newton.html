@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.methods.gauss_newton &#8212; fips 0.2.0b3.dev25+gb7302ec4c documentation</title>
+    <title>fips.methods.gauss_newton &#8212; fips 0.2.0b3.dev26+g4d65592e7 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../../_static/documentation_options.js?v=673372a1"></script>
+    <script src="../../../_static/documentation_options.js?v=05a089fb"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev25+gb7302ec4c documentation - Home"/>
-    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev25+gb7302ec4c documentation - Home"/>
+    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev26+g4d65592e7 documentation - Home"/>
+    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev26+g4d65592e7 documentation - Home"/>
   
   
 </a></div>
@@ -492,8 +492,8 @@
 <span class="sd">problem linearized at the last iterate, one step of :math:`d^2 &lt;</span>
 <span class="sd">\mathrm{tol} \cdot n` from the mode. Its estimate is the mode, and its gain,</span>
 <span class="sd">DOFS and information content are those of the Gaussian at the mode. Its</span>
-<span class="sd">variances, the covariance of aggregates and its draws are those of the</span>
-<span class="sd">posterior itself, :math:`p(x \mid z) \propto e^{-\chi^2(x)/2}`, drawn by</span>
+<span class="sd">variances, the covariance of aggregates, the mean, the intervals and its draws</span>
+<span class="sd">are those of the posterior itself, :math:`p(x \mid z) \propto e^{-\chi^2(x)/2}`, drawn by</span>
 <span class="sd">Hamiltonian Monte Carlo (``_Sampler``): the Gaussian at the mode is its mass</span>
 <span class="sd">and its exactly solved part, the rest of the cost its kicks, and a Metropolis</span>
 <span class="sd">test keeps the chain exact. Where the model bends over the posterior's</span>
@@ -659,8 +659,9 @@
 <span class="sd">    - the estimate is the mode, not the mean, and is not linear in the</span>
 <span class="sd">      observations (no ``estimate_is_mean``, no ``estimate_is_linear``);</span>
 <span class="sd">    - the variances and the covariance of aggregates are those of the kept</span>
-<span class="sd">      draws of the posterior (``draws`` of them, after a ``burn_in`` that</span>
-<span class="sd">      tunes the sampler, from ``seed``), about their mean, and</span>
+<span class="sd">      draws of the posterior (:meth:`kept`: ``draws`` of them, after a</span>
+<span class="sd">      ``burn_in`` that tunes the sampler, from ``seed``), about their mean,</span>
+<span class="sd">      and so are the posterior's mean and intervals (the draws' quantiles);</span>
 <span class="sd">      :meth:`sample` draws more;</span>
 <span class="sd">    - the gain, DOFS and the information content are those of the Gaussian</span>
 <span class="sd">      at the mode (``analytic``'s); the posterior reads the averaging kernel</span>
@@ -741,8 +742,8 @@
                 <span class="p">)</span>
         <span class="k">return</span> <span class="n">tuning</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_kept</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Return the kept draws (``n x draws``), drawn from the seed at the first call, with a warning if they mix too slowly for their variances."""</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">kept</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the kept draws (``n x draws``), which the variances, the covariances, the mean and the intervals are read from: drawn from the seed at the first call, with a warning if they mix too slowly for their variances."""</span>
         <span class="n">kept</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"_draws"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">kept</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">draws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">draws</span>
@@ -781,13 +782,13 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">variances</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Return the variances of the kept draws."""</span>
-        <span class="n">kept</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kept</span><span class="p">()</span>
+        <span class="n">kept</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kept</span><span class="p">()</span>
         <span class="n">centered</span> <span class="o">=</span> <span class="n">kept</span> <span class="o">-</span> <span class="n">kept</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">"ij,ij-&gt;i"</span><span class="p">,</span> <span class="n">centered</span><span class="p">,</span> <span class="n">centered</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">kept</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">cov</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">LinearOperator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Return the covariance of the kept draws, ``n x n``, or of their aggregates ``W x``, ``k x k``."""</span>
-        <span class="n">kept</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kept</span><span class="p">()</span>
+        <span class="n">kept</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kept</span><span class="p">()</span>
         <span class="n">Y</span> <span class="o">=</span> <span class="n">kept</span> <span class="k">if</span> <span class="n">W</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">W</span> <span class="o">@</span> <span class="n">kept</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
         <span class="n">centered</span> <span class="o">=</span> <span class="n">Y</span> <span class="o">-</span> <span class="n">Y</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">S</span> <span class="o">=</span> <span class="n">centered</span> <span class="o">@</span> <span class="n">centered</span><span class="o">.</span><span class="n">T</span> <span class="o">/</span> <span class="p">(</span><span class="n">Y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>

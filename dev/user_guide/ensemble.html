@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>A model with no Jacobian: the ensemble method &#8212; fips 0.2.0b3.dev25+gb7302ec4c documentation</title>
+    <title>A model with no Jacobian: the ensemble method &#8212; fips 0.2.0b3.dev26+g4d65592e7 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=673372a1"></script>
+    <script src="../_static/documentation_options.js?v=05a089fb"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev25+gb7302ec4c documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev25+gb7302ec4c documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev26+g4d65592e7 documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev26+g4d65592e7 documentation - Home"/>
   
   
 </a></div>
@@ -589,12 +589,12 @@ the model’s output, <span class="math notranslate nohighlight">\(F(x_j)\)</spa
 
 <span class="gp">In [22]: </span><span class="n">post</span><span class="o">.</span><span class="n">uncertainty</span><span class="p">(</span><span class="n">regions</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
 <span class="gh">Out[22]: </span>
-<span class="go">              prior_std  posterior_std  reduction</span>
-<span class="go">block region                                     </span>
-<span class="go">total W            5.35           0.80       0.85</span>
-<span class="go">      WC           5.35           0.70       0.87</span>
-<span class="go">      EC           5.35           0.84       0.84</span>
-<span class="go">      E            5.35           0.97       0.82</span>
+<span class="go">              prior_std  posterior_std  reduction  lower  upper</span>
+<span class="go">block region                                                   </span>
+<span class="go">total W            5.35           0.80       0.85  26.23  29.37</span>
+<span class="go">      WC           5.35           0.70       0.87  27.17  29.92</span>
+<span class="go">      EC           5.35           0.84       0.84  24.63  27.93</span>
+<span class="go">      E            5.35           0.97       0.82  28.11  31.92</span>
 </pre></div>
 </div>
 <p>A problem whose forward runs in Python can skip the middle:
@@ -640,12 +640,12 @@ cell.</p>
 
 <span class="gp">In [25]: </span><span class="n">exact</span><span class="o">.</span><span class="n">uncertainty</span><span class="p">(</span><span class="n">regions</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
 <span class="gh">Out[25]: </span>
-<span class="go">              prior_std  posterior_std  reduction</span>
-<span class="go">block region                                     </span>
-<span class="go">total W            5.35           0.86       0.84</span>
-<span class="go">      WC           5.35           0.78       0.85</span>
-<span class="go">      EC           5.35           0.91       0.83</span>
-<span class="go">      E            5.35           1.08       0.80</span>
+<span class="go">              prior_std  posterior_std  reduction  lower  upper</span>
+<span class="go">block region                                                   </span>
+<span class="go">total W            5.35           0.86       0.84  25.92  29.29</span>
+<span class="go">      WC           5.35           0.78       0.85  26.97  30.04</span>
+<span class="go">      EC           5.35           0.91       0.83  24.56  28.11</span>
+<span class="go">      E            5.35           1.08       0.80  27.35  31.60</span>
 </pre></div>
 </div>
 <p>The error of the regions’ totals over 16 ensembles of each size, the mean’s
@@ -692,13 +692,13 @@ exact one:</p>
 <span class="gp">In [34]: </span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">))</span>
 
 <span class="gp">In [35]: </span><span class="n">ax</span><span class="o">.</span><span class="n">loglog</span><span class="p">(</span><span class="n">curve</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">curve</span><span class="p">[</span><span class="s2">"mean"</span><span class="p">],</span> <span class="s2">"o-"</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"mean (posterior sd)"</span><span class="p">)</span>
-<span class="gh">Out[35]: </span><span class="go">[&lt;matplotlib.lines.Line2D at 0x774dcaf53b60&gt;]</span>
+<span class="gh">Out[35]: </span><span class="go">[&lt;matplotlib.lines.Line2D at 0x7278470ab770&gt;]</span>
 
 <span class="gp">In [36]: </span><span class="n">ax</span><span class="o">.</span><span class="n">loglog</span><span class="p">(</span><span class="n">curve</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">curve</span><span class="p">[</span><span class="s2">"std"</span><span class="p">],</span> <span class="s2">"s-"</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"std (relative)"</span><span class="p">)</span>
-<span class="gh">Out[36]: </span><span class="go">[&lt;matplotlib.lines.Line2D at 0x774dcaf50830&gt;]</span>
+<span class="gh">Out[36]: </span><span class="go">[&lt;matplotlib.lines.Line2D at 0x7278470a8590&gt;]</span>
 
 <span class="gp">In [37]: </span><span class="n">ax</span><span class="o">.</span><span class="n">loglog</span><span class="p">(</span><span class="n">sizes</span><span class="p">,</span> <span class="n">curve</span><span class="p">[</span><span class="s2">"mean"</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">sizes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">sizes</span><span class="p">)),</span> <span class="s2">"k:"</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">"$1/\sqrt</span><span class="si">{N}</span><span class="s2">$"</span><span class="p">)</span>
-<span class="gh">Out[37]: </span><span class="go">[&lt;matplotlib.lines.Line2D at 0x774dcaf501a0&gt;]</span>
+<span class="gh">Out[37]: </span><span class="go">[&lt;matplotlib.lines.Line2D at 0x7278470a81a0&gt;]</span>
 
 <span class="gp">In [38]: </span><span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">"members"</span><span class="p">)</span>
 <span class="gh">Out[38]: </span><span class="go">Text(0.5, 0, 'members')</span>
@@ -707,7 +707,7 @@ exact one:</p>
 <span class="gh">Out[39]: </span><span class="go">Text(0, 0.5, 'error of the region totals')</span>
 
 <span class="gp">In [40]: </span><span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
-<span class="gh">Out[40]: </span><span class="go">&lt;matplotlib.legend.Legend at 0x774dcaf50440&gt;</span>
+<span class="gh">Out[40]: </span><span class="go">&lt;matplotlib.legend.Legend at 0x7278470a82f0&gt;</span>
 </pre></div>
 </div>
 <a class="reference internal image-reference" href="../_images/ensemble_convergence.png"><img alt="../_images/ensemble_convergence.png" src="../_images/ensemble_convergence.png" style="width: 5in;" />

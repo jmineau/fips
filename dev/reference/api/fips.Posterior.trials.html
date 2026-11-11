@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.Posterior.trials &#8212; fips 0.2.0b3.dev25+gb7302ec4c documentation</title>
+    <title>fips.Posterior.trials &#8212; fips 0.2.0b3.dev26+g4d65592e7 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=673372a1"></script>
+    <script src="../../_static/documentation_options.js?v=05a089fb"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev25+gb7302ec4c documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev25+gb7302ec4c documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev26+g4d65592e7 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev26+g4d65592e7 documentation - Home"/>
   
   
 </a></div>
@@ -1018,8 +1018,8 @@
 <h1>fips.Posterior.trials<a class="headerlink" href="#fips-posterior-trials" title="Link to this heading">#</a></h1>
 <dl class="py method">
 <dt class="sig sig-object py" id="fips.Posterior.trials">
-<span class="sig-prename descclassname"><span class="pre">Posterior.</span></span><span class="sig-name descname"><span class="pre">trials</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">world</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">400</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">W</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">W_world</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fips/posterior.html#Posterior.trials"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fips.Posterior.trials" title="Link to this definition">#</a></dt>
-<dd><p>Return the truth and the estimate of each total in <cite>n</cite> trials of data made by <cite>world</cite>: the sampled <a class="reference internal" href="fips.Posterior.recovery.html#fips.Posterior.recovery" title="fips.Posterior.recovery"><code class="xref py py-meth docutils literal notranslate"><span class="pre">recovery()</span></code></a>.</p>
+<span class="sig-prename descclassname"><span class="pre">Posterior.</span></span><span class="sig-name descname"><span class="pre">trials</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">world</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">400</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">W</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">W_world</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.95</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fips/posterior.html#Posterior.trials"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fips.Posterior.trials" title="Link to this definition">#</a></dt>
+<dd><p>Return the truth, the estimate and the interval of each total in <cite>n</cite> trials of data made by <cite>world</cite>: the sampled <a class="reference internal" href="fips.Posterior.recovery.html#fips.Posterior.recovery" title="fips.Posterior.recovery"><code class="xref py py-meth docutils literal notranslate"><span class="pre">recovery()</span></code></a>.</p>
 <p>Each trial, the world makes a truth and its observations, this
 posterior solves the observations with its own assumptions
 (<a class="reference internal" href="fips.Posterior.with_data.html#fips.Posterior.with_data" title="fips.Posterior.with_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">with_data()</span></code></a>, one product), and the totals of the two go into
@@ -1030,7 +1030,11 @@ statistic of each trial (its reduced chi-squared), or a method whose
 estimate is not linear in the observations (the spread it claims is
 then each trial’s own). Where both apply, the
 table’s bias, spread and coverage agree with <code class="docutils literal notranslate"><span class="pre">recovery</span></code> within their
-Monte Carlo standard errors.</p>
+Monte Carlo standard errors. Each trial’s interval is its posterior’s
+own, as <a class="reference internal" href="fips.Posterior.uncertainty.html#fips.Posterior.uncertainty" title="fips.Posterior.uncertainty"><code class="xref py py-meth docutils literal notranslate"><span class="pre">uncertainty()</span></code></a> gives it: for a sampled posterior
+(<code class="docutils literal notranslate"><span class="pre">&quot;bounded&quot;</span></code> with a finite bound, <code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code> with a forward
+model) the quantiles of the trial’s draws, not the estimate (the mode)
+plus or minus a multiple of the standard deviation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1052,6 +1056,8 @@ By default, one row per state element.</p></li>
 <li><p><strong>W_world</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="fips.Operator.html#fips.Operator" title="fips.operator.Operator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Operator</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span>) – The aggregation of the world’s state to the same totals, as
 <a class="reference internal" href="fips.Posterior.recovery.html#fips.Posterior.recovery" title="fips.Posterior.recovery"><code class="xref py py-meth docutils literal notranslate"><span class="pre">recovery()</span></code></a> takes it, for a world whose state has other
 labels than the posterior’s.</p></li>
+<li><p><strong>level</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span>) – The probability of each trial’s interval, between 0 and 1, as
+<a class="reference internal" href="fips.Posterior.uncertainty.html#fips.Posterior.uncertainty" title="fips.Posterior.uncertainty"><code class="xref py py-meth docutils literal notranslate"><span class="pre">uncertainty()</span></code></a> takes it.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1062,14 +1068,15 @@ and then the rows of <cite>W</cite> (or the state’s labels): <code class="docu
 <span class="math notranslate nohighlight">\(\sqrt{\operatorname{diag} W \hat{S} W^T}\)</span>: the same in
 every trial of a method whose estimate is linear in the
 observations, and for any other that of the trial’s own
-posterior) and <code class="docutils literal notranslate"><span class="pre">reduced_chi2</span></code> (the trial’s
+posterior), <code class="docutils literal notranslate"><span class="pre">lower</span></code> and <code class="docutils literal notranslate"><span class="pre">upper</span></code> (the ends of the trial’s
+posterior interval of probability <cite>level</cite>, as
+<a class="reference internal" href="fips.Posterior.uncertainty.html#fips.Posterior.uncertainty" title="fips.Posterior.uncertainty"><code class="xref py py-meth docutils literal notranslate"><span class="pre">uncertainty()</span></code></a> gives them) and <code class="docutils literal notranslate"><span class="pre">reduced_chi2</span></code> (the trial’s
 <a class="reference internal" href="fips.Posterior.reduced_chi2.html#fips.Posterior.reduced_chi2" title="fips.Posterior.reduced_chi2"><code class="xref py py-attr docutils literal notranslate"><span class="pre">reduced_chi2</span></code></a>, the same on every row of a trial). Its
 <code class="docutils literal notranslate"><span class="pre">groupby</span></code> over the totals (with <code class="docutils literal notranslate"><span class="pre">dropna=False</span></code>: a state of
 several blocks is NaN on the levels a block lacks) gives the
 performance measures: the mean of <code class="docutils literal notranslate"><span class="pre">estimate</span> <span class="pre">-</span> <span class="pre">truth</span></code> is the
 bias, its standard deviation the spread, and the fraction of
-trials with <code class="docutils literal notranslate"><span class="pre">|estimate</span> <span class="pre">-</span> <span class="pre">truth|</span> <span class="pre">&lt;=</span> <span class="pre">z</span> <span class="pre">*</span> <span class="pre">posterior_std</span></code> the
-coverage.</p>
+trials with <code class="docutils literal notranslate"><span class="pre">lower</span> <span class="pre">&lt;=</span> <span class="pre">truth</span> <span class="pre">&lt;=</span> <span class="pre">upper</span></code> the coverage.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a></span></p>
@@ -1080,10 +1087,11 @@ coverage.</p>
     other than two Vectors; or (an <a class="reference internal" href="fips.UnavailableError.html#fips.UnavailableError" title="fips.UnavailableError"><code class="xref py py-class docutils literal notranslate"><span class="pre">UnavailableError</span></code></a>) the
     method cannot take new observations (its solution has no
     <code class="docutils literal notranslate"><span class="pre">with_data</span></code>).</p></li>
-<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – If <cite>n</cite> is not a positive integer; if the world’s observations do
-    not have exactly this posterior’s labels, or its truth not the
-    state’s (without <cite>W_world</cite>); if <cite>W_world</cite> is given without <cite>W</cite>,
-    or its columns are not the truth’s labels or its rows not <cite>W</cite>’s.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – If <cite>n</cite> is not a positive integer, or <cite>level</cite> not between 0 and 1;
+    if the world’s observations do not have exactly this posterior’s
+    labels, or its truth not the state’s (without <cite>W_world</cite>); if
+    <cite>W_world</cite> is given without <cite>W</cite>, or its columns are not the
+    truth’s labels or its rows not <cite>W</cite>’s.</p></li>
 </ul>
 </dd>
 </dl>

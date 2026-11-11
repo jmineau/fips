@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.Posterior &#8212; fips 0.2.0b3.dev25+gb7302ec4c documentation</title>
+    <title>fips.Posterior &#8212; fips 0.2.0b3.dev26+g4d65592e7 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=673372a1"></script>
+    <script src="../../_static/documentation_options.js?v=05a089fb"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev25+gb7302ec4c documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev25+gb7302ec4c documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev26+g4d65592e7 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev26+g4d65592e7 documentation - Home"/>
   
   
 </a></div>
@@ -1031,9 +1031,10 @@ on the solve or on the <code class="docutils literal notranslate"><span class="p
 <p><strong>A posterior’s members belong to the kind of answer, not the method.</strong>
 There are three kinds: a <em>Gaussian</em> posterior (<code class="docutils literal notranslate"><span class="pre">estimate</span></code> is its mean
 and the covariance is known), a <em>sampled</em> one (<code class="docutils literal notranslate"><span class="pre">estimate</span></code> is the mode,
-and the spread is that of draws) and a <em>low-rank</em> one (the covariance is
-kept as <code class="docutils literal notranslate"><span class="pre">rank</span></code> directions). A member its kind cannot give raises
-<a class="reference internal" href="fips.UnavailableError.html#fips.UnavailableError" title="fips.UnavailableError"><code class="xref py py-class docutils literal notranslate"><span class="pre">UnavailableError</span></code></a> (for a property, <code class="docutils literal notranslate"><span class="pre">hasattr</span></code> is then False):</p>
+and the mean, the spread and the intervals are those of draws) and a
+<em>low-rank</em> one (the covariance is kept as <code class="docutils literal notranslate"><span class="pre">rank</span></code> directions). A member
+its kind cannot give raises <a class="reference internal" href="fips.UnavailableError.html#fips.UnavailableError" title="fips.UnavailableError"><code class="xref py py-class docutils literal notranslate"><span class="pre">UnavailableError</span></code></a> (for a
+property, <code class="docutils literal notranslate"><span class="pre">hasattr</span></code> is then False):</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <colgroup>
 <col style="width: 16.0%" />
@@ -1069,37 +1070,42 @@ forward model (the Gaussian at the mode)</p></td>
 </tr>
 <tr class="row-odd"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">mean</span></code></p></th>
 <td><p>yes</p></td>
-<td><p>raises</p></td>
+<td><p>the kept draws’ mean</p></td>
 <td><p>yes (linear problem); raises (forward model)</p></td>
 </tr>
-<tr class="row-even"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">with_gamma</span></code></p></th>
+<tr class="row-even"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">lower</span></code>, <code class="docutils literal notranslate"><span class="pre">upper</span></code> (<code class="docutils literal notranslate"><span class="pre">uncertainty</span></code>, <code class="docutils literal notranslate"><span class="pre">trials</span></code>)</p></th>
+<td><p>the estimate plus or minus <code class="docutils literal notranslate"><span class="pre">z</span></code> standard deviations</p></td>
+<td><p>the kept draws’ quantiles</p></td>
+<td><p>the estimate plus or minus <code class="docutils literal notranslate"><span class="pre">z</span></code> standard deviations</p></td>
+</tr>
+<tr class="row-odd"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">with_gamma</span></code></p></th>
 <td><p>yes</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">&quot;bounded&quot;</span></code>: yes; <code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code>: raises (its linearization
 depends on gamma)</p></td>
 <td><p>yes (linear problem); raises (forward model)</p></td>
 </tr>
-<tr class="row-odd"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">log_evidence</span></code></p></th>
+<tr class="row-even"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">log_evidence</span></code></p></th>
 <td><p>yes; <code class="docutils literal notranslate"><span class="pre">&quot;ensemble&quot;</span></code>: raises</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code>: Laplace’s; <code class="docutils literal notranslate"><span class="pre">&quot;bounded&quot;</span></code>: raises</p></td>
 <td><p>yes (Laplace’s with a forward model) unless <code class="docutils literal notranslate"><span class="pre">rank</span></code> left out pairs
 that still hold information</p></td>
 </tr>
-<tr class="row-even"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">recovery</span></code>, <code class="docutils literal notranslate"><span class="pre">data_worth</span></code>, <code class="docutils literal notranslate"><span class="pre">candidate_worth</span></code></p></th>
+<tr class="row-odd"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">recovery</span></code>, <code class="docutils literal notranslate"><span class="pre">data_worth</span></code>, <code class="docutils literal notranslate"><span class="pre">candidate_worth</span></code></p></th>
 <td><p><code class="docutils literal notranslate"><span class="pre">&quot;analytic&quot;</span></code> only: they need an estimate linear in the observations</p></td>
 <td><p>raises</p></td>
 <td><p>raises</p></td>
 </tr>
-<tr class="row-odd"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">at_bound</span></code></p></th>
+<tr class="row-even"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">at_bound</span></code></p></th>
 <td><p>raises</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">&quot;bounded&quot;</span></code> with a finite bound</p></td>
 <td><p>raises</p></td>
 </tr>
-<tr class="row-even"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">iterations</span></code></p></th>
+<tr class="row-odd"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">iterations</span></code></p></th>
 <td><p><code class="docutils literal notranslate"><span class="pre">&quot;variational&quot;</span></code> only</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code> only</p></td>
 <td><p>yes</p></td>
 </tr>
-<tr class="row-odd"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">eigenvalues</span></code></p></th>
+<tr class="row-even"><th class="stub"><p><code class="docutils literal notranslate"><span class="pre">eigenvalues</span></code></p></th>
 <td><p><code class="docutils literal notranslate"><span class="pre">&quot;variational&quot;</span></code> only</p></td>
 <td><p>raises</p></td>
 <td><p>yes</p></td>
@@ -1211,7 +1217,7 @@ arrays (for the analytic method, a factorization:
 <td><p>the probability density of the observations given the problem's settings, with the state integrated out.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="fips.Posterior.mean.html#fips.Posterior.mean" title="fips.Posterior.mean"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mean</span></code></a></p></td>
-<td><p>The posterior mean, <code class="xref py py-attr docutils literal notranslate"><span class="pre">estimate</span></code> itself.</p></td>
+<td><p>The posterior mean, on the prior's space.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="fips.Posterior.modeled_obs.html#fips.Posterior.modeled_obs" title="fips.Posterior.modeled_obs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">modeled_obs</span></code></a></p></td>
 <td><p>The observations the estimate models, <span class="math notranslate nohighlight">\(H \hat{x} + c\)</span>.</p></td>
@@ -1276,11 +1282,11 @@ arrays (for the analytic method, a factorization:
 <tr class="row-even"><td><p><a class="reference internal" href="fips.Posterior.summary.html#fips.Posterior.summary" title="fips.Posterior.summary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">summary</span></code></a>()</p></td>
 <td><p>Return the diagnostics of the solve as a table of one row.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="fips.Posterior.trials.html#fips.Posterior.trials" title="fips.Posterior.trials"><code class="xref py py-obj docutils literal notranslate"><span class="pre">trials</span></code></a>([world, n, rng, W, W_world])</p></td>
-<td><p>Return the truth and the estimate of each total in <cite>n</cite> trials of data made by <cite>world</cite>: the sampled <code class="xref py py-meth docutils literal notranslate"><span class="pre">recovery()</span></code>.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="fips.Posterior.trials.html#fips.Posterior.trials" title="fips.Posterior.trials"><code class="xref py py-obj docutils literal notranslate"><span class="pre">trials</span></code></a>([world, n, rng, W, W_world, level])</p></td>
+<td><p>Return the truth, the estimate and the interval of each total in <cite>n</cite> trials of data made by <cite>world</cite>: the sampled <code class="xref py py-meth docutils literal notranslate"><span class="pre">recovery()</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="fips.Posterior.uncertainty.html#fips.Posterior.uncertainty" title="fips.Posterior.uncertainty"><code class="xref py py-obj docutils literal notranslate"><span class="pre">uncertainty</span></code></a>([W])</p></td>
-<td><p>Return the prior and posterior uncertainty of each aggregate, and how much the observations reduce it.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="fips.Posterior.uncertainty.html#fips.Posterior.uncertainty" title="fips.Posterior.uncertainty"><code class="xref py py-obj docutils literal notranslate"><span class="pre">uncertainty</span></code></a>([W, level])</p></td>
+<td><p>Return the prior and posterior uncertainty of each aggregate, how much the observations reduce it, and its posterior interval.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="fips.Posterior.with_data.html#fips.Posterior.with_data" title="fips.Posterior.with_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">with_data</span></code></a>(obs)</p></td>
 <td><p>Return the posterior of the same problem with other observations.</p></td>

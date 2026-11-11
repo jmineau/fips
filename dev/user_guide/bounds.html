@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Bounds on the state &#8212; fips 0.2.0b3.dev25+gb7302ec4c documentation</title>
+    <title>Bounds on the state &#8212; fips 0.2.0b3.dev26+g4d65592e7 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=673372a1"></script>
+    <script src="../_static/documentation_options.js?v=05a089fb"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev25+gb7302ec4c documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev25+gb7302ec4c documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev26+g4d65592e7 documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev26+g4d65592e7 documentation - Home"/>
   
   
 </a></div>
@@ -497,10 +497,13 @@ cost is least, which is the point of the box nearest <span class="math notransla
 metric of <span class="math notranslate nohighlight">\(\hat{S}\)</span>. fips finds it with an active set that needs only
 the columns of <span class="math notranslate nohighlight">\(\hat{S}\)</span> at the elements on a bound, from the analytic
 factors, and checks the optimality conditions of the answer before it
-returns it. <code class="docutils literal notranslate"><span class="pre">post.mean</span></code> raises: the mode is not the mean;</p></li>
+returns it. The mode is not the mean: <code class="docutils literal notranslate"><span class="pre">post.mean</span></code> is the mean of the draws;</p></li>
 <li><p>the <strong>uncertainty</strong> comes from <strong>draws</strong> of the truncated posterior, by exact
 Hamiltonian Monte Carlo (Pakman and Paninski, 2014). An element on its bound
-still has spread, on one side of the bound.</p></li>
+still has spread, on one side of the bound. The intervals of
+<a class="reference internal" href="../reference/api/fips.Posterior.uncertainty.html#fips.Posterior.uncertainty" title="fips.Posterior.uncertainty"><code class="xref py py-meth docutils literal notranslate"><span class="pre">uncertainty()</span></code></a> and <a class="reference internal" href="../reference/api/fips.Posterior.trials.html#fips.Posterior.trials" title="fips.Posterior.trials"><code class="xref py py-meth docutils literal notranslate"><span class="pre">trials()</span></code></a>
+(<code class="docutils literal notranslate"><span class="pre">lower</span></code> and <code class="docutils literal notranslate"><span class="pre">upper</span></code>) are the draws’ quantiles, not the mode plus or
+minus a multiple of the standard deviation.</p></li>
 </ul>
 <p>The bounds are <code class="docutils literal notranslate"><span class="pre">lower</span></code> and <code class="docutils literal notranslate"><span class="pre">upper</span></code>: a number for every element, a
 <a class="reference internal" href="../reference/api/fips.Vector.html#fips.Vector" title="fips.Vector"><code class="xref py py-class docutils literal notranslate"><span class="pre">Vector</span></code></a> with an element’s own bound (<code class="docutils literal notranslate"><span class="pre">-inf</span></code> or <code class="docutils literal notranslate"><span class="pre">inf</span></code> for
@@ -645,10 +648,10 @@ the bounds: they rule out the negative totals the Gaussian allowed.</p>
 
 <span class="gp">In [29]: </span><span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">({</span><span class="s2">"analytic"</span><span class="p">:</span> <span class="n">analytic</span><span class="o">.</span><span class="n">uncertainty</span><span class="p">(</span><span class="n">W</span><span class="p">),</span> <span class="s2">"bounded"</span><span class="p">:</span> <span class="n">post</span><span class="o">.</span><span class="n">uncertainty</span><span class="p">(</span><span class="n">W</span><span class="p">)})</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
 <span class="gh">Out[29]: </span>
-<span class="go">                     prior_std  posterior_std  reduction</span>
-<span class="go">         block what                                     </span>
-<span class="go">analytic total flux      4.065          0.952      0.766</span>
-<span class="go">bounded  total flux      4.065          0.679      0.833</span>
+<span class="go">                     prior_std  posterior_std  reduction  lower  upper</span>
+<span class="go">         block what                                                   </span>
+<span class="go">analytic total flux      4.065          0.952      0.766  1.838  5.568</span>
+<span class="go">bounded  total flux      4.065          0.679      0.833  3.894  6.569</span>
 </pre></div>
 </div>
 <p><strong>The mode is not the mean.</strong> The estimate is the mode; the draws are spread
@@ -743,7 +746,7 @@ the total:</p>
 <span class="gp">   ....: </span>    <span class="n">cell</span> <span class="o">=</span> <span class="n">error</span><span class="o">.</span><span class="n">xs</span><span class="p">(</span><span class="s2">"cell"</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">"block"</span><span class="p">)</span>
 <span class="gp">   ....: </span>    <span class="n">total</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">xs</span><span class="p">(</span><span class="s2">"total"</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">"block"</span><span class="p">)</span>
 <span class="gp">   ....: </span>    <span class="n">total_error</span> <span class="o">=</span> <span class="n">total</span><span class="p">[</span><span class="s2">"estimate"</span><span class="p">]</span> <span class="o">-</span> <span class="n">total</span><span class="p">[</span><span class="s2">"truth"</span><span class="p">]</span>
-<span class="gp">   ....: </span>    <span class="n">covered</span> <span class="o">=</span> <span class="n">total_error</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="mf">1.96</span> <span class="o">*</span> <span class="n">total</span><span class="p">[</span><span class="s2">"posterior_std"</span><span class="p">]</span>
+<span class="gp">   ....: </span>    <span class="n">covered</span> <span class="o">=</span> <span class="p">(</span><span class="n">total</span><span class="p">[</span><span class="s2">"lower"</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">total</span><span class="p">[</span><span class="s2">"truth"</span><span class="p">])</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">total</span><span class="p">[</span><span class="s2">"truth"</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">total</span><span class="p">[</span><span class="s2">"upper"</span><span class="p">])</span>
 <span class="gp">   ....: </span>    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span>
 <span class="gp">   ....: </span>        <span class="p">{</span>
 <span class="gp">   ....: </span>            <span class="s2">"cell RMSE"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">cell</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">())),</span>
@@ -763,14 +766,16 @@ the total:</p>
 <span class="go">total bias         0.109    0.386</span>
 <span class="go">total spread       1.003    0.870</span>
 <span class="go">claimed spread     0.952    0.748</span>
-<span class="go">total coverage     0.900    0.880</span>
+<span class="go">total coverage     0.900    0.480</span>
 </pre></div>
 </div>
 <p>With 100 trials the bias is known to about a tenth of the spread, and a
 coverage near 0.9 to about 0.03. In this world the bounds make the map better
 (a smaller cell RMSE) and move the total: up, by a few Monte Carlo standard
-errors of the bias, with a smaller spread and a smaller claimed spread (the
-two coverages are within their Monte Carlo error of each other). That is the
+errors of the bias, with a smaller spread and a smaller claimed spread. The
+bounded total’s interval, the quantiles of its draws, holds the truth much
+less often than the analytic one: the draws are of the truncated posterior,
+whose total is above this world’s wherever the data see little. That is the
 pattern to expect: <strong>bounds mostly improve maps and can move totals</strong>, and since the
 estimate is the mode of a skewed posterior, a total read from it is not the
 posterior’s mean total (above, the draws’). Which matters depends on the
