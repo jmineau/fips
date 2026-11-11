@@ -30,7 +30,7 @@ Inverse problems in geophysics and atmospheric science often involve large state
 
 - **Fast and exact**: each matrix is kept in its cheapest form (dense, sparse, diagonal, or Kronecker factors), and fips computes the exact Gaussian posterior with direct linear algebra, for large state spaces in seconds.
 
-- **Past the linear Gaussian problem**: bounds on the state, forward models that are not linear (with ready-made ones that keep a quantity positive), models that can only be run, and problems too large to factor, each a method of the same `fips.solve` on the same `Problem`; and covariance settings fitted from the data, with their uncertainty carried into the answer.
+- **Past the linear Gaussian problem**: bounds on the state, forward models that are not linear (with ready-made ones that keep a quantity positive), models that can only be run, and problems too large to factor, each a method of the same `fips.solve` on the same `Problem`; and covariance hyperparameters fitted from the data, with their uncertainty carried into the answer.
 
 ## Installation
 

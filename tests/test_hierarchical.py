@@ -1,18 +1,18 @@
 """
-Tests for ``fips.hierarchical``: the covariance settings drawn from their posterior, and the state at each draw.
+Tests for ``fips.hierarchical``: the covariance hyperparameters drawn from their posterior, and the state at each draw.
 
 How it is held to being right:
 
-1. **Quadrature.** One setting on a tiny problem: the posterior of the
-   setting, ``p(s) p(z | s)`` on a fine grid with the evidence of a fresh
-   solve at each point, gives the setting's mean, std and 5% and 95%
+1. **Quadrature.** One hyperparameter on a tiny problem: the posterior of the
+   hyperparameter, ``p(s) p(z | s)`` on a fine grid with the evidence of a fresh
+   solve at each point, gives the hyperparameter's mean, std and 5% and 95%
    quantiles, and the state's mixed mean and variance (the law of total
    variance). The chain's draws match them within four Monte Carlo standard
    errors (from the chain's effective sample size), on the general path and
    on the fast path.
 2. **Two wrong variants fail the same checks**: a chain with no
-   accept/reject step, and the state drawn at the settings' mode instead of
-   each draw's settings.
+   accept/reject step, and the state drawn at the hyperparameters' mode instead of
+   each draw's hyperparameters.
 3. **The fast path is the general path**: its evidence equals the scaled
    problem's ``log_evidence`` in both forms, and with the same seed the two
    paths give the same chain and the same draws of the state.
@@ -20,8 +20,8 @@ How it is held to being right:
    coordinates and its Jacobian.
 5. Seeds reproduce, the result pickles, labels and refusals.
 
-A slow test: simulation-based calibration. Worlds draw the settings from
-their priors, then the state, then the data; the rank of the true settings
+A slow test: simulation-based calibration. Worlds draw the hyperparameters from
+their priors, then the state, then the data; the rank of the true hyperparameters
 among the draws is uniform over the worlds, and a total's 90% interval holds
 the truth in 90% of them.
 """
@@ -36,10 +36,15 @@ from scipy import stats
 from scipy.integrate import trapezoid
 
 import fips
-import fips.settings
+import fips.hyperparameters
 from fips.distributions import HalfNormal, LogNormal, Uniform
+from fips.hyperparameters import _effective_size, _Scales
 from fips.methods import analytic
-from fips.settings import _effective_size, _Scales
+
+
+def every_draw(result, **kwargs):
+    """Return all the kept draws of the state of a hierarchical result."""
+    return result.sample(len(result.hyperparameters), **kwargs)
 
 
 def _world(n=3, m=4, seed=0, std=1.5, noise=0.5):
@@ -70,7 +75,7 @@ def build_tiny(s):
 
 
 def _quadrature():
-    """The setting's posterior on a grid of log s, and the state's mixed mean and variance."""
+    """The hyperparameter's posterior on a grid of log s, and the state's mixed mean and variance."""
     u = np.linspace(-5.0, 5.0, 1201) * PRIOR_STD.sigma + PRIOR_STD.mu
     log_post = np.empty(len(u))
     means, variances = [], []
@@ -106,7 +111,7 @@ def exact():
 
 
 def _setting_errors(draws, ess, exact):
-    """Each check of the setting's draws, in Monte Carlo standard errors (ESS from the correct chain)."""
+    """Each check of the hyperparameter's draws, in Monte Carlo standard errors (ESS from the correct chain)."""
     se_mean = exact["std"] / math.sqrt(ess)
     errors = {
         "mean": (draws.mean() - exact["mean"]) / se_mean,
@@ -132,19 +137,19 @@ def _state_errors(states, ess, exact):
 def test_the_setting_and_the_state_match_quadrature(path, exact):
     if path == "general":
         result = fips.hierarchical(build_tiny, {"std": PRIOR_STD}, draws=3000, seed=1)
-        draws = result.settings["std"].values
+        draws = result.hyperparameters["std"].values
     else:
         problem = build_tiny({"std": 1.0})
         result = fips.hierarchical(
             problem, {"prior_scale": PRIOR_STD}, draws=20000, seed=1
         )
-        draws = result.settings["prior_scale"].values
+        draws = result.hyperparameters["prior_scale"].values
     ess = float(result.ess.iloc[0])
     assert ess > 0.1 * len(draws)
     assert 0.2 < result.acceptance < 0.5
     errors = _setting_errors(draws, ess, exact)
     assert all(abs(e) < 4.0 for e in errors.values()), errors
-    states = result.sample().values
+    states = every_draw(result).values
     assert np.all(np.abs(_state_errors(states, ess, exact)) < 4.0)
     # the result's own summaries are those of the draws
     np.testing.assert_allclose(result.estimate.values, states.mean(axis=1))
@@ -154,17 +159,19 @@ def test_the_setting_and_the_state_match_quadrature(path, exact):
 def test_a_chain_with_no_accept_reject_step_fails_quadrature(exact, monkeypatch):
     """The wrong variant: every proposal accepted (where the posterior has a density), a random walk, not the posterior."""
     monkeypatch.setattr(
-        fips.settings, "_accept", lambda log_ratio, rng: math.isfinite(log_ratio)
+        fips.hyperparameters, "_accept", lambda log_ratio, rng: math.isfinite(log_ratio)
     )
     problem = build_tiny({"std": 1.0})
     result = fips.hierarchical(problem, {"prior_scale": PRIOR_STD}, draws=4000, seed=1)
-    errors = _setting_errors(result.settings["prior_scale"].values, 1000.0, exact)
+    errors = _setting_errors(
+        result.hyperparameters["prior_scale"].values, 1000.0, exact
+    )
     assert max(abs(e) for e in errors.values()) > 10.0, errors
 
 
 def test_the_state_drawn_at_the_mode_fails_the_law_of_total_variance(exact):
     """
-    The wrong variant: the state's draws at the settings' mode leave out the settings' uncertainty.
+    The wrong variant: the state's draws at the hyperparameters' mode leave out the hyperparameters' uncertainty.
 
     Its 20,000 draws are independent, so their standard errors are their own
     (about 1% of a variance); the mixed variance is about 30% larger.
@@ -228,7 +235,7 @@ def test_the_fast_evidence_is_the_scaled_problems(n, m, values):
 
 @pytest.mark.parametrize(("n", "m"), [(12, 20), (20, 12)])
 def test_the_fast_path_gives_the_general_paths_chain_and_draws(n, m):
-    """The same seed: the same settings and the same draws of the state, to the optimizer's tolerance."""
+    """The same seed: the same hyperparameters and the same draws of the state, to the optimizer's tolerance."""
     problem = _problem(n, m)
 
     def build(s):
@@ -247,17 +254,19 @@ def test_the_fast_path_gives_the_general_paths_chain_and_draws(n, m):
     fast = fips.hierarchical(problem, priors, draws=300, burn_in=100, seed=4)
     general = fips.hierarchical(build, priors, draws=300, burn_in=100, seed=4)
     np.testing.assert_allclose(fast.mode.values, general.mode.values, rtol=1e-4)
-    np.testing.assert_allclose(fast.settings.values, general.settings.values, rtol=1e-3)
+    np.testing.assert_allclose(
+        fast.hyperparameters.values, general.hyperparameters.values, rtol=1e-3
+    )
     assert fast.acceptance == general.acceptance
     scale = np.sqrt(fast.variances.values)
     np.testing.assert_allclose(
-        fast.sample().values / scale[:, None],
-        general.sample().values / scale[:, None],
+        every_draw(fast).values / scale[:, None],
+        every_draw(general).values / scale[:, None],
         atol=1e-3,
     )
 
 
-def test_the_fast_path_refuses_other_settings():
+def test_the_fast_path_refuses_other_hyperparameters():
     problem = build_tiny({"std": 1.0})
     with pytest.raises(ValueError, match="'length'"):
         fips.hierarchical(problem, {"length": LogNormal()})
@@ -324,12 +333,12 @@ def result():
 
 def test_seeds_reproduce(result):
     again = fips.hierarchical(build_tiny, {"std": PRIOR_STD}, draws=400, burn_in=100)
-    pd.testing.assert_frame_equal(result.settings, again.settings)
-    pd.testing.assert_frame_equal(result.sample(), again.sample())
+    pd.testing.assert_frame_equal(result.hyperparameters, again.hyperparameters)
+    pd.testing.assert_frame_equal(every_draw(result), every_draw(again))
     other = fips.hierarchical(
         build_tiny, {"std": PRIOR_STD}, draws=400, burn_in=100, seed=1
     )
-    assert not np.allclose(result.settings.values, other.settings.values)
+    assert not np.allclose(result.hyperparameters.values, other.hyperparameters.values)
 
 
 class _WithoutSpawn:
@@ -359,13 +368,13 @@ def test_the_chains_are_seeded_without_generator_spawn(monkeypatch):
 
     monkeypatch.setattr(np.random, "default_rng", default_rng)
     after = fips.hierarchical(build_tiny, {"std": PRIOR_STD}, draws=30, burn_in=20)
-    pd.testing.assert_frame_equal(before.settings, after.settings)
+    pd.testing.assert_frame_equal(before.hyperparameters, after.hyperparameters)
 
 
 def test_the_result_pickles(result):
     loaded = pickle.loads(pickle.dumps(result))
-    pd.testing.assert_frame_equal(loaded.settings, result.settings)
-    pd.testing.assert_frame_equal(loaded.sample(), result.sample())
+    pd.testing.assert_frame_equal(loaded.hyperparameters, result.hyperparameters)
+    pd.testing.assert_frame_equal(every_draw(loaded), every_draw(result))
     assert loaded.at(result.mode).log_evidence == pytest.approx(
         result.at(result.mode).log_evidence, rel=1e-12
     )
@@ -373,7 +382,7 @@ def test_the_result_pickles(result):
         build_tiny({"std": 1.0}), {"prior_scale": PRIOR_STD}, draws=50
     )
     pd.testing.assert_frame_equal(
-        pickle.loads(pickle.dumps(fast)).sample(), fast.sample()
+        every_draw(pickle.loads(pickle.dumps(fast))), every_draw(fast)
     )
 
 
@@ -382,23 +391,31 @@ def test_the_results_labels_and_aggregates(result):
         PRIOR.space,
         by=pd.Series("all", index=PRIOR.space.select("flux"), name="region"),
     )
-    assert list(result.settings.columns) == ["std"]
-    assert result.settings.index.name == "draw"
-    draws = result.sample(100)
+    assert list(result.hyperparameters.columns) == ["std"]
+    assert result.hyperparameters.index.name == "draw"
+    draws = result.sample(100, rng=0)
     assert draws.shape == (3, 100)
     assert draws.index.equals(PRIOR.index)
-    assert draws.columns[0] == 0 and draws.columns[-1] == 399
-    totals = result.sample(W=total)
+    assert draws.columns.is_unique and draws.columns.is_monotonic_increasing
+    assert draws.columns.min() >= 0 and draws.columns.max() <= 399
+    # a column is the draw made at its row of the hyperparameters
+    np.testing.assert_array_equal(
+        draws.values, every_draw(result).loc[:, draws.columns].values
+    )
+    pd.testing.assert_frame_equal(draws, result.sample(100, rng=0))
+    assert not draws.columns.equals(result.sample(100, rng=1).columns)
+    assert every_draw(result).columns.equals(result.hyperparameters.index)
+    totals = every_draw(result, W=total)
     np.testing.assert_allclose(
-        totals.values, result.sample().values.sum(axis=0, keepdims=True)
+        totals.values, every_draw(result).values.sum(axis=0, keepdims=True)
     )
     assert result.cov(total).dense()[0, 0] == pytest.approx(totals.values.var(ddof=1))
-    np.testing.assert_allclose(result.cov().dense(), np.cov(result.sample().values))
+    np.testing.assert_allclose(result.cov().dense(), np.cov(every_draw(result).values))
     table = result.uncertainty(total, level=0.9)
     assert list(table.columns) == ["estimate", "posterior_std", "lower", "upper"]
     assert table["lower"].iloc[0] == pytest.approx(np.quantile(totals.values, 0.05))
     assert result.estimate.space == PRIOR.space
-    assert "Hierarchical(settings=['std']" in repr(result)
+    assert "Hierarchical(hyperparameters=['std']" in repr(result)
     with pytest.raises(ValueError, match="kept"):
         result.sample(401)
     with pytest.raises(ValueError, match="missing"):
@@ -409,7 +426,7 @@ def test_the_results_labels_and_aggregates(result):
 
 def test_a_built_state_in_another_order_is_put_in_the_first_problems():
     """
-    A function that returns the prior in another order at some settings: each draw is put in the order of the first problem built, at the priors' medians.
+    A function that returns the prior in another order at some hyperparameters: each draw is put in the order of the first problem built, at the priors' medians.
 
     The prior means are 0, 10 and 20, far apart next to their std, so a draw
     put in the wrong order would move a cell's mean by 10.
@@ -438,22 +455,27 @@ def test_a_built_state_in_another_order_is_put_in_the_first_problems():
     plain = fips.hierarchical(build, {"std": PRIOR_STD}, draws=400, burn_in=50)
     reordered = fips.hierarchical(mixed, {"std": PRIOR_STD}, draws=400, burn_in=50)
     np.testing.assert_allclose(
-        reordered.settings.values, plain.settings.values, rtol=1e-4
+        reordered.hyperparameters.values, plain.hyperparameters.values, rtol=1e-4
     )
-    assert (reordered.settings["std"] > 1.0).any() and (
-        reordered.settings["std"] < 1.0
+    assert (reordered.hyperparameters["std"] > 1.0).any() and (
+        reordered.hyperparameters["std"] < 1.0
     ).any()
-    assert reordered.sample().index.equals(PRIOR.index)
+    assert every_draw(reordered).index.equals(PRIOR.index)
     np.testing.assert_allclose(
         reordered.estimate.values, plain.estimate.values, atol=0.5
     )
 
 
 @pytest.mark.parametrize(
-    ("build", "settings", "error", "match"),
+    ("build", "hyperparameters", "error", "match"),
     [
         (build_tiny, {}, ValueError, "empty"),
-        (build_tiny, {"std": stats.lognorm(1.0)}, TypeError, "prior of setting 'std'"),
+        (
+            build_tiny,
+            {"std": stats.lognorm(1.0)},
+            TypeError,
+            "prior of hyperparameter 'std'",
+        ),
         (3.0, {"std": PRIOR_STD}, TypeError, "build is a function"),
         (lambda s: 1.0, {"std": PRIOR_STD}, TypeError, "returned float"),
         (
@@ -465,9 +487,9 @@ def test_a_built_state_in_another_order_is_put_in_the_first_problems():
     ],
     ids=["empty", "scipy-prior", "a-number", "returns-a-float", "bounded"],
 )
-def test_refusals(build, settings, error, match):
+def test_refusals(build, hyperparameters, error, match):
     with pytest.raises(error, match=match):
-        fips.hierarchical(build, settings, draws=10, burn_in=0)
+        fips.hierarchical(build, hyperparameters, draws=10, burn_in=0)
 
 
 @pytest.mark.parametrize(
@@ -497,16 +519,16 @@ def test_the_effective_size_of_independent_and_correlated_chains():
 @pytest.mark.parametrize("path", ["fast", "general"])
 def test_simulation_based_calibration(path):
     """
-    Worlds drawn from the settings' priors: the true settings' ranks are uniform, and a total's 90% interval covers.
+    Worlds drawn from the hyperparameters' priors: the true hyperparameters' ranks are uniform, and a total's 90% interval covers.
 
     Each world draws a prior-std factor and a mismatch factor from their
     priors, a truth from the prior at the first, and the observations with
     the error at the second; the hierarchical posterior's draws (every
-    fifth, 100 of them) rank the true settings. Over the worlds the ranks are
+    fifth, 100 of them) rank the true hyperparameters. Over the worlds the ranks are
     uniform (a chi-squared test over 10 bins), and the total's 90% interval
     holds the true total in 90% of them (within three binomial standard
     errors). The general path builds an exponential prior covariance whose
-    length is a third setting.
+    length is a third hyperparameter.
     """
     rng = np.random.default_rng(11)
     n, m = 12, 16
@@ -556,7 +578,7 @@ def test_simulation_based_calibration(path):
                 burn_in=200,
                 seed=trial,
             )
-        thinned = result.settings.iloc[::5]
+        thinned = result.hyperparameters.iloc[::5]
         ranks.append([int((thinned[name] < true[name]).sum()) for name in priors])
         interval = result.uncertainty(total, level=0.9).iloc[0]
         true_total = float((total @ truth).values[0])

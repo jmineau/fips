@@ -92,7 +92,7 @@ def ask(post: fips.Posterior, member: str, linear: fips.Problem):
     if member == "recovery":
         return post.recovery(linear)
     if member == "data_worth":
-        return post.data_worth("obs_id", total)
+        return post.data_worth("obs_id", W=total)
     if member == "candidate_worth":
         candidates = fips.Operator(
             np.full((2, 4), 0.5),
@@ -100,7 +100,7 @@ def ask(post: fips.Posterior, member: str, linear: fips.Problem):
             post.problem.prior.space,
         )
         return post.candidate_worth(
-            candidates, fips.Independent().with_std(0.05), "obs_id", total
+            candidates, fips.Independent().with_std(0.05), "obs_id", W=total
         )
     return getattr(post, member)
 

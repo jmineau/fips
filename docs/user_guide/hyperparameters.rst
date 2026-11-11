@@ -1,25 +1,26 @@
+.. _hyperparameters:
 .. _settings:
 
-Fitting the covariance settings
-===============================
+Fitting the covariance hyperparameters
+======================================
 
 Every inversion rests on numbers someone chose: the prior covariance's
 standard deviation and correlation length, the observation covariance's
-standard deviation. These are the *settings*. **The settings that make the
+standard deviation. These are the *hyperparameters*. **The hyperparameters that make the
 observations most probable are their maximum-likelihood estimates, and**
 :attr:`post.log_evidence <fips.Posterior.log_evidence>` **is the log of that
 probability**, the *evidence*. Write a function that builds the problem from
-the settings, and maximize the evidence over them with :mod:`scipy.optimize`:
+the hyperparameters, and maximize the evidence over them with :mod:`scipy.optimize`:
 
 .. code-block:: python
 
-   def cost(log_settings):
-       return -fips.solve(build(np.exp(log_settings))).log_evidence
+   def cost(log_hyperparameters):
+       return -fips.solve(build(np.exp(log_hyperparameters))).log_evidence
 
    fit = scipy.optimize.minimize(cost, np.log(guess), method="L-BFGS-B")
 
-``np.exp(fit.x)`` is the fitted settings, and ``fips.solve(build(...))`` at
-them is the posterior. fips has no fitting function of its own: the settings
+``np.exp(fit.x)`` is the fitted hyperparameters, and ``fips.solve(build(...))`` at
+them is the posterior. fips has no fitting function of its own: the hyperparameters
 are yours, and so is the function that turns them into a problem (Michalak et
 al., 2005).
 
@@ -31,7 +32,7 @@ al., 2005).
 When to use it
 --------------
 
-- **Your settings are a judgment, and you want the data's view of them.**
+- **Your hyperparameters are a judgment, and you want the data's view of them.**
   Fit the ones you are least sure of; hold the others.
 - **The reduced chi-squared is far from 1.** It says the covariances are too
   small or too large together, not which one is wrong; the evidence decides
@@ -40,11 +41,11 @@ When to use it
   ``post.with_gamma(g).log_evidence`` gives the evidence at another gamma for
   a few products, with no new solve, so a sweep or
   :func:`scipy.optimize.minimize_scalar` over gamma is cheap. Gamma scales the
-  observation covariance, so it is the same setting as the observation
+  observation covariance, so it is the same hyperparameter as the observation
   standard deviation: fit one or the other, not both.
-- **The fitted settings are uncertain, and that matters to the answer.** A
-  posterior at fitted settings treats them as known. :doc:`hierarchical`
-  draws the settings from their posterior instead, and carries their
+- **The fitted hyperparameters are uncertain, and that matters to the answer.** A
+  posterior at fitted hyperparameters treats them as known. :doc:`hierarchical`
+  draws the hyperparameters from their posterior instead, and carries their
   uncertainty into the state's.
 
 
@@ -76,16 +77,16 @@ elements.
    H = fips.Operator(weights, observed, line)
    prior = fips.Vector(np.full(n, 2.0), line, name="prior")
 
-The function from the settings to the problem is the one a
+The function from the hyperparameters to the problem is the one a
 :ref:`repeated inversion <repeated-inversions>` already has. Here the
-settings are three numbers: the prior standard deviation, the correlation
+hyperparameters are three numbers: the prior standard deviation, the correlation
 length, and the observation standard deviation.
 
 .. ipython:: python
 
-   def build(settings, obs):
-       """Return the problem at the settings (prior std, correlation length, observation std)."""
-       std, length, noise = settings
+   def build(hyperparameters, obs):
+       """Return the problem at the hyperparameters (prior std, correlation length, observation std)."""
+       std, length, noise = hyperparameters
        return fips.Problem(
            prior=prior,
            prior_cov=fips.Exponential("x", length).with_std(std),
@@ -94,8 +95,8 @@ length, and the observation standard deviation.
            forward=H,
        )
 
-To show that the fit finds the right settings, the observations here come from
-a world whose settings are known: the problem at the true settings, whose
+To show that the fit finds the right hyperparameters, the observations here come from
+a world whose hyperparameters are known: the problem at the true hyperparameters, whose
 :meth:`~fips.Problem.simulate` draws a truth from its prior and the
 observations it gives (:doc:`synthetic`).
 
@@ -104,32 +105,32 @@ observations it gives (:doc:`synthetic`).
    true = pd.Series({"std": 1.0, "length": 5.0, "noise": 0.5})
    truth, obs = build(true, fips.Vector(np.zeros(m), observed)).simulate(rng)
 
-Minimize the negative log evidence over the logarithms of the settings. The
-logarithm keeps each setting positive and puts a factor of two the same
+Minimize the negative log evidence over the logarithms of the hyperparameters. The
+logarithm keeps each hyperparameter positive and puts a factor of two the same
 distance away on either side. L-BFGS-B estimates the gradient from
 differences, a few solves per step:
 
 .. ipython:: python
 
-   def cost(log_settings, obs=obs):
-       return -fips.solve(build(np.exp(log_settings), obs)).log_evidence
+   def cost(log_hyperparameters, obs=obs):
+       return -fips.solve(build(np.exp(log_hyperparameters), obs)).log_evidence
 
    guess = pd.Series({"std": 0.3, "length": 1.0, "noise": 2.0})
    fit = minimize(cost, np.log(guess), method="L-BFGS-B")
    fitted = pd.Series(np.exp(fit.x), index=true.index)
    pd.DataFrame({"true": true, "guess": guess, "fitted": fitted}).round(3)
 
-From a guess off by a factor of three to five in each setting, the fit finds
+From a guess off by a factor of three to five in each hyperparameter, the fit finds
 both standard deviations close to the truth. The correlation length it finds
 is shorter than the true one, and the next section shows why that is not a
 failure of the fit.
 
 
-How well the data decide a setting
-----------------------------------
+How well the data decide a hyperparameter
+-----------------------------------------
 
 **The evidence is a likelihood, so its curvature says how well the data
-decide a setting.** Hold one setting at each of several values, fit the
+decide a hyperparameter.** Hold one hyperparameter at each of several values, fit the
 others, and read how far the evidence falls below its maximum (a *profile*).
 A fall of about 2 is the edge of a 95% interval: half of 3.84, the 95% point
 of a chi-squared with one degree of freedom.
@@ -166,7 +167,7 @@ posterior summarized at its mode, and refused where neither holds:
   forward model. For a model that bends, it leaves out how the posterior
   departs from that Gaussian (its skew); for a lognormal state of a few
   elements that error is about 0.1, small next to the differences between
-  settings, so fit the settings of a forward model with it as above.
+  hyperparameters, so fit the hyperparameters of a forward model with it as above.
 - ``"variational"`` (:doc:`variational`): the same formula with the
   information content of its low-rank posterior (Laplace's at the mode, with
   a forward model). It is exact at full rank. Below it, the evidence leaves
@@ -176,7 +177,7 @@ posterior summarized at its mode, and refused where neither holds:
   ``rank`` until the last :attr:`~fips.Posterior.eigenvalues` are well below 1.
 - ``"bounded"`` (:doc:`bounds`): raises with a finite bound. The evidence
   with bounds needs the probability of the bounds under the prior and under
-  the posterior, which fips does not compute. Fit the settings on the problem
+  the posterior, which fips does not compute. Fit the hyperparameters on the problem
   without bounds, with ``"analytic"``. With no finite bound it is the
   analytic posterior, and gives the exact evidence.
 - ``"ensemble"`` (:doc:`ensemble`): raises. For a linear problem, the
@@ -189,9 +190,9 @@ why. The :ref:`members table <posterior-members>` lists it with the rest.
 Against a reduced chi-squared of 1
 ----------------------------------
 
-The common alternative is to adjust a setting until the reduced chi-squared,
+The common alternative is to adjust a hyperparameter until the reduced chi-squared,
 :math:`\chi^2 / m` (:attr:`~fips.Posterior.reduced_chi2`), is 1. **It is one
-equation, so it picks one setting given the others**: each guess of the
+equation, so it picks one hyperparameter given the others**: each guess of the
 length and the observation standard deviation has a prior standard deviation
 that passes it. Here are four guesses, each with the prior standard deviation
 that gives a reduced chi-squared of 1, and the evidence there:
@@ -228,14 +229,14 @@ Warnings and checks
 - **The evidence is a density of the observations**, so it depends on their
   units and their number. Compare it only between problems of the same
   observations.
-- **A setting the data do not decide** has a flat evidence, and the optimizer
-  stops anywhere along the flat part. Check a fitted setting with a profile
+- **A hyperparameter the data do not decide** has a flat evidence, and the optimizer
+  stops anywhere along the flat part. Check a fitted hyperparameter with a profile
   before trusting it.
 - **The observation covariance must be positive definite**: the evidence
   needs :math:`\ln \lvert S_z \rvert`, and raises
   :class:`numpy.linalg.LinAlgError` otherwise. A singular prior covariance is
   fine.
-- **Gamma and the observation standard deviation are one setting.** Fitting
+- **Gamma and the observation standard deviation are one hyperparameter.** Fitting
   both leaves the optimizer a direction in which the evidence does not
   change.
 
@@ -244,13 +245,14 @@ Cost
 ----
 
 Each evaluation is one solve. L-BFGS-B with differences takes one more
-solve per setting at each step, so a fit of :math:`p` settings costs a few
+solve per hyperparameter at each step, so a fit of :math:`p` hyperparameters costs a few
 dozen times :math:`p + 1` solves. The evidence itself costs one
 :math:`\ln \lvert S_z \rvert` beyond the solve, and
 ``post.with_gamma(g).log_evidence`` a few products, after one
 eigendecomposition that every gamma shares.
 
 
+.. _hyperparameters-evidence:
 .. _settings-evidence:
 
 How it works
@@ -292,7 +294,7 @@ the observation standard deviations together by :math:`k` scales :math:`G`
 by :math:`k^2`, so the evidence along that direction is
 :math:`-\tfrac{1}{2} (\chi^2 / k^2 + m \ln k^2) + \text{const}`. It is
 stationary in :math:`k` exactly when :math:`\chi^2 = m`. The maximum over all
-the settings is stationary in that direction too, so its reduced chi-squared
+the hyperparameters is stationary in that direction too, so its reduced chi-squared
 is 1; the other directions (how the variance splits between the prior and the
 observations, the correlation length) the reduced chi-squared does not see.
 

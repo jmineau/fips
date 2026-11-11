@@ -1,7 +1,9 @@
 """Test package metadata."""
 
+import difflib
 import functools
 import inspect
+import os
 import types
 import typing
 from importlib.metadata import version
@@ -79,3 +81,47 @@ def test_distributions_all_names_the_public_classes():
     exec("from fips.distributions import *", namespace)
     public = {k for k in namespace if k != "__builtins__"}
     assert public == {"HalfNormal", "LogNormal", "Uniform"}
+
+
+SIGNATURES = Path(__file__).parent / "data" / "public_signatures.txt"
+"""The signature of every public callable, as the API promises it (names, order, keyword-only marks and defaults; no annotations)."""
+
+
+def _signature_table():
+    """Return one line a public callable: its name, and its parameters without annotations."""
+    lines = []
+    for name, obj in _public_callables():
+        if inspect.isclass(obj) and not inspect.isfunction(obj.__init__):
+            lines.append(f"{name}(...)")  # takes a builtin's: no signature to store
+            continue
+        signature = inspect.signature(obj)
+        bare = signature.replace(
+            parameters=[
+                parameter.replace(annotation=inspect.Parameter.empty)
+                for parameter in signature.parameters.values()
+            ],
+            return_annotation=inspect.Signature.empty,
+        )
+        lines.append(f"{name}{bare}")
+    return sorted(lines)
+
+
+def test_the_public_signatures_are_the_stored_ones():
+    """
+    No argument of the public API is renamed, reordered, made keyword-only or given another default without this table changing in the same pull request.
+
+    To accept a change, run ``FIPS_WRITE_SIGNATURES=1 pytest tests/test_pkg.py`` and
+    commit ``tests/data/public_signatures.txt``.
+    """
+    table = _signature_table()
+    if os.environ.get("FIPS_WRITE_SIGNATURES"):
+        SIGNATURES.write_text("\n".join(table) + "\n")
+    stored = SIGNATURES.read_text().splitlines()
+    changes = [
+        line
+        for line in difflib.unified_diff(
+            stored, table, "stored", "now", lineterm="", n=0
+        )
+        if not line.startswith(("---", "+++", "@@"))
+    ]
+    assert not changes, "\n".join(changes)

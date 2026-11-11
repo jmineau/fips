@@ -1,12 +1,12 @@
 r"""
-The distributions :func:`fips.hierarchical` accepts as the prior of a covariance setting.
+The distributions :func:`fips.hierarchical` accepts as the prior of a covariance hyperparameter.
 
 Three: :class:`LogNormal`, :class:`HalfNormal` and :class:`Uniform`.
 Each has a log density, draws, a median (where the search for the mode
-starts) and a map to unbounded coordinates (the log of a positive setting,
+starts) and a map to unbounded coordinates (the log of a positive hyperparameter,
 the logit of a bounded one), where the sampler of :func:`fips.hierarchical`
 works. This is not a general library of distributions: they are the priors
-of the settings (a standard deviation, a correlation length, the observation
+of the hyperparameters (a standard deviation, a correlation length, the observation
 error's scale), not of the state, whose prior is a :class:`~fips.Vector` and a
 :class:`~fips.Covariance`.
 
@@ -32,7 +32,7 @@ _LOG_2PI = math.log(2.0 * math.pi)
 
 class _Distribution(ABC):
     """
-    The prior of one setting: its log density, and a map to unbounded coordinates, where the sampler works.
+    The prior of one hyperparameter: its log density, and a map to unbounded coordinates, where the sampler works.
 
     :class:`LogNormal`, :class:`HalfNormal` and :class:`Uniform` are the
     ones fips has. A new one is a subclass with :meth:`logpdf`,
@@ -56,7 +56,7 @@ class _Distribution(ABC):
 
     @abstractmethod
     def _from_unbounded(self, u: float) -> float:
-        """Return the setting at the unbounded coordinate `u`."""
+        """Return the hyperparameter at the unbounded coordinate `u`."""
 
     @abstractmethod
     def _log_density_unbounded(self, u: float) -> float:
@@ -89,7 +89,7 @@ def _finite(value: Any, what: str) -> float:
 
 
 class _Positive(_Distribution):
-    """A prior of a positive setting, sampled in its log."""
+    """A prior of a positive hyperparameter, sampled in its log."""
 
     def _to_unbounded(self, x: float) -> float:
         r"""Return :math:`\ln x`."""
@@ -108,7 +108,7 @@ class _Positive(_Distribution):
 @dataclass(frozen=True)
 class LogNormal(_Positive):
     r"""
-    A lognormal prior: the log of the setting is normal, :math:`\ln s \sim N(\mu, \sigma^2)`.
+    A lognormal prior: the log of the hyperparameter is normal, :math:`\ln s \sim N(\mu, \sigma^2)`.
 
     The prior of a standard deviation or a length known to a factor:
     ``LogNormal(np.log(2.0), 0.5)`` has its median at 2 and a 95% interval
@@ -138,9 +138,9 @@ class LogNormal(_Positive):
     """
 
     mu: float = 0.0
-    """The mean of the log of the setting."""
+    """The mean of the log of the hyperparameter."""
     sigma: float = 1.0
-    """The standard deviation of the log of the setting."""
+    """The standard deviation of the log of the hyperparameter."""
 
     def __post_init__(self):
         """Check the parameters."""
@@ -178,21 +178,21 @@ class LogNormal(_Positive):
 @dataclass(frozen=True)
 class HalfNormal(_Positive):
     r"""
-    A half-normal prior: the absolute value of a normal of mean 0 and standard deviation `scale`.
+    A half-normal prior: the absolute value of a normal of mean 0 and standard deviation `sigma`.
 
-    A weak prior on a positive setting that is likely below a few times
-    `scale` and may be near zero: its median is :math:`0.674` `scale`, and
-    95% of it is below :math:`1.96` `scale`.
+    A weak prior on a positive hyperparameter that is likely below a few times
+    `sigma` and may be near zero: its median is :math:`0.674` `sigma`, and
+    95% of it is below :math:`1.96` `sigma`.
 
     Parameters
     ----------
-    scale : float
+    sigma : float
         The standard deviation of the normal, positive.
 
     Raises
     ------
     ValueError
-        If `scale` is not positive and finite.
+        If `sigma` is not positive and finite.
 
     Examples
     --------
@@ -202,17 +202,17 @@ class HalfNormal(_Positive):
     6.745
     """
 
-    scale: float = 1.0
-    """The standard deviation of the normal the setting is the absolute value of."""
+    sigma: float = 1.0
+    """The standard deviation of the normal the hyperparameter is the absolute value of."""
 
     def __post_init__(self):
         """Check the parameter."""
-        object.__setattr__(self, "scale", _positive(self.scale, "HalfNormal's scale"))
+        object.__setattr__(self, "sigma", _positive(self.sigma, "HalfNormal's sigma"))
 
     @property
     def median(self) -> float:
-        r"""The median, :math:`\Phi^{-1}(0.75)` `scale`."""
-        return float(ndtri(0.75)) * self.scale
+        r"""The median, :math:`\Phi^{-1}(0.75)` `sigma`."""
+        return float(ndtri(0.75)) * self.sigma
 
     def logpdf(self, x: float) -> float:
         r"""Return :math:`\ln 2 - \ln \sigma - \tfrac{1}{2} \ln 2\pi - x^2 / 2\sigma^2` for :math:`x \ge 0` (``-inf`` below)."""
@@ -220,16 +220,16 @@ class HalfNormal(_Positive):
             return -math.inf
         return (
             math.log(2.0)
-            - math.log(self.scale)
+            - math.log(self.sigma)
             - 0.5 * _LOG_2PI
-            - 0.5 * (x / self.scale) ** 2
+            - 0.5 * (x / self.sigma) ** 2
         )
 
     def sample(
         self, n: int, rng: "int | np.random.Generator | None" = None
     ) -> np.ndarray:
         r"""Return `n` draws, :math:`\lvert \sigma \xi \rvert`."""
-        return np.abs(self.scale * np.random.default_rng(rng).standard_normal(n))
+        return np.abs(self.sigma * np.random.default_rng(rng).standard_normal(n))
 
 
 @dataclass(frozen=True)
@@ -287,7 +287,7 @@ class Uniform(_Distribution):
         return float(logit((x - self.low) / (self.high - self.low)))
 
     def _from_unbounded(self, u: float) -> float:
-        """Return the setting whose position's logit is `u`."""
+        """Return the hyperparameter whose position's logit is `u`."""
         return self.low + (self.high - self.low) * math.exp(float(log_expit(u)))
 
     def _log_density_unbounded(self, u: float) -> float:

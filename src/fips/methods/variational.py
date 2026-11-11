@@ -157,14 +157,18 @@ class VariationalOptions:
         For a forward model, the step at which the Gauss-Newton steps stop,
         :math:`d^2 <` ``tol`` :math:`\cdot\, n`, Rodgers' rule as
         ``"gauss_newton"``'s ``tol`` (its default too).
+    seed : int, default 0
+        The seed of Lanczos's starting vector, so that a solve is
+        reproducible. It sets which of the equally good starts is used; the
+        eigenpairs agree to ``cg_tol`` whatever it is.
 
     Raises
     ------
     ValueError
         If `gamma` is not a positive, finite number, `rank`,
         `max_cg_iterations` or `max_iterations` is not a positive integer,
-        `cg_tol` or `tol` is not a positive, finite number, or `cg_tol` is
-        not below 1.
+        `cg_tol` or `tol` is not a positive, finite number, `cg_tol` is
+        not below 1, or `seed` is not a nonnegative integer.
     """
 
     gamma: float = 1.0
@@ -179,6 +183,8 @@ class VariationalOptions:
     """For a forward model, the most Gauss-Newton steps."""
     tol: float = 1e-6
     r"""For a forward model, the steps stop when :math:`d^2 <` ``tol`` :math:`\cdot\, n`."""
+    seed: int = 0
+    """The seed of Lanczos's starting vector."""
 
     def __post_init__(self):
         object.__setattr__(self, "gamma", AnalyticOptions(self.gamma).gamma)
@@ -206,6 +212,14 @@ class VariationalOptions:
                 "conjugate gradients relative to the right side, and the start, "
                 "the prior, has a relative residual of 1 (cg_tol=1 returns the prior)."
             )
+        value = self.seed
+        if (
+            not isinstance(value, numbers.Integral)
+            or isinstance(value, bool)
+            or value < 0
+        ):
+            raise ValueError(f"seed must be a nonnegative integer, got {value!r}.")
+        object.__setattr__(self, "seed", int(value))
 
 
 class _System:
@@ -327,7 +341,7 @@ def _shrinkage(eigenvalues: np.ndarray) -> np.ndarray:
 
 
 def _eigenpairs(
-    system: _System, rank: int, cg_tol: float
+    system: _System, rank: int, cg_tol: float, seed: int
 ) -> tuple[np.ndarray, np.ndarray]:
     r"""
     Return the leading eigenvalues of :math:`\tilde{H} / \gamma` (the gamma-free matrix :math:`N`, from the largest) and their eigenvectors (``r x k``), with ``k`` at most `rank`.
@@ -336,7 +350,7 @@ def _eigenpairs(
     :math:`\tilde{H}` has. When it is at least half of ``r``, :math:`\tilde{H}`
     is formed from ``r`` products and eigendecomposed (``eigh``); otherwise
     Lanczos finds the pairs from products (``eigsh``, ``which="LA"``, a
-    seeded start so that a solve is reproducible). Eigenvalues at roundoff of
+    start drawn from `seed`, so that a solve is reproducible). Eigenvalues at roundoff of
     the largest (below ``r * eps`` of it, or for Lanczos ``cg_tol`` of it) are
     dropped: they are directions the data do not see.
 
@@ -355,7 +369,7 @@ def _eigenpairs(
         eigenvalues, vectors = values[::-1][:k], vectors[:, ::-1][:, :k]
         floor = r * np.finfo(float).eps
     else:
-        start = np.random.default_rng(0).standard_normal(r)
+        start = np.random.default_rng(seed).standard_normal(r)
         try:
             values, vectors = (
                 np.asarray(a)
@@ -694,7 +708,7 @@ def _linear(
     state = float(xi @ xi)
     d2 = state + gamma * system.weighted_norm(modeled)
     if keep is None:
-        eigenvalues, V = _eigenpairs(system, options.rank, options.cg_tol)
+        eigenvalues, V = _eigenpairs(system, options.rank, options.cg_tol, options.seed)
         _report(gamma * eigenvalues, options.rank < min(system.r, len(d)))
         G = np.asarray(system.R @ V, dtype=float)
     else:
@@ -825,7 +839,9 @@ def _iterate(
         if converged:
             point_xi = xi
             xi = xi + fraction * step
-            eigenvalues, V = _eigenpairs(system, options.rank, options.cg_tol)
+            eigenvalues, V = _eigenpairs(
+                system, options.rank, options.cg_tol, options.seed
+            )
             _report(gamma * eigenvalues, options.rank < min(system.r, len(z)))
             logger.info(
                 "Gauss-Newton converged in %d steps, %d CG iterations in all: the "

@@ -491,7 +491,7 @@ def taylortest(
     model: ForwardModel,
     x: Vector,
     dx: Vector | None = None,
-    rng: int | np.random.Generator | None = 0,
+    rng: int | np.random.Generator | None = None,
 ) -> bool:
     r"""
     Check that a model's Jacobian is the derivative of the model, by a Taylor test, and that its transpose is its adjoint.
@@ -530,9 +530,9 @@ def taylortest(
         The direction of the steps, on the model's columns. By default normal
         draws, each scaled by its element's size in `x` (where an element is
         zero, by the mean size of `x`; 1 if `x` is zero).
-    rng : int, numpy.random.Generator or None, default 0
+    rng : int, numpy.random.Generator or None, default None
         A seed, or the generator to draw from (used as given, so a generator
-        passed on is advanced; None draws from fresh entropy), as
+        passed on is advanced; None, the default, draws from fresh entropy), as
         :meth:`fips.Posterior.sample` takes it: the default direction, then
         the vectors of the adjoint check. A solve has a ``seed``, a draw takes
         an ``rng``; this check draws.

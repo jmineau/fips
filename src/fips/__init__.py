@@ -10,7 +10,7 @@ A :class:`Problem` puts the prior, the observations, the forward operator (or
 a :class:`ForwardModel` that is not linear, with its Jacobian;
 :class:`LogNormalForward` and :class:`SoftplusForward` keep a block positive)
 and the covariances together, and :func:`solve` returns its :class:`Posterior`.
-With priors on the covariance settings (:mod:`fips.distributions`),
+With priors on the covariance hyperparameters (:mod:`fips.distributions`),
 :func:`hierarchical` draws them from their posterior and the state at each
 draw (:class:`Hierarchical`).
 A finding that changes how far an answer can be trusted is logged under the
@@ -37,11 +37,11 @@ from .covariance import (
     Matern,
 )
 from .forward import ForwardModel, taylortest
+from .hyperparameters import Hierarchical, hierarchical
 from .methods import available_methods, solve
 from .operator import Operator
 from .posterior import Posterior, UnavailableError
 from .problem import Problem
-from .settings import Hierarchical, hierarchical
 from .space import Space
 from .transforms import LogNormalForward, SoftplusForward
 from .vector import Vector

@@ -1,5 +1,5 @@
 """
-Tests for ``Posterior.log_evidence``: the log density of the observations given the settings, the state integrated out.
+Tests for ``Posterior.log_evidence``: the log density of the observations given the hyperparameters, the state integrated out.
 
 The analytic value is held to SciPy's density of the observations,
 ``multivariate_normal(H x_0 + c, H S_0 H^T + S_z / gamma).logpdf(z)``, written
@@ -21,8 +21,8 @@ with dense matrices and nothing from fips:
 (to roundoff, against the analytic value), and, for a lognormal model in a few
 cells, compared with an importance-sampling estimate of the evidence known to
 1%; the error is recorded, not held to a tolerance. ``"bounded"`` with a
-finite bound raises. A slow test: over worlds drawn at known settings, the
-settings that maximize the evidence scatter about the true ones.
+finite bound raises. A slow test: over worlds drawn at known hyperparameters, the
+hyperparameters that maximize the evidence scatter about the true ones.
 """
 
 import logging
@@ -594,14 +594,14 @@ def test_laplace_against_importance_sampling(seed):
 
 
 # ---------------------------------------------------------------------------
-# Worlds at known settings
+# Worlds at known hyperparameters
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.slow
-def test_evidence_maximum_scatters_about_the_true_settings():
+def test_evidence_maximum_scatters_about_the_true_hyperparameters():
     """
-    Over worlds drawn at known settings, the prior std and the mismatch std that maximize the evidence scatter about the true ones.
+    Over worlds drawn at known hyperparameters, the prior std and the mismatch std that maximize the evidence scatter about the true ones.
 
     100 worlds on one problem's labels (40 cells, 80 observations, the
     correlation length known); each fit maximizes the evidence over the log of

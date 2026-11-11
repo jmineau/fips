@@ -177,7 +177,7 @@ def solve(problem: Problem, method: str = "analytic", **options: Any) -> Posteri
         ``localization``, ``obs_localization`` and ``seed`` (see
         :class:`~fips.methods.ensemble.EnsembleOptions`); for
         ``"variational"``, ``gamma``, ``rank``, ``cg_tol``,
-        ``max_cg_iterations``, ``max_iterations`` and ``tol`` (see
+        ``max_cg_iterations``, ``max_iterations``, ``tol`` and ``seed`` (see
         :class:`~fips.methods.variational.VariationalOptions`).
 
     Returns

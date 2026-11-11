@@ -30,9 +30,9 @@ words.
      - :doc:`ensemble`
    * - solve a problem too large to factor, or with an adjoint model
      - :doc:`variational`
-   * - choose the covariance settings from the data
-     - :doc:`settings`
-   * - carry the uncertainty of those settings into the answer
+   * - choose the covariance hyperparameters from the data
+     - :doc:`hyperparameters`
+   * - carry the uncertainty of those hyperparameters into the answer
      - :doc:`hierarchical`
    * - test an inversion on data whose answer you know
      - :doc:`synthetic`
@@ -61,7 +61,7 @@ words.
    :maxdepth: 1
    :caption: Checking and tuning an inversion
 
-   settings
+   hyperparameters
    hierarchical
    synthetic
 
