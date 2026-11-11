@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>A model with no Jacobian: the ensemble method &#8212; fips 0.2.0b3.dev29+g5e1ec677f documentation</title>
+    <title>A model with no Jacobian: the ensemble method &#8212; fips 0.2.0b3.dev30+gc9b9ff2f6 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=a44d3497"></script>
+    <script src="../_static/documentation_options.js?v=34f5c268"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev29+g5e1ec677f documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev29+g5e1ec677f documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev30+gc9b9ff2f6 documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev30+gc9b9ff2f6 documentation - Home"/>
   
   
 </a></div>
@@ -692,13 +692,13 @@ exact one:</p>
 <span class="gp">In [34]: </span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">))</span>
 
 <span class="gp">In [35]: </span><span class="n">ax</span><span class="o">.</span><span class="n">loglog</span><span class="p">(</span><span class="n">curve</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">curve</span><span class="p">[</span><span class="s2">"mean"</span><span class="p">],</span> <span class="s2">"o-"</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"mean (posterior sd)"</span><span class="p">)</span>
-<span class="gh">Out[35]: </span><span class="go">[&lt;matplotlib.lines.Line2D at 0x70805228c440&gt;]</span>
+<span class="gh">Out[35]: </span><span class="go">[&lt;matplotlib.lines.Line2D at 0x79fc1f9986e0&gt;]</span>
 
 <span class="gp">In [36]: </span><span class="n">ax</span><span class="o">.</span><span class="n">loglog</span><span class="p">(</span><span class="n">curve</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">curve</span><span class="p">[</span><span class="s2">"std"</span><span class="p">],</span> <span class="s2">"s-"</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"std (relative)"</span><span class="p">)</span>
-<span class="gh">Out[36]: </span><span class="go">[&lt;matplotlib.lines.Line2D at 0x70805228ecf0&gt;]</span>
+<span class="gh">Out[36]: </span><span class="go">[&lt;matplotlib.lines.Line2D at 0x79fc1f99ae40&gt;]</span>
 
 <span class="gp">In [37]: </span><span class="n">ax</span><span class="o">.</span><span class="n">loglog</span><span class="p">(</span><span class="n">sizes</span><span class="p">,</span> <span class="n">curve</span><span class="p">[</span><span class="s2">"mean"</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">sizes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">sizes</span><span class="p">)),</span> <span class="s2">"k:"</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">"$1/\sqrt</span><span class="si">{N}</span><span class="s2">$"</span><span class="p">)</span>
-<span class="gh">Out[37]: </span><span class="go">[&lt;matplotlib.lines.Line2D at 0x70805228ef90&gt;]</span>
+<span class="gh">Out[37]: </span><span class="go">[&lt;matplotlib.lines.Line2D at 0x79fc1f99b0e0&gt;]</span>
 
 <span class="gp">In [38]: </span><span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">"members"</span><span class="p">)</span>
 <span class="gh">Out[38]: </span><span class="go">Text(0.5, 0, 'members')</span>
@@ -707,7 +707,7 @@ exact one:</p>
 <span class="gh">Out[39]: </span><span class="go">Text(0, 0.5, 'error of the region totals')</span>
 
 <span class="gp">In [40]: </span><span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
-<span class="gh">Out[40]: </span><span class="go">&lt;matplotlib.legend.Legend at 0x70805228ee40&gt;</span>
+<span class="gh">Out[40]: </span><span class="go">&lt;matplotlib.legend.Legend at 0x79fc1f99af90&gt;</span>
 </pre></div>
 </div>
 <a class="reference internal image-reference" href="../_images/ensemble_convergence.png"><img alt="../_images/ensemble_convergence.png" src="../_images/ensemble_convergence.png" style="width: 5in;" />

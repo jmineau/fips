@@ -348,13 +348,13 @@ when a spread is asked for, and a smaller ``draws`` (``fips.solve(problem,
 "bounded", lower={"flux": 0.0}, draws=500)``) costs proportionally less, with a
 larger Monte Carlo error.
 
-A rectified draw costs an active set, as the mode does: a step for each
-element it holds or releases on the way, each a solve with :math:`\hat{S}` at
-the elements on a bound. With a correlated prior whose standard deviation
-equals its mean and weak data, a draw of 400 elements (70 of them on a bound
-in a typical draw) took 28 ms against 4 ms for a truncated one, and a draw of
-2000 elements (120 on a bound) 0.28 s against 15 ms: 9 minutes for the
-default 2000 draws, on one machine. Both keep the same columns of
+A rectified draw costs an active set, as the mode does: a few steps, each
+exchanging at once every element to hold or release, and each a solve with
+:math:`\hat{S}` at the elements on a bound. With a correlated prior whose
+standard deviation equals its mean and weak data, a draw of 400 elements (70
+of them on a bound in a typical draw) took 1.7 ms against 4 ms for a truncated
+one, and a draw of 2000 elements (120 on a bound) 7.6 ms against 14 ms: 15 s
+for the default 2000 draws, on one machine. Both keep the same columns of
 :math:`\hat{S}`, up to all of them (``n x n``).
 
 :meth:`~fips.Posterior.trials` asks each trial's posterior for its spread, so

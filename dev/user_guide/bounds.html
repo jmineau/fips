@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Bounds on the state &#8212; fips 0.2.0b3.dev29+g5e1ec677f documentation</title>
+    <title>Bounds on the state &#8212; fips 0.2.0b3.dev30+gc9b9ff2f6 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=a44d3497"></script>
+    <script src="../_static/documentation_options.js?v=34f5c268"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev29+g5e1ec677f documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev29+g5e1ec677f documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev30+gc9b9ff2f6 documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev30+gc9b9ff2f6 documentation - Home"/>
   
   
 </a></div>
@@ -853,13 +853,13 @@ far from its bounds bounces little and costs little. The draws are made only
 when a spread is asked for, and a smaller <code class="docutils literal notranslate"><span class="pre">draws</span></code> (<code class="docutils literal notranslate"><span class="pre">fips.solve(problem,</span>
 <span class="pre">&quot;bounded&quot;,</span> <span class="pre">lower={&quot;flux&quot;:</span> <span class="pre">0.0},</span> <span class="pre">draws=500)</span></code>) costs proportionally less, with a
 larger Monte Carlo error.</p>
-<p>A rectified draw costs an active set, as the mode does: a step for each
-element it holds or releases on the way, each a solve with <span class="math notranslate nohighlight">\(\hat{S}\)</span> at
-the elements on a bound. With a correlated prior whose standard deviation
-equals its mean and weak data, a draw of 400 elements (70 of them on a bound
-in a typical draw) took 28 ms against 4 ms for a truncated one, and a draw of
-2000 elements (120 on a bound) 0.28 s against 15 ms: 9 minutes for the
-default 2000 draws, on one machine. Both keep the same columns of
+<p>A rectified draw costs an active set, as the mode does: a few steps, each
+exchanging at once every element to hold or release, and each a solve with
+<span class="math notranslate nohighlight">\(\hat{S}\)</span> at the elements on a bound. With a correlated prior whose
+standard deviation equals its mean and weak data, a draw of 400 elements (70
+of them on a bound in a typical draw) took 1.7 ms against 4 ms for a truncated
+one, and a draw of 2000 elements (120 on a bound) 7.6 ms against 14 ms: 15 s
+for the default 2000 draws, on one machine. Both keep the same columns of
 <span class="math notranslate nohighlight">\(\hat{S}\)</span>, up to all of them (<code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">x</span> <span class="pre">n</span></code>).</p>
 <p><a class="reference internal" href="../reference/api/fips.Posterior.trials.html#fips.Posterior.trials" title="fips.Posterior.trials"><code class="xref py py-meth docutils literal notranslate"><span class="pre">trials()</span></code></a> asks each trial’s posterior for its spread, so
 a bounded posterior draws in every trial: keep <code class="docutils literal notranslate"><span class="pre">draws</span></code> small there.</p>
