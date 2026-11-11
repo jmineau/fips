@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.Posterior.data_misfit &#8212; fips 0.2.0b3.dev34+g9a0704831 documentation</title>
+    <title>fips.Posterior.data_misfit &#8212; fips 0.2.0b3.dev35+gd1a34da7b documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=8e63224c"></script>
+    <script src="../../_static/documentation_options.js?v=bd5d55db"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev35+gd1a34da7b documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev35+gd1a34da7b documentation - Home"/>
   
   
 </a></div>
@@ -1045,7 +1045,7 @@
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">Posterior.</span></span><span class="sig-name descname"><span class="pre">data_misfit</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a></span><a class="headerlink" href="#fips.Posterior.data_misfit" title="Link to this definition">#</a></dt>
 <dd><p><span class="math notranslate nohighlight">\(r^T S_z^{-1} r\)</span>.</p>
 <p><span class="math notranslate nohighlight">\(r = z - H \hat{x} - c\)</span> is the residual and <span class="math notranslate nohighlight">\(S_z\)</span> the
-model-data mismatch as the problem gives it, not divided by
+observation covariance as the problem gives it, not divided by
 <span class="math notranslate nohighlight">\(\gamma\)</span>, so that it can be compared across a sweep over
 gamma: with <a class="reference internal" href="fips.Posterior.state_misfit.html#fips.Posterior.state_misfit" title="fips.Posterior.state_misfit"><code class="xref py py-attr docutils literal notranslate"><span class="pre">state_misfit</span></code></a> it is the L-curve (Hansen, 1992), a
 point per gamma, whose corner is where fitting the observations more
@@ -1099,7 +1099,7 @@ of the L-curve. <em>SIAM Review</em>, 34(4), 561-580.
 </div>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>How far the modeled observations are from the observations, weighed by the model-data mismatch</p>
+<dd class="field-odd"><p>How far the modeled observations are from the observations, weighed by the observation covariance</p>
 </dd>
 </dl>
 </dd></dl>

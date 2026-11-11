@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.forward &#8212; fips 0.2.0b3.dev34+g9a0704831 documentation</title>
+    <title>fips.forward &#8212; fips 0.2.0b3.dev35+gd1a34da7b documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=8e63224c"></script>
+    <script src="../../_static/documentation_options.js?v=bd5d55db"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev35+gd1a34da7b documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev35+gd1a34da7b documentation - Home"/>
   
   
 </a></div>
@@ -432,7 +432,9 @@
 <span class="sd">:class:`~fips.Operator` (or, for a model with an adjoint, its products</span>
 <span class="sd">:math:`J v` and :math:`J^T w`, :meth:`ForwardModel.jvp` and</span>
 <span class="sd">:meth:`ForwardModel.vjp`). The observations are then :math:`z = F(x) + c + e`.</span>
-<span class="sd">fips builds no Jacobian: it calls the caller's. :meth:`Problem.linearized</span>
+<span class="sd">For a model the caller writes, fips builds no Jacobian: it calls the</span>
+<span class="sd">caller's (:class:`~fips.LogNormalForward` and :class:`~fips.SoftplusForward`</span>
+<span class="sd">bring their own). :meth:`Problem.linearized</span>
 <span class="sd">&lt;fips.Problem.linearized&gt;` is the linear problem at a state, and</span>
 <span class="sd">``fips.solve(problem, "gauss_newton")`` finds the mode of the posterior by</span>
 <span class="sd">solving it again at each estimate (``"variational"`` does the same with</span>
@@ -520,7 +522,7 @@
 <span class="sd">      diagonal).</span>
 
 <span class="sd">    A model whose Jacobian is too large to hold, but which has a tangent</span>
-<span class="sd">    linear and an adjoint (a transport model run forward and backward),</span>
+<span class="sd">    linear and an adjoint (a model run forward and backward),</span>
 <span class="sd">    writes :meth:`jvp` and :meth:`vjp` instead of ``jacobian``: its Jacobian</span>
 <span class="sd">    is then those products (a :class:`~fips.linalg.MatrixFreeOperator`), and</span>
 <span class="sd">    ``fips.solve(problem, "variational")`` solves with them alone.</span>

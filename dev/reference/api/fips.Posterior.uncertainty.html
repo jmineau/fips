@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.Posterior.uncertainty &#8212; fips 0.2.0b3.dev34+g9a0704831 documentation</title>
+    <title>fips.Posterior.uncertainty &#8212; fips 0.2.0b3.dev35+gd1a34da7b documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=8e63224c"></script>
+    <script src="../../_static/documentation_options.js?v=bd5d55db"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev35+gd1a34da7b documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev35+gd1a34da7b documentation - Home"/>
   
   
 </a></div>
@@ -1049,10 +1049,10 @@ observations, <span class="math notranslate nohighlight">\(\sqrt{\operatorname{d
 <span class="math notranslate nohighlight">\(\sqrt{\operatorname{diag} W \hat{S} W^T}\)</span>, from
 <a class="reference internal" href="fips.Covariance.aggregate.html#fips.Covariance.aggregate" title="fips.Covariance.aggregate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Covariance.aggregate</span></code></a> and
 <a class="reference internal" href="fips.Posterior.cov.html#fips.Posterior.cov" title="fips.Posterior.cov"><code class="xref py py-meth docutils literal notranslate"><span class="pre">cov()</span></code></a>, neither forming an <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">x</span> <span class="pre">n</span></code> matrix. A row of <cite>W</cite> can be
-any linear combination of the state: a total, a mean, or a combination
-of totals such as a trend or the difference of two seasons (<code class="docutils literal notranslate"><span class="pre">C</span> <span class="pre">&#64;</span> <span class="pre">W</span></code>,
-with <code class="docutils literal notranslate"><span class="pre">C</span></code> the weights of the rows of <code class="docutils literal notranslate"><span class="pre">W</span></code>), whose uncertainty
-includes the covariance between the totals.</p>
+any linear combination of the state: a sum, a mean, or a combination
+of aggregates such as a trend or the difference of two seasons
+(<code class="docutils literal notranslate"><span class="pre">C</span> <span class="pre">&#64;</span> <span class="pre">W</span></code>, with <code class="docutils literal notranslate"><span class="pre">C</span></code> the weights of the rows of <code class="docutils literal notranslate"><span class="pre">W</span></code>), whose
+uncertainty includes the covariance between the aggregates.</p>
 <p>The interval is the posterior’s own. For a sampled posterior
 (<code class="docutils literal notranslate"><span class="pre">&quot;bounded&quot;</span></code> with a finite bound, <code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code> with a forward
 model) it is from quantiles of the kept draws of <span class="math notranslate nohighlight">\(W x\)</span>, which
@@ -1076,7 +1076,7 @@ labels): <code class="docutils literal notranslate"><span class="pre">prior_std<
 where the prior standard deviation is 0), then <code class="docutils literal notranslate"><span class="pre">lower</span></code> and
 <code class="docutils literal notranslate"><span class="pre">upper</span></code>, the ends of the posterior interval of probability
 <cite>level</cite>. A variance below zero by more than roundoff, which only
-a prior error or model-data mismatch covariance that is not
+a prior or observation covariance that is not
 positive semidefinite can give, makes its standard deviation, the
 reduction and a Gaussian interval NaN, with a logged warning (as
 in <a class="reference internal" href="fips.Posterior.recovery.html#fips.Posterior.recovery" title="fips.Posterior.recovery"><code class="xref py py-meth docutils literal notranslate"><span class="pre">recovery()</span></code></a>).</p>

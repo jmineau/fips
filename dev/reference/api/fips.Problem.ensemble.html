@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.Problem.ensemble &#8212; fips 0.2.0b3.dev34+g9a0704831 documentation</title>
+    <title>fips.Problem.ensemble &#8212; fips 0.2.0b3.dev35+gd1a34da7b documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=8e63224c"></script>
+    <script src="../../_static/documentation_options.js?v=bd5d55db"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev35+gd1a34da7b documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev35+gd1a34da7b documentation - Home"/>
   
   
 </a></div>
@@ -1045,7 +1045,7 @@
 <span class="sig-prename descclassname"><span class="pre">Problem.</span></span><span class="sig-name descname"><span class="pre">ensemble</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fips/problem.html#Problem.ensemble"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fips.Problem.ensemble" title="Link to this definition">#</a></dt>
 <dd><p>Return <cite>n</cite> members drawn from the prior, one column each: the first stage of the ensemble method.</p>
 <p>Each member is <span class="math notranslate nohighlight">\(x_0 + \delta_j - \bar{\delta}\)</span>, with
-<span class="math notranslate nohighlight">\(\delta_j \sim N(0, S_0)\)</span> drawn through the prior error
+<span class="math notranslate nohighlight">\(\delta_j \sim N(0, S_0)\)</span> drawn through the prior
 covariance’s root and their mean <span class="math notranslate nohighlight">\(\bar{\delta}\)</span> taken out, so
 the members’ mean is the prior exactly and their sample covariance,
 <span class="math notranslate nohighlight">\(\sum_j (x_j - x_0)(x_j - x_0)^T / (n - 1)\)</span>, has the mean
@@ -1071,7 +1071,7 @@ one column per member, a <code class="docutils literal notranslate"><span class=
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
 <li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – If <cite>n</cite> is not an integer of at least 2.</p></li>
-<li><p><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.LinAlgError.html#scipy.linalg.LinAlgError" title="(in SciPy v1.18.0)"><strong>numpy.linalg.LinAlgError</strong></a> – If the prior error covariance has a clearly negative eigenvalue.</p></li>
+<li><p><a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.LinAlgError.html#scipy.linalg.LinAlgError" title="(in SciPy v1.18.0)"><strong>numpy.linalg.LinAlgError</strong></a> – If the prior covariance has a clearly negative eigenvalue.</p></li>
 </ul>
 </dd>
 </dl>

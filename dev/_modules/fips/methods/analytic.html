@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.methods.analytic &#8212; fips 0.2.0b3.dev34+g9a0704831 documentation</title>
+    <title>fips.methods.analytic &#8212; fips 0.2.0b3.dev35+gd1a34da7b documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../../_static/documentation_options.js?v=8e63224c"></script>
+    <script src="../../../_static/documentation_options.js?v=bd5d55db"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
-    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
+    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev35+gd1a34da7b documentation - Home"/>
+    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev35+gd1a34da7b documentation - Home"/>
   
   
 </a></div>
@@ -431,16 +431,16 @@
 <span class="sd">that asks the factors for everything it reports. It factors in one of two</span>
 <span class="sd">forms, chosen by the problem's size, which give the same posterior:</span>
 
-<span class="sd">- ``Whitened`` whitens the observations with the model-data mismatch and</span>
+<span class="sd">- ``Whitened`` whitens the observations with the observation covariance and</span>
 <span class="sd">  works with an ``m x m`` matrix (``m`` observations);</span>
-<span class="sd">- ``Information`` whitens the state with the prior error covariance and</span>
+<span class="sd">- ``Information`` whitens the state with the prior covariance and</span>
 <span class="sd">  works with an ``n x n`` matrix (``n`` state elements). It applies the</span>
-<span class="sd">  inverse of the model-data mismatch, which it can for a mismatch that is</span>
+<span class="sd">  inverse of the observation covariance, which it can for one that is</span>
 <span class="sd">  dense, diagonal, sparse, block diagonal or Kronecker.</span>
 
 <span class="sd">The information form is used when there are fewer state elements than</span>
-<span class="sd">observations and the mismatch is dense, diagonal, sparse, block diagonal or</span>
-<span class="sd">Kronecker (and the prior error covariance has a square root); otherwise the</span>
+<span class="sd">observations and the observation covariance is dense, diagonal, sparse, block diagonal or</span>
+<span class="sd">Kronecker (and the prior covariance has a square root); otherwise the</span>
 <span class="sd">whitened form (``_choose``). :class:`AnalyticOptions` holds :math:`\gamma`.</span>
 
 <span class="sd">Either form's matrix is factored at the solve's :math:`\gamma` by Cholesky</span>
@@ -453,9 +453,9 @@
 <span class="sd">eigendecomposition uses LAPACK's ``evd`` driver, and redoes it with ``evr``</span>
 <span class="sd">when there is not enough memory for ``evd``'s workspace (``_eigh``).</span>
 
-<span class="sd">A solve logs a warning when the correlation of the model-data mismatch is</span>
-<span class="sd">nearly singular (``_warn_if_ill_conditioned``). Only the mismatch is checked,</span>
-<span class="sd">as the solve sees it, sums included: a prior error covariance may be singular.</span>
+<span class="sd">A solve logs a warning when the correlation of the observation covariance is</span>
+<span class="sd">nearly singular (``_warn_if_ill_conditioned``). Only the observation covariance is checked,</span>
+<span class="sd">as the solve sees it, sums included: a prior covariance may be singular.</span>
 <span class="sd">"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">dataclasses</span>
@@ -488,14 +488,14 @@
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 <span class="n">_ILL_CONDITIONED</span> <span class="o">=</span> <span class="mf">1e10</span>
-<span class="sd">"""The condition number of the mismatch's correlation above which a solve warns: it keeps about six of sixteen digits."""</span>
+<span class="sd">"""The condition number of the observation covariance's correlation above which a solve warns: it keeps about six of sixteen digits."""</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_warn_if_ill_conditioned</span><span class="p">(</span><span class="n">condition</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Log a warning if the correlation of the model-data mismatch has a `condition` number above ``_ILL_CONDITIONED``."""</span>
+<span class="w">    </span><span class="sd">"""Log a warning if the correlation of the observation covariance has a `condition` number above ``_ILL_CONDITIONED``."""</span>
     <span class="k">if</span> <span class="n">condition</span> <span class="o">&gt;</span> <span class="n">_ILL_CONDITIONED</span><span class="p">:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-            <span class="s2">"The correlation of the model-data mismatch has a condition number "</span>
+            <span class="s2">"The correlation of the observation covariance has a condition number "</span>
             <span class="s2">"of about </span><span class="si">%.1e</span><span class="s2">: a solve with it loses about as many digits as the "</span>
             <span class="s2">"condition number has, of sixteen. Pass rtol= to its kernel "</span>
             <span class="s2">"(rtol=1e-8 keeps the condition number near 1e8), or add independent "</span>
@@ -509,12 +509,10 @@
 <span class="sd">The number of observations above which a whitened solve with many more observations than state elements logs a warning.</span>
 
 <span class="sd">The whitened form factors an ``m x m`` matrix, in a time that grows as</span>
-<span class="sd">``m^3``. Measured on one core of a cluster node (``n = 100``) when every solve</span>
-<span class="sd">eigendecomposed it, the whole solve took 2 s at ``m = 2,205``, 25 s at</span>
-<span class="sd">``5,000``, 85 s at ``7,500`` and 203 s at ``10,000``; the Cholesky of a</span>
-<span class="sd">one-gamma solve is several times faster, and the first ``with_gamma`` still</span>
-<span class="sd">eigendecomposes. When the information form could not be used and ``m`` is</span>
-<span class="sd">more than twice ``n``, a solve above this size says why.</span>
+<span class="sd">``m^3``: seconds on one core at a few thousand observations, minutes at ten</span>
+<span class="sd">thousand. The first ``with_gamma`` eigendecomposes it, several times slower</span>
+<span class="sd">than a solve's Cholesky. When the information form could not be used and</span>
+<span class="sd">``m`` is more than twice ``n``, a solve above this size says why.</span>
 <span class="sd">"""</span>
 
 <span class="n">_INVERTIBLE</span> <span class="o">=</span> <span class="p">(</span>
@@ -525,11 +523,11 @@
     <span class="n">KroneckerOperator</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="sd">"""</span>
-<span class="sd">The forms of the model-data mismatch whose inverse the information form applies.</span>
+<span class="sd">The forms of the observation covariance whose inverse the information form applies.</span>
 
-<span class="sd">A dense mismatch is applied through its Cholesky factor. The whitened form</span>
+<span class="sd">A dense observation covariance is applied through its Cholesky factor. The whitened form</span>
 <span class="sd">needs that factor too, so the information form saves the ``m x m``</span>
-<span class="sd">factorization and the ``m x m`` products. A Kronecker mismatch is applied</span>
+<span class="sd">factorization and the ``m x m`` products. A Kronecker one is applied</span>
 <span class="sd">through its factors; the whitened form would form it as a dense ``m x m``</span>
 <span class="sd">matrix.</span>
 <span class="sd">"""</span>
@@ -559,7 +557,7 @@
 <span class="sd">    """</span>
 
     <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
-<span class="w">    </span><span class="sd">"""The regularization factor: the model-data mismatch is divided by it."""</span>
+<span class="w">    </span><span class="sd">"""The regularization factor: the observation covariance is divided by it."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
@@ -762,14 +760,14 @@
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Return one exact draw for each pair of `gammas` and `scales`, ``n x N``: a draw of the posterior with the prior std times the scale.</span>
 
-<span class="sd">        With the prior error covariance :math:`s^2 S_0` and the mismatch</span>
-<span class="sd">        :math:`c S_z`, the posterior's mean is this problem's at</span>
+<span class="sd">        With the prior covariance :math:`s^2 S_0` and the observation</span>
+<span class="sd">        covariance :math:`c S_z`, the posterior's mean is this problem's at</span>
 <span class="sd">        :math:`\gamma = s^2 / c` and its covariance :math:`s^2` times this</span>
 <span class="sd">        problem's there. :meth:`sample` at :math:`(s, c)` is then</span>
 <span class="sd">        :math:`\hat{x}(\gamma) + s \big(\delta - K(\gamma) (H \delta + e)\big)`</span>
 <span class="sd">        with :math:`\delta \sim N(0, S_0)` and :math:`e \sim N(0, S_z /</span>
 <span class="sd">        \gamma)`. Each draw's normals are drawn from `rng` in turn, the prior's</span>
-<span class="sd">        then the mismatch's, as ``sample(1, rng)`` of each problem would draw</span>
+<span class="sd">        then the observation error's, as ``sample(1, rng)`` of each problem would draw</span>
 <span class="sd">        them, so a draw is that problem's own to roundoff. The gain is never</span>
 <span class="sd">        formed: one product with the factors for all the draws.</span>
 <span class="sd">        """</span>
@@ -912,10 +910,10 @@
 <span class="sd">    covariance or the gain is asked for. The arrays are read-only, also after</span>
 <span class="sd">    a pickle or a copy.</span>
 
-<span class="sd">    With :math:`Q = S_0` the prior error covariance (:math:`n \times n`),</span>
-<span class="sd">    :math:`S_z = L L^T` the model-data mismatch (:math:`m \times m`; :math:`L` its</span>
+<span class="sd">    With :math:`Q = S_0` the prior covariance (:math:`n \times n`),</span>
+<span class="sd">    :math:`S_z = L L^T` the observation covariance (:math:`m \times m`; :math:`L` its</span>
 <span class="sd">    Cholesky factor, or the square root of its diagonal) and :math:`S_z / \gamma`</span>
-<span class="sd">    the mismatch the solve uses:</span>
+<span class="sd">    the observation covariance the solve uses:</span>
 
 <span class="sd">    .. math::</span>
 
@@ -993,7 +991,7 @@
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        numpy.linalg.LinAlgError</span>
-<span class="sd">            If the model-data mismatch is not positive-definite.</span>
+<span class="sd">            If the observation covariance is not positive-definite.</span>
 <span class="sd">        """</span>
         <span class="n">H</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">_operator</span><span class="o">.</span><span class="n">data</span>
         <span class="n">S_0</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">data</span>
@@ -1006,7 +1004,7 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">S_z</span><span class="p">,</span> <span class="n">DiagonalOperator</span><span class="p">):</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">S_z</span><span class="o">.</span><span class="n">values</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="n">LinAlgError</span><span class="p">(</span>
-                    <span class="s2">"The model-data mismatch has a variance that is not positive, "</span>
+                    <span class="s2">"The observation covariance has a variance that is not positive, "</span>
                     <span class="s2">"so it cannot whiten the observations."</span>
                 <span class="p">)</span>
             <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">S_z</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
@@ -1023,7 +1021,7 @@
                 <span class="n">L</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">cholesky</span><span class="p">(</span><span class="n">S_z_dense</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
             <span class="k">except</span> <span class="n">LinAlgError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">LinAlgError</span><span class="p">(</span>
-                    <span class="s2">"The model-data mismatch is not positive-definite, so it "</span>
+                    <span class="s2">"The observation covariance is not positive-definite, so it "</span>
                     <span class="s2">"cannot whiten the observations."</span>
                 <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">err</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">eigendecompose</span><span class="p">:</span>  <span class="c1"># with_gamma factors the same mismatch again</span>
@@ -1042,7 +1040,7 @@
             <span class="n">gamma</span><span class="p">,</span>
             <span class="n">eigendecompose</span><span class="p">,</span>
             <span class="s2">"The whitened prior in observation space"</span><span class="p">,</span>
-            <span class="s2">"the prior error covariance"</span><span class="p">,</span>
+            <span class="s2">"the prior covariance"</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">B</span> <span class="o">=</span> <span class="n">whiten</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
@@ -1206,19 +1204,19 @@
 <span class="sd">    The analytic method's solution in the information form: the factors of one problem, read at one gamma.</span>
 
 <span class="sd">    ``_analytic`` factors its problem into this (:meth:`factor`) when there</span>
-<span class="sd">    are fewer state elements than observations and the model-data mismatch</span>
+<span class="sd">    are fewer state elements than observations and the observation covariance</span>
 <span class="sd">    is dense, diagonal, sparse, block diagonal or Kronecker; otherwise into</span>
 <span class="sd">    :class:`Whitened`. It factors an :math:`n \times n` matrix instead of an</span>
 <span class="sd">    :math:`m \times m` one, and gives the same posterior. It holds one</span>
 <span class="sd">    :math:`n \times n` array; it forms nothing :math:`m \times m` of its own</span>
-<span class="sd">    (a dense mismatch is factored by Cholesky inside each solve with it; a</span>
+<span class="sd">    (a dense observation covariance is factored by Cholesky inside each solve with it; a</span>
 <span class="sd">    Kronecker one is applied through its factors). The arrays are read-only,</span>
 <span class="sd">    also after a pickle or a copy.</span>
 
-<span class="sd">    With :math:`S_0 = R_0 R_0^T` the prior error covariance (:math:`R_0` its</span>
+<span class="sd">    With :math:`S_0 = R_0 R_0^T` the prior covariance (:math:`R_0` its</span>
 <span class="sd">    square root in its own form: :meth:`~fips.linalg.LinearOperator.sqrt`),</span>
-<span class="sd">    :math:`S_z` the model-data mismatch and :math:`S_z / \gamma` the mismatch</span>
-<span class="sd">    the solve uses:</span>
+<span class="sd">    :math:`S_z` the observation covariance and :math:`S_z / \gamma` the</span>
+<span class="sd">    observation covariance the solve uses:</span>
 
 <span class="sd">    .. math::</span>
 
@@ -1295,9 +1293,9 @@
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        numpy.linalg.LinAlgError</span>
-<span class="sd">            If the model-data mismatch is not positive-definite.</span>
+<span class="sd">            If the observation covariance is not positive-definite.</span>
 <span class="sd">        _NoSquareRoot</span>
-<span class="sd">            If the prior error covariance has no square root (it is not</span>
+<span class="sd">            If the prior covariance has no square root (it is not</span>
 <span class="sd">            positive-definite to working precision).</span>
 <span class="sd">        """</span>
         <span class="n">H</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">_operator</span><span class="o">.</span><span class="n">data</span>
@@ -1306,14 +1304,14 @@
             <span class="n">S_z</span><span class="o">.</span><span class="n">logdet</span><span class="p">()</span>  <span class="c1"># raises unless positive-definite</span>
         <span class="k">except</span> <span class="n">LinAlgError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">LinAlgError</span><span class="p">(</span>
-                <span class="s2">"The model-data mismatch is not positive-definite, so it cannot "</span>
+                <span class="s2">"The observation covariance is not positive-definite, so it cannot "</span>
                 <span class="s2">"weight the observations."</span>
             <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">err</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">R_0</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">sqrt</span><span class="p">()</span>
         <span class="k">except</span> <span class="n">LinAlgError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">_NoSquareRoot</span><span class="p">(</span>
-                <span class="s2">"The prior error covariance has no square root: it is not "</span>
+                <span class="s2">"The prior covariance has no square root: it is not "</span>
                 <span class="s2">"positive-definite to working precision."</span>
             <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">err</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">eigendecompose</span><span class="p">:</span>  <span class="c1"># with_gamma factors the same mismatch again</span>
@@ -1326,7 +1324,7 @@
             <span class="n">gamma</span><span class="p">,</span>
             <span class="n">eigendecompose</span><span class="p">,</span>
             <span class="s2">"The observations' information on the whitened state"</span><span class="p">,</span>
-            <span class="s2">"the model-data mismatch"</span><span class="p">,</span>
+            <span class="s2">"the observation covariance"</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">G</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">R_0</span> <span class="o">@</span> <span class="n">X</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
@@ -1490,7 +1488,7 @@
 
     <span class="nd">@cached_property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_innovation_norm</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">""":math:`q = d^T S_z^{-1} d`, one solve with the mismatch, kept (each new set of observations has its own)."""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">""":math:`q = d^T S_z^{-1} d`, one solve with the observation covariance, kept (each new set of observations has its own)."""</span>
         <span class="n">d</span> <span class="o">=</span> <span class="n">_innovation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">d</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">obs_cov</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">d</span><span class="p">)))</span>
 
@@ -1533,7 +1531,7 @@
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the factors of `problem`, this one's with other observation values.</span>
 
-<span class="sd">        Only :math:`b` changes: a solve with the model-data mismatch, a</span>
+<span class="sd">        Only :math:`b` changes: a solve with the observation covariance, a</span>
 <span class="sd">        product with :math:`H^T` and one with :math:`G^T` (``n x n``).</span>
 <span class="sd">        """</span>
         <span class="n">innovation</span> <span class="o">=</span> <span class="n">_read_only</span><span class="p">(</span><span class="n">_carried</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">G</span><span class="p">))</span>
@@ -1541,7 +1539,7 @@
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">_NoSquareRoot</span><span class="p">(</span><span class="n">LinAlgError</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""The prior error covariance has no square root, so the information form cannot factor the problem."""</span>
+<span class="w">    </span><span class="sd">"""The prior covariance has no square root, so the information form cannot factor the problem."""</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_innovation</span><span class="p">(</span><span class="n">problem</span><span class="p">:</span> <span class="n">Problem</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
@@ -1571,8 +1569,7 @@
 <span class="sd">    I/\gamma)^{-1}) = \operatorname{tr}(R^{-1} A R^{-T})`, by a triangular</span>
 <span class="sd">    product (:math:`k^3` flops, less than the form spends making `A`). It</span>
 <span class="sd">    equals :math:`k - \lVert R^{-1} \rVert_F^2 / \gamma`, but that loses</span>
-<span class="sd">    digits when DOFS is much smaller than `k` (two in paper 1's monthly</span>
-<span class="sd">    inversion). The information content, :math:`\tfrac{1}{2} \ln \lvert I +</span>
+<span class="sd">    digits when DOFS is much smaller than `k`. The information content, :math:`\tfrac{1}{2} \ln \lvert I +</span>
 <span class="sd">    \gamma A \rvert = \tfrac{1}{2} \sum_i \ln(\gamma R_{ii}^2)`, is read from</span>
 <span class="sd">    the factor's diagonal (that of :math:`R^{-1}` is :math:`1 / R_{ii}`): the</span>
 <span class="sd">    log-determinant of the matrix the solve factored, with no second</span>
@@ -1691,7 +1688,7 @@
 <span class="sd">    Return the form to factor `problem` in, and why.</span>
 
 <span class="sd">    The information form when there are fewer state elements than</span>
-<span class="sd">    observations and the model-data mismatch is dense, diagonal, sparse, block</span>
+<span class="sd">    observations and the observation covariance is dense, diagonal, sparse, block</span>
 <span class="sd">    diagonal or Kronecker; otherwise the whitened form. The tests replace this</span>
 <span class="sd">    function to hold both forms to the same outputs.</span>
 <span class="sd">    """</span>
@@ -1704,13 +1701,13 @@
         <span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">S_z</span><span class="p">,</span> <span class="n">_INVERTIBLE</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">Whitened</span><span class="p">,</span> <span class="p">(</span>
-            <span class="sa">f</span><span class="s2">"the model-data mismatch is a </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">S_z</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">, which the "</span>
+            <span class="sa">f</span><span class="s2">"the observation covariance is a </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">S_z</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">, which the "</span>
             <span class="s2">"information form does not take (it takes dense, diagonal, sparse, "</span>
             <span class="s2">"block diagonal and Kronecker)"</span>
         <span class="p">)</span>
     <span class="k">return</span> <span class="n">Information</span><span class="p">,</span> <span class="p">(</span>
         <span class="sa">f</span><span class="s2">"the n = </span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2"> state elements are fewer than the m = </span><span class="si">{</span><span class="n">m</span><span class="si">}</span><span class="s2"> observations, and "</span>
-        <span class="sa">f</span><span class="s2">"the model-data mismatch is a </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">S_z</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">"</span>
+        <span class="sa">f</span><span class="s2">"the observation covariance is a </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">S_z</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">"</span>
     <span class="p">)</span>
 
 
@@ -1718,7 +1715,7 @@
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Factor `problem` in the form :func:`_choose` gives, logging which and why.</span>
 
-<span class="sd">    The information form needs a square root of the prior error covariance;</span>
+<span class="sd">    The information form needs a square root of the prior covariance;</span>
 <span class="sd">    when it has none (it is not positive-definite to working precision), the</span>
 <span class="sd">    whitened form, which needs none, factors the problem. A whitened solve</span>
 <span class="sd">    with many more observations than state elements and more than</span>
@@ -1731,7 +1728,7 @@
             <span class="n">solution</span> <span class="o">=</span> <span class="n">Information</span><span class="o">.</span><span class="n">factor</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">gamma</span><span class="p">)</span>
         <span class="k">except</span> <span class="n">_NoSquareRoot</span><span class="p">:</span>
             <span class="n">why</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="s2">"the prior error covariance has no square root (it is not "</span>
+                <span class="s2">"the prior covariance has no square root (it is not "</span>
                 <span class="s2">"positive-definite to working precision), which the information "</span>
                 <span class="s2">"form needs"</span>
             <span class="p">)</span>

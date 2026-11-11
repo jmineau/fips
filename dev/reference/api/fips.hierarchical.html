@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.hierarchical &#8212; fips 0.2.0b3.dev34+g9a0704831 documentation</title>
+    <title>fips.hierarchical &#8212; fips 0.2.0b3.dev35+gd1a34da7b documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=8e63224c"></script>
+    <script src="../../_static/documentation_options.js?v=bd5d55db"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev35+gd1a34da7b documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev35+gd1a34da7b documentation - Home"/>
   
   
 </a></div>
@@ -1057,15 +1057,15 @@ steps, it draws the state exactly from the posterior at the chain’s
 settings (<a class="reference internal" href="fips.Posterior.sample.html#fips.Posterior.sample" title="fips.Posterior.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Posterior.sample</span></code></a>), so the
 state’s draws are draws of <span class="math notranslate nohighlight">\(p(x \mid z)\)</span>, the Gaussian posteriors
 mixed over the settings’ posterior.</p>
-<p><strong>The fast path.</strong> When the only settings are a factor on the prior error
-standard deviation and one on the model-data mismatch’s, pass the problem
+<p><strong>The fast path.</strong> When the only settings are a factor on the prior’s
+standard deviation and one on the observation error’s, pass the problem
 at factors of 1 as <cite>build</cite>, and name the settings <code class="docutils literal notranslate"><span class="pre">&quot;prior_scale&quot;</span></code> (the
-prior std times it) and <code class="docutils literal notranslate"><span class="pre">&quot;obs_scale&quot;</span></code> (the mismatch std times it), or
-<code class="docutils literal notranslate"><span class="pre">&quot;gamma&quot;</span></code> instead of <code class="docutils literal notranslate"><span class="pre">&quot;obs_scale&quot;</span></code> (the mismatch covariance over it).
+prior std times it) and <code class="docutils literal notranslate"><span class="pre">&quot;obs_scale&quot;</span></code> (the observation error’s std times it), or
+<code class="docutils literal notranslate"><span class="pre">&quot;gamma&quot;</span></code> instead of <code class="docutils literal notranslate"><span class="pre">&quot;obs_scale&quot;</span></code> (the observation covariance over it).
 One eigendecomposition then gives the evidence at every step, in
 <span class="math notranslate nohighlight">\(O(m)\)</span> (or <span class="math notranslate nohighlight">\(O(n)\)</span>) with no solve, and the state’s draws at
 every kept step in one product: a run costs about one eigendecomposition
-of the problem, at any size.</p>
+of the problem and one product for the draws of the state.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -1119,7 +1119,7 @@ Metropolis jumping rules. <em>Bayesian Statistics 5</em>, 599-607.</p>
 <p>Geyer, C. J. (1992). Practical Markov chain Monte Carlo. <em>Statistical
 Science</em>, 7(4), 473-483.</p>
 <p class="rubric">Examples</p>
-<p>The fast path: a factor on the prior std and one on the mismatch’s, on a
+<p>The fast path: a factor on the prior std and one on the observation error’s, on a
 problem of 60 observations of 20 cells, whose truth has a std of 2 and
 whose observations an error of 0.5:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -1161,14 +1161,14 @@ the same problem, so the same chain:</p>
 <span class="gp">... </span>        <span class="n">prior</span><span class="o">=</span><span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="p">,</span>
 <span class="gp">... </span>        <span class="n">prior_cov</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Independent</span><span class="p">()</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="s2">"prior_std"</span><span class="p">]),</span>
 <span class="gp">... </span>        <span class="n">obs</span><span class="o">=</span><span class="n">obs</span><span class="p">,</span>
-<span class="gp">... </span>        <span class="n">obs_cov</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Independent</span><span class="p">()</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="s2">"mdm"</span><span class="p">]),</span>
+<span class="gp">... </span>        <span class="n">obs_cov</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Independent</span><span class="p">()</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="s2">"obs_std"</span><span class="p">]),</span>
 <span class="gp">... </span>        <span class="n">forward</span><span class="o">=</span><span class="n">H</span><span class="p">,</span>
 <span class="gp">... </span>    <span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">general</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">hierarchical</span><span class="p">(</span>
 <span class="gp">... </span>    <span class="n">build</span><span class="p">,</span>
 <span class="gp">... </span>    <span class="p">{</span>
 <span class="gp">... </span>        <span class="s2">"prior_std"</span><span class="p">:</span> <span class="n">fips</span><span class="o">.</span><span class="n">distributions</span><span class="o">.</span><span class="n">LogNormal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
-<span class="gp">... </span>        <span class="s2">"mdm"</span><span class="p">:</span> <span class="n">fips</span><span class="o">.</span><span class="n">distributions</span><span class="o">.</span><span class="n">LogNormal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
+<span class="gp">... </span>        <span class="s2">"obs_std"</span><span class="p">:</span> <span class="n">fips</span><span class="o">.</span><span class="n">distributions</span><span class="o">.</span><span class="n">LogNormal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span>
 <span class="gp">... </span>    <span class="p">},</span>
 <span class="gp">... </span>    <span class="n">draws</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
 <span class="gp">... </span>    <span class="n">burn_in</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>

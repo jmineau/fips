@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.UnavailableError &#8212; fips 0.2.0b3.dev34+g9a0704831 documentation</title>
+    <title>fips.UnavailableError &#8212; fips 0.2.0b3.dev35+gd1a34da7b documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=8e63224c"></script>
+    <script src="../../_static/documentation_options.js?v=bd5d55db"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -135,8 +135,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev35+gd1a34da7b documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev35+gd1a34da7b documentation - Home"/>
   
   
 </a></div>
@@ -1047,8 +1047,8 @@ method whose estimate is a mode it keeps no draws of,
 no bounds, <a class="reference internal" href="fips.Posterior.log_evidence.html#fips.Posterior.log_evidence" title="fips.Posterior.log_evidence"><code class="xref py py-attr docutils literal notranslate"><span class="pre">log_evidence</span></code></a> of one whose posterior is not
 the Gaussian at its estimate, and so on. It is an <a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#AttributeError" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">AttributeError</span></code></a>,
 so <code class="docutils literal notranslate"><span class="pre">hasattr(post,</span> <span class="pre">&quot;at_bound&quot;)</span></code> is False and generic code can ask a
-posterior what it gives, and a <a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#TypeError" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeError</span></code></a>, as these refusals
-were before it.</p>
+posterior what it gives, and a <a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#TypeError" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeError</span></code></a>, so code that catches
+a TypeError catches it too.</p>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
 <dl class="simple">

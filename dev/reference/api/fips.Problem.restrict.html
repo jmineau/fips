@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.Problem.restrict &#8212; fips 0.2.0b3.dev34+g9a0704831 documentation</title>
+    <title>fips.Problem.restrict &#8212; fips 0.2.0b3.dev35+gd1a34da7b documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=8e63224c"></script>
+    <script src="../../_static/documentation_options.js?v=bd5d55db"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev35+gd1a34da7b documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev35+gd1a34da7b documentation - Home"/>
   
   
 </a></div>
@@ -1046,17 +1046,17 @@
 <dd><p>Return the problem on part of the state, the rest held at its prior.</p>
 <p>Use it to solve for some of the state only, such as the elements the
 observations see well, and keep every other element at its prior
-value. Which elements to keep is your choice: for example, in a flux
-inversion, the cells whose total sensitivity is above a percentile of all cells’
-(<a class="reference internal" href="fips.aggregate.sum.html#fips.aggregate.sum" title="fips.aggregate.sum"><code class="xref py py-func docutils literal notranslate"><span class="pre">fips.aggregate.sum()</span></code></a> of the forward operator’s absolute column
-sums, grouped by cell, gives that total).</p>
+value. Which elements to keep is your choice: for example, the
+elements whose sensitivity (the sum of the absolute values in their
+column of the forward operator) is above a percentile of all
+elements’.</p>
 <p>The dropped elements still add to the observations, at their prior
 values: <span class="math notranslate nohighlight">\(H_r x_{0,r}\)</span> (the forward operator’s columns for them
 times their prior) is added to the offset. The prior, the prior
 covariance and the forward operator are cut to the kept labels; the
 covariance keeps its form, so a Kronecker covariance stays as its
 factors. The dropped elements’ prior uncertainty is not added to the
-model-data mismatch: they are held exactly at the prior.</p>
+observation covariance: they are held exactly at the prior.</p>
 <p>After solving, <code class="docutils literal notranslate"><span class="pre">post.estimate.combine_first(problem.prior)</span></code> puts
 the estimate back on the whole state, with the prior for the dropped
 elements (<a class="reference internal" href="fips.Vector.combine_first.html#fips.Vector.combine_first" title="fips.Vector.combine_first"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Vector.combine_first()</span></code></a>).</p>

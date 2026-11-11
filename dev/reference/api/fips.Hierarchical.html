@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.Hierarchical &#8212; fips 0.2.0b3.dev34+g9a0704831 documentation</title>
+    <title>fips.Hierarchical &#8212; fips 0.2.0b3.dev35+gd1a34da7b documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=8e63224c"></script>
+    <script src="../../_static/documentation_options.js?v=bd5d55db"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev35+gd1a34da7b documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev35+gd1a34da7b documentation - Home"/>
   
   
 </a></div>
@@ -1044,9 +1044,8 @@
 <p><a class="reference internal" href="fips.hierarchical.html#fips.hierarchical" title="fips.hierarchical"><code class="xref py py-func docutils literal notranslate"><span class="pre">hierarchical()</span></code></a> builds it. It is not a <a class="reference internal" href="fips.Posterior.html#fips.Posterior" title="fips.Posterior"><code class="xref py py-class docutils literal notranslate"><span class="pre">Posterior</span></code></a>: the
 posterior of the state is a mixture of Gaussians, one for each draw of the
 settings, so its estimate, variances and covariances are those of the
-draws of the state (<code class="docutils literal notranslate"><span class="pre">draws</span></code> of them: a Monte Carlo estimate, a standard
-deviation good to a few percent at the default 2000, more where the chain
-is slow, <a class="reference internal" href="fips.Hierarchical.ess.html#fips.Hierarchical.ess" title="fips.Hierarchical.ess"><code class="xref py py-attr docutils literal notranslate"><span class="pre">ess</span></code></a>). What is defined only for one Gaussian (the gain,
+draws of the state (<code class="docutils literal notranslate"><span class="pre">draws</span></code> of them: a Monte Carlo estimate, whose
+error falls as the effective number of draws, <a class="reference internal" href="fips.Hierarchical.ess.html#fips.Hierarchical.ess" title="fips.Hierarchical.ess"><code class="xref py py-attr docutils literal notranslate"><span class="pre">ess</span></code></a>, grows). What is defined only for one Gaussian (the gain,
 DOFS, the chi-squared tests, the evidence) is on the posterior at one
 setting, <a class="reference internal" href="fips.Hierarchical.at.html#fips.Hierarchical.at" title="fips.Hierarchical.at"><code class="xref py py-meth docutils literal notranslate"><span class="pre">at()</span></code></a>. The draws of the state are held as a <code class="docutils literal notranslate"><span class="pre">state</span> <span class="pre">x</span>
 <span class="pre">draws</span></code> array.</p>

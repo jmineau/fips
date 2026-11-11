@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.problem &#8212; fips 0.2.0b3.dev34+g9a0704831 documentation</title>
+    <title>fips.problem &#8212; fips 0.2.0b3.dev35+gd1a34da7b documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=8e63224c"></script>
+    <script src="../../_static/documentation_options.js?v=bd5d55db"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev35+gd1a34da7b documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev35+gd1a34da7b documentation - Home"/>
   
   
 </a></div>
@@ -527,12 +527,12 @@
 <span class="sd">    prior : Vector</span>
 <span class="sd">        The prior state :math:`x_0`. Its space labels the state.</span>
 <span class="sd">    prior_cov : Covariance or CovarianceModel</span>
-<span class="sd">        The prior error covariance :math:`S_0`. A covariance model (such as</span>
+<span class="sd">        The prior covariance :math:`S_0`. A covariance model (such as</span>
 <span class="sd">        ``Kronecker(...).with_std(std)``) is built on the prior's space.</span>
 <span class="sd">    obs : Vector</span>
 <span class="sd">        The observations :math:`z`. Its space labels the observations.</span>
 <span class="sd">    obs_cov : Covariance or CovarianceModel</span>
-<span class="sd">        The model-data mismatch :math:`S_z`, the covariance of the</span>
+<span class="sd">        The observation covariance :math:`S_z`, the covariance of the</span>
 <span class="sd">        observation error; a model is built on the observations' space. It</span>
 <span class="sd">        must be positive-definite.</span>
 <span class="sd">    forward : Operator or ForwardModel</span>
@@ -540,7 +540,8 @@
 <span class="sd">        observations (its rows); or a forward model :math:`F` with its</span>
 <span class="sd">        Jacobian (:class:`~fips.ForwardModel`), whose rows have the</span>
 <span class="sd">        observations' labels and whose columns the prior's. A problem with a</span>
-<span class="sd">        model is solved by ``fips.solve(problem, "gauss_newton")``.</span>
+<span class="sd">        model is solved by ``"gauss_newton"``, ``"variational"`` or</span>
+<span class="sd">        ``"ensemble"``.</span>
 <span class="sd">    offset : Vector or float, optional</span>
 <span class="sd">        The part of the observations the state does not explain, :math:`c`</span>
 <span class="sd">        (a background): a vector on the observations' labels, or one value</span>
@@ -554,7 +555,7 @@
 <span class="sd">        If the forward operator or model, a covariance or the offset does not</span>
 <span class="sd">        have exactly the labels of the space it is put on: a block or a label</span>
 <span class="sd">        on one side and not the other. The message names them. Also if every</span>
-<span class="sd">        variance of the prior error covariance is zero (some may be: an</span>
+<span class="sd">        variance of the prior covariance is zero (some may be: an</span>
 <span class="sd">        element known exactly, a bias block given as 0).</span>
 
 <span class="sd">    See Also</span>
@@ -565,8 +566,8 @@
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
 <span class="sd">    A forward operator that covers only part of the state (a Jacobian with</span>
-<span class="sd">    columns only for the elements the observations are sensitive to: in a</span>
-<span class="sd">    transport model, the cells a footprint touched) is placed on the whole</span>
+<span class="sd">    columns only for the elements the observations are sensitive to) is</span>
+<span class="sd">    placed on the whole</span>
 <span class="sd">    state by :meth:`Operator.from_blocks &lt;fips.Operator.from_blocks&gt;`, which</span>
 <span class="sd">    puts a labeled block by its labels: an element the Jacobian lacks is a</span>
 <span class="sd">    column of zeros, and a label the space lacks raises. With ``J`` the</span>
@@ -679,7 +680,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">prior_cov</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Covariance</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""The prior error covariance, :math:`S_0`, on the prior's space."""</span>
+<span class="w">        </span><span class="sd">"""The prior covariance, :math:`S_0`, on the prior's space."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prior_cov</span>
 
     <span class="nd">@property</span>
@@ -689,7 +690,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">obs_cov</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Covariance</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""The model-data mismatch, :math:`S_z`, on the observations' space."""</span>
+<span class="w">        </span><span class="sd">"""The observation covariance, :math:`S_z`, on the observations' space."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obs_cov</span>
 
     <span class="nd">@property</span>
@@ -797,9 +798,9 @@
 <span class="sd">        `x` has the forward operator :math:`J` and the offset :math:`c + F(x)</span>
 <span class="sd">        - J x`. It predicts what the model does at `x` itself, and near `x` to</span>
 <span class="sd">        first order. Its analytic solve, ``fips.solve(problem.linearized(x))``,</span>
-<span class="sd">        is one step of Gauss-Newton from `x`; ``fips.solve(problem,</span>
-<span class="sd">        "gauss_newton")`` repeats the step from the prior until the estimate</span>
-<span class="sd">        stops moving.</span>
+<span class="sd">        is one Gauss-Newton step from `x`; ``fips.solve(problem,</span>
+<span class="sd">        "gauss_newton")`` repeats the step from the prior until the step is</span>
+<span class="sd">        small (its ``tol``).</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -904,12 +905,12 @@
         <span class="n">truth</span><span class="p">:</span> <span class="s2">"Vector | None"</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Vector</span><span class="p">,</span> <span class="n">Vector</span><span class="p">]:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">        Return a truth and the observations it would give, :math:`H x + c + e`.</span>
+<span class="sd">        Return a truth and the observations it would give, :math:`F(x) + c + e` (:math:`H x + c + e` for a forward operator).</span>
 
 <span class="sd">        The problem as a world that makes data: the truth is drawn from the</span>
 <span class="sd">        prior, :math:`x \sim N(x_0, S_0)`, and the observations are its</span>
 <span class="sd">        noise-free prediction (:meth:`predict`) plus an error drawn from the</span>
-<span class="sd">        model-data mismatch, :math:`e \sim N(0, S_z)`. Solving the problem on</span>
+<span class="sd">        observation covariance, :math:`e \sim N(0, S_z)`. Solving the problem on</span>
 <span class="sd">        these observations, ``post.with_data(obs)``, and comparing the estimate</span>
 <span class="sd">        with the truth tests an inversion on data whose answer is known; a</span>
 <span class="sd">        loop of them over one generator is a Monte Carlo of how often the</span>
@@ -926,7 +927,7 @@
 <span class="sd">            `truth` draws the error alone.</span>
 <span class="sd">        truth : Vector, optional</span>
 <span class="sd">            A state to use as the truth instead of drawing one, on the prior's</span>
-<span class="sd">            labels in any order: another prior estimate, 1.5 times the prior. Its</span>
+<span class="sd">            labels in any order (for example 1.5 times the prior). Its</span>
 <span class="sd">            observations still carry the error.</span>
 
 <span class="sd">        Returns</span>
@@ -1018,10 +1019,10 @@
 
 <span class="sd">        Use it to solve for some of the state only, such as the elements the</span>
 <span class="sd">        observations see well, and keep every other element at its prior</span>
-<span class="sd">        value. Which elements to keep is your choice: for example, in a flux</span>
-<span class="sd">        inversion, the cells whose total sensitivity is above a percentile of all cells'</span>
-<span class="sd">        (:func:`fips.aggregate.sum` of the forward operator's absolute column</span>
-<span class="sd">        sums, grouped by cell, gives that total).</span>
+<span class="sd">        value. Which elements to keep is your choice: for example, the</span>
+<span class="sd">        elements whose sensitivity (the sum of the absolute values in their</span>
+<span class="sd">        column of the forward operator) is above a percentile of all</span>
+<span class="sd">        elements'.</span>
 
 <span class="sd">        The dropped elements still add to the observations, at their prior</span>
 <span class="sd">        values: :math:`H_r x_{0,r}` (the forward operator's columns for them</span>
@@ -1029,7 +1030,7 @@
 <span class="sd">        covariance and the forward operator are cut to the kept labels; the</span>
 <span class="sd">        covariance keeps its form, so a Kronecker covariance stays as its</span>
 <span class="sd">        factors. The dropped elements' prior uncertainty is not added to the</span>
-<span class="sd">        model-data mismatch: they are held exactly at the prior.</span>
+<span class="sd">        observation covariance: they are held exactly at the prior.</span>
 
 <span class="sd">        After solving, ``post.estimate.combine_first(problem.prior)`` puts</span>
 <span class="sd">        the estimate back on the whole state, with the prior for the dropped</span>
@@ -1142,9 +1143,9 @@
 
 <span class="sd">        Each input on the observations goes through the same aggregation</span>
 <span class="sd">        :math:`W`: the observations :math:`W z`, the forward operator</span>
-<span class="sd">        :math:`W H`, the model-data mismatch :math:`W S_z W^T` and the offset</span>
+<span class="sd">        :math:`W H`, the observation covariance :math:`W S_z W^T` and the offset</span>
 <span class="sd">        :math:`W c`. Each keeps the cheapest form (a sparse :math:`W` and a</span>
-<span class="sd">        diagonal :math:`S_z` give a sparse mismatch). A forward model</span>
+<span class="sd">        diagonal :math:`S_z` give a sparse observation covariance). A forward model</span>
 <span class="sd">        :math:`F` is followed by the aggregation: the new problem's model is</span>
 <span class="sd">        :math:`W F(x)`, with the Jacobian :math:`W J(x)`.</span>
 
@@ -1235,7 +1236,7 @@
 <span class="sd">        Return `n` members drawn from the prior, one column each: the first stage of the ensemble method.</span>
 
 <span class="sd">        Each member is :math:`x_0 + \delta_j - \bar{\delta}`, with</span>
-<span class="sd">        :math:`\delta_j \sim N(0, S_0)` drawn through the prior error</span>
+<span class="sd">        :math:`\delta_j \sim N(0, S_0)` drawn through the prior</span>
 <span class="sd">        covariance's root and their mean :math:`\bar{\delta}` taken out, so</span>
 <span class="sd">        the members' mean is the prior exactly and their sample covariance,</span>
 <span class="sd">        :math:`\sum_j (x_j - x_0)(x_j - x_0)^T / (n - 1)`, has the mean</span>
@@ -1263,7 +1264,7 @@
 <span class="sd">        ValueError</span>
 <span class="sd">            If `n` is not an integer of at least 2.</span>
 <span class="sd">        numpy.linalg.LinAlgError</span>
-<span class="sd">            If the prior error covariance has a clearly negative eigenvalue.</span>
+<span class="sd">            If the prior covariance has a clearly negative eigenvalue.</span>
 
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>

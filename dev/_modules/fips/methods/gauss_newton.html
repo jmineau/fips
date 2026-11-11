@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.methods.gauss_newton &#8212; fips 0.2.0b3.dev34+g9a0704831 documentation</title>
+    <title>fips.methods.gauss_newton &#8212; fips 0.2.0b3.dev35+gd1a34da7b documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../../_static/documentation_options.js?v=8e63224c"></script>
+    <script src="../../../_static/documentation_options.js?v=bd5d55db"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
-    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
+    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev35+gd1a34da7b documentation - Home"/>
+    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev35+gd1a34da7b documentation - Home"/>
   
   
 </a></div>
@@ -459,7 +459,7 @@
 <span class="sd">mode is the same), and only a whole step below the rule stops the</span>
 <span class="sd">iterations. The rule measures the step, not the distance to the mode: when</span>
 <span class="sd">the steps fall by a constant factor near 1 (a model that bends much over the</span>
-<span class="sd">posterior's spread), the solve logs a warning that the estimate may be</span>
+<span class="sd">posterior's spread), the solve logs a warning that the last iterate may be</span>
 <span class="sd">further from the mode (``_warn_if_slow``).</span>
 
 <span class="sd">For a transform (:class:`~fips.LogNormalForward`,</span>
@@ -473,19 +473,17 @@
 <span class="sd">not positive definite. The iterations stop when both steps are below the</span>
 <span class="sd">rule, with Gauss-Newton's, so the mode is the same and the Gaussian at the</span>
 <span class="sd">mode is still the analytic solution of the problem linearized at the last</span>
-<span class="sd">iterate. Newton converges quadratically where Gauss-Newton crawls: on the</span>
-<span class="sd">user guide's comparison problem (400 state elements, 120 observations, a log</span>
-<span class="sd">standard deviation of 1, 200 trials) the lognormal model took a median of</span>
-<span class="sd">7 steps and at most 14, against Gauss-Newton's 9 and 23; the softplus model 9</span>
-<span class="sd">and 14, against 18 and 153. A model fips did not write has no curvature, and</span>
-<span class="sd">its steps are Gauss-Newton's.</span>
+<span class="sd">iterate. Newton converges quadratically where Gauss-Newton crawls: where the</span>
+<span class="sd">model bends much over the posterior's spread, it takes a fraction of</span>
+<span class="sd">Gauss-Newton's steps. A model fips did not write has no curvature, and its</span>
+<span class="sd">steps are Gauss-Newton's.</span>
 
 <span class="sd">:math:`\hat{S}_i^{-1}` is never formed. Every estimate is :math:`x_0 + S_0 y`</span>
 <span class="sd">with :math:`y = J_i^T u_i` (:math:`u_i` the analytic solve's :math:`(J_i S_0</span>
 <span class="sd">J_i^T + S_z/\gamma)^{-1}` times its innovation), so the prior term of</span>
 <span class="sd">:math:`d^2` is :math:`\Delta y^T S_0 \Delta y` (no inverse of :math:`S_0`,</span>
 <span class="sd">which may be singular) and its data term :math:`\gamma (J_i \delta)^T</span>
-<span class="sd">S_z^{-1} (J_i \delta)`, a solve with the mismatch factored once.</span>
+<span class="sd">S_z^{-1} (J_i \delta)`, a solve with the observation covariance factored once.</span>
 
 <span class="sd">The solution (:class:`GaussNewton`) keeps the analytic solution of the last</span>
 <span class="sd">linearized problem, the Gaussian at the mode: the analytic posterior of the</span>
@@ -497,7 +495,7 @@
 <span class="sd">Hamiltonian Monte Carlo (``_Sampler``): the Gaussian at the mode is its mass</span>
 <span class="sd">and its exactly solved part, the rest of the cost its kicks, and a Metropolis</span>
 <span class="sd">test keeps the chain exact. Where the model bends over the posterior's</span>
-<span class="sd">spread, the Gaussian at the mode is not the posterior (a total of lognormal</span>
+<span class="sd">spread, the Gaussian at the mode is not the posterior (a sum of lognormal</span>
 <span class="sd">values from its draws runs high and covers the truth too rarely); the draws</span>
 <span class="sd">are. The misfits and the chi-squared are the cost's terms at the mode, from</span>
 <span class="sd">the model itself. With a forward operator (a linear problem)</span>
@@ -550,8 +548,8 @@
 <span class="sd">    ----------</span>
 <span class="sd">    gamma : float, default 1.0</span>
 <span class="sd">        The regularization factor :math:`\gamma`, as for the analytic method</span>
-<span class="sd">        (:class:`~fips.methods.analytic.AnalyticOptions`): the model-data</span>
-<span class="sd">        mismatch is divided by it.</span>
+<span class="sd">        (:class:`~fips.methods.analytic.AnalyticOptions`): the observation</span>
+<span class="sd">        covariance is divided by it.</span>
 <span class="sd">    max_iterations : int, default 50</span>
 <span class="sd">        The most steps to take. A solve that has not stopped by then raises.</span>
 <span class="sd">        A mildly nonlinear problem stops in a few; a strongly nonlinear one</span>
@@ -569,8 +567,10 @@
 <span class="sd">        The number of draws of the posterior kept for its variances and the</span>
 <span class="sd">        covariance of aggregates (Monte Carlo estimates: the relative error of</span>
 <span class="sd">        a standard deviation is about :math:`\sqrt{\tau / (2\,</span>
-<span class="sd">        \text{draws}})`, with :math:`\tau` the draws' autocorrelation time,</span>
-<span class="sd">        about 1 to 3 for most elements, 2% to 3% at 2000). They are made at</span>
+<span class="sd">        \text{draws}})`, with :math:`\tau` the draws' autocorrelation time).</span>
+<span class="sd">        An element the observations see only through a sum with others, on</span>
+<span class="sd">        a posterior that bends, mixes slowly: its spread can be far off with</span>
+<span class="sd">        no warning, so compare a few seeds. The draws are made at</span>
 <span class="sd">        the first use of the variances or covariances, and each trial of</span>
 <span class="sd">        :meth:`Posterior.trials &lt;fips.Posterior.trials&gt;` makes its own, so</span>
 <span class="sd">        fewer make trials quicker. There is no setting without draws: the</span>
@@ -593,7 +593,7 @@
 <span class="sd">    """</span>
 
     <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
-<span class="w">    </span><span class="sd">"""The regularization factor: the model-data mismatch is divided by it."""</span>
+<span class="w">    </span><span class="sd">"""The regularization factor: the observation covariance is divided by it."""</span>
     <span class="n">max_iterations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span>
 <span class="w">    </span><span class="sd">"""The most steps to take."""</span>
     <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-6</span>
@@ -1102,7 +1102,7 @@
 <span class="n">_SLOW_DRAWS</span> <span class="o">=</span> <span class="p">(</span>
     <span class="s2">"The posterior bends much over its spread, along a direction the Gaussian "</span>
     <span class="s2">"at the mode does not follow; raise draws= for those elements' spread, or "</span>
-    <span class="s2">"read the totals the data constrain, which mix faster."</span>
+    <span class="s2">"read the aggregates the data constrain, which mix faster."</span>
 <span class="p">)</span>
 <span class="sd">"""What the slow-mixing warning of the kept draws says of the cause and the remedy."""</span>
 

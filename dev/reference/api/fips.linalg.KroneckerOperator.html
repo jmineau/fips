@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.linalg.KroneckerOperator &#8212; fips 0.2.0b3.dev34+g9a0704831 documentation</title>
+    <title>fips.linalg.KroneckerOperator &#8212; fips 0.2.0b3.dev35+gd1a34da7b documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=8e63224c"></script>
+    <script src="../../_static/documentation_options.js?v=bd5d55db"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev35+gd1a34da7b documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev35+gd1a34da7b documentation - Home"/>
   
   
 </a></div>
@@ -1045,7 +1045,7 @@
 <div class="math notranslate nohighlight">
 \[S = D \, P \, (C_1 \otimes C_2 \otimes \dots \otimes C_K) \, P^T D\]</div>
 <p>Each factor <span class="math notranslate nohighlight">\(C_k\)</span> is the correlation matrix of one marginal (the
-times, or the grid cells), <span class="math notranslate nohighlight">\(P\)</span> picks the rows of the full product
+times, or the points of a grid), <span class="math notranslate nohighlight">\(P\)</span> picks the rows of the full product
 that the operator has, in its order (any subset of the product, in any
 order), and <span class="math notranslate nohighlight">\(D\)</span> is the diagonal of standard deviations. Entry
 <code class="docutils literal notranslate"><span class="pre">(i,</span> <span class="pre">j)</span></code> is <code class="docutils literal notranslate"><span class="pre">std[i]</span> <span class="pre">*</span> <span class="pre">std[j]</span> <span class="pre">*</span> <span class="pre">prod_k</span> <span class="pre">C_k[pos_k[i],</span> <span class="pre">pos_k[j]]</span></code>.</p>

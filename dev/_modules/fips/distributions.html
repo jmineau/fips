@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.distributions &#8212; fips 0.2.0b3.dev34+g9a0704831 documentation</title>
+    <title>fips.distributions &#8212; fips 0.2.0b3.dev35+gd1a34da7b documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=8e63224c"></script>
+    <script src="../../_static/documentation_options.js?v=bd5d55db"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev35+gd1a34da7b documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev35+gd1a34da7b documentation - Home"/>
   
   
 </a></div>
@@ -424,13 +424,13 @@
 <span></span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">The distributions :func:`fips.hierarchical` accepts as the prior of a covariance setting.</span>
 
-<span class="sd">Three for now: :class:`LogNormal`, :class:`HalfNormal` and :class:`Uniform`.</span>
+<span class="sd">Three: :class:`LogNormal`, :class:`HalfNormal` and :class:`Uniform`.</span>
 <span class="sd">Each has a log density, draws, a median (where the search for the mode</span>
 <span class="sd">starts) and a map to unbounded coordinates (the log of a positive setting,</span>
 <span class="sd">the logit of a bounded one), where the sampler of :func:`fips.hierarchical`</span>
 <span class="sd">works. This is not a general library of distributions: they are the priors</span>
-<span class="sd">of the settings (a standard deviation, a correlation length, the mismatch's</span>
-<span class="sd">scale), not of the state, whose prior is a :class:`~fips.Vector` and a</span>
+<span class="sd">of the settings (a standard deviation, a correlation length, the observation</span>
+<span class="sd">error's scale), not of the state, whose prior is a :class:`~fips.Vector` and a</span>
 <span class="sd">:class:`~fips.Covariance`.</span>
 
 <span class="sd">&gt;&gt;&gt; import numpy as np</span>

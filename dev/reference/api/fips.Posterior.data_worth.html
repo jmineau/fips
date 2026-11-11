@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.Posterior.data_worth &#8212; fips 0.2.0b3.dev34+g9a0704831 documentation</title>
+    <title>fips.Posterior.data_worth &#8212; fips 0.2.0b3.dev35+gd1a34da7b documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=8e63224c"></script>
+    <script src="../../_static/documentation_options.js?v=bd5d55db"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev35+gd1a34da7b documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev35+gd1a34da7b documentation - Home"/>
   
   
 </a></div>
@@ -1048,7 +1048,7 @@
 must be linear in the observations, and the innovation covariance
 exact); a sampled, ensemble or variational posterior raises
 <a class="reference internal" href="fips.UnavailableError.html#fips.UnavailableError" title="fips.UnavailableError"><code class="xref py py-class docutils literal notranslate"><span class="pre">UnavailableError</span></code></a>.</p>
-<p>For each group (a site, a platform, a month), the posterior standard
+<p>For each group (for example a site or a month), the posterior standard
 deviation of each aggregate without the group’s observations and with
 them (this posterior), without solving again. Removing the
 observations <span class="math notranslate nohighlight">\(g\)</span> changes the posterior covariance by a rank
@@ -1058,7 +1058,7 @@ observations <span class="math notranslate nohighlight">\(g\)</span> changes the
 P = (H S_0 H^T + S_z/\gamma)^{-1},\]</div>
 <p>with <span class="math notranslate nohighlight">\(K_g\)</span> the gain’s columns for the group and <span class="math notranslate nohighlight">\(P_{gg}\)</span>
 its block of <span class="math notranslate nohighlight">\(P\)</span> (the block inverse of the innovation
-covariance). It is exact whatever the model-data mismatch, also when
+covariance). It is exact whatever the observation covariance, also when
 it correlates the errors of one group with another’s: it is the
 posterior of the problem without the group’s rows and columns. For
 <span class="math notranslate nohighlight">\(W\)</span>, <span class="math notranslate nohighlight">\(W K_g\)</span> is a part of <span class="math notranslate nohighlight">\(W K\)</span> (<code class="docutils literal notranslate"><span class="pre">k</span> <span class="pre">x</span> <span class="pre">m</span></code>), so
@@ -1074,20 +1074,20 @@ from a rank <span class="math notranslate nohighlight">\(m_g\)</span> update of 
 \[S_{g} = S_0 - S_0 H_g^T F_g^{-1} H_g S_0, \qquad
 F_g = H_g S_0 H_g^T + R_{gg} / \gamma,\]</div>
 <p>with <span class="math notranslate nohighlight">\(H_g\)</span> the group’s rows of <span class="math notranslate nohighlight">\(H\)</span> and <span class="math notranslate nohighlight">\(R_{gg}\)</span> its own
-block of the model-data mismatch. It is not the difference of the other
+block of the observation covariance. It is not the difference of the other
 columns: two groups that see the same part of the state each take much
 off the prior alone and little on top of one another, and the two
 readings agree only for a single group. Because it uses <span class="math notranslate nohighlight">\(R_{gg}\)</span>
 only, it ignores any correlation between the group’s errors and the
 other groups’, which <code class="docutils literal notranslate"><span class="pre">std_without</span></code> and <code class="docutils literal notranslate"><span class="pre">std_with</span></code> keep: a problem
-whose mismatch correlates sites gives each site, alone, the benefit of
-independent errors from the rest.</p>
+whose observation covariance correlates groups gives each group,
+alone, the benefit of independent errors from the rest.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>by</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a></span>) – The levels of the observations’ labels to group by, as
 <a class="reference internal" href="fips.Posterior.desroziers.html#fips.Posterior.desroziers" title="fips.Posterior.desroziers"><code class="xref py py-meth docutils literal notranslate"><span class="pre">desroziers()</span></code></a> and <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.groupby.html#pandas.DataFrame.groupby" title="(in pandas v3.1)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pandas.DataFrame.groupby()</span></code></a> take them:
-<code class="docutils literal notranslate"><span class="pre">&quot;site&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;block&quot;</span></code> (a platform per block), <code class="docutils literal notranslate"><span class="pre">[&quot;site&quot;,</span>
+<code class="docutils literal notranslate"><span class="pre">&quot;site&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;block&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">[&quot;site&quot;,</span>
 <span class="pre">pd.Grouper(level=&quot;obs_time&quot;,</span> <span class="pre">freq=&quot;MS&quot;)]</span></code>. Observations whose
 block lacks a level are in no group of it (they are never
 removed).</p></li>

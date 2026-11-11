@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.posterior &#8212; fips 0.2.0b3.dev34+g9a0704831 documentation</title>
+    <title>fips.posterior &#8212; fips 0.2.0b3.dev35+gd1a34da7b documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=8e63224c"></script>
+    <script src="../../_static/documentation_options.js?v=bd5d55db"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev35+gd1a34da7b documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev35+gd1a34da7b documentation - Home"/>
   
   
 </a></div>
@@ -431,7 +431,8 @@
 <span class="sd">covariance of aggregates, the gain, DOFS and its share per state element, the</span>
 <span class="sd">information content, chi-squared and its two misfits), puts the problem's labels on them and keeps</span>
 <span class="sd">each one once computed. Everything else it gives is</span>
-<span class="sd">written from those and the problem, so it holds for every method. The</span>
+<span class="sd">written from those and the problem, so it holds for every method that gives</span>
+<span class="sd">them; a member a method cannot give raises :class:`UnavailableError`. The</span>
 <span class="sd">analytic method's solution is the factorization of its whitened system, or of</span>
 <span class="sd">its information system when that is smaller (:mod:`fips.methods.analytic`).</span>
 
@@ -479,8 +480,8 @@
 <span class="sd">    no bounds, :attr:`~Posterior.log_evidence` of one whose posterior is not</span>
 <span class="sd">    the Gaussian at its estimate, and so on. It is an :class:`AttributeError`,</span>
 <span class="sd">    so ``hasattr(post, "at_bound")`` is False and generic code can ask a</span>
-<span class="sd">    posterior what it gives, and a :class:`TypeError`, as these refusals</span>
-<span class="sd">    were before it.</span>
+<span class="sd">    posterior what it gives, and a :class:`TypeError`, so code that catches</span>
+<span class="sd">    a TypeError catches it too.</span>
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
@@ -518,7 +519,7 @@
 
 <span class="sd">    A method solves a :class:`~fips.Problem` and keeps whatever it needs to</span>
 <span class="sd">    answer these questions (the analytic method keeps a factorization of</span>
-<span class="sd">    its system; a sampling method would keep its samples). Each answer is an unlabeled NumPy array (or a float), in the order of the</span>
+<span class="sd">    its system; a sampled one keeps its draws). Each answer is an unlabeled NumPy array (or a float), in the order of the</span>
 <span class="sd">    problem's spaces: ``n`` the state elements (``problem.prior``), ``m`` the</span>
 <span class="sd">    observations (``problem.obs``). The posterior labels them, and computes</span>
 <span class="sd">    each one once.</span>
@@ -585,7 +586,7 @@
 <span class="sd">    of the mode. The ``"gauss_newton"`` method's estimate is the mode; its</span>
 <span class="sd">    mean, variances, covariances and intervals are those of the draws it</span>
 <span class="sd">    keeps of its posterior; its gain, DOFS and information content those of</span>
-<span class="sd">    the Gaussian of the problem linearized where its last step was made; and its chi-squared terms those of the model at</span>
+<span class="sd">    the Gaussian at the mode; and its chi-squared terms those of the model at</span>
 <span class="sd">    its estimate. The ``"ensemble"`` method's estimate is the mean of its</span>
 <span class="sd">    updated members; its variances, covariances and gain are those of the</span>
 <span class="sd">    members, and its DOFS, information content and chi-squared the analytic</span>
@@ -613,7 +614,7 @@
 <div class="viewcode-block" id="Solution.variances">
 <a class="viewcode-back" href="../../reference/api/fips.posterior.Solution.variances.html#fips.Solution.variances">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">variances</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return the posterior error variances, the diagonal of :math:`\hat{S}` (``n``)."""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return the posterior variances, the diagonal of :math:`\hat{S}` (``n``)."""</span>
         <span class="o">...</span></div>
 
 
@@ -621,7 +622,7 @@
 <a class="viewcode-back" href="../../reference/api/fips.posterior.Solution.cov.html#fips.Solution.cov">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">cov</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">LinearOperator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">        Return the posterior error covariance of the state, or of aggregates of it.</span>
+<span class="sd">        Return the posterior covariance of the state, or of aggregates of it.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -730,7 +731,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">gamma</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">"""The regularization factor :math:`\gamma`: the solve divided the model-data mismatch by it."""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""The regularization factor :math:`\gamma`: the solve divided the observation covariance by it."""</span>
         <span class="o">...</span></div>
 
 
@@ -915,7 +916,7 @@
             <span class="s2">"</span><span class="si">%d</span><span class="s2"> of the </span><span class="si">%d</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> are below zero by more than roundoff (the lowest is "</span>
             <span class="s2">"</span><span class="si">%.3g</span><span class="s2">, where roundoff is </span><span class="si">%.3g</span><span class="s2">); their standard deviation is NaN. A "</span>
             <span class="s2">"variance is negative only when a covariance is not positive "</span>
-            <span class="s2">"semidefinite: check the prior error and model-data mismatch "</span>
+            <span class="s2">"semidefinite: check the prior and observation covariances "</span>
             <span class="s2">"covariances."</span><span class="p">,</span>
             <span class="nb">int</span><span class="p">(</span><span class="n">negative</span><span class="o">.</span><span class="n">sum</span><span class="p">()),</span>
             <span class="n">negative</span><span class="o">.</span><span class="n">size</span><span class="p">,</span>
@@ -1084,7 +1085,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">options</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Options</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""The options the method solved with (``gamma``)."""</span>
+<span class="w">        </span><span class="sd">"""The options the method solved with: its own options class (every one has ``gamma``)."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_options</span>
 
     <span class="nd">@property</span>
@@ -1158,7 +1159,7 @@
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>
 <span class="sd">        mean : The posterior mean.</span>
-<span class="sd">        variances : The posterior error variances.</span>
+<span class="sd">        variances : The posterior variances.</span>
 <span class="sd">        """</span>
         <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solution</span><span class="o">.</span><span class="n">estimate</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">Vector</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"estimate"</span><span class="p">)</span></div>
@@ -1233,22 +1234,22 @@
     <span class="nd">@cached_property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">variances</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vector</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">        The posterior error variances, the diagonal of :math:`\hat{S}`.</span>
+<span class="sd">        The posterior variances, the diagonal of :math:`\hat{S}`.</span>
 
 <span class="sd">        The analytic method computes them from its factors in</span>
 <span class="sd">        :math:`O(m n)`, without the :math:`n \times n` covariance. The</span>
 <span class="sd">        ``"bounded"`` method gives the variances of its kept draws of the</span>
-<span class="sd">        truncated posterior, or its rectified draws (``draws`` of them: a Monte Carlo estimate, at the</span>
-<span class="sd">        default 2000 a standard deviation good to about 1.5% away from the</span>
-<span class="sd">        bounds and to about 12% for an element whose analytic estimate is one</span>
-<span class="sd">        to four standard deviations outside its bound; the solve warns past</span>
-<span class="sd">        10%), about their mean (:attr:`mean`), not about the mode; the ``"gauss_newton"`` method those</span>
-<span class="sd">        of its kept draws of the posterior of its forward model, the same</span>
-<span class="sd">        way; the ``"ensemble"`` method those of its updated members.</span>
+<span class="sd">        truncated posterior, or its rectified draws (``draws`` of them: a</span>
+<span class="sd">        Monte Carlo estimate, less precise for an element whose draws pile</span>
+<span class="sd">        against its bound; the solve warns when a standard deviation is</span>
+<span class="sd">        uncertain by more than 10%), about their mean (:attr:`mean`), not</span>
+<span class="sd">        about the mode; the ``"gauss_newton"`` method those of its kept draws</span>
+<span class="sd">        of the posterior of its forward model, the same way; the</span>
+<span class="sd">        ``"ensemble"`` method those of its updated members.</span>
 
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>
-<span class="sd">        cov : The posterior error covariance, of the state or of aggregates.</span>
+<span class="sd">        cov : The posterior covariance, of the state or of aggregates.</span>
 <span class="sd">        """</span>
         <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solution</span><span class="o">.</span><span class="n">variances</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">Vector</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"variance"</span><span class="p">)</span></div>
@@ -1388,8 +1389,8 @@
 <span class="sd">        \delta`, and the iterations stop when it is below ``tol`` times the</span>
 <span class="sd">        number of state elements. ``cost`` is the cost at the step's estimate,</span>
 <span class="sd">        :math:`\gamma` times the data misfit plus the state misfit; the last is</span>
-<span class="sd">        :attr:`chi2`. Near the mode, Gauss-Newton's ``d2`` falls by orders of</span>
-<span class="sd">        magnitude a step, and the cost settles. ``"variational"`` takes the</span>
+<span class="sd">        :attr:`chi2`. Near the mode ``d2`` falls fast and the cost settles;</span>
+<span class="sd">        where it falls slowly, the solve logs a warning. ``"variational"`` takes the</span>
 <span class="sd">        same steps for a forward model (one for a linear problem), each solved</span>
 <span class="sd">        by conjugate gradients, and adds their number, ``cg_iterations`` (each</span>
 <span class="sd">        a product with :math:`H` and one with :math:`H^T`).</span>
@@ -1550,7 +1551,7 @@
 <a class="viewcode-back" href="../../reference/api/fips.Posterior.cov.html#fips.Posterior.cov">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">cov</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">Operator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Covariance</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">        Return the posterior error covariance, of the state or of aggregates of it.</span>
+<span class="sd">        Return the posterior covariance, of the state or of aggregates of it.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1620,7 +1621,7 @@
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the largest prior variance each aggregate could have, which its roundoff is relative to.</span>
 
-<span class="sd">        :func:`_largest_variance` of the prior error covariance for the rows of</span>
+<span class="sd">        :func:`_largest_variance` of the prior covariance for the rows of</span>
 <span class="sd">        `W_form` (the state's elements for None).</span>
 <span class="sd">        """</span>
         <span class="n">Wt</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">W_form</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">W_form</span><span class="o">.</span><span class="n">_transpose</span><span class="p">()</span><span class="o">.</span><span class="n">dense</span><span class="p">()</span>  <span class="c1"># n x k</span>
@@ -1639,10 +1640,10 @@
 <span class="sd">        :math:`\sqrt{\operatorname{diag} W \hat{S} W^T}`, from</span>
 <span class="sd">        :meth:`Covariance.aggregate &lt;fips.Covariance.aggregate&gt;` and</span>
 <span class="sd">        :meth:`cov`, neither forming an ``n x n`` matrix. A row of `W` can be</span>
-<span class="sd">        any linear combination of the state: a total, a mean, or a combination</span>
-<span class="sd">        of totals such as a trend or the difference of two seasons (``C @ W``,</span>
-<span class="sd">        with ``C`` the weights of the rows of ``W``), whose uncertainty</span>
-<span class="sd">        includes the covariance between the totals.</span>
+<span class="sd">        any linear combination of the state: a sum, a mean, or a combination</span>
+<span class="sd">        of aggregates such as a trend or the difference of two seasons</span>
+<span class="sd">        (``C @ W``, with ``C`` the weights of the rows of ``W``), whose</span>
+<span class="sd">        uncertainty includes the covariance between the aggregates.</span>
 
 <span class="sd">        The interval is the posterior's own. For a sampled posterior</span>
 <span class="sd">        (``"bounded"`` with a finite bound, ``"gauss_newton"`` with a forward</span>
@@ -1670,7 +1671,7 @@
 <span class="sd">            where the prior standard deviation is 0), then ``lower`` and</span>
 <span class="sd">            ``upper``, the ends of the posterior interval of probability</span>
 <span class="sd">            `level`. A variance below zero by more than roundoff, which only</span>
-<span class="sd">            a prior error or model-data mismatch covariance that is not</span>
+<span class="sd">            a prior or observation covariance that is not</span>
 <span class="sd">            positive semidefinite can give, makes its standard deviation, the</span>
 <span class="sd">            reduction and a Gaussian interval NaN, with a logged warning (as</span>
 <span class="sd">            in :meth:`recovery`).</span>
@@ -1801,11 +1802,10 @@
 <span class="sd">        to the bounds, by exact Hamiltonian Monte Carlo (Pakman and Paninski,</span>
 <span class="sd">        2014): each call runs a chain from the mode, leaves out its first</span>
 <span class="sd">        ``burn_in`` draws, and returns the next `n`. Each draw starts from the</span>
-<span class="sd">        last, so the draws are correlated: about one effective draw per draw</span>
-<span class="sd">        for an element away from its bounds, and one per 13 to 17 for an</span>
-<span class="sd">        element whose analytic estimate is one to four standard deviations</span>
-<span class="sd">        outside its bound, whose draws pile against it (one far outside mixes</span>
-<span class="sd">        faster). A call costs a</span>
+<span class="sd">        last, so the draws are correlated: nearly independent for an element</span>
+<span class="sd">        away from its bounds, strongly correlated for one whose analytic</span>
+<span class="sd">        estimate is a few standard deviations outside its bound, whose draws</span>
+<span class="sd">        pile against it (one far outside mixes faster). A call costs a</span>
 <span class="sd">        reflection off a bound, an ``O(n)`` step, for each bound a path</span>
 <span class="sd">        reaches: about as many per draw as there are elements near a bound.</span>
 <span class="sd">        With ``distribution="rectified"`` each call instead takes the</span>
@@ -1824,10 +1824,9 @@
 <span class="sd">        (``GaussNewtonOptions``), and returns the next `n` draws. A draw of</span>
 <span class="sd">        the state (log scale factors, under a lognormal transform), carried</span>
 <span class="sd">        through the model or its transform, is a draw of the result: a total</span>
-<span class="sd">        of the transformed values, its interval. The draws are correlated (an</span>
-<span class="sd">        autocorrelation time of 1 to 3 draws for most elements of the user</span>
-<span class="sd">        guide's 400-element comparison problem; hundreds along a</span>
-<span class="sd">        curve the data pin, which the totals they constrain do not share). A</span>
+<span class="sd">        of the transformed values, its interval. The draws are correlated:</span>
+<span class="sd">        nearly independent for most elements, strongly correlated along a</span>
+<span class="sd">        curve the data pin, which the aggregates they constrain do not share. A</span>
 <span class="sd">        draw costs a few evaluations of the model and of the product of its</span>
 <span class="sd">        Jacobian's transpose (one for a linear model), each with a product of</span>
 <span class="sd">        the Gaussian at the mode's covariance.</span>
@@ -1846,10 +1845,10 @@
 <span class="sd">            independent draws; None draws from fresh entropy). A solve has a</span>
 <span class="sd">            ``seed``, a draw takes an ``rng``. The prior's</span>
 <span class="sd">            standard normals are drawn first, as a ``columns x n`` array, then</span>
-<span class="sd">            the model-data mismatch's, so a seed gives the same draws for the</span>
+<span class="sd">            the observation error's, so a seed gives the same draws for the</span>
 <span class="sd">            same problem and gamma (to roundoff, whichever form the method factored in).</span>
 <span class="sd">        W : Operator, optional</span>
-<span class="sd">            An aggregation, as :meth:`cov` takes it: one row per total, one</span>
+<span class="sd">            An aggregation, as :meth:`cov` takes it: one row per aggregate, one</span>
 <span class="sd">            column per state element. The draws are then those of</span>
 <span class="sd">            :math:`W x`: the same state draws, aggregated, so ``sample(n,</span>
 <span class="sd">            rng=0, W=W)`` is ``W @ sample(n, rng=0)``.</span>
@@ -1879,7 +1878,7 @@
 <span class="sd">        cov : The posterior covariance, of the state or of aggregates.</span>
 <span class="sd">        uncertainty : The standard deviation of aggregates, before and after.</span>
 <span class="sd">        trials : The estimate's error over many sets of data.</span>
-<span class="sd">        fips.Covariance.sample : One draw from a covariance, as the prior and the mismatch are drawn here.</span>
+<span class="sd">        fips.Covariance.sample : One draw from a covariance, as the prior and the observation error are drawn here.</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
@@ -1946,7 +1945,7 @@
 <span class="sd">        exact); a sampled, ensemble or variational posterior raises</span>
 <span class="sd">        :class:`~fips.UnavailableError`.</span>
 
-<span class="sd">        For each group (a site, a platform, a month), the posterior standard</span>
+<span class="sd">        For each group (for example a site or a month), the posterior standard</span>
 <span class="sd">        deviation of each aggregate without the group's observations and with</span>
 <span class="sd">        them (this posterior), without solving again. Removing the</span>
 <span class="sd">        observations :math:`g` changes the posterior covariance by a rank</span>
@@ -1959,7 +1958,7 @@
 
 <span class="sd">        with :math:`K_g` the gain's columns for the group and :math:`P_{gg}`</span>
 <span class="sd">        its block of :math:`P` (the block inverse of the innovation</span>
-<span class="sd">        covariance). It is exact whatever the model-data mismatch, also when</span>
+<span class="sd">        covariance). It is exact whatever the observation covariance, also when</span>
 <span class="sd">        it correlates the errors of one group with another's: it is the</span>
 <span class="sd">        posterior of the problem without the group's rows and columns. For</span>
 <span class="sd">        :math:`W`, :math:`W K_g` is a part of :math:`W K` (``k x m``), so</span>
@@ -1980,21 +1979,21 @@
 <span class="sd">            F_g = H_g S_0 H_g^T + R_{gg} / \gamma,</span>
 
 <span class="sd">        with :math:`H_g` the group's rows of :math:`H` and :math:`R_{gg}` its own</span>
-<span class="sd">        block of the model-data mismatch. It is not the difference of the other</span>
+<span class="sd">        block of the observation covariance. It is not the difference of the other</span>
 <span class="sd">        columns: two groups that see the same part of the state each take much</span>
 <span class="sd">        off the prior alone and little on top of one another, and the two</span>
 <span class="sd">        readings agree only for a single group. Because it uses :math:`R_{gg}`</span>
 <span class="sd">        only, it ignores any correlation between the group's errors and the</span>
 <span class="sd">        other groups', which ``std_without`` and ``std_with`` keep: a problem</span>
-<span class="sd">        whose mismatch correlates sites gives each site, alone, the benefit of</span>
-<span class="sd">        independent errors from the rest.</span>
+<span class="sd">        whose observation covariance correlates groups gives each group,</span>
+<span class="sd">        alone, the benefit of independent errors from the rest.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        by : str, list or pandas.Grouper</span>
 <span class="sd">            The levels of the observations' labels to group by, as</span>
 <span class="sd">            :meth:`desroziers` and :meth:`pandas.DataFrame.groupby` take them:</span>
-<span class="sd">            ``"site"``, ``"block"`` (a platform per block), ``["site",</span>
+<span class="sd">            ``"site"``, ``"block"``, ``["site",</span>
 <span class="sd">            pd.Grouper(level="obs_time", freq="MS")]``. Observations whose</span>
 <span class="sd">            block lacks a level are in no group of it (they are never</span>
 <span class="sd">            removed).</span>
@@ -2146,7 +2145,7 @@
 <span class="sd">        raises :class:`~fips.UnavailableError`.</span>
 
 <span class="sd">        Candidate observations are rows of a forward operator that the</span>
-<span class="sd">        problem does not have (a new site, another platform, a season not yet</span>
+<span class="sd">        problem does not have (for example a new site, or a season not yet</span>
 <span class="sd">        measured) and the covariance of their errors; their values are not</span>
 <span class="sd">        needed. For each group of candidates, the posterior standard deviation</span>
 <span class="sd">        of each aggregate without the group (this posterior) and with it, from</span>
@@ -2339,8 +2338,8 @@
 <span class="sd">        pseudo-inverse of :math:`W`: it spreads a change of the aggregates back</span>
 <span class="sd">        over the state elements (for a sum, evenly over the elements summed),</span>
 <span class="sd">        so :math:`W A W^*` is how the aggregated estimate responds to the</span>
-<span class="sd">        aggregated truth. This is the form IMI uses; :math:`W A W^T` is not an</span>
-<span class="sd">        averaging kernel. It is computed without the ``n x n`` kernel.</span>
+<span class="sd">        aggregated truth. :math:`W A W^T` is not an averaging kernel. It is</span>
+<span class="sd">        computed without the ``n x n`` kernel.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -2409,11 +2408,11 @@
 <span class="sd">        The covariance of the innovation, :math:`H S_0 H^T + S_z / \gamma`, dense.</span>
 
 <span class="sd">        The innovation is :math:`z - H x_0 - c`, the observations minus what</span>
-<span class="sd">        the prior models; this is its covariance when the prior error and the</span>
-<span class="sd">        model-data mismatch are right, and the ``m x m`` matrix the solve</span>
+<span class="sd">        the prior models; this is its covariance when the prior and observation</span>
+<span class="sd">        covariances are right, and the ``m x m`` matrix the solve</span>
 <span class="sd">        factors. Kalman filtering calls it the innovation covariance; Rodgers</span>
 <span class="sd">        (2000) writes it :math:`S_y`. It includes the regularization factor:</span>
-<span class="sd">        the mismatch is divided by :math:`\gamma`. Its diagonal, square-rooted,</span>
+<span class="sd">        the observation covariance is divided by :math:`\gamma`. Its diagonal, square-rooted,</span>
 <span class="sd">        is the spread expected for each observation's innovation, of which</span>
 <span class="sd">        :math:`H S_0 H^T` is the prior's share.</span>
 
@@ -2438,7 +2437,7 @@
 <span class="sd">        :math:`d^a_i d^b_i` is the variance of the error of observation</span>
 <span class="sd">        :math:`i` when the covariances of the problem are right. One</span>
 <span class="sd">        observation's product is noisy; its mean over a group of observations</span>
-<span class="sd">        (a site, a month) is the diagnostic.</span>
+<span class="sd">        (for example a site or a month) is the diagnostic.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -2689,7 +2688,7 @@
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">chi2</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">        The chi-squared of the solution: the minimum of the cost, the data misfit times gamma plus the state misfit.</span>
+<span class="sd">        The chi-squared of the solution: the cost at the estimate, the data misfit times gamma plus the state misfit.</span>
 
 <span class="sd">        .. math::</span>
 <span class="sd">            \chi^2 = (z - H\hat{x} - c)^T (S_z/\gamma)^{-1} (z - H\hat{x} - c)</span>
@@ -2717,10 +2716,10 @@
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">data_misfit</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">        How far the modeled observations are from the observations, weighed by the model-data mismatch: :math:`r^T S_z^{-1} r`.</span>
+<span class="sd">        How far the modeled observations are from the observations, weighed by the observation covariance: :math:`r^T S_z^{-1} r`.</span>
 
 <span class="sd">        :math:`r = z - H \hat{x} - c` is the residual and :math:`S_z` the</span>
-<span class="sd">        model-data mismatch as the problem gives it, not divided by</span>
+<span class="sd">        observation covariance as the problem gives it, not divided by</span>
 <span class="sd">        :math:`\gamma`, so that it can be compared across a sweep over</span>
 <span class="sd">        gamma: with :attr:`state_misfit` it is the L-curve (Hansen, 1992), a</span>
 <span class="sd">        point per gamma, whose corner is where fitting the observations more</span>
@@ -2775,10 +2774,10 @@
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">state_misfit</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">        How far the estimate is from the prior, weighed by the prior error covariance: :math:`(\hat{x} - x_0)^T S_0^{-1} (\hat{x} - x_0)`.</span>
+<span class="sd">        How far the estimate is from the prior, weighed by the prior covariance: :math:`(\hat{x} - x_0)^T S_0^{-1} (\hat{x} - x_0)`.</span>
 
 <span class="sd">        The analytic method computes it without inverting :math:`S_0`, so it</span>
-<span class="sd">        holds for a semi-definite prior error covariance too (the increment</span>
+<span class="sd">        holds for a semi-definite prior covariance too (the increment</span>
 <span class="sd">        lies in its range). With :attr:`data_misfit` it is the L-curve: plot</span>
 <span class="sd">        one against the other over a sweep of gamma. :attr:`chi2` is</span>
 <span class="sd">        :math:`\gamma` times :attr:`data_misfit` plus this.</span>
@@ -2884,7 +2883,7 @@
 <span class="sd">        positive-definite.</span>
 
 <span class="sd">        It is the likelihood of the settings the problem was built with, the</span>
-<span class="sd">        prior error covariance, the model-data mismatch and gamma: the</span>
+<span class="sd">        prior covariance, the observation covariance and gamma: the</span>
 <span class="sd">        settings that maximize it are their maximum-likelihood estimates</span>
 <span class="sd">        (Michalak et al., 2005). Write a function that builds the problem from</span>
 <span class="sd">        the settings and maximize this over them, with</span>
@@ -2901,9 +2900,8 @@
 <span class="sd">        step from the mode). It is exact for a linear forward model; for a</span>
 <span class="sd">        model that bends, it is the evidence of the Gaussian at the mode, and</span>
 <span class="sd">        leaves out how the posterior departs from it (the skew its draws show,</span>
-<span class="sd">        :meth:`sample`): for a lognormal block of a few elements with a</span>
-<span class="sd">        log-std of 0.8, it was within about 0.1 of the evidence by importance</span>
-<span class="sd">        sampling. The ``"bounded"`` method gives it only with no finite bound,</span>
+<span class="sd">        :meth:`sample`), more the more the model bends over the posterior's</span>
+<span class="sd">        spread. The ``"bounded"`` method gives it only with no finite bound,</span>
 <span class="sd">        when its posterior is the analytic one.</span>
 
 <span class="sd">        For the ``"variational"`` method, it is the same formula with the</span>
@@ -2997,8 +2995,8 @@
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Test whether the innovation, the residual and the increment are as large as the covariances say: Rodgers' four chi-squared tests.</span>
 
-<span class="sd">        Each test takes a vector that is :math:`N(0, C)` when the prior error</span>
-<span class="sd">        and model-data mismatch covariances are right, and its chi-squared</span>
+<span class="sd">        Each test takes a vector that is :math:`N(0, C)` when the prior</span>
+<span class="sd">        and observation covariances are right, and its chi-squared</span>
 <span class="sd">        :math:`v^T C^{+} v` (:math:`^{+}` the pseudo-inverse), which then</span>
 <span class="sd">        follows a chi-squared distribution whose degrees of freedom are the</span>
 <span class="sd">        rank of :math:`C`: it averages them. With :math:`G = H S_0 H^T +</span>
@@ -3025,7 +3023,7 @@
 <span class="sd">        against the prior in the measurement and in the state space, as</span>
 <span class="sd">        pyOptimalEstimation computes them. The first two test both</span>
 <span class="sd">        covariances at once; the last two whether the observations move the</span>
-<span class="sd">        estimate as far from the prior as the prior error covariance allows.</span>
+<span class="sd">        estimate as far from the prior as the prior covariance allows.</span>
 
 <span class="sd">        **In a linear problem the four are two pairs of the same numbers**,</span>
 <span class="sd">        so a table with duplicate rows is expected: the residual is</span>
@@ -3138,11 +3136,11 @@
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">r2</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">        The R² of the enhancement, :math:`\operatorname{corr}(z - c, H\hat{x})^2`.</span>
+<span class="sd">        The R² of the observations less the offset, :math:`\operatorname{corr}(z - c, H\hat{x})^2`.</span>
 
 <span class="sd">        How well the estimate fits the part of the observations the state</span>
-<span class="sd">        explains: the observations :math:`z` less the offset :math:`c` (in a</span>
-<span class="sd">        flux inversion, the enhancement over the background), against</span>
+<span class="sd">        explains: the observations :math:`z` less the offset :math:`c` (for</span>
+<span class="sd">        example the enhancement over a background), against</span>
 <span class="sd">        :math:`H\hat{x}`, which is :attr:`modeled_obs` less the offset.</span>
 
 <span class="sd">        The offset is taken out because it is given, not fitted. One that</span>
@@ -3367,12 +3365,16 @@
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Return the posterior of the same problem with other observations.</span>
 
-<span class="sd">        The analytic method's factorization depends on where the</span>
+<span class="sd">        Use it for a bootstrap, or for synthetic observations of a known</span>
+<span class="sd">        truth. The analytic method's factorization depends on where the</span>
 <span class="sd">        observations are and how uncertain they are, not on their values, so</span>
-<span class="sd">        this costs a product with the factors instead of a new solve (a</span>
-<span class="sd">        bootstrap, or synthetic observations of a known truth): one</span>
+<span class="sd">        this costs a product with the factors instead of a new solve: one</span>
 <span class="sd">        :math:`m \times m` product in the whitened form, a solve with the</span>
-<span class="sd">        model-data mismatch and :math:`O(n^2)` in the information form.</span>
+<span class="sd">        observation covariance and :math:`O(n^2)` in the information form.</span>
+<span class="sd">        The other methods keep what does not depend on the values (the</span>
+<span class="sd">        ``"bounded"`` method its kept columns, ``"gauss_newton"`` its last</span>
+<span class="sd">        linearization, ``"ensemble"`` its members and their modeled</span>
+<span class="sd">        observations) and solve again from there.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -3493,8 +3495,8 @@
 <span class="sd">        :math:`S_z / \gamma`). When the world makes the data, with a truth</span>
 <span class="sd">        :math:`x \sim N(\mu, P)` (its prior, or a given `truth` with</span>
 <span class="sd">        :math:`P = 0`) and observations :math:`z = H_w x + c_w + e`,</span>
-<span class="sd">        :math:`e \sim N(0, R_w)` (its forward operator, offset and model-data</span>
-<span class="sd">        mismatch, not divided by :math:`\gamma`), the error</span>
+<span class="sd">        :math:`e \sim N(0, R_w)` (its forward operator, offset and observation</span>
+<span class="sd">        covariance, not divided by :math:`\gamma`), the error</span>
 <span class="sd">        :math:`\hat{x} - x` is Gaussian, with</span>
 
 <span class="sd">        .. math::</span>
@@ -3514,7 +3516,7 @@
 <span class="sd">        The world's state may have other labels than the posterior's (a</span>
 <span class="sd">        monthly truth recovered by an annual inversion, the whole state where</span>
 <span class="sd">        the solve was restricted, a truth on a fine grid and an inversion on a</span>
-<span class="sd">        coarse one) when both are added up to the same totals: `W` on the</span>
+<span class="sd">        coarse one) when both are added up to the same aggregates: `W` on the</span>
 <span class="sd">        posterior's state and `W_world` on the world's, with the same rows. The error of a total is</span>
 <span class="sd">        then :math:`W \hat{x} - W_w x`, with mean :math:`W x_0 + W K (H_w \mu</span>
 <span class="sd">        + c_w - H x_0 - c) - W_w \mu` and covariance :math:`G P G^T + W K R_w</span>
@@ -3530,13 +3532,13 @@
 <span class="sd">            the posterior's problem.</span>
 <span class="sd">        truth : Vector, optional</span>
 <span class="sd">            A fixed truth, on the world's state labels in any order, instead</span>
-<span class="sd">            of the world's prior (another prior estimate, 1.5 times the prior).</span>
+<span class="sd">            of the world's prior (for example 1.5 times the prior).</span>
 <span class="sd">            Only the observation error is then random.</span>
 <span class="sd">        W : Operator, optional</span>
-<span class="sd">            An aggregation, as :meth:`cov` takes it: one row per total. By</span>
+<span class="sd">            An aggregation, as :meth:`cov` takes it: one row per aggregate. By</span>
 <span class="sd">            default, one row per state element. Required with `W_world`.</span>
 <span class="sd">        W_world : Operator, optional</span>
-<span class="sd">            The aggregation of the world's state to the same totals, for a</span>
+<span class="sd">            The aggregation of the world's state to the same aggregates, for a</span>
 <span class="sd">            world whose state has other labels than the posterior's: its</span>
 <span class="sd">            columns the world's state labels, its rows exactly the rows of</span>
 <span class="sd">            `W` (in any order). By default `W`, so the world must then have</span>
@@ -3570,7 +3572,8 @@
 <span class="sd">            If the method's estimate is not linear in the observations (its</span>
 <span class="sd">            solution does not set ``estimate_is_linear``; an</span>
 <span class="sd">            :class:`UnavailableError`), or `world` is not a Problem, or</span>
-<span class="sd">            `truth` not a Vector.</span>
+<span class="sd">            `truth` not a Vector, or the world's forward is a forward model</span>
+<span class="sd">            (its data are not Gaussian: use :meth:`trials`).</span>
 <span class="sd">        ValueError</span>
 <span class="sd">            If the world's observations or, without `W_world`, its state, the</span>
 <span class="sd">            truth or the columns of `W` do not have exactly this posterior's</span>
@@ -3587,8 +3590,7 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
-<span class="sd">        Paper 1's experiment: a truth of 1.5 times the prior, observed without</span>
-<span class="sd">        noise, and the fraction of the true change of each monthly total that</span>
+<span class="sd">        A truth of 1.5 times the prior, observed without noise, and the fraction of the true change of each monthly total that</span>
 <span class="sd">        the inversion recovers. The expected estimate is the one from</span>
 <span class="sd">        noise-free observations, since the noise has mean zero; ``std`` is the</span>
 <span class="sd">        spread the noise adds.</span>
@@ -3760,12 +3762,12 @@
         <span class="n">level</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.95</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">        Return the truth, the estimate and the interval of each total in `n` trials of data made by `world`: the sampled :meth:`recovery`.</span>
+<span class="sd">        Return the truth, the estimate and the interval of each aggregate in `n` trials of data made by `world`: the sampled :meth:`recovery`.</span>
 
 <span class="sd">        Each trial, the world makes a truth and its observations, this</span>
 <span class="sd">        posterior solves the observations with its own assumptions</span>
 <span class="sd">        (:meth:`with_data`, one product), and the totals of the two go into</span>
-<span class="sd">        one row per total. The table is the loop :meth:`recovery` answers</span>
+<span class="sd">        one row per aggregate. The table is the loop :meth:`recovery` answers</span>
 <span class="sd">        exactly, kept trial by trial, for what the exact answer cannot take: a</span>
 <span class="sd">        world whose truth is not Gaussian or whose error is not additive, a</span>
 <span class="sd">        statistic of each trial (its reduced chi-squared), or a method whose</span>
@@ -3797,10 +3799,10 @@
 <span class="sd">            :meth:`~fips.Problem.simulate` takes it. The same seed gives two</span>
 <span class="sd">            posteriors the same data, trial for trial, so their tables pair.</span>
 <span class="sd">        W : Operator, optional</span>
-<span class="sd">            An aggregation, as :meth:`recovery` takes it: one row per total.</span>
+<span class="sd">            An aggregation, as :meth:`recovery` takes it: one row per aggregate.</span>
 <span class="sd">            By default, one row per state element.</span>
 <span class="sd">        W_world : Operator, optional</span>
-<span class="sd">            The aggregation of the world's state to the same totals, as</span>
+<span class="sd">            The aggregation of the world's state to the same aggregates, as</span>
 <span class="sd">            :meth:`recovery` takes it, for a world whose state has other</span>
 <span class="sd">            labels than the posterior's.</span>
 <span class="sd">        level : float, default 0.95</span>

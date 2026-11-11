@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.transforms &#8212; fips 0.2.0b3.dev34+g9a0704831 documentation</title>
+    <title>fips.transforms &#8212; fips 0.2.0b3.dev35+gd1a34da7b documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=8e63224c"></script>
+    <script src="../../_static/documentation_options.js?v=bd5d55db"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev34+g9a0704831 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev35+gd1a34da7b documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev35+gd1a34da7b documentation - Home"/>
   
   
 </a></div>
@@ -439,7 +439,7 @@
 <span class="sd">transformed value :math:`T(u)`.</span>
 
 <span class="sd">- :class:`LogNormalForward`: :math:`T(u) = r\, e^{u}`, a scale factor of a</span>
-<span class="sd">  reference :math:`r` (a prior estimate, such as an emission inventory): the</span>
+<span class="sd">  reference :math:`r` (a prior value of each element): the</span>
 <span class="sd">  uncertainty is a factor.</span>
 <span class="sd">- :class:`SoftplusForward`: :math:`T(u) = s \log(1 + e^{u/s})`: the value</span>
 <span class="sd">  itself where it is large (:math:`T(u) \approx u` for :math:`u \gg s`),</span>
@@ -722,7 +722,7 @@
 <span class="sd">    The observations are :math:`F(x) = H\, [r \circ e^{u}; \text{the other</span>
 <span class="sd">    blocks}]`: :math:`H` is the forward operator on the whole state, the</span>
 <span class="sd">    state on `block` is :math:`u`, the log of the factor that scales the</span>
-<span class="sd">    reference :math:`r` (a prior estimate, such as an emission inventory),</span>
+<span class="sd">    reference :math:`r` (a prior value of each element),</span>
 <span class="sd">    and every other block (a bias) passes through as it is. The Jacobian is</span>
 <span class="sd">    :math:`H` with each column of the block scaled by its value,</span>
 <span class="sd">    :math:`H \operatorname{diag}(r \circ</span>
@@ -775,12 +775,13 @@
 <span class="sd">    the mode, so :math:`r\, e^{\hat{u}}` is the median of each element's</span>
 <span class="sd">    value under it, below its mean :math:`r\, e^{\hat{u} + \sigma^2/2}` (with</span>
 <span class="sd">    :math:`\sigma^2` the variance at the mode). A sum of lognormals has no</span>
-<span class="sd">    closed form: draws of the total are ``model.transform(post.sample(n))``</span>
-<span class="sd">    summed by draw. Where the data constrain sums of elements whose prior is</span>
-<span class="sd">    wide, the Gaussian at the mode lies along the tangent of the curved set</span>
-<span class="sd">    of states they allow, and the draws' totals run high: the sum of the</span>
-<span class="sd">    values at the mode is the better total (the user guide's "Values that</span>
-<span class="sd">    stay positive" measures both).</span>
+<span class="sd">    closed form: draws of a total are ``model.transform(post.sample(n))``</span>
+<span class="sd">    summed by draw. The ``"gauss_newton"`` method draws the posterior itself,</span>
+<span class="sd">    so these are draws of the posterior's total. The Gaussian at the mode is</span>
+<span class="sd">    not a substitute for them: where the data constrain a sum of elements</span>
+<span class="sd">    whose prior is wide, it lies along the tangent of the curved set of</span>
+<span class="sd">    states they allow, and a total from its draws runs high (the user</span>
+<span class="sd">    guide's "Values that stay positive", How it works).</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
@@ -900,10 +901,9 @@
 <span class="sd">        mode, the median of each element's value under the Gaussian at the</span>
 <span class="sd">        mode (not its mean). For draws of the posterior</span>
 <span class="sd">        (:meth:`Posterior.sample &lt;fips.Posterior.sample&gt;`, one column each),</span>
-<span class="sd">        draws of the value: the total of each column is a draw of the total</span>
-<span class="sd">        (see the class's Notes for when they run high). Aggregating ``u``</span>
-<span class="sd">        first (``post.sample(n, W=W)``) and transforming that is not a total</span>
-<span class="sd">        of the values.</span>
+<span class="sd">        draws of the value: the total of each column is a draw of the total.</span>
+<span class="sd">        Aggregating ``u`` first (``post.sample(n, W=W)``) and transforming</span>
+<span class="sd">        that is not a total of the values.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1302,8 +1302,8 @@
 <span class="sd">    The transform is monotone, so the mode :math:`\hat{u}` (the median of</span>
 <span class="sd">    the Gaussian at the mode) maps to the median of each element's value</span>
 <span class="sd">    under it, :meth:`transform` of the estimate. Draws of a total are</span>
-<span class="sd">    ``model.transform(post.sample(n))`` summed by draw; near the bend they run</span>
-<span class="sd">    high, as :class:`LogNormalForward`'s do (see its Notes).</span>
+<span class="sd">    ``model.transform(post.sample(n))`` summed by draw, as for</span>
+<span class="sd">    :class:`LogNormalForward` (see its Notes).</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
@@ -1415,8 +1415,7 @@
 <span class="sd">        mode, the median of each element's value under the Gaussian at the</span>
 <span class="sd">        mode. For draws of the posterior (:meth:`Posterior.sample</span>
 <span class="sd">        &lt;fips.Posterior.sample&gt;`, one column each), draws of the value: the</span>
-<span class="sd">        total of each column is a draw of the total (see the class's Notes</span>
-<span class="sd">        for when they run high).</span>
+<span class="sd">        total of each column is a draw of the total.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1481,9 +1480,8 @@
 <span class="sd">            If their labels are not the block's, a mean is not positive, or a</span>
 <span class="sd">            standard deviation is negative or not finite.</span>
 <span class="sd">        RuntimeError</span>
-<span class="sd">            If Newton's method does not match some element (it has not failed in</span>
-<span class="sd">            the tests, over means from 1e-6 to 1e6 scales and standard</span>
-<span class="sd">            deviations from 1e-6 to 1e3 times the mean).</span>
+<span class="sd">            If Newton's method does not match the mean and the standard</span>
+<span class="sd">            deviation of some element to a relative error of 1e-9.</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
