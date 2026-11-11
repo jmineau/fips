@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.posterior &#8212; fips 0.2.0b3.dev28+g2d3770dcc documentation</title>
+    <title>fips.posterior &#8212; fips 0.2.0b3.dev29+g5e1ec677f documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=2612ccf9"></script>
+    <script src="../../_static/documentation_options.js?v=a44d3497"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev28+g2d3770dcc documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev28+g2d3770dcc documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev29+g5e1ec677f documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev29+g5e1ec677f documentation - Home"/>
   
   
 </a></div>
@@ -577,7 +577,9 @@
 <span class="sd">    A method whose posterior is not Gaussian in closed form answers each</span>
 <span class="sd">    question as its docstring says. The bounded method's estimate is the mode;</span>
 <span class="sd">    its mean, variances, covariances and intervals are those of the draws it</span>
-<span class="sd">    keeps of its posterior (a Gaussian truncated to the bounds); its gain,</span>
+<span class="sd">    keeps (of its posterior, a Gaussian truncated to the bounds, or, with</span>
+<span class="sd">    ``distribution="rectified"``, of the bounded estimate with the prior mean</span>
+<span class="sd">    and the data redrawn); its gain,</span>
 <span class="sd">    DOFS and information content are those of the Gaussian at the mode, with</span>
 <span class="sd">    the elements on a bound held there; and its chi-squared terms are those</span>
 <span class="sd">    of the mode. The ``"gauss_newton"`` method's estimate is the mode; its</span>
@@ -1236,7 +1238,7 @@
 <span class="sd">        The analytic method computes them from its factors in</span>
 <span class="sd">        :math:`O(m n)`, without the :math:`n \times n` covariance. The</span>
 <span class="sd">        ``"bounded"`` method gives the variances of its kept draws of the</span>
-<span class="sd">        truncated posterior (``draws`` of them: a Monte Carlo estimate, at the</span>
+<span class="sd">        truncated posterior, or its rectified draws (``draws`` of them: a Monte Carlo estimate, at the</span>
 <span class="sd">        default 2000 a standard deviation good to about 1.5% away from the</span>
 <span class="sd">        bounds and to about 12% for an element whose analytic estimate is one</span>
 <span class="sd">        to four standard deviations outside its bound; the solve warns past</span>
@@ -1296,8 +1298,7 @@
 <span class="sd">        hold others there that the move would push out. These are the elements</span>
 <span class="sd">        the bounds decide; the observations decide the others. Its estimate is</span>
 <span class="sd">        the mode, so an element on a bound still has posterior spread</span>
-<span class="sd">        (:attr:`variances`, from draws of the truncated posterior), on one side</span>
-<span class="sd">        of the bound.</span>
+<span class="sd">        (:attr:`variances`, from its draws), on one side of the bound.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1807,6 +1808,13 @@
 <span class="sd">        faster). A call costs a</span>
 <span class="sd">        reflection off a bound, an ``O(n)`` step, for each bound a path</span>
 <span class="sd">        reaches: about as many per draw as there are elements near a bound.</span>
+<span class="sd">        With ``distribution="rectified"`` each call instead takes the</span>
+<span class="sd">        analytic method's `n` draws from `rng` and moves each onto the bounds</span>
+<span class="sd">        as the mode is (the bounded problem solved again for that draw of the</span>
+<span class="sd">        prior and the data): independent draws, draw ``k`` paired with the</span>
+<span class="sd">        analytic posterior's draw ``k`` for the same `rng` and equal to it</span>
+<span class="sd">        where no bound binds, often exactly on a bound. A call costs an</span>
+<span class="sd">        active set per draw.</span>
 
 <span class="sd">        The ``"gauss_newton"`` method draws the posterior of its forward</span>
 <span class="sd">        model, :math:`p(x \mid z) \propto e^{-\chi^2(x)/2}`, by Hamiltonian</span>

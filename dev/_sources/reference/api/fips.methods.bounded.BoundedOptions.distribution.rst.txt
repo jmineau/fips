@@ -1,0 +1,6 @@
+fips.methods.bounded.BoundedOptions.distribution
+================================================
+
+.. currentmodule:: fips.methods.bounded
+
+.. autoattribute:: BoundedOptions.distribution

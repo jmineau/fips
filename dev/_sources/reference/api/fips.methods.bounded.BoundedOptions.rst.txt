@@ -15,6 +15,7 @@
    :toctree:
 
    ~BoundedOptions.burn_in
+   ~BoundedOptions.distribution
    ~BoundedOptions.draws
    ~BoundedOptions.gamma
    ~BoundedOptions.lower

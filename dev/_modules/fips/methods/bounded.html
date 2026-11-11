@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.methods.bounded &#8212; fips 0.2.0b3.dev28+g2d3770dcc documentation</title>
+    <title>fips.methods.bounded &#8212; fips 0.2.0b3.dev29+g5e1ec677f documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../../_static/documentation_options.js?v=2612ccf9"></script>
+    <script src="../../../_static/documentation_options.js?v=a44d3497"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev28+g2d3770dcc documentation - Home"/>
-    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev28+g2d3770dcc documentation - Home"/>
+    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev29+g5e1ec677f documentation - Home"/>
+    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev29+g5e1ec677f documentation - Home"/>
   
   
 </a></div>
@@ -442,10 +442,18 @@
 <span class="sd">  says they would if that element were known to be at its bound. It is found</span>
 <span class="sd">  by an active set (``_mode``) that needs :math:`\hat{S}` only at the columns</span>
 <span class="sd">  of the elements on a bound, from the factors (``_cov_times``);</span>
-<span class="sd">- **draws of the truncated posterior** (:meth:`Bounded.sample`), by exact</span>
-<span class="sd">  Hamiltonian Monte Carlo (Pakman and Paninski, 2014: ``_Sampler``), for its</span>
-<span class="sd">  uncertainty: the variances and the covariance of aggregates are those of the</span>
-<span class="sd">  draws, and so are the posterior mean and the intervals (their quantiles).</span>
+<span class="sd">- **draws** (:meth:`Bounded.sample`), for its uncertainty: the variances and</span>
+<span class="sd">  the covariance of aggregates are those of the draws, and so are the</span>
+<span class="sd">  posterior mean and the intervals (their quantiles). By default they are</span>
+<span class="sd">  draws of the truncated posterior, by exact Hamiltonian Monte Carlo (Pakman</span>
+<span class="sd">  and Paninski, 2014: ``_Sampler``); with ``distribution="rectified"`` each is</span>
+<span class="sd">  the bounded problem solved again for a draw of the prior mean and the</span>
+<span class="sd">  observations: an exact draw of the analytic posterior moved onto the</span>
+<span class="sd">  bounds by ``_mode``, as the analytic estimate is. A rectified draw is often</span>
+<span class="sd">  exactly on a bound; a truncated one never is. Bardsley and Fox (2012)</span>
+<span class="sd">  solve such a nonnegativity-constrained problem for each sample, and Miller,</span>
+<span class="sd">  Michalak and Levi (2014, section 3.3.1) propose realizations this way, then</span>
+<span class="sd">  test each by Metropolis-Hastings, which fips does not.</span>
 
 <span class="sd">The gain, DOFS and the information content are those of the analytic posterior</span>
 <span class="sd">with the elements on a bound held there (the Gaussian at the mode); the</span>
@@ -455,6 +463,15 @@
 
 <span class="sd">References</span>
 <span class="sd">----------</span>
+<span class="sd">Bardsley and Fox (2012). *Inverse Problems in Science and Engineering*,</span>
+<span class="sd">20(4), 477-498; from its abstract: "for each sample a large-scale</span>
+<span class="sd">nonnegativity constrained quadratic minimization problem must be solved".</span>
+
+<span class="sd">Miller, S. M., Michalak, A. M., and Levi, P. J. (2014). Atmospheric inverse</span>
+<span class="sd">modeling with known physical bounds: an example from trace gas emissions.</span>
+<span class="sd">*Geoscientific Model Development*, 7, 303-315.</span>
+<span class="sd">https://doi.org/10.5194/gmd-7-303-2014</span>
+
 <span class="sd">Pakman, A., and Paninski, L. (2014). Exact Hamiltonian Monte Carlo for truncated</span>
 <span class="sd">multivariate Gaussians. *Journal of Computational and Graphical Statistics*,</span>
 <span class="sd">23(2), 518-542. https://doi.org/10.1080/10618600.2013.788448</span>
@@ -476,7 +493,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">numpy.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinAlgError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">cho_factor</span><span class="p">,</span> <span class="n">cho_solve</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.stats</span><span class="w"> </span><span class="kn">import</span> <span class="n">truncnorm</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.stats</span><span class="w"> </span><span class="kn">import</span> <span class="n">norm</span><span class="p">,</span> <span class="n">truncnorm</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">DenseOperator</span><span class="p">,</span> <span class="n">LinearOperator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg.forms</span><span class="w"> </span><span class="kn">import</span> <span class="n">_read_only</span>
@@ -504,6 +521,9 @@
 
 <span class="n">_NEAR</span> <span class="o">=</span> <span class="mf">4.0</span>
 <span class="sd">"""The sampler fetches, before it starts, the columns of the elements whose analytic estimate is within this many posterior standard deviations inside a bound, or outside it."""</span>
+
+<span class="n">_DISTRIBUTIONS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"truncated"</span><span class="p">,</span> <span class="s2">"rectified"</span><span class="p">)</span>
+<span class="sd">"""What the draws can be draws of: the posterior truncated to the bounds, or the bounded problem solved again for draws of the prior and the data."""</span>
 
 
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -623,35 +643,68 @@
 <span class="sd">        cut at the bounds, whose mean is higher than the Gaussian's at a lower</span>
 <span class="sd">        bound (lower, at an upper one), so a total read from them sits above</span>
 <span class="sd">        (or below) the prior's; the warning says by how much, for each such</span>
-<span class="sd">        block.</span>
+<span class="sd">        block (for rectified draws, the smaller shift of the prior set to its</span>
+<span class="sd">        bounds).</span>
 <span class="sd">    draws : int, default 2000</span>
-<span class="sd">        The number of draws of the truncated posterior kept for its variances</span>
-<span class="sd">        and the covariance of aggregates. They are Monte Carlo estimates from a</span>
-<span class="sd">        chain: each draw is exact, but starts from the last. At 2000, a</span>
+<span class="sd">        The number of draws kept for the variances, the covariance of</span>
+<span class="sd">        aggregates, the mean and the intervals. Truncated draws are Monte</span>
+<span class="sd">        Carlo estimates from a chain: each draw is exact, but starts from the</span>
+<span class="sd">        last. At 2000, a</span>
 <span class="sd">        standard deviation is good to about 1.5% for an element away from its</span>
 <span class="sd">        bounds (:math:`1 / \sqrt{2\, \text{draws}}`, as for independent</span>
 <span class="sd">        draws), and to about 12% (root mean square over 24 solves; 25% at</span>
 <span class="sd">        worst) for an element whose analytic estimate is one to four standard</span>
 <span class="sd">        deviations outside its bound: its draws pile against the bound and mix</span>
 <span class="sd">        slowly (an autocorrelation time of 13 to 17 draws). One far outside</span>
-<span class="sd">        mixes faster. The error falls as :math:`1/\sqrt{\text{draws}}`; the</span>
+<span class="sd">        mixes faster. Rectified draws are independent; an element on its</span>
+<span class="sd">        bound in nearly every one has its spread from the few that are not.</span>
+<span class="sd">        The error falls as :math:`1/\sqrt{\text{draws}}`; the</span>
 <span class="sd">        solve warns when a standard deviation is uncertain by more than 10%,</span>
 <span class="sd">        and says how many draws would do.</span>
 <span class="sd">    burn_in : int, default 20</span>
 <span class="sd">        The draws made and left out before those kept, from the mode. Each</span>
 <span class="sd">        draw of the sampler travels a quarter period, after which a Gaussian</span>
 <span class="sd">        without bounds would be independent of its start, so few are needed.</span>
+<span class="sd">        Rectified draws are not a chain, and leave none out: it does nothing</span>
+<span class="sd">        for them.</span>
 <span class="sd">    seed : int, default 0</span>
 <span class="sd">        The seed of the kept draws, so that a solve is reproducible.</span>
+<span class="sd">    distribution : {"truncated", "rectified"}, default "truncated"</span>
+<span class="sd">        What the draws are draws of. ``"truncated"``: the analytic posterior</span>
+<span class="sd">        truncated to the box, by the chain above; a draw is never exactly on</span>
+<span class="sd">        a bound. ``"rectified"``: the bounded problem solved again for each</span>
+<span class="sd">        draw of the prior mean and the observations from their Gaussians.</span>
+<span class="sd">        Each draw is an exact draw of the analytic posterior moved onto the</span>
+<span class="sd">        bounds as the mode is (the analytic estimate's place taken by the</span>
+<span class="sd">        draw), so an element outside its bounds in that draw is exactly on</span>
+<span class="sd">        one, and its neighbors move along the posterior's correlations. The</span>
+<span class="sd">        draws are independent (no chain: `burn_in` does nothing), and draw</span>
+<span class="sd">        ``k`` of :meth:`~fips.Posterior.sample` is the analytic posterior's</span>
+<span class="sd">        draw ``k`` from the same generator, moved onto the bounds. It is the</span>
+<span class="sd">        distribution of the bounded estimate when the prior mean and the data</span>
+<span class="sd">        are redrawn, not the Bayesian posterior of a prior fips writes down</span>
+<span class="sd">        and not the truncated posterior; where the data constrain little its</span>
+<span class="sd">        mean sits less far above the prior's than the truncated one (for one</span>
+<span class="sd">        element whose prior standard deviation equals its distance from a</span>
+<span class="sd">        lower bound, 8% of that distance against 29%). Each draw costs an</span>
+<span class="sd">        active set, as the mode does, a step for each element it holds or</span>
+<span class="sd">        releases on the way. With a correlated prior whose standard</span>
+<span class="sd">        deviation equals its mean and weak data, a draw took 28 ms for 400</span>
+<span class="sd">        elements (70 on a bound in a typical draw) and 0.28 s for 2000 (120</span>
+<span class="sd">        on a bound: 9 minutes for 2000 draws), against 4 and 15 ms for a</span>
+<span class="sd">        truncated draw. Both keep the columns of the posterior covariance</span>
+<span class="sd">        at every element a draw reaches a bound at, up to all of them</span>
+<span class="sd">        (``n x n``: 30 MiB for 2000 elements).</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
 <span class="sd">    ValueError</span>
 <span class="sd">        If `gamma` is not a positive, finite number; a bound is NaN, or a</span>
 <span class="sd">        bound no value can satisfy (``lower`` of ``inf``); both bounds are</span>
-<span class="sd">        numbers and `lower` is not below `upper`; or `draws` is not an</span>
+<span class="sd">        numbers and `lower` is not below `upper`; `draws` is not an</span>
 <span class="sd">        integer of at least 2, `burn_in` not a nonnegative one, or `seed` not</span>
-<span class="sd">        a nonnegative integer. A bound's labels are checked against the state by</span>
+<span class="sd">        a nonnegative integer; or `distribution` is neither ``"truncated"``</span>
+<span class="sd">        nor ``"rectified"``. A bound's labels are checked against the state by</span>
 <span class="sd">        :func:`fips.solve`.</span>
 <span class="sd">    TypeError</span>
 <span class="sd">        If a bound is not a number, a Vector, a dict or None, or a dict has a</span>
@@ -665,11 +718,13 @@
     <span class="n">upper</span><span class="p">:</span> <span class="s2">"float | Vector | Mapping[str, float | Vector] | None"</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="w">    </span><span class="sd">"""The upper bounds on the state, as given (a dict by block is kept as a mapping of its blocks)."""</span>
     <span class="n">draws</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2000</span>
-<span class="w">    </span><span class="sd">"""The number of draws of the truncated posterior kept for its variances and covariances."""</span>
+<span class="w">    </span><span class="sd">"""The number of draws kept for the variances, covariances, mean and intervals."""</span>
     <span class="n">burn_in</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">20</span>
-<span class="w">    </span><span class="sd">"""The draws left out before those kept."""</span>
+<span class="w">    </span><span class="sd">"""The draws of the truncated chain left out before those kept (none for rectified draws)."""</span>
     <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="w">    </span><span class="sd">"""The seed of the kept draws."""</span>
+    <span class="n">distribution</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"truncated"</span>
+<span class="w">    </span><span class="sd">"""What the draws are draws of: ``"truncated"`` (the posterior truncated to the bounds) or ``"rectified"`` (the bounded problem solved again for draws of the prior and the data)."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"gamma"</span><span class="p">,</span> <span class="n">AnalyticOptions</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="p">)</span><span class="o">.</span><span class="n">gamma</span><span class="p">)</span>
@@ -696,7 +751,13 @@
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> must be </span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2"> integer</span><span class="si">{</span><span class="n">at_least</span><span class="si">}</span><span class="s2">, got </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">."</span>
                 <span class="p">)</span>
-            <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">))</span></div>
+            <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">distribution</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_DISTRIBUTIONS</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">'distribution must be "truncated" (the posterior truncated to '</span>
+                <span class="s1">'the bounds) or "rectified" (the bounded problem solved again for '</span>
+                <span class="sa">f</span><span class="s2">"draws of the prior and the data), got </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">distribution</span><span class="si">!r}</span><span class="s2">."</span>
+            <span class="p">)</span></div>
 
 
 
@@ -752,6 +813,13 @@
     <span class="s2">"its bound mixes slowest; raise draws= for those elements' spread."</span>
 <span class="p">)</span>
 <span class="sd">"""What the slow-mixing warning of the kept draws says of the cause and the remedy."""</span>
+
+<span class="n">_RARE_DRAWS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"The rectified draws are independent, and an element on its bound in most "</span>
+    <span class="s2">"of them has its spread from the few that are not; raise draws= for those "</span>
+    <span class="s2">"elements' spread."</span>
+<span class="p">)</span>
+<span class="sd">"""What the too-few-draws warning of the kept rectified draws says of the cause and the remedy."""</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">_Columns</span><span class="p">:</span>
@@ -987,6 +1055,38 @@
     <span class="p">}</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_checked_mode</span><span class="p">(</span>
+    <span class="n">x_hat</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">lower</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">upper</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">columns</span><span class="p">:</span> <span class="n">_Columns</span><span class="p">,</span>
+    <span class="n">variances</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return the mode of the box nearest `x_hat` in the posterior's metric (``_mode``), which side each element is held at, the multipliers and how far it is from each optimality condition (``_kkt``), checked.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    numpy.linalg.LinAlgError</span>
+<span class="sd">        If the active set fails (``_mode``), or the mode it ends at does not</span>
+<span class="sd">        meet the optimality conditions to ``sqrt(eps)`` of the scale of the</span>
+<span class="sd">        state (the largest of its values, bounds and posterior standard</span>
+<span class="sd">        deviations).</span>
+<span class="sd">    """</span>
+    <span class="n">scale</span> <span class="o">=</span> <span class="n">_scale</span><span class="p">(</span><span class="n">x_hat</span><span class="p">,</span> <span class="n">variances</span><span class="p">,</span> <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">)</span>
+    <span class="n">mode</span><span class="p">,</span> <span class="n">side</span><span class="p">,</span> <span class="n">multipliers</span> <span class="o">=</span> <span class="n">_mode</span><span class="p">(</span><span class="n">x_hat</span><span class="p">,</span> <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="n">variances</span><span class="p">,</span> <span class="n">scale</span><span class="p">)</span>
+    <span class="n">conditions</span> <span class="o">=</span> <span class="n">_kkt</span><span class="p">(</span><span class="n">x_hat</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">side</span><span class="p">,</span> <span class="n">multipliers</span><span class="p">,</span> <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="n">variances</span><span class="p">)</span>
+    <span class="n">worst</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">conditions</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">name</span><span class="p">:</span> <span class="n">conditions</span><span class="p">[</span><span class="n">name</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">conditions</span><span class="p">[</span><span class="n">worst</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">_KKT_RTOL</span> <span class="o">*</span> <span class="n">scale</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">LinAlgError</span><span class="p">(</span>
+            <span class="s2">"The bounded mode does not meet the optimality conditions: it is "</span>
+            <span class="sa">f</span><span class="s2">"off by </span><span class="si">{</span><span class="n">conditions</span><span class="p">[</span><span class="n">worst</span><span class="p">]</span><span class="si">:</span><span class="s2">.3g</span><span class="si">}</span><span class="s2"> in the '</span><span class="si">{</span><span class="n">worst</span><span class="si">}</span><span class="s2">' condition, where "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_KKT_RTOL</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">scale</span><span class="si">:</span><span class="s2">.3g</span><span class="si">}</span><span class="s2"> is allowed. The posterior covariance of "</span>
+            <span class="s2">"the elements on a bound is too ill-conditioned to hold them there."</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">mode</span><span class="p">,</span> <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">),</span> <span class="n">side</span><span class="p">,</span> <span class="n">multipliers</span><span class="p">,</span> <span class="n">conditions</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_first_hit</span><span class="p">(</span>
     <span class="n">alpha</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">beta</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">gap</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">gap2</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
@@ -1148,25 +1248,26 @@
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">eq</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Bounded</span><span class="p">:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">    The bounded method's solution: the mode of the truncated posterior, and its draws.</span>
+<span class="sd">    The bounded method's solution: the mode of the posterior in the box, and its draws.</span>
 
 <span class="sd">    It keeps the analytic factors (``analytic``), the bounds of each state</span>
 <span class="sd">    element, the mode, which bound each element is held at, and the</span>
 <span class="sd">    multipliers :math:`\lambda`, with :math:`x = \hat{x} + \hat{S}_{:a}</span>
 <span class="sd">    \lambda_a` (``_mode``). The :class:`~fips.Posterior` asks it for every</span>
 <span class="sd">    array it reports: it is the bounded method's</span>
-<span class="sd">    :class:`~fips.posterior.Solution`. The draws of the truncated posterior</span>
-<span class="sd">    are made at their first use and kept (not pickled: a posterior read back</span>
-<span class="sd">    draws them again, the same, from the seed).</span>
+<span class="sd">    :class:`~fips.posterior.Solution`. The draws (of the truncated</span>
+<span class="sd">    posterior, or rectified: ``distribution``) are made at their first use</span>
+<span class="sd">    and kept (not pickled: a posterior read back draws them again, the same,</span>
+<span class="sd">    from the seed).</span>
 
 <span class="sd">    Its answers, by what each needs:</span>
 
 <span class="sd">    - the estimate is the mode, not the mean, and is not linear in the</span>
 <span class="sd">      observations (no ``estimate_is_mean``, no ``estimate_is_linear``);</span>
 <span class="sd">    - the variances and the covariance of aggregates are those of the kept</span>
-<span class="sd">      draws (:meth:`kept`: ``draws`` of them, after ``burn_in``, from</span>
-<span class="sd">      ``seed``), and so are the posterior's mean and intervals (the draws'</span>
-<span class="sd">      quantiles); :meth:`sample` draws more;</span>
+<span class="sd">      draws (:meth:`kept`: ``draws`` of them from ``seed``, after ``burn_in``</span>
+<span class="sd">      for the truncated chain), and so are the posterior's mean and</span>
+<span class="sd">      intervals (the draws' quantiles); :meth:`sample` draws more;</span>
 <span class="sd">    - the gain, DOFS, DOFS per element and the information content are those</span>
 <span class="sd">      of the analytic posterior with the elements on a bound held there,</span>
 <span class="sd">      :math:`x_a = b_a` (the Gaussian at the mode), with :math:`C =</span>
@@ -1199,6 +1300,8 @@
 <span class="w">    </span><span class="sd">"""The draws left out before those kept."""</span>
     <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span>
 <span class="w">    </span><span class="sd">"""The seed of the kept draws."""</span>
+    <span class="n">distribution</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"truncated"</span>
+<span class="w">    </span><span class="sd">"""What the draws are draws of: ``"truncated"`` (the chain of the truncated posterior) or ``"rectified"`` (the analytic draws moved onto the bounds)."""</span>
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">solve</span><span class="p">(</span>
@@ -1209,11 +1312,13 @@
         <span class="n">draws</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">burn_in</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">distribution</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"truncated"</span><span class="p">,</span>
         <span class="n">columns</span><span class="p">:</span> <span class="s2">"_Columns | None"</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Bounded"</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the solution of the analytic factors held to the bounds: the mode, by the active set, checked.</span>
 
+<span class="sd">        `distribution` is what its draws are draws of (``BoundedOptions``).</span>
 <span class="sd">        `columns` is a cache of the posterior covariance's columns to share</span>
 <span class="sd">        (another solution of the same factors with other observations).</span>
 
@@ -1227,21 +1332,9 @@
 <span class="sd">        """</span>
         <span class="k">if</span> <span class="n">columns</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">columns</span> <span class="o">=</span> <span class="n">_Columns</span><span class="p">(</span><span class="n">analytic</span><span class="p">)</span>
-        <span class="n">x_hat</span> <span class="o">=</span> <span class="n">analytic</span><span class="o">.</span><span class="n">estimate</span><span class="p">()</span>
-        <span class="n">variances</span> <span class="o">=</span> <span class="n">analytic</span><span class="o">.</span><span class="n">variances</span><span class="p">()</span>
-        <span class="n">scale</span> <span class="o">=</span> <span class="n">_scale</span><span class="p">(</span><span class="n">x_hat</span><span class="p">,</span> <span class="n">variances</span><span class="p">,</span> <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">)</span>
-        <span class="n">mode</span><span class="p">,</span> <span class="n">side</span><span class="p">,</span> <span class="n">multipliers</span> <span class="o">=</span> <span class="n">_mode</span><span class="p">(</span><span class="n">x_hat</span><span class="p">,</span> <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="n">variances</span><span class="p">,</span> <span class="n">scale</span><span class="p">)</span>
-        <span class="n">conditions</span> <span class="o">=</span> <span class="n">_kkt</span><span class="p">(</span>
-            <span class="n">x_hat</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">side</span><span class="p">,</span> <span class="n">multipliers</span><span class="p">,</span> <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="n">variances</span>
+        <span class="n">mode</span><span class="p">,</span> <span class="n">side</span><span class="p">,</span> <span class="n">multipliers</span><span class="p">,</span> <span class="n">conditions</span> <span class="o">=</span> <span class="n">_checked_mode</span><span class="p">(</span>
+            <span class="n">analytic</span><span class="o">.</span><span class="n">estimate</span><span class="p">(),</span> <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="n">analytic</span><span class="o">.</span><span class="n">variances</span><span class="p">()</span>
         <span class="p">)</span>
-        <span class="n">worst</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">conditions</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">name</span><span class="p">:</span> <span class="n">conditions</span><span class="p">[</span><span class="n">name</span><span class="p">])</span>
-        <span class="k">if</span> <span class="n">conditions</span><span class="p">[</span><span class="n">worst</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">_KKT_RTOL</span> <span class="o">*</span> <span class="n">scale</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">LinAlgError</span><span class="p">(</span>
-                <span class="s2">"The bounded mode does not meet the optimality conditions: it is "</span>
-                <span class="sa">f</span><span class="s2">"off by </span><span class="si">{</span><span class="n">conditions</span><span class="p">[</span><span class="n">worst</span><span class="p">]</span><span class="si">:</span><span class="s2">.3g</span><span class="si">}</span><span class="s2"> in the '</span><span class="si">{</span><span class="n">worst</span><span class="si">}</span><span class="s2">' condition, where "</span>
-                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_KKT_RTOL</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">scale</span><span class="si">:</span><span class="s2">.3g</span><span class="si">}</span><span class="s2"> is allowed. The posterior covariance of "</span>
-                <span class="s2">"the elements on a bound is too ill-conditioned to hold them there."</span>
-            <span class="p">)</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
             <span class="s2">"Bounded mode: </span><span class="si">%d</span><span class="s2"> of </span><span class="si">%d</span><span class="s2"> elements on a bound; optimality conditions </span><span class="si">%s</span><span class="s2">."</span><span class="p">,</span>
             <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">side</span><span class="p">)),</span>
@@ -1252,12 +1345,13 @@
             <span class="n">analytic</span><span class="o">=</span><span class="n">analytic</span><span class="p">,</span>
             <span class="n">lower</span><span class="o">=</span><span class="n">_read_only</span><span class="p">(</span><span class="n">lower</span><span class="p">),</span>
             <span class="n">upper</span><span class="o">=</span><span class="n">_read_only</span><span class="p">(</span><span class="n">upper</span><span class="p">),</span>
-            <span class="n">mode</span><span class="o">=</span><span class="n">_read_only</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">mode</span><span class="p">,</span> <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">)),</span>
+            <span class="n">mode</span><span class="o">=</span><span class="n">_read_only</span><span class="p">(</span><span class="n">mode</span><span class="p">),</span>
             <span class="n">side</span><span class="o">=</span><span class="n">_read_only</span><span class="p">(</span><span class="n">side</span><span class="p">),</span>
             <span class="n">multipliers</span><span class="o">=</span><span class="n">_read_only</span><span class="p">(</span><span class="n">multipliers</span><span class="p">),</span>
             <span class="n">draws</span><span class="o">=</span><span class="n">draws</span><span class="p">,</span>
             <span class="n">burn_in</span><span class="o">=</span><span class="n">burn_in</span><span class="p">,</span>
             <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
+            <span class="n">distribution</span><span class="o">=</span><span class="n">distribution</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">solution</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">"_columns_"</span><span class="p">]</span> <span class="o">=</span> <span class="n">columns</span>
         <span class="k">return</span> <span class="n">solution</span>
@@ -1280,17 +1374,21 @@
         <span class="k">return</span> <span class="n">sampler</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">kept</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Return the kept draws (``n x draws``), which the variances, the covariances, the mean and the intervals are read from: drawn from the seed at the first call, with a warning if they mix too slowly for their variances."""</span>
+<span class="w">        </span><span class="sd">"""Return the kept draws (``n x draws``), which the variances, the covariances, the mean and the intervals are read from: drawn from the seed at the first call, with a warning if they are too few for their variances."""</span>
         <span class="n">kept</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"_draws"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">kept</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                <span class="s2">"Drawing </span><span class="si">%d</span><span class="s2"> draws of the truncated posterior (after </span><span class="si">%d</span><span class="s2"> left out)."</span><span class="p">,</span>
+                <span class="s2">"Drawing </span><span class="si">%d</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> draws (after </span><span class="si">%d</span><span class="s2"> left out)."</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">draws</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">burn_in</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">distribution</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">burn_in</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">distribution</span> <span class="o">==</span> <span class="s2">"truncated"</span> <span class="k">else</span> <span class="mi">0</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="n">kept</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">draws</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">))</span>
             <span class="n">kept</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">"_draws"</span><span class="p">]</span> <span class="o">=</span> <span class="n">_read_only</span><span class="p">(</span><span class="n">kept</span><span class="p">)</span>
-            <span class="n">_warn_if_imprecise</span><span class="p">(</span><span class="n">kept</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="n">_SLOW_DRAWS</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">distribution</span> <span class="o">==</span> <span class="s2">"truncated"</span><span class="p">:</span>
+                <span class="n">_warn_if_imprecise</span><span class="p">(</span><span class="n">kept</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="n">_SLOW_DRAWS</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">_warn_if_imprecise</span><span class="p">(</span><span class="n">kept</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="n">_RARE_DRAWS</span><span class="p">,</span> <span class="n">independent</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">kept</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_conditioned</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
@@ -1351,9 +1449,56 @@
 <span class="w">    </span><span class="sd">"""Why a bounded posterior gives no log evidence."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Return `N` new draws of the truncated posterior (``n x N``): a chain from the mode, its first ``burn_in`` left out."""</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return `N` new draws (``n x N``).</span>
+
+<span class="sd">        Truncated: a chain of the truncated posterior from the mode, its first</span>
+<span class="sd">        ``burn_in`` left out. Rectified: the analytic posterior's `N` draws</span>
+<span class="sd">        from `rng` (``analytic.sample``), each moved onto the bounds</span>
+<span class="sd">        (:meth:`_rectify`).</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">distribution</span> <span class="o">==</span> <span class="s2">"rectified"</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rectify</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">rng</span><span class="p">))</span>
         <span class="n">sampler</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sampler</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">sampler</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">sampler</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">),</span> <span class="n">N</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">burn_in</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_rectify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">draws</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Return the analytic posterior's draws `draws` (``n x N``, overwritten) each moved onto the bounds as the mode is: the bounded problem solved again for a draw of the prior and the data.</span>
+
+<span class="sd">        The analytic estimate of the problem with the prior mean drawn from</span>
+<span class="sd">        :math:`N(x_0, S_0)` and the observations from :math:`N(z, S_z /</span>
+<span class="sd">        \gamma)` is an exact draw :math:`x_s` of :math:`N(\hat{x}, \hat{S})`</span>
+<span class="sd">        (``analytic.sample``), and the perturbed problem has the same</span>
+<span class="sd">        :math:`\hat{S}`, so its bounded estimate is the point of the box</span>
+<span class="sd">        nearest :math:`x_s` in the metric of :math:`\hat{S}`: ``_mode`` at</span>
+<span class="sd">        :math:`x_s` in place of :math:`\hat{x}`, checked by its optimality</span>
+<span class="sd">        conditions. An element the posterior fixes (no variance) keeps the</span>
+<span class="sd">        analytic estimate's value, as the mode does: the draw's roundoff</span>
+<span class="sd">        there could put it a hair outside a bound it sits on.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        numpy.linalg.LinAlgError</span>
+<span class="sd">            If a draw's active set fails or ends off the optimality</span>
+<span class="sd">            conditions (``_checked_mode``), naming the draw.</span>
+<span class="sd">        """</span>
+        <span class="n">columns</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_columns</span><span class="p">()</span>
+        <span class="n">variances</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">variances</span><span class="p">()</span>
+        <span class="n">fixed</span> <span class="o">=</span> <span class="o">~</span><span class="p">(</span><span class="n">variances</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">x_hat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">estimate</span><span class="p">()</span>
+        <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">draws</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">draws</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span>
+            <span class="n">x</span><span class="p">[</span><span class="n">fixed</span><span class="p">]</span> <span class="o">=</span> <span class="n">x_hat</span><span class="p">[</span><span class="n">fixed</span><span class="p">]</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">draws</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">_checked_mode</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="n">variances</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">except</span> <span class="n">LinAlgError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">LinAlgError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Rectified draw </span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2"> of </span><span class="si">{</span><span class="n">draws</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2"> could not be moved "</span>
+                    <span class="sa">f</span><span class="s2">"onto the bounds: </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">"</span>
+                <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">err</span>
+        <span class="k">return</span> <span class="n">draws</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">variances</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Return the variances of the kept draws."""</span>
@@ -1508,6 +1653,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">draws</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">burn_in</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">distribution</span><span class="p">,</span>
         <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">with_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problem</span><span class="p">:</span> <span class="n">Problem</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Bounded"</span><span class="p">:</span>
@@ -1519,6 +1665,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">draws</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">burn_in</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">distribution</span><span class="p">,</span>
             <span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_columns</span><span class="p">(),</span>
         <span class="p">)</span>
 
@@ -1556,24 +1703,59 @@
 <span class="sd">"""The share of a block's bounded elements that must be wide for the solve to warn of the block."""</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_warn_if_wide</span><span class="p">(</span><span class="n">problem</span><span class="p">:</span> <span class="n">Problem</span><span class="p">,</span> <span class="n">lower</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">upper</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_rectified_shift</span><span class="p">(</span>
+    <span class="n">x_0</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">std</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">lower</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">upper</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Return the mean of the prior set to its bounds where it falls outside, less the prior mean, each element alone: :math:`E[\operatorname{clip}(x, l, u)] - x_0` for :math:`x \sim N(x_0, s^2)`, :math:`s &gt; 0`.</span>
+
+<span class="sd">    With :math:`\alpha = (l - x_0) / s` and :math:`\beta = (u - x_0) / s`,</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        E[\operatorname{clip}(x, l, u)] - x_0 = (l - x_0)\, \Phi(\alpha)</span>
+<span class="sd">        + (u - x_0) (1 - \Phi(\beta)) + s\, (\phi(\alpha) - \phi(\beta)),</span>
+
+<span class="sd">    a term left out where its bound is infinite. For one lower bound, with</span>
+<span class="sd">    :math:`d = x_0 - l` and :math:`a = d / s`, it is :math:`s\, \phi(a) - d\,</span>
+<span class="sd">    \Phi(-a)`.</span>
+<span class="sd">    """</span>
+    <span class="n">alpha</span> <span class="o">=</span> <span class="p">(</span><span class="n">lower</span> <span class="o">-</span> <span class="n">x_0</span><span class="p">)</span> <span class="o">/</span> <span class="n">std</span>
+    <span class="n">beta</span> <span class="o">=</span> <span class="p">(</span><span class="n">upper</span> <span class="o">-</span> <span class="n">x_0</span><span class="p">)</span> <span class="o">/</span> <span class="n">std</span>
+    <span class="n">shift</span> <span class="o">=</span> <span class="n">std</span> <span class="o">*</span> <span class="p">(</span><span class="n">norm</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">alpha</span><span class="p">)</span> <span class="o">-</span> <span class="n">norm</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">beta</span><span class="p">))</span>
+    <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">lower</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">upper</span><span class="p">)</span>
+    <span class="n">shift</span><span class="p">[</span><span class="n">low</span><span class="p">]</span> <span class="o">+=</span> <span class="p">(</span><span class="n">lower</span><span class="p">[</span><span class="n">low</span><span class="p">]</span> <span class="o">-</span> <span class="n">x_0</span><span class="p">[</span><span class="n">low</span><span class="p">])</span> <span class="o">*</span> <span class="n">norm</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">alpha</span><span class="p">[</span><span class="n">low</span><span class="p">])</span>
+    <span class="n">shift</span><span class="p">[</span><span class="n">high</span><span class="p">]</span> <span class="o">+=</span> <span class="p">(</span><span class="n">upper</span><span class="p">[</span><span class="n">high</span><span class="p">]</span> <span class="o">-</span> <span class="n">x_0</span><span class="p">[</span><span class="n">high</span><span class="p">])</span> <span class="o">*</span> <span class="n">norm</span><span class="o">.</span><span class="n">sf</span><span class="p">(</span><span class="n">beta</span><span class="p">[</span><span class="n">high</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">shift</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_warn_if_wide</span><span class="p">(</span>
+    <span class="n">problem</span><span class="p">:</span> <span class="n">Problem</span><span class="p">,</span>
+    <span class="n">lower</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">upper</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">distribution</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"truncated"</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Log one warning when a block's prior is wide against its bounds, so that a total read from the draws sits above (or below) the prior's.</span>
 
-<span class="sd">    The draws are of the posterior cut at the bounds, and a Gaussian cut at a</span>
-<span class="sd">    lower bound has a higher mean than the Gaussian (a lower one, at an upper</span>
-<span class="sd">    bound): where the data constrain little, the draws' mean, intervals and</span>
-<span class="sd">    totals are those of the cut prior. An element</span>
+<span class="sd">    Where the data constrain little, the draws' mean, intervals and totals</span>
+<span class="sd">    are those of the prior as the draws treat it: for ``"truncated"`` draws,</span>
+<span class="sd">    the prior cut at the bounds, whose mean is higher than the Gaussian's at</span>
+<span class="sd">    a lower bound (lower, at an upper one); for ``"rectified"`` ones, the</span>
+<span class="sd">    prior set to its bound where it falls outside, whose mean moves the same</span>
+<span class="sd">    way, less far. An element</span>
 <span class="sd">    is wide on a side when that side's bound is finite, its prior standard</span>
 <span class="sd">    deviation :math:`s` is positive and the bound is less than two standard</span>
 <span class="sd">    deviations from the prior mean :math:`x_0` (:math:`a = (x_0 - l) / s &lt; 2`</span>
 <span class="sd">    for a lower bound :math:`l`; an upper bound is the mirror image). A block</span>
 <span class="sd">    is reported when more than 10% of its bounded elements (those with a</span>
 <span class="sd">    finite bound) are wide. Its shift is the sum, over its bounded elements,</span>
-<span class="sd">    of the mean of the prior cut at the bounds less the prior mean (each</span>
-<span class="sd">    element alone: :math:`s\, \phi(a) / \Phi(a)` for one bound), as a share</span>
-<span class="sd">    of the sum of the elements' distances from the prior mean to the nearer</span>
-<span class="sd">    bound: the share of the prior's total, for a bound of zero.</span>
+<span class="sd">    of the mean of that prior less the prior mean (each element alone:</span>
+<span class="sd">    :math:`s\, \phi(a) / \Phi(a)` cut, :math:`s\, \phi(a) - (x_0 - l)\,</span>
+<span class="sd">    \Phi(-a)` set to the bound, :func:`_rectified_shift`, for one lower</span>
+<span class="sd">    bound), as a share of the sum of the elements' distances from the prior</span>
+<span class="sd">    mean to the nearer bound: the share of the prior's total, for a bound of</span>
+<span class="sd">    zero.</span>
 <span class="sd">    """</span>
     <span class="n">state</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span>
     <span class="n">x_0</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">values</span>
@@ -1585,18 +1767,25 @@
     <span class="n">wide</span> <span class="o">=</span> <span class="n">bounded</span> <span class="o">&amp;</span> <span class="n">positive</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">a</span> <span class="o">&lt;</span> <span class="n">_WIDE</span><span class="p">)</span>
     <span class="n">shift</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">state</span><span class="p">))</span>
     <span class="n">cut</span> <span class="o">=</span> <span class="n">bounded</span> <span class="o">&amp;</span> <span class="n">positive</span>
-    <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span>
-        <span class="n">invalid</span><span class="o">=</span><span class="s2">"ignore"</span>
-    <span class="p">):</span>  <span class="c1"># SciPy's skewness, unused, at a bound 1000 sd away</span>
-        <span class="n">shift</span><span class="p">[</span><span class="n">cut</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">truncnorm</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span>
-                <span class="p">(</span><span class="n">lower</span><span class="p">[</span><span class="n">cut</span><span class="p">]</span> <span class="o">-</span> <span class="n">x_0</span><span class="p">[</span><span class="n">cut</span><span class="p">])</span> <span class="o">/</span> <span class="n">scale</span><span class="p">[</span><span class="n">cut</span><span class="p">],</span>
-                <span class="p">(</span><span class="n">upper</span><span class="p">[</span><span class="n">cut</span><span class="p">]</span> <span class="o">-</span> <span class="n">x_0</span><span class="p">[</span><span class="n">cut</span><span class="p">])</span> <span class="o">/</span> <span class="n">scale</span><span class="p">[</span><span class="n">cut</span><span class="p">],</span>
-                <span class="n">loc</span><span class="o">=</span><span class="n">x_0</span><span class="p">[</span><span class="n">cut</span><span class="p">],</span>
-                <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">[</span><span class="n">cut</span><span class="p">],</span>
+    <span class="k">if</span> <span class="n">distribution</span> <span class="o">==</span> <span class="s2">"rectified"</span><span class="p">:</span>
+        <span class="n">shift</span><span class="p">[</span><span class="n">cut</span><span class="p">]</span> <span class="o">=</span> <span class="n">_rectified_shift</span><span class="p">(</span><span class="n">x_0</span><span class="p">[</span><span class="n">cut</span><span class="p">],</span> <span class="n">scale</span><span class="p">[</span><span class="n">cut</span><span class="p">],</span> <span class="n">lower</span><span class="p">[</span><span class="n">cut</span><span class="p">],</span> <span class="n">upper</span><span class="p">[</span><span class="n">cut</span><span class="p">])</span>
+        <span class="n">prior</span> <span class="o">=</span> <span class="s2">"the prior set to its bounds where it falls outside them"</span>
+        <span class="n">draws</span> <span class="o">=</span> <span class="s2">"the bounded problem solved again for draws of the prior and the data"</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span>
+            <span class="n">invalid</span><span class="o">=</span><span class="s2">"ignore"</span>
+        <span class="p">):</span>  <span class="c1"># SciPy's skewness, unused, at a bound 1000 sd away</span>
+            <span class="n">shift</span><span class="p">[</span><span class="n">cut</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">truncnorm</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span>
+                    <span class="p">(</span><span class="n">lower</span><span class="p">[</span><span class="n">cut</span><span class="p">]</span> <span class="o">-</span> <span class="n">x_0</span><span class="p">[</span><span class="n">cut</span><span class="p">])</span> <span class="o">/</span> <span class="n">scale</span><span class="p">[</span><span class="n">cut</span><span class="p">],</span>
+                    <span class="p">(</span><span class="n">upper</span><span class="p">[</span><span class="n">cut</span><span class="p">]</span> <span class="o">-</span> <span class="n">x_0</span><span class="p">[</span><span class="n">cut</span><span class="p">])</span> <span class="o">/</span> <span class="n">scale</span><span class="p">[</span><span class="n">cut</span><span class="p">],</span>
+                    <span class="n">loc</span><span class="o">=</span><span class="n">x_0</span><span class="p">[</span><span class="n">cut</span><span class="p">],</span>
+                    <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">[</span><span class="n">cut</span><span class="p">],</span>
+                <span class="p">)</span>
+                <span class="o">-</span> <span class="n">x_0</span><span class="p">[</span><span class="n">cut</span><span class="p">]</span>
             <span class="p">)</span>
-            <span class="o">-</span> <span class="n">x_0</span><span class="p">[</span><span class="n">cut</span><span class="p">]</span>
-        <span class="p">)</span>
+        <span class="n">prior</span> <span class="o">=</span> <span class="s2">"the prior cut at the bounds"</span>
+        <span class="n">draws</span> <span class="o">=</span> <span class="s2">"of the posterior cut at the bounds"</span>
     <span class="n">distance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">bounded</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">x_0</span> <span class="o">-</span> <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span> <span class="o">-</span> <span class="n">x_0</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
     <span class="n">reports</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">state</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
@@ -1613,19 +1802,19 @@
         <span class="c1"># "two" is _WIDE</span>
         <span class="n">reports</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">block</span><span class="si">!r}</span><span class="s2">: </span><span class="si">{</span><span class="n">n_wide</span><span class="si">}</span><span class="s2"> of </span><span class="si">{</span><span class="n">n_bounded</span><span class="si">}</span><span class="s2"> bounded elements are within two "</span>
-            <span class="s2">"prior standard deviations of a bound, and the prior cut at the "</span>
-            <span class="sa">f</span><span class="s2">"bounds has a total about </span><span class="si">{</span><span class="n">by</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">side</span><span class="si">}</span><span class="s2"> the prior's</span><span class="si">{</span><span class="n">units</span><span class="si">}</span><span class="s2"> (each "</span>
-            <span class="s2">"element taken alone)"</span>
+            <span class="sa">f</span><span class="s2">"prior standard deviations of a bound, and </span><span class="si">{</span><span class="n">prior</span><span class="si">}</span><span class="s2"> has a total "</span>
+            <span class="sa">f</span><span class="s2">"about </span><span class="si">{</span><span class="n">by</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">side</span><span class="si">}</span><span class="s2"> the prior's</span><span class="si">{</span><span class="n">units</span><span class="si">}</span><span class="s2"> (each element taken alone)"</span>
         <span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">reports</span><span class="p">:</span>
         <span class="k">return</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-        <span class="s2">"The prior is wide against the bounds: </span><span class="si">%s</span><span class="s2">. The draws are of the "</span>
-        <span class="s2">"posterior cut at the bounds, so where the data constrain little, their "</span>
-        <span class="s2">"mean, intervals and totals sit that far from the prior's. The estimate "</span>
-        <span class="s2">"(the mode) is not affected; for a total, read the analytic posterior "</span>
-        <span class="s2">"(fips.solve(problem)) or use fips.LognormalForward."</span><span class="p">,</span>
+        <span class="s2">"The prior is wide against the bounds: </span><span class="si">%s</span><span class="s2">. The draws are </span><span class="si">%s</span><span class="s2">, so where "</span>
+        <span class="s2">"the data constrain little, their mean, intervals and totals sit that "</span>
+        <span class="s2">"far from the prior's. The estimate (the mode) is not affected; for a "</span>
+        <span class="s2">"total, read the analytic posterior (fips.solve(problem)) or use "</span>
+        <span class="s2">"fips.LognormalForward."</span><span class="p">,</span>
         <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">reports</span><span class="p">),</span>
+        <span class="n">draws</span><span class="p">,</span>
     <span class="p">)</span>
 
 
@@ -1657,9 +1846,15 @@
     <span class="n">analytic</span> <span class="o">=</span> <span class="n">_factor</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">gamma</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">lower</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">()</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">upper</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">()):</span>
         <span class="k">return</span> <span class="n">Posterior</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">analytic</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span>
-    <span class="n">_warn_if_wide</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">)</span>
+    <span class="n">_warn_if_wide</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">distribution</span><span class="p">)</span>
     <span class="n">solution</span> <span class="o">=</span> <span class="n">Bounded</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span>
-        <span class="n">analytic</span><span class="p">,</span> <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">draws</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">burn_in</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">seed</span>
+        <span class="n">analytic</span><span class="p">,</span>
+        <span class="n">lower</span><span class="p">,</span>
+        <span class="n">upper</span><span class="p">,</span>
+        <span class="n">options</span><span class="o">.</span><span class="n">draws</span><span class="p">,</span>
+        <span class="n">options</span><span class="o">.</span><span class="n">burn_in</span><span class="p">,</span>
+        <span class="n">options</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span>
+        <span class="n">options</span><span class="o">.</span><span class="n">distribution</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">Posterior</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">solution</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span>
 </pre></div>
