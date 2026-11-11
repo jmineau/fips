@@ -192,8 +192,8 @@ The softplus model
 several below, the flux is :math:`s\, e^{u/s}`, near zero and positive. The
 uncertainty is additive away from zero (a flux of :math:`10 \pm 2`) and bends
 near it. ``scale`` is in the flux's units and says where the bend is: the
-transform is not the same in other units, so set it, near the prior standard
-deviation of the cells that could be near zero.
+transform is not the same in other units, so it has no default: set it near
+the prior standard deviation of the cells that could be near zero.
 
 There is no closed form for the prior on :math:`u` that a flux prior
 corresponds to: :meth:`~fips.SoftplusForward.prior_for` computes the flux's
