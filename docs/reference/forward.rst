@@ -53,6 +53,28 @@ The model
    ForwardModel.jvp
    ForwardModel.vjp
 
+Either kind of forward
+~~~~~~~~~~~~~~~~~~~~~~
+An :class:`Operator` is a forward model whose Jacobian is itself:
+``H(x)`` is ``H @ x`` and ``H.jacobian(x)`` is ``H``. So a problem's
+:attr:`~Problem.forward` is one type, :class:`~fips.forward.Forward`, which
+both an operator and a :class:`ForwardModel` answer, and code that calls
+``problem.forward(x)`` and ``problem.forward.jacobian(x)`` holds for a linear
+problem and for a model.
+
+.. currentmodule:: fips.forward
+
+.. autosummary::
+   :toctree: api/
+
+   Forward
+   Forward.rows
+   Forward.cols
+   Forward.__call__
+   Forward.jacobian
+
+.. currentmodule:: fips
+
 Checking the Jacobian
 ~~~~~~~~~~~~~~~~~~~~~
 .. autosummary::

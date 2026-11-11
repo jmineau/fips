@@ -834,6 +834,30 @@ class TestMatmul:
         np.testing.assert_array_equal((H @ x).values, [140.0, 320.0])
 
 
+class TestAsAForwardModel:
+    """An operator is a forward model whose Jacobian is itself: ``H(x)`` is ``H @ x`` and ``H.jacobian(x)`` is ``H``."""
+
+    def test_call_is_the_product_by_label(self, H, state):
+        """A vector on the columns in another order gives the same product, on the rows."""
+        x = Vector(np.array([1.0, -2.0, 0.5]), state)
+        shuffled = x.align(reordered(state))
+        for given in (x, shuffled):
+            y = H(given)
+            assert isinstance(y, Vector) and y.space is H.rows
+            np.testing.assert_array_equal(y.values, (H @ x).values)
+
+    def test_call_refuses_what_has_no_labels_and_other_labels(
+        self, H, state, other_state
+    ):
+        with pytest.raises(TypeError, match="takes a Vector on its columns"):
+            H(np.ones(3))
+        with pytest.raises(ValueError):
+            H(Vector(np.ones(len(other_state)), other_state))
+
+    def test_the_jacobian_is_the_operator_itself(self, H, state):
+        assert H.jacobian(Vector(np.zeros(3), state)) is H
+
+
 class TestSum:
     """Sums and differences join both spaces exactly, by label."""
 

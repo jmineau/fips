@@ -1,8 +1,9 @@
 r"""
 Forward models: a map from the state to the observations that is not linear.
 
-A :class:`~fips.Problem` takes its forward map as an :class:`~fips.Operator`,
-the matrix :math:`H` of a linear map, or as a :class:`ForwardModel`, a class
+A :class:`~fips.Problem` takes its forward map (a :class:`Forward`) as an
+:class:`~fips.Operator`, the matrix :math:`H` of a linear map and its own
+Jacobian, or as a :class:`ForwardModel`, a class
 the caller writes with two methods: the model itself, :math:`F(x)`, and its
 Jacobian, :math:`J(x) = \partial F / \partial x` at a state, as an
 :class:`~fips.Operator` (or, for a model with an adjoint, its products
@@ -18,6 +19,7 @@ model, and its transpose against the Jacobian.
 
 import logging
 from abc import ABC, abstractmethod
+from typing import Protocol
 
 import numpy as np
 
@@ -27,6 +29,43 @@ from fips.space import Space
 from fips.vector import Vector
 
 logger = logging.getLogger(__name__)
+
+
+class Forward(Protocol):
+    r"""
+    A problem's forward map, linear or not: what :attr:`Problem.forward <fips.Problem.forward>` is.
+
+    Two kinds of object answer it. An :class:`~fips.Operator` :math:`H` is a
+    forward model whose Jacobian is constant: ``H(x)`` is ``H @ x`` and
+    ``H.jacobian(x)`` is ``H``. A :class:`ForwardModel` :math:`F` is one the
+    caller writes. Code that reads a problem's forward through these four
+    members holds for both; what needs the matrix (``@``, ``.data``,
+    ``.dense()``) is an operator's own, and :class:`~fips.Problem` takes
+    only these two kinds as ``forward=``.
+
+    See Also
+    --------
+    ForwardModel : A forward map that is not linear, written by the caller.
+    fips.Operator : A linear one.
+    """
+
+    @property
+    def rows(self) -> Space:
+        """The labels of the observations the map makes."""
+        ...
+
+    @property
+    def cols(self) -> Space:
+        """The labels of the state it takes."""
+        ...
+
+    def __call__(self, x: Vector) -> Vector:
+        r"""Return the observations the state `x` models, without the offset: :math:`F(x)`, or :math:`H x`, on :attr:`rows`."""
+        ...
+
+    def jacobian(self, x: Vector) -> Operator:
+        r"""Return the Jacobian at `x`, :math:`J(x)`, an Operator on :attr:`rows` and :attr:`cols` (for an operator, itself)."""
+        ...
 
 
 class ForwardModel(ABC):
@@ -56,7 +95,8 @@ class ForwardModel(ABC):
     subclass's ``__init__``. fips calls both methods with a vector on
     :attr:`cols` itself, so ``self.H @ x`` with ``self.H`` on the same columns
     needs no reordering. A model with a linear map is an
-    :class:`~fips.Operator`, and needs no class.
+    :class:`~fips.Operator`, and needs no class: an operator is a forward
+    model whose Jacobian is itself (both answer :class:`Forward`).
 
     Parameters
     ----------
@@ -378,7 +418,7 @@ def _returned(model: ForwardModel, v: Vector, space: Space, method: str) -> np.n
     return _on(space, v, f"what {type(model).__name__}.{method} returns", "its labels")
 
 
-def _evaluated(model: ForwardModel, values: np.ndarray) -> np.ndarray:
+def _evaluated(model: Forward, values: np.ndarray) -> np.ndarray:
     """
     Return the model's observations of the state `values` (in the order of its columns), in the order of its rows.
 

@@ -46,7 +46,8 @@ src/fips/
   space.py          Space: ordered named blocks, the padded MultiIndex, select, align
   vector.py         Vector: values on a Space (read-only), from_series/from_blocks
   operator.py       Operator: a fips.linalg form with a Space on each axis
-  forward.py        ForwardModel (F and its Jacobian, or its products jvp/vjp), taylortest (and the adjoint)
+  forward.py        Forward (what problem.forward is), ForwardModel (F and its Jacobian, or its products
+                    jvp/vjp), taylortest (and the adjoint)
   transforms.py     LognormalForward, SoftplusForward: H on a positive T(u) of one block; prior_for
                     (softplus moments by panels split at the bend: Gauss-Hermite fails past 2 scales)
   problem.py        Problem: the inputs, checked once; predict, linearized, aggregate, restrict
@@ -96,7 +97,9 @@ which places labeled blocks by label); write each covariance as a correlation
 model times standard deviations (`Kronecker(...).with_std(std)`, sums,
 `Covariance.block_diag(flux=..., bias=...)`); hand them to `Problem`, which
 checks the labels and builds the models; `fips.solve(problem)` returns the
-`Posterior` (`"gauss_newton"` for a `ForwardModel` in place of `H`). A repeated
+`Posterior` (`"gauss_newton"` for a `ForwardModel` in place of `H`). **An `Operator` is a
+forward model** whose Jacobian is itself (`H(x)` is `H @ x`, `H.jacobian(x)` is `H`), so
+`Problem.forward` is one type, `fips.forward.Forward`, a protocol both answer. A repeated
 inversion is a function that builds the `Problem`.
 
 ## Invariants

@@ -72,7 +72,8 @@ The words
        :math:`J(x)`, the forward operator of the problem linearized at
        :math:`x` (:meth:`Problem.linearized <fips.Problem.linearized>`). Its
        posterior's estimate is the mode (``"gauss_newton"``,
-       :doc:`/user_guide/nonlinear`).
+       :doc:`/user_guide/nonlinear`). A forward operator is a forward model
+       whose Jacobian is itself: ``H(x)`` is ``H @ x``.
    * - **offset**
      - :math:`c`
      - ``offset``
