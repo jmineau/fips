@@ -20,6 +20,20 @@ def test_version():
     assert fips.__version__ == version("fips")
 
 
+def test_no_warning_filter_imports_fips_at_startup(pytestconfig):
+    """
+    No ``filterwarnings`` line of pyproject.toml names a fips class.
+
+    pytest resolves those lines at startup, which imports fips before
+    pytest-cov measures: every module-level line (each import, ``def`` and
+    ``class``) is then reported as never run, and coverage reads about twenty
+    points low. ``tests/conftest.py`` ignores ``fips.FipsWarning`` with a mark,
+    which is read when a test runs.
+    """
+    named = [f for f in pytestconfig.getini("filterwarnings") if "fips." in f]
+    assert not named, named
+
+
 def test_no_blanket_type_ignore():
     """The source silences pyrefly only with ``# pyrefly: ignore[<code>]`` and a reason, never ``# type: ignore``."""
     src = Path(fips.__file__).parent
