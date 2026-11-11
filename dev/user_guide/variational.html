@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>A problem too large to factor: the variational method &#8212; fips 0.2.0b3.dev37+g63f5b0216 documentation</title>
+    <title>A problem too large to factor: the variational method &#8212; fips 0.2.0b3.dev39+g54c87e68b documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=36a0ec1c"></script>
+    <script src="../_static/documentation_options.js?v=bed76f9f"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev37+g63f5b0216 documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev37+g63f5b0216 documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev39+g54c87e68b documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev39+g54c87e68b documentation - Home"/>
   
   
 </a></div>
@@ -614,13 +614,13 @@ uncertainty:</p>
 <span class="gp">In [25]: </span><span class="n">sd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">exact</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
 
 <span class="gp">In [26]: </span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">estimate</span><span class="o">.</span><span class="n">values</span> <span class="o">-</span> <span class="n">exact</span><span class="o">.</span><span class="n">estimate</span><span class="o">.</span><span class="n">values</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">/</span> <span class="n">sd</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>  <span class="c1"># in posterior sd</span>
-<span class="gh">Out[26]: </span><span class="go">np.float64(3.438894381619387e-07)</span>
+<span class="gh">Out[26]: </span><span class="go">np.float64(3.4692902391553187e-07)</span>
 
 <span class="gp">In [27]: </span><span class="n">post</span><span class="o">.</span><span class="n">iterations</span>
 <span class="gh">Out[27]: </span>
 <span class="go">                    d2        cost  cg_iterations</span>
 <span class="go">iteration                                        </span>
-<span class="go">1          2019.879959  546.315759             84</span>
+<span class="go">1          2019.879955  546.315759             84</span>
 </pre></div>
 </div>
 <p>The conjugate gradients took one solve of under a hundred iterations. Each
@@ -669,7 +669,7 @@ of the standard deviations against the exact ones, as <code class="docutils lite
 <span class="go">200   93.079            0.037      0.036         0.000        0.004</span>
 
 <span class="gp">In [32]: </span><span class="n">exact</span><span class="o">.</span><span class="n">dofs</span>
-<span class="gh">Out[32]: </span><span class="go">94.47390857879236</span>
+<span class="gh">Out[32]: </span><span class="go">94.47390857879242</span>
 </pre></div>
 </div>
 <p>At ranks 25 and 50 the last pair kept still has an eigenvalue above 1, and
@@ -755,25 +755,25 @@ linearized at the last estimate:</p>
 <span class="gh">Out[45]: </span>
 <span class="go">                     d2          cost  cg_iterations</span>
 <span class="go">iteration                                           </span>
-<span class="go">1          86869.737780  31728.345306             62</span>
-<span class="go">2          31651.894873    364.657056             72</span>
-<span class="go">3            289.820517     75.417719             71</span>
+<span class="go">1          86869.737900  31728.345240             62</span>
+<span class="go">2          31651.894885    364.657067             72</span>
+<span class="go">3            289.820490     75.417721             69</span>
 <span class="go">4              0.672952     74.804003             65</span>
-<span class="go">5              0.073740     74.743728             62</span>
-<span class="go">6              0.014968     74.735908             59</span>
+<span class="go">5              0.073740     74.743728             61</span>
+<span class="go">6              0.014968     74.735908             57</span>
 <span class="go">7              0.006779     74.732577             59</span>
-<span class="go">8              0.002826     74.731526             53</span>
+<span class="go">8              0.002826     74.731526             55</span>
 <span class="go">9              0.001381     74.731045             57</span>
 <span class="go">10             0.000666     74.730835             53</span>
-<span class="go">11             0.000333     74.730733             52</span>
+<span class="go">11             0.000333     74.730733             50</span>
 <span class="go">12             0.000166     74.730684             48</span>
 <span class="go">13             0.000084     74.730659             48</span>
-<span class="go">14             0.000042     74.730647             47</span>
+<span class="go">14             0.000042     74.730647             48</span>
 
 <span class="gp">In [46]: </span><span class="n">newton</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">lognormal</span><span class="p">,</span> <span class="s2">"gauss_newton"</span><span class="p">,</span> <span class="n">draws</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
 
 <span class="gp">In [47]: </span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">by_products</span><span class="o">.</span><span class="n">estimate</span><span class="o">.</span><span class="n">values</span> <span class="o">-</span> <span class="n">newton</span><span class="o">.</span><span class="n">estimate</span><span class="o">.</span><span class="n">values</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
-<span class="gh">Out[47]: </span><span class="go">np.float64(7.296662246913943e-07)</span>
+<span class="gh">Out[47]: </span><span class="go">np.float64(6.886045042786559e-07)</span>
 </pre></div>
 </div>
 <p>The two modes agree to within their stopping rules. <code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code> forms
