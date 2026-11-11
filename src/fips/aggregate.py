@@ -462,7 +462,7 @@ def offset_block(
     An offset is an unknown that adds to each observation of its group (the
     background at a site in a month, a calibration bias of a network): it is
     solved for with the state, as a block of its own, instead of being fixed
-    (the problem's ``offset``) or left in the model-data mismatch. Its prior
+    (the problem's ``offset``) or left in the observation covariance. Its prior
     and its covariance are the caller's: the offsets' labels are the groups,
     so a covariance model on their levels correlates them (an
     ``Exponential("obs_time", "30D")`` between the months of one site).

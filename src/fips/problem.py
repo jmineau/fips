@@ -102,12 +102,12 @@ class Problem:
     prior : Vector
         The prior state :math:`x_0`. Its space labels the state.
     prior_cov : Covariance or CovarianceModel
-        The prior error covariance :math:`S_0`. A covariance model (such as
+        The prior covariance :math:`S_0`. A covariance model (such as
         ``Kronecker(...).with_std(std)``) is built on the prior's space.
     obs : Vector
         The observations :math:`z`. Its space labels the observations.
     obs_cov : Covariance or CovarianceModel
-        The model-data mismatch :math:`S_z`, the covariance of the
+        The observation covariance :math:`S_z`, the covariance of the
         observation error; a model is built on the observations' space. It
         must be positive-definite.
     forward : Operator or ForwardModel
@@ -115,7 +115,8 @@ class Problem:
         observations (its rows); or a forward model :math:`F` with its
         Jacobian (:class:`~fips.ForwardModel`), whose rows have the
         observations' labels and whose columns the prior's. A problem with a
-        model is solved by ``fips.solve(problem, "gauss_newton")``.
+        model is solved by ``"gauss_newton"``, ``"variational"`` or
+        ``"ensemble"``.
     offset : Vector or float, optional
         The part of the observations the state does not explain, :math:`c`
         (a background): a vector on the observations' labels, or one value
@@ -129,7 +130,7 @@ class Problem:
         If the forward operator or model, a covariance or the offset does not
         have exactly the labels of the space it is put on: a block or a label
         on one side and not the other. The message names them. Also if every
-        variance of the prior error covariance is zero (some may be: an
+        variance of the prior covariance is zero (some may be: an
         element known exactly, a bias block given as 0).
 
     See Also
@@ -140,8 +141,8 @@ class Problem:
     Notes
     -----
     A forward operator that covers only part of the state (a Jacobian with
-    columns only for the elements the observations are sensitive to: in a
-    transport model, the cells a footprint touched) is placed on the whole
+    columns only for the elements the observations are sensitive to) is
+    placed on the whole
     state by :meth:`Operator.from_blocks <fips.Operator.from_blocks>`, which
     puts a labeled block by its labels: an element the Jacobian lacks is a
     column of zeros, and a label the space lacks raises. With ``J`` the
@@ -254,7 +255,7 @@ class Problem:
 
     @property
     def prior_cov(self) -> Covariance:
-        """The prior error covariance, :math:`S_0`, on the prior's space."""
+        """The prior covariance, :math:`S_0`, on the prior's space."""
         return self._prior_cov
 
     @property
@@ -264,7 +265,7 @@ class Problem:
 
     @property
     def obs_cov(self) -> Covariance:
-        """The model-data mismatch, :math:`S_z`, on the observations' space."""
+        """The observation covariance, :math:`S_z`, on the observations' space."""
         return self._obs_cov
 
     @property
@@ -367,9 +368,9 @@ class Problem:
         `x` has the forward operator :math:`J` and the offset :math:`c + F(x)
         - J x`. It predicts what the model does at `x` itself, and near `x` to
         first order. Its analytic solve, ``fips.solve(problem.linearized(x))``,
-        is one step of Gauss-Newton from `x`; ``fips.solve(problem,
-        "gauss_newton")`` repeats the step from the prior until the estimate
-        stops moving.
+        is one Gauss-Newton step from `x`; ``fips.solve(problem,
+        "gauss_newton")`` repeats the step from the prior until the step is
+        small (its ``tol``).
 
         Parameters
         ----------
@@ -471,12 +472,12 @@ class Problem:
         truth: "Vector | None" = None,
     ) -> tuple[Vector, Vector]:
         r"""
-        Return a truth and the observations it would give, :math:`H x + c + e`.
+        Return a truth and the observations it would give, :math:`F(x) + c + e` (:math:`H x + c + e` for a forward operator).
 
         The problem as a world that makes data: the truth is drawn from the
         prior, :math:`x \sim N(x_0, S_0)`, and the observations are its
         noise-free prediction (:meth:`predict`) plus an error drawn from the
-        model-data mismatch, :math:`e \sim N(0, S_z)`. Solving the problem on
+        observation covariance, :math:`e \sim N(0, S_z)`. Solving the problem on
         these observations, ``post.with_data(obs)``, and comparing the estimate
         with the truth tests an inversion on data whose answer is known; a
         loop of them over one generator is a Monte Carlo of how often the
@@ -493,7 +494,7 @@ class Problem:
             `truth` draws the error alone.
         truth : Vector, optional
             A state to use as the truth instead of drawing one, on the prior's
-            labels in any order: another prior estimate, 1.5 times the prior. Its
+            labels in any order (for example 1.5 times the prior). Its
             observations still carry the error.
 
         Returns
@@ -582,10 +583,10 @@ class Problem:
 
         Use it to solve for some of the state only, such as the elements the
         observations see well, and keep every other element at its prior
-        value. Which elements to keep is your choice: for example, in a flux
-        inversion, the cells whose total sensitivity is above a percentile of all cells'
-        (:func:`fips.aggregate.sum` of the forward operator's absolute column
-        sums, grouped by cell, gives that total).
+        value. Which elements to keep is your choice: for example, the
+        elements whose sensitivity (the sum of the absolute values in their
+        column of the forward operator) is above a percentile of all
+        elements'.
 
         The dropped elements still add to the observations, at their prior
         values: :math:`H_r x_{0,r}` (the forward operator's columns for them
@@ -593,7 +594,7 @@ class Problem:
         covariance and the forward operator are cut to the kept labels; the
         covariance keeps its form, so a Kronecker covariance stays as its
         factors. The dropped elements' prior uncertainty is not added to the
-        model-data mismatch: they are held exactly at the prior.
+        observation covariance: they are held exactly at the prior.
 
         After solving, ``post.estimate.combine_first(problem.prior)`` puts
         the estimate back on the whole state, with the prior for the dropped
@@ -703,9 +704,9 @@ class Problem:
 
         Each input on the observations goes through the same aggregation
         :math:`W`: the observations :math:`W z`, the forward operator
-        :math:`W H`, the model-data mismatch :math:`W S_z W^T` and the offset
+        :math:`W H`, the observation covariance :math:`W S_z W^T` and the offset
         :math:`W c`. Each keeps the cheapest form (a sparse :math:`W` and a
-        diagonal :math:`S_z` give a sparse mismatch). A forward model
+        diagonal :math:`S_z` give a sparse observation covariance). A forward model
         :math:`F` is followed by the aggregation: the new problem's model is
         :math:`W F(x)`, with the Jacobian :math:`W J(x)`.
 
@@ -793,7 +794,7 @@ class Problem:
         Return `n` members drawn from the prior, one column each: the first stage of the ensemble method.
 
         Each member is :math:`x_0 + \delta_j - \bar{\delta}`, with
-        :math:`\delta_j \sim N(0, S_0)` drawn through the prior error
+        :math:`\delta_j \sim N(0, S_0)` drawn through the prior
         covariance's root and their mean :math:`\bar{\delta}` taken out, so
         the members' mean is the prior exactly and their sample covariance,
         :math:`\sum_j (x_j - x_0)(x_j - x_0)^T / (n - 1)`, has the mean
@@ -821,7 +822,7 @@ class Problem:
         ValueError
             If `n` is not an integer of at least 2.
         numpy.linalg.LinAlgError
-            If the prior error covariance has a clearly negative eigenvalue.
+            If the prior covariance has a clearly negative eigenvalue.
 
         See Also
         --------

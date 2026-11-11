@@ -7,7 +7,7 @@ and ``m`` can pass :math:`10^5`, and then none of them fits. This method
 needs only products: :math:`H v` and :math:`H^T w` (a sparse :math:`H`, or a
 :class:`~fips.linalg.MatrixFreeOperator`, or a forward model's
 :meth:`~fips.ForwardModel.jvp` and :meth:`~fips.ForwardModel.vjp`), solves
-with :math:`S_z`, and a root :math:`R` of the prior error covariance,
+with :math:`S_z`, and a root :math:`R` of the prior covariance,
 :math:`S_0 = R R^T` (``n x r``, the root a draw is made with, applied
 through a Kronecker or block-diagonal form's factors).
 
@@ -128,8 +128,8 @@ class VariationalOptions:
     ----------
     gamma : float, default 1.0
         The regularization factor :math:`\gamma`, as for the analytic method
-        (:class:`~fips.methods.analytic.AnalyticOptions`): the model-data
-        mismatch is divided by it.
+        (:class:`~fips.methods.analytic.AnalyticOptions`): the observation
+        covariance is divided by it.
     rank : int, default 100
         The number of leading eigenpairs of the prior-preconditioned Hessian
         kept for the low-rank posterior (at most ``min(m, r)``, the most it
@@ -167,7 +167,7 @@ class VariationalOptions:
     """
 
     gamma: float = 1.0
-    """The regularization factor: the model-data mismatch is divided by it."""
+    """The regularization factor: the observation covariance is divided by it."""
     rank: int = 100
     """The number of eigenpairs of the low-rank posterior."""
     cg_tol: float = 1e-8

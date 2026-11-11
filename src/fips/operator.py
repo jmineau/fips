@@ -398,7 +398,8 @@ class Operator:
 
         A pair of blocks that is not given is zero. A labeled block is placed
         by its labels: it may cover part of its blocks' labels (the rest is
-        zero), as a transport Jacobian covers the cells a footprint touched.
+        zero), as a Jacobian covers only the elements some observations
+        depend on.
         A :class:`~fips.Covariance` may not (see ``Raises``): its variances
         are the diagonal of the blocks' own pairs, so each of those must
         cover its block's labels.

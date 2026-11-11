@@ -1116,7 +1116,7 @@ def test_a_kronecker_mismatch_that_is_not_positive_definite_raises():
     rng = np.random.default_rng(0)
     S_z = KroneckerOperator([np.array([[1.0, 1.0], [1.0, 1.0]]), _spd(rng, 4)])
     with pytest.raises(
-        LinAlgError, match="model-data mismatch is not positive-definite"
+        LinAlgError, match="observation covariance is not positive-definite"
     ):
         fips.solve(_problem(z, x_0, H, S_0, S_z, c))
 
@@ -1125,7 +1125,7 @@ def test_a_dense_mismatch_that_is_not_positive_definite_raises():
     """The information form applies ``S_z^-1``, so a dense ``S_z`` it is chosen for must be positive-definite: a clear error, not a wrong answer."""
     z, x_0, H, S_0, _, c = _arrays("dense", 0, n_time=1, n_cell=3, m=8)
     with pytest.raises(
-        LinAlgError, match="model-data mismatch is not positive-definite"
+        LinAlgError, match="observation covariance is not positive-definite"
     ):
         fips.solve(_problem(z, x_0, H, S_0, np.ones((8, 8)), c))
 
@@ -1180,7 +1180,7 @@ def test_a_large_whitened_solve_warns(caplog, monkeypatch):
     assert "m = 8 observations, more than twice the n = 3 state elements" in (
         record.message
     )
-    assert "the prior error covariance has no square root" in record.message
+    assert "the prior covariance has no square root" in record.message
     quiet = {
         "information form, diagonal": (
             _arrays("dense", 0, 1, 3, 8),

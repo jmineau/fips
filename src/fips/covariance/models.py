@@ -419,7 +419,7 @@ class CovarianceModel(ABC):
 
     Examples
     --------
-    The model-data mismatch of one site: an instrument error, independent,
+    The observation covariance of one site: an instrument error, independent,
     and a transport error correlated over 2.8 hours that day:
 
     >>> import pandas as pd

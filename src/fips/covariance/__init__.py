@@ -6,8 +6,9 @@ itself, with the solves, log-determinant and square root a covariance needs.
 It is written as a correlation model with standard deviations:
 ``Exponential("time", "30D").with_std(std)``. The kernels
 (:class:`Exponential`, :class:`Gaussian`, :class:`Matern`, :class:`Constant`)
-correlate labels by their distance, measured with the functions of
-:mod:`fips.covariance.distances`; :class:`Independent` and :class:`Kronecker`
+correlate labels by their distance along some levels (numbers, times, or
+latitude and longitude on the Earth, as :mod:`fips.covariance.distances`
+measures them); :class:`Independent` and :class:`Kronecker`
 combine models; a :class:`CovarianceModel` is a covariance waiting for its
 space.
 """

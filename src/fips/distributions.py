@@ -1,13 +1,13 @@
 r"""
 The distributions :func:`fips.hierarchical` accepts as the prior of a covariance setting.
 
-Three for now: :class:`LogNormal`, :class:`HalfNormal` and :class:`Uniform`.
+Three: :class:`LogNormal`, :class:`HalfNormal` and :class:`Uniform`.
 Each has a log density, draws, a median (where the search for the mode
 starts) and a map to unbounded coordinates (the log of a positive setting,
 the logit of a bounded one), where the sampler of :func:`fips.hierarchical`
 works. This is not a general library of distributions: they are the priors
-of the settings (a standard deviation, a correlation length, the mismatch's
-scale), not of the state, whose prior is a :class:`~fips.Vector` and a
+of the settings (a standard deviation, a correlation length, the observation
+error's scale), not of the state, whose prior is a :class:`~fips.Vector` and a
 :class:`~fips.Covariance`.
 
 >>> import numpy as np

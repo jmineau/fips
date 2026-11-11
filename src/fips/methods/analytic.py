@@ -5,16 +5,16 @@ The analytic method: the closed-form Gaussian posterior of a linear problem.
 that asks the factors for everything it reports. It factors in one of two
 forms, chosen by the problem's size, which give the same posterior:
 
-- ``Whitened`` whitens the observations with the model-data mismatch and
+- ``Whitened`` whitens the observations with the observation covariance and
   works with an ``m x m`` matrix (``m`` observations);
-- ``Information`` whitens the state with the prior error covariance and
+- ``Information`` whitens the state with the prior covariance and
   works with an ``n x n`` matrix (``n`` state elements). It applies the
-  inverse of the model-data mismatch, which it can for a mismatch that is
+  inverse of the observation covariance, which it can for one that is
   dense, diagonal, sparse, block diagonal or Kronecker.
 
 The information form is used when there are fewer state elements than
-observations and the mismatch is dense, diagonal, sparse, block diagonal or
-Kronecker (and the prior error covariance has a square root); otherwise the
+observations and the observation covariance is dense, diagonal, sparse, block diagonal or
+Kronecker (and the prior covariance has a square root); otherwise the
 whitened form (``_choose``). :class:`AnalyticOptions` holds :math:`\gamma`.
 
 Either form's matrix is factored at the solve's :math:`\gamma` by Cholesky
@@ -27,9 +27,9 @@ of the observations, so the posterior of other observations
 eigendecomposition uses LAPACK's ``evd`` driver, and redoes it with ``evr``
 when there is not enough memory for ``evd``'s workspace (``_eigh``).
 
-A solve logs a warning when the correlation of the model-data mismatch is
-nearly singular (``_warn_if_ill_conditioned``). Only the mismatch is checked,
-as the solve sees it, sums included: a prior error covariance may be singular.
+A solve logs a warning when the correlation of the observation covariance is
+nearly singular (``_warn_if_ill_conditioned``). Only the observation covariance is checked,
+as the solve sees it, sums included: a prior covariance may be singular.
 """
 
 import dataclasses
@@ -62,14 +62,14 @@ from fips.problem import Problem
 logger = logging.getLogger(__name__)
 
 _ILL_CONDITIONED = 1e10
-"""The condition number of the mismatch's correlation above which a solve warns: it keeps about six of sixteen digits."""
+"""The condition number of the observation covariance's correlation above which a solve warns: it keeps about six of sixteen digits."""
 
 
 def _warn_if_ill_conditioned(condition: float) -> None:
-    """Log a warning if the correlation of the model-data mismatch has a `condition` number above ``_ILL_CONDITIONED``."""
+    """Log a warning if the correlation of the observation covariance has a `condition` number above ``_ILL_CONDITIONED``."""
     if condition > _ILL_CONDITIONED:
         logger.warning(
-            "The correlation of the model-data mismatch has a condition number "
+            "The correlation of the observation covariance has a condition number "
             "of about %.1e: a solve with it loses about as many digits as the "
             "condition number has, of sixteen. Pass rtol= to its kernel "
             "(rtol=1e-8 keeps the condition number near 1e8), or add independent "
@@ -83,12 +83,10 @@ _LARGE_M = 5000
 The number of observations above which a whitened solve with many more observations than state elements logs a warning.
 
 The whitened form factors an ``m x m`` matrix, in a time that grows as
-``m^3``. Measured on one core of a cluster node (``n = 100``) when every solve
-eigendecomposed it, the whole solve took 2 s at ``m = 2,205``, 25 s at
-``5,000``, 85 s at ``7,500`` and 203 s at ``10,000``; the Cholesky of a
-one-gamma solve is several times faster, and the first ``with_gamma`` still
-eigendecomposes. When the information form could not be used and ``m`` is
-more than twice ``n``, a solve above this size says why.
+``m^3``: seconds on one core at a few thousand observations, minutes at ten
+thousand. The first ``with_gamma`` eigendecomposes it, several times slower
+than a solve's Cholesky. When the information form could not be used and
+``m`` is more than twice ``n``, a solve above this size says why.
 """
 
 _INVERTIBLE = (
@@ -99,11 +97,11 @@ _INVERTIBLE = (
     KroneckerOperator,
 )
 """
-The forms of the model-data mismatch whose inverse the information form applies.
+The forms of the observation covariance whose inverse the information form applies.
 
-A dense mismatch is applied through its Cholesky factor. The whitened form
+A dense observation covariance is applied through its Cholesky factor. The whitened form
 needs that factor too, so the information form saves the ``m x m``
-factorization and the ``m x m`` products. A Kronecker mismatch is applied
+factorization and the ``m x m`` products. A Kronecker one is applied
 through its factors; the whitened form would form it as a dense ``m x m``
 matrix.
 """
@@ -131,7 +129,7 @@ class AnalyticOptions:
     """
 
     gamma: float = 1.0
-    """The regularization factor: the model-data mismatch is divided by it."""
+    """The regularization factor: the observation covariance is divided by it."""
 
     def __post_init__(self):
         try:
@@ -333,14 +331,14 @@ class _Factors:
         r"""
         Return one exact draw for each pair of `gammas` and `scales`, ``n x N``: a draw of the posterior with the prior std times the scale.
 
-        With the prior error covariance :math:`s^2 S_0` and the mismatch
-        :math:`c S_z`, the posterior's mean is this problem's at
+        With the prior covariance :math:`s^2 S_0` and the observation
+        covariance :math:`c S_z`, the posterior's mean is this problem's at
         :math:`\gamma = s^2 / c` and its covariance :math:`s^2` times this
         problem's there. :meth:`sample` at :math:`(s, c)` is then
         :math:`\hat{x}(\gamma) + s \big(\delta - K(\gamma) (H \delta + e)\big)`
         with :math:`\delta \sim N(0, S_0)` and :math:`e \sim N(0, S_z /
         \gamma)`. Each draw's normals are drawn from `rng` in turn, the prior's
-        then the mismatch's, as ``sample(1, rng)`` of each problem would draw
+        then the observation error's, as ``sample(1, rng)`` of each problem would draw
         them, so a draw is that problem's own to roundoff. The gain is never
         formed: one product with the factors for all the draws.
         """
@@ -483,10 +481,10 @@ class Whitened(_Factors):
     covariance or the gain is asked for. The arrays are read-only, also after
     a pickle or a copy.
 
-    With :math:`Q = S_0` the prior error covariance (:math:`n \times n`),
-    :math:`S_z = L L^T` the model-data mismatch (:math:`m \times m`; :math:`L` its
+    With :math:`Q = S_0` the prior covariance (:math:`n \times n`),
+    :math:`S_z = L L^T` the observation covariance (:math:`m \times m`; :math:`L` its
     Cholesky factor, or the square root of its diagonal) and :math:`S_z / \gamma`
-    the mismatch the solve uses:
+    the observation covariance the solve uses:
 
     .. math::
 
@@ -564,7 +562,7 @@ class Whitened(_Factors):
         Raises
         ------
         numpy.linalg.LinAlgError
-            If the model-data mismatch is not positive-definite.
+            If the observation covariance is not positive-definite.
         """
         H = problem._operator.data
         S_0 = problem.prior_cov.data
@@ -577,7 +575,7 @@ class Whitened(_Factors):
         if isinstance(S_z, DiagonalOperator):
             if not np.all(S_z.values > 0):
                 raise LinAlgError(
-                    "The model-data mismatch has a variance that is not positive, "
+                    "The observation covariance has a variance that is not positive, "
                     "so it cannot whiten the observations."
                 )
             s = np.sqrt(S_z.values)
@@ -594,7 +592,7 @@ class Whitened(_Factors):
                 L = np.asarray(cholesky(S_z_dense, lower=True))
             except LinAlgError as err:
                 raise LinAlgError(
-                    "The model-data mismatch is not positive-definite, so it "
+                    "The observation covariance is not positive-definite, so it "
                     "cannot whiten the observations."
                 ) from err
             if not eigendecompose:  # with_gamma factors the same mismatch again
@@ -613,7 +611,7 @@ class Whitened(_Factors):
             gamma,
             eigendecompose,
             "The whitened prior in observation space",
-            "the prior error covariance",
+            "the prior covariance",
         )
         B = whiten(X)
         return cls(
@@ -777,19 +775,19 @@ class Information(_Factors):
     The analytic method's solution in the information form: the factors of one problem, read at one gamma.
 
     ``_analytic`` factors its problem into this (:meth:`factor`) when there
-    are fewer state elements than observations and the model-data mismatch
+    are fewer state elements than observations and the observation covariance
     is dense, diagonal, sparse, block diagonal or Kronecker; otherwise into
     :class:`Whitened`. It factors an :math:`n \times n` matrix instead of an
     :math:`m \times m` one, and gives the same posterior. It holds one
     :math:`n \times n` array; it forms nothing :math:`m \times m` of its own
-    (a dense mismatch is factored by Cholesky inside each solve with it; a
+    (a dense observation covariance is factored by Cholesky inside each solve with it; a
     Kronecker one is applied through its factors). The arrays are read-only,
     also after a pickle or a copy.
 
-    With :math:`S_0 = R_0 R_0^T` the prior error covariance (:math:`R_0` its
+    With :math:`S_0 = R_0 R_0^T` the prior covariance (:math:`R_0` its
     square root in its own form: :meth:`~fips.linalg.LinearOperator.sqrt`),
-    :math:`S_z` the model-data mismatch and :math:`S_z / \gamma` the mismatch
-    the solve uses:
+    :math:`S_z` the observation covariance and :math:`S_z / \gamma` the
+    observation covariance the solve uses:
 
     .. math::
 
@@ -866,9 +864,9 @@ class Information(_Factors):
         Raises
         ------
         numpy.linalg.LinAlgError
-            If the model-data mismatch is not positive-definite.
+            If the observation covariance is not positive-definite.
         _NoSquareRoot
-            If the prior error covariance has no square root (it is not
+            If the prior covariance has no square root (it is not
             positive-definite to working precision).
         """
         H = problem._operator.data
@@ -877,14 +875,14 @@ class Information(_Factors):
             S_z.logdet()  # raises unless positive-definite
         except LinAlgError as err:
             raise LinAlgError(
-                "The model-data mismatch is not positive-definite, so it cannot "
+                "The observation covariance is not positive-definite, so it cannot "
                 "weight the observations."
             ) from err
         try:
             R_0 = problem.prior_cov.data.sqrt()
         except LinAlgError as err:
             raise _NoSquareRoot(
-                "The prior error covariance has no square root: it is not "
+                "The prior covariance has no square root: it is not "
                 "positive-definite to working precision."
             ) from err
         if not eigendecompose:  # with_gamma factors the same mismatch again
@@ -897,7 +895,7 @@ class Information(_Factors):
             gamma,
             eigendecompose,
             "The observations' information on the whitened state",
-            "the model-data mismatch",
+            "the observation covariance",
         )
         G = np.asarray(R_0 @ X)
         return cls(
@@ -1061,7 +1059,7 @@ class Information(_Factors):
 
     @cached_property
     def _innovation_norm(self) -> float:
-        r""":math:`q = d^T S_z^{-1} d`, one solve with the mismatch, kept (each new set of observations has its own)."""
+        r""":math:`q = d^T S_z^{-1} d`, one solve with the observation covariance, kept (each new set of observations has its own)."""
         d = _innovation(self.problem)
         return float(d @ np.asarray(self.problem.obs_cov.data.solve(d)))
 
@@ -1104,7 +1102,7 @@ class Information(_Factors):
         """
         Return the factors of `problem`, this one's with other observation values.
 
-        Only :math:`b` changes: a solve with the model-data mismatch, a
+        Only :math:`b` changes: a solve with the observation covariance, a
         product with :math:`H^T` and one with :math:`G^T` (``n x n``).
         """
         innovation = _read_only(_carried(problem, self.G))
@@ -1112,7 +1110,7 @@ class Information(_Factors):
 
 
 class _NoSquareRoot(LinAlgError):
-    """The prior error covariance has no square root, so the information form cannot factor the problem."""
+    """The prior covariance has no square root, so the information form cannot factor the problem."""
 
 
 def _innovation(problem: Problem) -> np.ndarray:
@@ -1142,8 +1140,7 @@ def _decompose(
     I/\gamma)^{-1}) = \operatorname{tr}(R^{-1} A R^{-T})`, by a triangular
     product (:math:`k^3` flops, less than the form spends making `A`). It
     equals :math:`k - \lVert R^{-1} \rVert_F^2 / \gamma`, but that loses
-    digits when DOFS is much smaller than `k` (two in paper 1's monthly
-    inversion). The information content, :math:`\tfrac{1}{2} \ln \lvert I +
+    digits when DOFS is much smaller than `k`. The information content, :math:`\tfrac{1}{2} \ln \lvert I +
     \gamma A \rvert = \tfrac{1}{2} \sum_i \ln(\gamma R_{ii}^2)`, is read from
     the factor's diagonal (that of :math:`R^{-1}` is :math:`1 / R_{ii}`): the
     log-determinant of the matrix the solve factored, with no second
@@ -1262,7 +1259,7 @@ def _choose(problem: Problem) -> tuple[type, str]:
     Return the form to factor `problem` in, and why.
 
     The information form when there are fewer state elements than
-    observations and the model-data mismatch is dense, diagonal, sparse, block
+    observations and the observation covariance is dense, diagonal, sparse, block
     diagonal or Kronecker; otherwise the whitened form. The tests replace this
     function to hold both forms to the same outputs.
     """
@@ -1275,13 +1272,13 @@ def _choose(problem: Problem) -> tuple[type, str]:
         )
     if not isinstance(S_z, _INVERTIBLE):
         return Whitened, (
-            f"the model-data mismatch is a {type(S_z).__name__}, which the "
+            f"the observation covariance is a {type(S_z).__name__}, which the "
             "information form does not take (it takes dense, diagonal, sparse, "
             "block diagonal and Kronecker)"
         )
     return Information, (
         f"the n = {n} state elements are fewer than the m = {m} observations, and "
-        f"the model-data mismatch is a {type(S_z).__name__}"
+        f"the observation covariance is a {type(S_z).__name__}"
     )
 
 
@@ -1289,7 +1286,7 @@ def _factor(problem: Problem, gamma: float) -> "Whitened | Information":
     """
     Factor `problem` in the form :func:`_choose` gives, logging which and why.
 
-    The information form needs a square root of the prior error covariance;
+    The information form needs a square root of the prior covariance;
     when it has none (it is not positive-definite to working precision), the
     whitened form, which needs none, factors the problem. A whitened solve
     with many more observations than state elements and more than
@@ -1302,7 +1299,7 @@ def _factor(problem: Problem, gamma: float) -> "Whitened | Information":
             solution = Information.factor(problem, gamma)
         except _NoSquareRoot:
             why = (
-                "the prior error covariance has no square root (it is not "
+                "the prior covariance has no square root (it is not "
                 "positive-definite to working precision), which the information "
                 "form needs"
             )

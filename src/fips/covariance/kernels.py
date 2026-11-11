@@ -4,10 +4,10 @@ Kernels: correlations of the labels' coordinates.
 :class:`Exponential`, :class:`Gaussian` and :class:`Matern` fall from one
 with the distance along some levels (a time, a line, a distance on the
 Earth); :class:`Constant` is one at any distance. ``within=`` keeps any of
-them inside groups of labels (the same site and day): zero between groups.
+them inside groups of labels (the same site and day, say): zero between groups.
 
 A smooth kernel on close points is nearly singular: its smallest eigenvalues
-are roundoff, and a solve with it as the model-data mismatch keeps few digits.
+are roundoff, and a solve with it as the observation covariance keeps few digits.
 ``rtol=`` raises its smallest eigenvalues so that the condition number stays
 near ``1 / rtol``.
 """
@@ -503,17 +503,17 @@ class Exponential(_Decay):
     A correlation that decays smoothly, on points close together for its
     scale, is nearly singular: its smallest eigenvalues are roundoff, and a
     solve with it loses about as many digits as its condition number has (a
-    Cholesky factorization fails past about ``1e16``). A prior error
-    covariance may be singular; a model-data mismatch must be
-    positive-definite, and a solve logs a warning when the correlation of the
-    mismatch has a condition number above ``1e10``. Either of two things
+    Cholesky factorization fails past about ``1e16``). A prior
+    covariance may be singular; an observation covariance must be
+    positive-definite, and the analytic method logs a warning when the correlation of
+    the observation covariance has a condition number above ``1e10``. Either of two things
     fixes it: `rtol`, in the correlation, or an independent error added to
     the covariance (``+ Independent().with_std(...)``).
 
     Examples
     --------
-    A prior error correlated over 30 days in time and 20 km in space, kept as
-    the two factors:
+    A prior covariance with correlations over 30 days in time and 20 km in
+    space, kept as the two factors:
 
     >>> from fips import Exponential, Kronecker
     >>> model = Kronecker(

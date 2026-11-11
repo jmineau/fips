@@ -9,7 +9,9 @@ Jacobian, :math:`J(x) = \partial F / \partial x` at a state, as an
 :class:`~fips.Operator` (or, for a model with an adjoint, its products
 :math:`J v` and :math:`J^T w`, :meth:`ForwardModel.jvp` and
 :meth:`ForwardModel.vjp`). The observations are then :math:`z = F(x) + c + e`.
-fips builds no Jacobian: it calls the caller's. :meth:`Problem.linearized
+For a model the caller writes, fips builds no Jacobian: it calls the
+caller's (:class:`~fips.LogNormalForward` and :class:`~fips.SoftplusForward`
+bring their own). :meth:`Problem.linearized
 <fips.Problem.linearized>` is the linear problem at a state, and
 ``fips.solve(problem, "gauss_newton")`` finds the mode of the posterior by
 solving it again at each estimate (``"variational"`` does the same with
@@ -86,7 +88,7 @@ class ForwardModel(ABC):
       diagonal).
 
     A model whose Jacobian is too large to hold, but which has a tangent
-    linear and an adjoint (a transport model run forward and backward),
+    linear and an adjoint (a model run forward and backward),
     writes :meth:`jvp` and :meth:`vjp` instead of ``jacobian``: its Jacobian
     is then those products (a :class:`~fips.linalg.MatrixFreeOperator`), and
     ``fips.solve(problem, "variational")`` solves with them alone.

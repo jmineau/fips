@@ -1,8 +1,8 @@
 r"""
 The covariance settings as unknowns: their priors, their posterior, and the state over them.
 
-Every problem rests on settings someone chose (the prior error's standard
-deviation and correlation length, the model-data mismatch's standard
+Every problem rests on settings someone chose (the prior's standard
+deviation and correlation length, the observation error's standard
 deviation). :func:`hierarchical` gives each setting a prior, draws the
 settings from their posterior,
 
@@ -134,7 +134,7 @@ class _Built:
 
 class _Scales:
     r"""
-    The fast path: the settings scale the problem's prior std (``prior_scale``) and its mismatch (``obs_scale``, or ``gamma``).
+    The fast path: the settings scale the problem's prior std (``prior_scale``) and its observation covariance (``obs_scale``, or ``gamma``).
 
     At :math:`s` = ``prior_scale`` and :math:`c` = ``obs_scale**2 /
     gamma``, the innovation covariance is :math:`s^2 H S_0 H^T + c S_z = s^2
@@ -155,7 +155,7 @@ class _Scales:
 
     @staticmethod
     def scales(values: dict[str, float]) -> tuple[float, float]:
-        """Return the prior std's scale and the mismatch covariance's, :math:`(s, c)`."""
+        """Return the prior std's scale and the observation covariance's, :math:`(s, c)`."""
         obs_scale = values.get("obs_scale", 1.0)
         return values.get("prior_scale", 1.0), obs_scale * obs_scale / values.get(
             "gamma", 1.0
@@ -351,15 +351,15 @@ def hierarchical(
     state's draws are draws of :math:`p(x \mid z)`, the Gaussian posteriors
     mixed over the settings' posterior.
 
-    **The fast path.** When the only settings are a factor on the prior error
-    standard deviation and one on the model-data mismatch's, pass the problem
+    **The fast path.** When the only settings are a factor on the prior's
+    standard deviation and one on the observation error's, pass the problem
     at factors of 1 as `build`, and name the settings ``"prior_scale"`` (the
-    prior std times it) and ``"obs_scale"`` (the mismatch std times it), or
-    ``"gamma"`` instead of ``"obs_scale"`` (the mismatch covariance over it).
+    prior std times it) and ``"obs_scale"`` (the observation error's std times it), or
+    ``"gamma"`` instead of ``"obs_scale"`` (the observation covariance over it).
     One eigendecomposition then gives the evidence at every step, in
     :math:`O(m)` (or :math:`O(n)`) with no solve, and the state's draws at
     every kept step in one product: a run costs about one eigendecomposition
-    of the problem, at any size.
+    of the problem and one product for the draws of the state.
 
     Parameters
     ----------
@@ -416,7 +416,7 @@ def hierarchical(
 
     Examples
     --------
-    The fast path: a factor on the prior std and one on the mismatch's, on a
+    The fast path: a factor on the prior std and one on the observation error's, on a
     problem of 60 observations of 20 cells, whose truth has a std of 2 and
     whose observations an error of 0.5:
 
@@ -459,14 +459,14 @@ def hierarchical(
     ...         prior=problem.prior,
     ...         prior_cov=fips.Independent().with_std(s["prior_std"]),
     ...         obs=obs,
-    ...         obs_cov=fips.Independent().with_std(s["mdm"]),
+    ...         obs_cov=fips.Independent().with_std(s["obs_std"]),
     ...         forward=H,
     ...     )
     >>> general = fips.hierarchical(
     ...     build,
     ...     {
     ...         "prior_std": fips.distributions.LogNormal(0.0, 1.0),
-    ...         "mdm": fips.distributions.LogNormal(0.0, 1.0),
+    ...         "obs_std": fips.distributions.LogNormal(0.0, 1.0),
     ...     },
     ...     draws=1000,
     ...     burn_in=300,
@@ -504,7 +504,7 @@ def hierarchical(
             )
         if "obs_scale" in names and "gamma" in names:
             raise ValueError(
-                "obs_scale and gamma both scale the model-data mismatch: give one."
+                "obs_scale and gamma both scale the observation covariance: give one."
             )
         target = _Scales(build)
     elif callable(build):
@@ -600,9 +600,8 @@ class Hierarchical:
     :func:`hierarchical` builds it. It is not a :class:`~fips.Posterior`: the
     posterior of the state is a mixture of Gaussians, one for each draw of the
     settings, so its estimate, variances and covariances are those of the
-    draws of the state (``draws`` of them: a Monte Carlo estimate, a standard
-    deviation good to a few percent at the default 2000, more where the chain
-    is slow, :attr:`ess`). What is defined only for one Gaussian (the gain,
+    draws of the state (``draws`` of them: a Monte Carlo estimate, whose
+    error falls as the effective number of draws, :attr:`ess`, grows). What is defined only for one Gaussian (the gain,
     DOFS, the chi-squared tests, the evidence) is on the posterior at one
     setting, :meth:`at`. The draws of the state are held as a ``state x
     draws`` array.
