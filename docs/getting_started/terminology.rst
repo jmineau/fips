@@ -216,7 +216,10 @@ The posterior also has these statistics:
        the residual :math:`z - F(\hat{x}) - c`.
    * - uncertainty reduction
      - ``post.uncertainty_reduction``
-     - :math:`1 - \sqrt{\operatorname{tr}(\hat{S})} / \sqrt{\operatorname{tr}(S_0)}`.
+     - :math:`1 - \sqrt{\operatorname{tr}(\hat{S})} / \sqrt{\operatorname{tr}(S_0)}`,
+       with the prior the method used in place of :math:`S_0` (the prior
+       with the bounds for ``"bounded"``, the prior members for
+       ``"ensemble"``), so observations that tell nothing give 0.
    * - Desroziers diagnostic
      - ``post.desroziers(by=...)``
      - The observation error variances the residuals and the innovation

@@ -31,9 +31,12 @@ the analytic method does (``_factor``) and keeps two things from the factors:
 
 The gain, DOFS and the information content are those of the analytic posterior
 with the elements on a bound held there (the Gaussian at the mode); the
-chi-squared and the misfits are the analytic cost's terms at the mode. With no
-finite bound, the posterior is the analytic one, and ``_bounded`` returns the
-analytic solution itself.
+chi-squared and the misfits are the analytic cost's terms at the mode. The
+prior's spread, which the reduction of uncertainty is measured against, is
+that of draws of the prior with the bounds (the bounded problem with no
+observations: ``Bounded.prior_draws``), so observations that tell nothing
+reduce nothing. With no finite bound, the posterior is the analytic one, and
+``_bounded`` returns the analytic solution itself.
 
 References
 ----------
@@ -390,6 +393,47 @@ _RARE_DRAWS = (
 """What the too-few-draws warning of the kept rectified draws says of the cause and the remedy."""
 
 
+class _Prior:
+    r"""
+    The prior :math:`N(x_0, S_0)`, answering what the active set and the sampler read of the analytic posterior: the posterior of the problem with no observations.
+
+    The bounded method's prior is this Gaussian with the bounds (cut at them,
+    or set to them for rectified draws), and its spread is that of draws of
+    the bounded problem with no observations (:meth:`Bounded.prior_draws`),
+    made by the same machinery as the posterior's draws with this in place of
+    the analytic factors. :meth:`sample` draws as ``analytic.sample`` does,
+    the prior's normals first and then the observations', which it does not
+    use: so the prior's draw ``k`` and the posterior's draw ``k`` from one
+    seed share their normals, and where the observations tell nothing the
+    two are the same draws.
+    """
+
+    def __init__(self, problem: Problem):
+        self.problem = problem
+
+    def estimate(self) -> np.ndarray:
+        """Return the prior mean, :math:`x_0`."""
+        return self.problem.prior.values
+
+    def variances(self) -> np.ndarray:
+        """Return the prior variances, the diagonal of :math:`S_0`."""
+        return self.problem.prior_cov.data.diagonal()
+
+    def _cov_times(self, V: np.ndarray) -> np.ndarray:
+        r"""Return :math:`S_0 V` for a block `V` (``n x k``)."""
+        return np.asarray(self.problem.prior_cov.data @ V, dtype=float)
+
+    def sample(self, N: int, rng: np.random.Generator) -> np.ndarray:
+        r"""Return `N` draws of :math:`N(x_0, S_0)` (``n x N``), drawing from `rng` the normals ``analytic.sample`` would."""
+        prior_root = self.problem.prior_cov.data._root
+        obs_root = self.problem.obs_cov.data._root
+        delta = np.asarray(
+            prior_root @ rng.standard_normal((prior_root.shape[1], N)), dtype=float
+        )
+        rng.standard_normal((obs_root.shape[1], N))  # the observations' normals
+        return self.estimate()[:, None] + delta
+
+
 class _Columns:
     r"""
     Columns of the analytic posterior covariance :math:`\hat{S}`, computed from the factors in blocks and kept.
@@ -403,10 +447,11 @@ class _Columns:
     is the same after a pickle. They are kept in one Fortran-ordered array, so
     a column is a contiguous view. One cache serves every posterior of other
     observations (``with_data``): :math:`\hat{S}` does not depend on their
-    values.
+    values. Given the prior (:class:`_Prior`), they are columns of
+    :math:`S_0`.
     """
 
-    def __init__(self, analytic: "Whitened | Information"):
+    def __init__(self, analytic: "Whitened | Information | _Prior"):
         self._analytic = analytic
         n = len(analytic.problem.prior)
         self._slot = np.full(n, -1, dtype=np.intp)
@@ -800,12 +845,13 @@ class _Sampler:
     of the start. The velocities are the analytic method's exact draws less
     :math:`\hat{x}` (``analytic.sample``), :data:`_BLOCK` at a time; only the
     bounded elements are checked for a hit, and only the columns of the
-    elements that hit are used, from ``columns``.
+    elements that hit are used, from ``columns``. Given the prior
+    (:class:`_Prior`) for ``analytic``, it draws the prior cut at the bounds.
     """
 
     def __init__(
         self,
-        analytic: "Whitened | Information",
+        analytic: "Whitened | Information | _Prior",
         lower: np.ndarray,
         upper: np.ndarray,
         columns: _Columns,
@@ -902,9 +948,9 @@ class Bounded:
     \lambda_a` (``_mode``). The :class:`~fips.Posterior` asks it for every
     array it reports: it is the bounded method's
     :class:`~fips.posterior.Solution`. The draws (of the truncated
-    posterior, or rectified: ``distribution``) are made at their first use
-    and kept (not pickled: a posterior read back draws them again, the same,
-    from the seed).
+    posterior, or rectified: ``distribution``), and those of the prior with
+    the bounds, are made at their first use and kept (not pickled: a
+    posterior read back draws them again, the same, from the seed).
 
     Its answers, by what each needs:
 
@@ -914,6 +960,9 @@ class Bounded:
       draws (:meth:`kept`: ``draws`` of them from ``seed``, after ``burn_in``
       for the truncated chain), and so are the posterior's mean and
       intervals (the draws' quantiles); :meth:`sample` draws more;
+    - the prior's variances, which the reduction of uncertainty is measured
+      against, are those of draws of the prior with the bounds, the bounded
+      problem with no observations (:meth:`used_prior_variances`);
     - the gain, DOFS, DOFS per element and the information content are those
       of the analytic posterior with the elements on a bound held there,
       :math:`x_a = b_a` (the Gaussian at the mode), with :math:`C =
@@ -1053,7 +1102,8 @@ class Bounded:
         return {
             name: value
             for name, value in self.__dict__.items()
-            if name not in ("_columns_", "_sampler_", "_draws", "_conditioned_")
+            if name
+            not in ("_columns_", "_sampler_", "_draws", "_conditioned_", "_prior_draws")
         }
 
     def __setstate__(self, state: dict) -> None:
@@ -1104,53 +1154,58 @@ class Bounded:
         (:meth:`_rectify`).
         """
         if self.distribution == "rectified":
-            return self._rectify(self.analytic.sample(N, rng))
+            return _rectify(
+                self.analytic,
+                self.lower,
+                self.upper,
+                self._columns(),
+                self.analytic.sample(N, rng),
+            )
         sampler = self._sampler()
         return sampler.run(sampler.start(self.mode), N, self.burn_in, rng)
 
-    def _rectify(self, draws: np.ndarray) -> np.ndarray:
+    def prior_draws(self) -> np.ndarray:
         r"""
-        Return the analytic posterior's draws `draws` (``n x N``, overwritten) each moved onto the bounds as the mode is: the bounded problem solved again for a draw of the prior and the data.
+        Return draws of the prior with the bounds (``n x draws``), which the prior's variances are read from: drawn from the seed at the first call, and kept.
 
-        The analytic estimate of the problem with the prior mean drawn from
-        :math:`N(x_0, S_0)` and the observations from :math:`N(z, S_z /
-        \gamma)` is an exact draw :math:`x_s` of :math:`N(\hat{x}, \hat{S})`
-        (``analytic.sample``), and the perturbed problem has the same
-        :math:`\hat{S}`, so its bounded estimate is the point of the box
-        nearest :math:`x_s` in the metric of :math:`\hat{S}`: ``_mode`` at
-        :math:`x_s` in place of :math:`\hat{x}`, checked by its optimality
-        conditions. An element the posterior fixes (no variance) keeps the
-        analytic estimate's value, as the mode does: the draw's roundoff
-        there could put it a hair outside a bound it sits on.
-
-        Raises
-        ------
-        numpy.linalg.LinAlgError
-            If a draw's active set fails or ends off the optimality
-            conditions (``_checked_mode``), naming the draw.
+        The prior the bounded method uses is :math:`N(x_0, S_0)` with the
+        bounds, as its draws treat it: the bounded problem with no
+        observations, whose posterior is that prior. Truncated, the prior cut
+        at the bounds: a chain of it, from its mode, as the kept draws are
+        made. Rectified, the prior set to its bounds: each draw of
+        :math:`N(x_0, S_0)` moved onto the bounds as the mode is (an element
+        outside them onto its bound, the others along the prior's
+        correlations), which is what a rectified draw is when the
+        observations tell nothing. The draws are as many as the kept ones,
+        from the same seed, and share their normals (:class:`_Prior`), so
+        where the observations tell nothing they are the kept draws, and the
+        reduction of uncertainty is zero.
         """
-        columns = self._columns()
-        variances = self.analytic.variances()
-        fixed = ~(variances > 0)
-        x_hat = self.analytic.estimate()
-        lower, upper = self.lower, self.upper
-        for j in range(draws.shape[1]):
-            x = draws[:, j]
-            x[fixed] = x_hat[fixed]
-            try:
-                draws[:, j] = _checked_mode(x, lower, upper, columns, variances)[0]
-            except LinAlgError as err:
-                raise LinAlgError(
-                    f"Rectified draw {j} of {draws.shape[1]} could not be moved "
-                    f"onto the bounds: {err}"
-                ) from err
-        return draws
+        kept = self.__dict__.get("_prior_draws")
+        if kept is None:
+            prior = _Prior(self.analytic.problem)
+            columns = _Columns(prior)
+            rng = np.random.default_rng(self.seed)
+            if self.distribution == "rectified":
+                kept = _rectify(
+                    prior,
+                    self.lower,
+                    self.upper,
+                    columns,
+                    prior.sample(self.draws, rng),
+                )
+            else:
+                mode = _checked_mode(
+                    prior.estimate(), self.lower, self.upper, columns, prior.variances()
+                )[0]
+                sampler = _Sampler(prior, self.lower, self.upper, columns)
+                kept = sampler.run(sampler.start(mode), self.draws, self.burn_in, rng)
+            kept = self.__dict__["_prior_draws"] = _read_only(kept)
+        return kept
 
     def variances(self) -> np.ndarray:
         """Return the variances of the kept draws."""
-        kept = self.kept()
-        centered = kept - kept.mean(axis=1, keepdims=True)
-        return np.einsum("ij,ij->i", centered, centered) / (kept.shape[1] - 1)
+        return _variances(self.kept())
 
     def cov(self, W: LinearOperator | None = None) -> np.ndarray:
         """Return the covariance of the kept draws, ``n x n``, or of their aggregates ``W x``, ``k x k``."""
@@ -1159,6 +1214,11 @@ class Bounded:
         centered = Y - Y.mean(axis=1, keepdims=True)
         S = centered @ centered.T / (Y.shape[1] - 1)
         return 0.5 * (S + S.T)
+
+    def used_prior_variances(self, W: LinearOperator | None = None) -> np.ndarray:
+        """Return the variances of the prior with the bounds (``n``), or of its aggregates ``W x`` (``k``): those of :meth:`prior_draws`."""
+        draws = self.prior_draws()
+        return _variances(draws if W is None else np.asarray(W @ draws, dtype=float))
 
     def _gain_rows(self, active: np.ndarray) -> np.ndarray:
         r"""Return the rows of the analytic gain at `active`, :math:`K_{a:}` (``|a| x m``)."""
@@ -1291,29 +1351,92 @@ class Bounded:
         }
 
     def with_gamma(self, gamma: float) -> "Bounded":
-        """Return the solution at `gamma`: the active set again, on the analytic factors read at `gamma`."""
-        return type(self).solve(
-            self.analytic.with_gamma(gamma),
-            self.lower,
-            self.upper,
-            self.draws,
-            self.burn_in,
-            self.seed,
-            self.distribution,
+        """Return the solution at `gamma`: the active set again, on the analytic factors read at `gamma`, sharing the prior's draws."""
+        return self._sharing_the_prior(
+            type(self).solve(
+                self.analytic.with_gamma(gamma),
+                self.lower,
+                self.upper,
+                self.draws,
+                self.burn_in,
+                self.seed,
+                self.distribution,
+            )
         )
 
     def with_data(self, problem: Problem) -> "Bounded":
-        """Return the solution of `problem`, this one's with other observation values: the active set again, sharing the kept columns."""
-        return type(self).solve(
-            self.analytic.with_data(problem),
-            self.lower,
-            self.upper,
-            self.draws,
-            self.burn_in,
-            self.seed,
-            self.distribution,
-            columns=self._columns(),
+        """Return the solution of `problem`, this one's with other observation values: the active set again, sharing the kept columns and the prior's draws."""
+        return self._sharing_the_prior(
+            type(self).solve(
+                self.analytic.with_data(problem),
+                self.lower,
+                self.upper,
+                self.draws,
+                self.burn_in,
+                self.seed,
+                self.distribution,
+                columns=self._columns(),
+            )
         )
+
+    def _sharing_the_prior(self, other: "Bounded") -> "Bounded":
+        """Return `other` with this solution's prior draws, if made: the prior depends on neither gamma nor the observations' values."""
+        prior_draws = self.__dict__.get("_prior_draws")
+        if prior_draws is not None:
+            other.__dict__["_prior_draws"] = prior_draws
+        return other
+
+
+def _variances(draws: np.ndarray) -> np.ndarray:
+    """Return the variance of each row of `draws` (``n x N``), with ``N - 1`` in the denominator."""
+    centered = draws - draws.mean(axis=1, keepdims=True)
+    return np.einsum("ij,ij->i", centered, centered) / (draws.shape[1] - 1)
+
+
+def _rectify(
+    analytic: "Whitened | Information | _Prior",
+    lower: np.ndarray,
+    upper: np.ndarray,
+    columns: _Columns,
+    draws: np.ndarray,
+) -> np.ndarray:
+    r"""
+    Return the analytic posterior's draws `draws` (``n x N``, overwritten) each moved onto the bounds as the mode is: the bounded problem solved again for a draw of the prior and the data.
+
+    The analytic estimate of the problem with the prior mean drawn from
+    :math:`N(x_0, S_0)` and the observations from :math:`N(z, S_z /
+    \gamma)` is an exact draw :math:`x_s` of :math:`N(\hat{x}, \hat{S})`
+    (``analytic.sample``), and the perturbed problem has the same
+    :math:`\hat{S}`, so its bounded estimate is the point of the box
+    nearest :math:`x_s` in the metric of :math:`\hat{S}`: ``_mode`` at
+    :math:`x_s` in place of :math:`\hat{x}`, checked by its optimality
+    conditions. An element the posterior fixes (no variance) keeps the
+    analytic estimate's value, as the mode does: the draw's roundoff
+    there could put it a hair outside a bound it sits on. `columns` are
+    the cached columns of `analytic`'s covariance. With the prior
+    (:class:`_Prior`) for `analytic`, the problem has no observations, and
+    the draws are those of the prior set to its bounds.
+
+    Raises
+    ------
+    numpy.linalg.LinAlgError
+        If a draw's active set fails or ends off the optimality
+        conditions (``_checked_mode``), naming the draw.
+    """
+    variances = analytic.variances()
+    fixed = ~(variances > 0)
+    x_hat = analytic.estimate()
+    for j in range(draws.shape[1]):
+        x = draws[:, j]
+        x[fixed] = x_hat[fixed]
+        try:
+            draws[:, j] = _checked_mode(x, lower, upper, columns, variances)[0]
+        except LinAlgError as err:
+            raise LinAlgError(
+                f"Rectified draw {j} of {draws.shape[1]} could not be moved "
+                f"onto the bounds: {err}"
+            ) from err
+    return draws
 
 
 def _logdet(S: np.ndarray) -> float:

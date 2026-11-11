@@ -96,9 +96,9 @@ class Solution(Protocol):
     observations (``problem.obs``). The posterior labels them, and computes
     each one once.
 
-    Ten members are optional, and a posterior whose solution lacks one says
-    so when it is asked for the feature (or, for ``linearized``, uses its own
-    problem):
+    Eleven members are optional, and a posterior whose solution lacks one says
+    so when it is asked for the feature (or, for ``linearized`` and
+    ``used_prior_variances``, uses its own problem):
 
     - ``with_gamma(gamma) -> Solution``: the solution at another
       regularization factor, without solving again (:meth:`Posterior.with_gamma`).
@@ -132,6 +132,13 @@ class Solution(Protocol):
       linearized where its last solve was made). The averaging kernel and
       the innovation covariance read their forward operator from it; without
       it, from the posterior's problem.
+    - ``used_prior_variances(W=None) -> np.ndarray``: for a method whose prior is
+      not the problem's Gaussian :math:`N(x_0, S_0)`, the variances of the
+      prior it used, of the state (``n``) or of the aggregates ``W x``
+      (``k``). The ``prior_std`` and ``reduction`` of
+      :meth:`Posterior.uncertainty` and :attr:`Posterior.uncertainty_reduction`
+      are measured against them, so that observations that tell nothing
+      reduce nothing; without it, against :math:`S_0`.
 
     And a solution whose :meth:`estimate` is the posterior mean says so with a
     class attribute ``estimate_is_mean = True``; without it, a posterior's
@@ -152,7 +159,9 @@ class Solution(Protocol):
     its mean, variances, covariances and intervals are those of the draws it
     keeps (of its posterior, a Gaussian truncated to the bounds, or, with
     ``distribution="rectified"``, of the bounded estimate with the prior mean
-    and the data redrawn); its gain,
+    and the data redrawn); its prior's variances are those of draws of the
+    prior with the bounds (cut at them, or for rectified draws set to them);
+    its gain,
     DOFS and information content are those of the Gaussian at the mode, with
     the elements on a bound held there; and its chi-squared terms are those
     of the mode. The ``"gauss_newton"`` method's estimate is the mode; its
@@ -161,8 +170,9 @@ class Solution(Protocol):
     the Gaussian at the mode; and its chi-squared terms those of the model at
     its estimate. The ``"ensemble"`` method's estimate is the mean of its
     updated members; its variances, covariances and gain are those of the
-    members, and its DOFS, information content and chi-squared the analytic
-    formulas with the members' covariance of the modeled observations. The
+    members, its prior's variances those of the prior members, and its
+    DOFS, information content and chi-squared the analytic formulas with
+    the members' covariance of the modeled observations. The
     ``"variational"`` method's estimate is the solution of conjugate
     gradients (the mode, with a forward model); its variances, covariances,
     gain, DOFS and information content are those of its low-rank posterior,
@@ -521,6 +531,12 @@ class Posterior:
          - the estimate plus or minus ``z`` standard deviations
          - the kept draws' quantiles
          - the estimate plus or minus ``z`` standard deviations
+       * - ``prior_std``, ``reduction`` (``uncertainty``),
+           ``uncertainty_reduction``
+         - against :math:`S_0`; ``"ensemble"``: against its prior members
+         - ``"bounded"``: against draws of the prior with the bounds;
+           ``"gauss_newton"``: against :math:`S_0`
+         - against :math:`S_0`
        * - ``with_gamma``
          - yes
          - ``"bounded"``: yes; ``"gauss_newton"``: raises (its linearization
@@ -1142,6 +1158,23 @@ class Posterior:
         Wt = None if W_form is None else W_form._transpose().dense()  # n x k
         return _largest_variance(Wt, self._problem.prior_cov.data)
 
+    def _prior_variances(
+        self, W: Operator | None, W_form: LinearOperator | None
+    ) -> np.ndarray:
+        """
+        Return the variances of the prior the method used, of the state (`W` None) or of the aggregates ``W x``.
+
+        The solution's ``used_prior_variances`` when it has one (a method whose
+        prior is not the problem's Gaussian), at `W_form`, the aggregation
+        `W` as a form; otherwise those of :math:`S_0`.
+        """
+        own = getattr(self._solution, "used_prior_variances", None)
+        if own is not None:
+            return own(W_form)
+        if W is None:
+            return self._problem.prior_cov.variances.values
+        return self._problem.prior_cov.aggregate(W).variances.values
+
     def uncertainty(
         self, W: Operator | None = None, level: float = 0.95
     ) -> pd.DataFrame:
@@ -1157,6 +1190,16 @@ class Posterior:
         of aggregates such as a trend or the difference of two seasons
         (``C @ W``, with ``C`` the weights of the rows of ``W``), whose
         uncertainty includes the covariance between the aggregates.
+
+        The prior side is the prior the method used, so observations that
+        tell nothing reduce nothing. For ``"bounded"`` with a finite bound
+        it is the spread of draws of the prior with the bounds, the bounded
+        problem with no observations: :math:`N(x_0, S_0)` cut at the bounds
+        (``distribution="truncated"``) or set to them (``"rectified"``),
+        drawn as many times as the posterior and from the same seed. For
+        ``"ensemble"`` it is the spread of the prior members, whose
+        covariance the update used. For every other method it is
+        :math:`S_0`.
 
         The interval is the posterior's own. For a sampled posterior
         (``"bounded"`` with a finite bound, ``"gauss_newton"`` with a forward
@@ -1179,7 +1222,8 @@ class Posterior:
         -------
         pandas.DataFrame
             One row per aggregate, on the aggregation's rows (or the state's
-            labels): ``prior_std``, ``posterior_std`` and ``reduction``,
+            labels): ``prior_std`` (of the prior the method used, as above),
+            ``posterior_std`` and ``reduction``,
             :math:`1 - \sigma_{posterior} / \sigma_{prior}` (a fraction; NaN
             where the prior standard deviation is 0), then ``lower`` and
             ``upper``, the ends of the posterior interval of probability
@@ -1201,7 +1245,7 @@ class Posterior:
         --------
         cov : The posterior covariance, of the state or of aggregates.
         fips.Covariance.aggregate : The prior covariance of aggregates, ``problem.prior_cov.aggregate(W)``.
-        uncertainty_reduction : One number for the whole state.
+        uncertainty_reduction : One number for the whole state, measured against the same prior.
 
         Examples
         --------
@@ -1250,15 +1294,14 @@ class Posterior:
         """
         level = _checked_level(level)
         if W is None:
-            prior = self._problem.prior_cov.variances.values
             posterior = self.variances.values
             W_form = None
             index = self._problem.prior.index
         else:
             posterior = self.cov(W).variances.values  # checks W against the state
-            prior = self._problem.prior_cov.aggregate(W).variances.values
             W_form = self._aggregation(W)
             index = W.rows.index
+        prior = self._prior_variances(W, W_form)
         scale = self._prior_scale(W_form)
         prior_std = _std(prior, scale, "prior variances")
         posterior_std = _std(posterior, scale, "posterior variances")
@@ -2688,9 +2731,21 @@ class Posterior:
         r"""
         One minus the ratio of the posterior to the prior total error.
 
-        :math:`1 - \sqrt{\operatorname{tr}(\hat{S})} / \sqrt{\operatorname{tr}(S_0)}`.
+        :math:`1 - \sqrt{\operatorname{tr}(\hat{S})} / \sqrt{\operatorname{tr}(S_0)}`,
+        with the prior side the prior the method used, as in
+        :meth:`uncertainty`: for ``"bounded"`` with a finite bound the
+        variances of draws of the prior with the bounds, for ``"ensemble"``
+        those of the prior members, in place of :math:`\operatorname{tr}(S_0)`.
+        Observations that tell nothing (no DOFS) give 0, for a sampled
+        posterior within the Monte Carlo error of its draws.
+
+        See Also
+        --------
+        uncertainty : The same reduction for each element or aggregate.
+        dofs : What the observations told, in degrees of freedom.
         """
-        prior = self._problem.prior_cov.data.trace()
+        own = getattr(self._solution, "used_prior_variances", None)
+        prior = self._problem.prior_cov.data.trace() if own is None else own().sum()
         return float(1 - np.sqrt(self.variances.values.sum()) / np.sqrt(prior))
 
     def summary(self) -> pd.DataFrame:
