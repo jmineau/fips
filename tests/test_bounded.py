@@ -767,9 +767,9 @@ def test_the_active_set_is_bvls_on_problems_that_stress_it(kind, monkeypatch):
     The active set against SciPy's bounded least squares on 40 random problems of each kind, to 1e-9 posterior standard deviations (1e-5 for the nearly singular ones, whose reference loses digits), passing its own optimality conditions.
 
     Each problem is solved twice: with block exchanges, and with ``_TRIES``
-    at 0, which exchanges one element a step whenever a step does not lower
-    the count of broken conditions. The two take different paths (other
-    counts of steps) to the same answer.
+    at 0, which goes to one exchange a step at the first block step that
+    does not lower the count of broken conditions. The two take different
+    paths (other counts of steps) to the same answer.
     """
     rng = np.random.default_rng(KINDS.index(kind))
     held, default = 0, bounded._TRIES
@@ -812,8 +812,22 @@ _CYCLE_X = np.array([-0.5206142, 3.67844478, -3.69877401, -1.22438935, -3.297662
 _CYCLE_UPPER = np.array([2.54584288, np.inf, 1.00099489, np.inf, np.inf])
 
 
+def _spy_on_one_exchange(monkeypatch) -> list[int]:
+    """Count the modes the active set finds by one exchange a step."""
+    used = []
+    one_exchange = bounded._one_exchange
+
+    def spy(*args):
+        used.append(1)
+        return one_exchange(*args)
+
+    monkeypatch.setattr(bounded, "_one_exchange", spy)
+    return used
+
+
 def test_block_exchanges_that_cycle_are_ended_by_one_exchange_a_step(monkeypatch):
-    """On a problem where exchanging every broken element at once cycles, the fallback to one exchange a step ends at the bounded least-squares answer; without it the active set runs to its cap and raises."""
+    """On a problem where exchanging every broken element at once cycles, the active set goes to one exchange a step and ends at the bounded least-squares answer."""
+    used = _spy_on_one_exchange(monkeypatch)
     lower, variances = np.zeros(5), np.diag(_CYCLE_S).copy()
     mode, _, _, _ = bounded._checked_mode(
         _CYCLE_X, lower, _CYCLE_UPPER, DenseColumns(_CYCLE_S), variances
@@ -823,16 +837,31 @@ def test_block_exchanges_that_cycle_are_ended_by_one_exchange_a_step(monkeypatch
         A, A @ _CYCLE_X, bounds=(lower, _CYCLE_UPPER), method="bvls", tol=1e-15
     ).x
     np.testing.assert_allclose(mode, reference, rtol=0, atol=1e-10)
-    monkeypatch.setattr(bounded, "_TRIES", 10**9)  # never fall back
-    with pytest.raises(LinAlgError, match="did not end"):
-        bounded._mode(
-            _CYCLE_X,
-            lower,
-            _CYCLE_UPPER,
-            DenseColumns(_CYCLE_S),
-            variances,
-            bounded._scale(_CYCLE_X, variances, lower, _CYCLE_UPPER),
-        )
+    assert used
+
+
+@pytest.mark.parametrize("seed", [75, 156, 245])
+def test_block_exchanges_that_wander_are_ended_in_a_step_an_element(seed, monkeypatch):
+    """
+    A smooth covariance and a rough point: the block exchanges stall, and one exchange a step ends in about a step an element.
+
+    One exchange a step by the least index (Murty's rule), which ends too,
+    took thousands of steps on these three, past the cap of ``10 n + 100``.
+    """
+    used = _spy_on_one_exchange(monkeypatch)
+    n = 40
+    i = np.arange(n)
+    S = np.exp(-(((i[:, None] - i[None, :]) / 3.0) ** 2)) + 1e-4 * np.eye(n)
+    x_hat = np.random.default_rng(seed).normal(0.0, 1.5, n)
+    lower, upper, variances = np.zeros(n), np.full(n, np.inf), np.diag(S).copy()
+    columns = DenseColumns(S)
+    mode, _, _, _ = bounded._checked_mode(x_hat, lower, upper, columns, variances)
+    A = np.linalg.cholesky(np.linalg.inv(S)).T
+    reference = lsq_linear(
+        A, A @ x_hat, bounds=(lower, upper), method="bvls", tol=1e-15
+    ).x
+    np.testing.assert_allclose(mode, reference, rtol=0, atol=1e-7)
+    assert used and columns.calls < 3 * n
 
 
 def test_the_active_set_takes_a_few_steps_where_one_exchange_a_step_took_many():

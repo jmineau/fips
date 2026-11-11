@@ -49,6 +49,12 @@ https://doi.org/10.5194/gmd-7-303-2014
 Pakman, A., and Paninski, L. (2014). Exact Hamiltonian Monte Carlo for truncated
 multivariate Gaussians. *Journal of Computational and Graphical Statistics*,
 23(2), 518-542. https://doi.org/10.1080/10618600.2013.788448
+
+Nocedal, J., and Wright, S. J. (2006). *Numerical Optimization*, second
+edition, chapter 16. Springer.
+
+Lawson, C. L., and Hanson, R. J. (1974). *Solving Least Squares Problems*.
+Prentice-Hall.
 """
 
 import logging
@@ -82,7 +88,7 @@ _DECISION_RTOL = 1e-10
 """How far outside its bounds a free element, or how wrong the sign of a held element's multiplier, must be before the active set exchanges it, relative to the scale of the state."""
 
 _TRIES = 3
-"""The steps of block exchanges the active set takes without a new least count of broken conditions before it exchanges one element a step."""
+"""The steps of block exchanges the active set takes in a row without a new least count of broken conditions before it exchanges one element a step instead (``_one_exchange``)."""
 
 _BLOCK = 512
 """The number of velocities the sampler draws in one block."""
@@ -498,17 +504,20 @@ def _mode(
     outside the box joining :math:`a` at the bound it crossed and a held one
     whose multiplier has the wrong sign leaving it. Wrong means beyond
     :data:`_DECISION_RTOL` of the scale, measured for a multiplier as
-    :math:`\lambda_i \hat{S}_{ii}`, the distance it pulls the element. Block
-    exchanges can cycle; while the count of broken conditions falls they go
-    on, and after :data:`_TRIES` steps in a row without a new least count
-    each step exchanges only the broken element of the highest index
-    (Murty's rule), which ends for a positive-definite matrix, until the
-    count falls below its least again. A step costs one Cholesky factor of
-    :math:`\hat{S}_{aa}` and one product with :math:`\hat{S}_{:a}`
-    (``columns``); a few steps usually do, where exchanging one element a
-    step took one per element exchanged. ``10 n + 100`` steps at most, then
-    it raises. The solve then checks the optimality conditions of what it
-    returns (``_kkt``).
+    :math:`\lambda_i \hat{S}_{ii}`, the distance it pulls the element. A
+    step costs one Cholesky factor of :math:`\hat{S}_{aa}` and one product
+    with :math:`\hat{S}_{:a}` (``columns``); a few steps usually do, where
+    exchanging one element a step takes one per element exchanged.
+
+    Block exchanges do not lower the cost at each step, and can cycle or
+    wander (a strongly correlated :math:`\hat{S}` with an :math:`\hat{x}`
+    far rougher than it). While the count of broken conditions reaches a new
+    least they go on; after :data:`_TRIES` steps in a row without one, the
+    mode is found by exchanging one element a step instead
+    (``_one_exchange``), which lowers the cost at each step and so ends. The
+    block exchanges therefore take ``(_TRIES + 1) (n + 1)`` steps at most.
+    The solve then checks the optimality conditions of what it returns
+    (``_kkt``).
 
     Raises
     ------
@@ -523,7 +532,7 @@ def _mode(
     side[x_hat > upper] = -1
     tolerance = _DECISION_RTOL * scale
     least, tries = n + 1, _TRIES
-    for _ in range(10 * n + 100):
+    while True:
         active = np.flatnonzero(side)
         x = x_hat.copy()
         lam = np.zeros(0)
@@ -547,14 +556,90 @@ def _mode(
             least, tries = broken, _TRIES
         elif tries:
             tries -= 1
-        else:  # Murty's rule: only the broken element of the highest index
-            last = max(
-                below.max(initial=-1), above.max(initial=-1), wrong.max(initial=-1)
-            )
-            below, above, wrong = (k[k == last] for k in (below, above, wrong))
+        else:
+            return _one_exchange(x_hat, lower, upper, columns, variances, scale)
         side[below] = 1
         side[above] = -1
         side[wrong] = 0
+
+
+def _one_exchange(
+    x_hat: np.ndarray,
+    lower: np.ndarray,
+    upper: np.ndarray,
+    columns: _Columns,
+    variances: np.ndarray,
+    scale: float,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    r"""
+    Return what ``_mode`` returns, by exchanging one element a step: the active set ``_mode`` falls back to.
+
+    The primal active-set method for a convex quadratic program (Nocedal and
+    Wright, 2006, algorithm 16.3), here with bounds only: the method of which
+    Lawson and Hanson's nonnegative least squares, and its bounded variant,
+    are the least-squares case, with the step back to the box at the first
+    element that would leave it. It keeps a feasible point and the set
+    :math:`a` of ``_mode``. Each step moves toward :math:`x(a)` and stops at
+    the first free element that would leave the box, which joins :math:`a`;
+    at :math:`x(a)` itself, an element whose multiplier has the wrong sign
+    leaves :math:`a` (the most wrong first, measured as :math:`\lambda_i
+    \hat{S}_{ii}`, the distance it pulls the element), and with none the
+    point is the mode. It starts from :math:`\hat{x}` put into the box, with
+    the elements it put on a bound in :math:`a`. Each step lowers the cost
+    or changes :math:`a` at the same cost, so it ends (a degenerate problem
+    could cycle among sets of the same cost: ``10 n + 100`` steps at most,
+    then it raises), in about a step for each element it holds or releases.
+
+    Raises
+    ------
+    numpy.linalg.LinAlgError
+        If :math:`\hat{S}_{aa}` is not positive definite, or the active set
+        does not end.
+    """
+    n = len(x_hat)
+    side = np.zeros(n, dtype=np.int8)
+    side[x_hat < lower] = 1
+    side[x_hat > upper] = -1
+    x = np.clip(x_hat, lower, upper)
+    multipliers = np.zeros(n)
+    tolerance = _DECISION_RTOL * scale
+    for _ in range(10 * n + 100):
+        active = np.flatnonzero(side)
+        if not len(active):
+            return x_hat.copy(), side, multipliers
+        bound = np.where(side[active] > 0, lower[active], upper[active])
+        S_a = columns(active)
+        lam = _conditioned_solve(S_a[active], bound - x_hat[active])
+        target = x_hat + S_a @ lam
+        target[active] = bound
+        step = target - x
+        free = side == 0
+        down = free & (step < 0) & np.isfinite(lower)
+        up = free & (step > 0) & np.isfinite(upper)
+        alpha, blocking, held = 1.0, -1, 0
+        if down.any():
+            reach = np.maximum(x[down] - lower[down], 0.0) / -step[down]
+            k = int(np.argmin(reach))
+            if reach[k] < alpha:
+                alpha, blocking, held = float(reach[k]), int(np.flatnonzero(down)[k]), 1
+        if up.any():
+            reach = np.maximum(upper[up] - x[up], 0.0) / step[up]
+            k = int(np.argmin(reach))
+            if reach[k] < alpha:
+                alpha, blocking, held = float(reach[k]), int(np.flatnonzero(up)[k]), -1
+        if blocking >= 0:
+            x = x + alpha * step
+            x[active] = bound
+            x[blocking] = lower[blocking] if held > 0 else upper[blocking]
+            side[blocking] = held
+            continue
+        x = target
+        pull = side[active] * lam * variances[active]  # below zero: the wrong sign
+        worst = int(np.argmin(pull))
+        if pull[worst] >= -tolerance:
+            multipliers[active] = lam
+            return x, side, multipliers
+        side[active[worst]] = 0
     raise LinAlgError(
         "The bounded mode was not found: the active set did not end after "
         f"{10 * n + 100} steps."
