@@ -139,10 +139,11 @@ class Problem:
 
     Notes
     -----
-    A forward operator that covers only part of the state (a transport
-    Jacobian has columns only for the cells a footprint touched) is placed on
-    the whole state by :meth:`Operator.from_blocks <fips.Operator.from_blocks>`,
-    which puts a labeled block by its labels: a cell the Jacobian lacks is a
+    A forward operator that covers only part of the state (a Jacobian with
+    columns only for the elements the observations are sensitive to: in a
+    transport model, the cells a footprint touched) is placed on the whole
+    state by :meth:`Operator.from_blocks <fips.Operator.from_blocks>`, which
+    puts a labeled block by its labels: an element the Jacobian lacks is a
     column of zeros, and a label the space lacks raises. With ``J`` the
     labeled Jacobian (a DataFrame, dense or pandas-sparse, or a tuple
     ``(matrix, row_labels, col_labels)``)::
@@ -492,7 +493,7 @@ class Problem:
             `truth` draws the error alone.
         truth : Vector, optional
             A state to use as the truth instead of drawing one, on the prior's
-            labels in any order: another inventory, 1.5 times the prior. Its
+            labels in any order: another prior estimate, 1.5 times the prior. Its
             observations still carry the error.
 
         Returns
@@ -579,10 +580,10 @@ class Problem:
         r"""
         Return the problem on part of the state, the rest held at its prior.
 
-        Use it to solve for some of the state only, such as the cells the
+        Use it to solve for some of the state only, such as the elements the
         observations see well, and keep every other element at its prior
-        value. Which elements to keep is your choice: for example, the cells
-        whose total sensitivity is above a percentile of all cells'
+        value. Which elements to keep is your choice: for example, in a flux
+        inversion, the cells whose total sensitivity is above a percentile of all cells'
         (:func:`fips.aggregate.sum` of the forward operator's absolute column
         sums, grouped by cell, gives that total).
 

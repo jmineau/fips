@@ -1478,7 +1478,7 @@ def _bounded(problem: Problem, options: BoundedOptions) -> Posterior:
             f"forward is a model, {type(problem.forward).__name__}: bounds with a "
             'forward model are not available. Solve it with "gauss_newton", '
             "without bounds, or write the model on a state that cannot leave "
-            "the bounds (the logarithm of a positive flux)."
+            "the bounds (the logarithm of a positive quantity)."
         )
     state = problem.prior.space
     _warn_if_every_block(options, state)

@@ -1,8 +1,8 @@
 r"""
 The ensemble method: a square-root ensemble Kalman update, for a forward model that can only be run.
 
-A transport model with no Jacobian (a TM5 or WRF configuration) cannot be
-linearized by hand, but it can be run. The ensemble method needs only its
+A model with no Jacobian (an atmospheric transport model, such as a TM5 or
+WRF configuration) cannot be linearized by hand, but it can be run. The ensemble method needs only its
 runs: :meth:`Problem.ensemble <fips.Problem.ensemble>` draws ``N`` members
 from the prior, the model is run on each (outside fips, or by fips when the
 problem's forward is an :class:`~fips.Operator` or a
@@ -145,7 +145,7 @@ class EnsembleOptions:
         with the modeled observations: rows the state's labels, columns the
         observations' (any order, any form). fips computes no distances:
         the weights are yours (Gaspari and Cohn's function of the distance
-        between each cell and each observation, say). Without it, no
+        between each state element and each observation, say). Without it, no
         localization. It needs `obs_localization`.
     obs_localization : Operator, optional
         Weights :math:`\rho_{yy}` on the ensemble's covariance of the modeled

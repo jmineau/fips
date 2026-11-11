@@ -1,21 +1,26 @@
 .. _positive:
 
-Fluxes that stay positive
+Values that stay positive
 =========================
 
-A flux of methane cannot be negative, and the Gaussian posterior of a flux
-inversion often is where the prior is small and the observations see little.
-One way to keep it positive is to hold the state to bounds (:doc:`bounds`).
-The other, on this page: **solve for a variable** :math:`u` **that can be
-anything, and make the flux a positive function of it.**
-:class:`fips.LognormalForward` makes the flux a factor of an inventory,
-:math:`r\, e^{u}`; :class:`fips.SoftplusForward` makes it :math:`u` itself
-where it is large, bending to stay above zero near zero. Each is a forward
-model (:doc:`nonlinear`): the state, its prior and its covariance are in
-:math:`u`'s units, ``model.prior_for`` gives the prior on :math:`u` whose flux
-has the mean and standard deviation you mean, ``fips.solve(problem,
-"gauss_newton")`` finds the mode and draws the posterior, and
-``model.transform`` maps the estimate, or the draws, back to the flux.
+Some quantities cannot be negative (a flux, a concentration, a rate), yet the
+Gaussian posterior of a problem that estimates them often is where the prior
+is small and the observations see little. One way to keep the state positive
+is to hold it to bounds (:doc:`bounds`). The other, on this page: **solve for
+a variable** :math:`u` **that can be anything, and make the quantity a
+positive function of it.** :class:`fips.LognormalForward` makes it a factor of
+a reference (a prior estimate), :math:`r\, e^{u}`;
+:class:`fips.SoftplusForward` makes it :math:`u` itself where it is large,
+bending to stay above zero near zero. Each is a forward model
+(:doc:`nonlinear`): the state, its prior and its covariance are in
+:math:`u`'s units, ``model.prior_for`` gives the prior on :math:`u` whose
+transformed value has the mean and standard deviation you mean,
+``fips.solve(problem, "gauss_newton")`` finds the mode and draws the
+posterior, and ``model.transform`` maps the estimate, or the draws, back to
+the value.
+
+The example on this page is a methane flux inversion: the state is the flux
+of each cell, and the reference an emission inventory.
 
 .. contents:: On this page
    :local:
@@ -57,7 +62,7 @@ too, name it with ``block="flux"``) is :math:`u`, the logarithm of the factor
 that scales each cell's inventory :math:`r`, and the model is :math:`F(x) =
 H\, (r\, e^{u})`. Other blocks pass through: :math:`H` is the forward operator
 on the whole state, and the columns of a bias block are used as they are. The
-Jacobian is :math:`H` with each column of the block scaled by its flux, in the
+Jacobian is :math:`H` with each column of the block scaled by its value, in the
 form of :math:`H`, so a sparse footprint stays sparse.
 
 
@@ -65,7 +70,7 @@ Choosing the prior on u
 -----------------------
 
 A prior standard deviation of 0.5 on :math:`u` is a factor of :math:`e^{0.5} =
-1.65` either way. What it means for the flux depends on where the prior on
+1.65` either way. What it means for the value depends on where the prior on
 :math:`u` is centered, and there are two conventions:
 
 - **the median**: :math:`u \sim N(0, \sigma^2)`. The inventory is the prior's
@@ -75,10 +80,11 @@ A prior standard deviation of 0.5 on :math:`u` is a factor of :math:`e^{0.5} =
 - **the mean**: :math:`u \sim N(-\sigma^2/2, \sigma^2)`. The inventory is the
   prior's mean flux, and its total the inventory's.
 
-An inventory is an estimate of the mean flux, and a basin total is a sum of
-means, so fips's helper takes the mean. :meth:`~fips.LognormalForward.prior_for`
-takes the flux's prior mean :math:`m` and standard deviation :math:`s` in each
-cell and returns the :math:`u` prior whose flux has exactly those:
+A reference is usually an estimate of the mean (an inventory is), and a total
+is a sum of means, so fips's helper takes the mean.
+:meth:`~fips.LognormalForward.prior_for` takes the prior mean :math:`m` and
+standard deviation :math:`s` of each element's value and returns the :math:`u`
+prior whose value has exactly those:
 :math:`\sigma^2 = \log(1 + s^2/m^2)` and :math:`\mu = \log(m/r) - \sigma^2/2`.
 An uncertainty of 100% of the inventory is :math:`\sigma = \sqrt{\log 2} =
 0.83`:
@@ -90,8 +96,8 @@ An uncertainty of 100% of the inventory is :math:`\sigma = \sqrt{\log 2} =
 
 The correlations are those of :math:`u`. Write the covariance with them as for
 any state (``fips.Exponential("cell", 3.0).with_std(sigma)``), and know that
-the flux's correlations are weaker: two cells whose :math:`u` correlate by
-:math:`\rho` have fluxes that correlate by
+the values' correlations are weaker: two elements whose :math:`u` correlate
+by :math:`\rho` have values that correlate by
 
 .. math::
 
@@ -162,45 +168,45 @@ Sum the draws after the transform: ``post.sample(n, W=W)`` aggregates
 of the kept draws (``draws=2000`` of them), in :math:`u`.
 
 
-Cells with no reference
------------------------
+Elements with no reference
+--------------------------
 
-A cell whose inventory is zero has a zero flux, whatever :math:`u` is: its
-column of the Jacobian is zero, so no observation moves it, and the inversion
-can put no source there. ``prior_for`` gives those cells :math:`\mu = 0` and
-:math:`\sigma = 0` (a mean or standard deviation that is not zero there
-raises); any prior there gives the other cells the same posterior, since a
+An element whose reference is zero has a zero value, whatever :math:`u` is:
+its column of the Jacobian is zero, so no observation moves it, and the data
+cannot make it positive. ``prior_for`` gives those elements :math:`\mu = 0`
+and :math:`\sigma = 0` (a mean or standard deviation that is not zero there
+raises); any prior there gives the other elements the same posterior, since a
 variable that no observation sees changes nothing it is correlated with.
 
 .. ipython:: python
 
    flux.iloc[[5, 17, 29]]
 
-Salt Lake Valley inventories have empty cells where sources could be (a new
-well, a leak no inventory lists). To let the data put a source there, give the
-cell a reference (a small one grows by the prior's factor, so it stays small),
-use :class:`~fips.SoftplusForward` with a prior mean above zero, or hold the
-flux to bounds instead (:doc:`bounds`).
+In a flux inversion, an inventory can have empty cells where sources could be
+(a new well, a leak no inventory lists). To let the data put a value there,
+give the element a reference (a small one grows by the prior's factor, so it
+stays small), use :class:`~fips.SoftplusForward` with a prior mean above zero,
+or hold the state to bounds instead (:doc:`bounds`).
 
 
 The softplus model
 ------------------
 
-:class:`fips.SoftplusForward` solves for the flux in its own units, with
+:class:`fips.SoftplusForward` solves for the value in its own units, with
 :math:`T(u) = s \log(1 + e^{u/s})`: where :math:`u` is several ``scale``
-:math:`s` above zero the flux is :math:`u`, and the problem is the linear one;
-several below, the flux is :math:`s\, e^{u/s}`, near zero and positive. The
-uncertainty is additive away from zero (a flux of :math:`10 \pm 2`) and bends
-near it. ``scale`` is in the flux's units and says where the bend is: the
+:math:`s` above zero the value is :math:`u`, and the problem is the linear
+one; several below, the value is :math:`s\, e^{u/s}`, near zero and positive.
+The uncertainty is additive away from zero (:math:`10 \pm 2`) and bends near
+it. ``scale`` is in the value's units and says where the bend is: the
 transform is not the same in other units, so it has no default: set it near
-the prior standard deviation of the cells that could be near zero.
+the prior standard deviation of the elements that could be near zero.
 
-There is no closed form for the prior on :math:`u` that a flux prior
-corresponds to: :meth:`~fips.SoftplusForward.prior_for` computes the flux's
+There is no closed form for the prior on :math:`u` that a prior on the value
+corresponds to: :meth:`~fips.SoftplusForward.prior_for` computes the value's
 mean and standard deviation for a Gaussian :math:`u` by quadrature and matches
-them by Newton's method, to 1e-12. Far above the scale it returns the flux's
+them by Newton's method, to 1e-12. Far above the scale it returns the value's
 own prior; near zero, a :math:`u` centered lower and wider. The empty cells
-get a mean of a tenth of the smallest inventory, since a softplus flux is never
+get a mean of a tenth of the smallest inventory, since a softplus value is never
 zero:
 
 .. ipython:: python
@@ -224,7 +230,7 @@ Why a total comes from draws of the posterior
 The posterior of :math:`u` is not Gaussian, and the Gaussian at the mode (the
 analytic posterior of the problem linearized at the mode,
 ``fips.solve(problem.linearized(post.estimate))``) can be far from it for a
-function of many cells. Two cells whose total is observed closely, each with a
+function of many elements. Two elements whose total is observed closely, each with a
 prior factor of :math:`e = 2.7` either way, show why:
 
 .. ipython:: python
@@ -243,9 +249,10 @@ The data say the total is :math:`2.00 \pm 0.05`, and so do the posterior's
 draws; the Gaussian at the mode's say :math:`2.6 \pm 0.9`. The states that give
 that total lie on a curve, :math:`e^{u_a} + e^{u_b} = 2`; the Gaussian at the
 mode lies along the curve's tangent, and on the tangent the sum of the
-exponentials is never below 2. The flux at the mode is right (1 and 1); the
-Gaussian's draws are not. A footprint sees a sum of cells, so this is the case
-of a flux inversion, and it grows with the prior's spread. The sampler uses
+exponentials is never below 2. The values at the mode are right (1 and 1);
+the Gaussian's draws are not. An observation of a sum of elements is this
+case (in a flux inversion, a footprint sees a sum of cells), and it grows with
+the prior's spread. The sampler uses
 the Gaussian at the mode only to move (:doc:`nonlinear`), and its draws are of
 the posterior.
 
@@ -279,22 +286,22 @@ draws to keep the page quick:
 Thirty trials know a coverage to about 0.04, so read the table for its
 contrast: with a prior of 100% (a log standard deviation of 0.83) the Gaussian
 at the mode's interval misses the truth about one time in four, the posterior's
-holds it about as often as it claims, and the sum of the flux at the mode stays
+holds it about as often as it claims, and the sum of the values at the mode stays
 unbiased with either prior.
 
-In a larger world shaped like the Salt Lake Valley's (400 cells, three sites,
+In the larger world of :doc:`comparison` (400 cells, three sites,
 three quarters of the cells with an averaging kernel below 0.1, a log standard
 deviation of 1), over 200 trials with 1000 kept draws each, the 95% interval
 of the total held the truth in 95.5% of them for ``LognormalForward`` and 96%
 for ``SoftplusForward`` (21% and 40% from the Gaussian at the mode), and each
-cell's 95% interval, the quantiles of its draws (as
+element's 95% interval, the quantiles of its draws (as
 :meth:`~fips.Posterior.trials` reads it), in 94.7% and 94.6%. Read
-symmetrically about the mode with the draws' standard deviation, a cell's
+symmetrically about the mode with the draws' standard deviation, an element's
 interval held the truth in 92%: the posterior is skewed there.
 
 So: report the total and its interval from the posterior's draws, and each
-cell's interval from its draws (or from :attr:`~fips.Posterior.variances`).
-The sum of the flux at the mode is a point estimate of the total near its
+element's interval from its draws (or from :attr:`~fips.Posterior.variances`).
+The sum of the values at the mode is a point estimate of the total near its
 median.
 
 
@@ -305,29 +312,29 @@ The draws are made at the first use of :attr:`~fips.Posterior.variances`,
 :meth:`~fips.Posterior.cov` or :meth:`~fips.Posterior.sample`, after a
 ``burn_in`` of 200 that tunes the sampler's step, and kept. Each draw follows a
 path of steps (one for a model that is linear, more where it bends: medians of
-16 and 20 in the Salt Lake Valley-shaped world), and each step evaluates the
+16 and 20 in :doc:`comparison`'s 400-cell world), and each step evaluates the
 model and the product of its Jacobian's transpose with a vector (a transform
 forms no Jacobian), and multiplies by the covariance of the Gaussian at the
-mode. In the Salt Lake Valley-shaped world (400 cells, 120 observations) a draw
+mode. In that world (400 cells, 120 observations) a draw
 took 5 to 10 ms (a step about 0.5 ms), so the 2200 of a solve 10 to 20 s, on
 one core; the same footprint as a linear model, 0.7 ms (one step). A trial of
 :meth:`~fips.Posterior.trials` draws its own. The draws are correlated: most
-cells' have an autocorrelation time of 1 to 3 draws there (the slowest, tens),
+elements' have an autocorrelation time of 1 to 3 draws there (the slowest, tens),
 so 2000 draws give a standard deviation to about 3%; ``draws=`` asks for more.
 A solve logs a warning when some element's draws mix so slowly that its
-standard deviation is uncertain by more than 10% (in the two cells above, along
+standard deviation is uncertain by more than 10% (in the two elements above, along
 the curve: the total, which the data constrain, mixes in a few draws).
 
 
 Which to use
 ------------
 
-- :class:`~fips.LognormalForward` when the uncertainty is a **factor** of an
-  inventory, the same in relative terms at small and large fluxes. A cell with
-  no inventory stays at zero.
-- :class:`~fips.SoftplusForward` when the uncertainty is **additive** (a flux
-  of :math:`10 \pm 2`, whatever its size) and the flux is near zero only in
-  some cells, where it bends instead of going below.
+- :class:`~fips.LognormalForward` when the uncertainty is a **factor** of a
+  reference (an inventory), the same in relative terms at small and large
+  values. An element with no reference stays at zero.
+- :class:`~fips.SoftplusForward` when the uncertainty is **additive**
+  (:math:`10 \pm 2`, whatever the value's size) and the value is near zero
+  only in some elements, where it bends instead of going below.
 - ``"bounded"`` (:doc:`bounds`) when the prior is the Gaussian one and only
   the negative part is wrong: the posterior is the Gaussian truncated at zero,
   whose total is above the Gaussian's where the data see little.
@@ -338,7 +345,7 @@ fips draws each posterior exactly, so in its own world a total's interval
 covers.
 
 Both transforms make the problem nonlinear, more so the wider the prior, and
-the solve takes more steps: in the Salt Lake Valley-shaped world at a log
+the solve takes more steps: in :doc:`comparison`'s 400-cell world at a log
 standard deviation of 1 (200 trials), a median of 7 and at most 14 for the
 lognormal model, 9 and 14 for the softplus model (Gauss-Newton's steps alone
 took 9 and 23, and 18 and 153). A solve logs a warning when its steps fall

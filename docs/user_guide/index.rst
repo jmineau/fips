@@ -9,7 +9,7 @@ fits the covariance settings by maximizing the evidence; :doc:`hierarchical`
 draws them from their posterior, so intervals hold their uncertainty; :doc:`bounds`
 holds the state to bounds (a flux that cannot be negative); :doc:`nonlinear`
 solves a problem whose forward is a model that is not linear; :doc:`positive`
-keeps a flux positive by solving for its logarithm or its softplus; and
+keeps a block positive by solving for its logarithm or its softplus; and
 :doc:`comparison` runs the analytic, bounded, lognormal and softplus methods
 on one problem, to choose among them; :doc:`variational` solves a problem too
 large to factor, from products alone.

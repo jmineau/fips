@@ -47,9 +47,9 @@ solved by conjugate gradients preconditioned by :math:`\hat{S}_i`
 not positive definite. The iterations stop when both steps are below the
 rule, with Gauss-Newton's, so the mode is the same and the Gaussian at the
 mode is still the analytic solution of the problem linearized at the last
-iterate. Newton converges quadratically where Gauss-Newton crawls: in the
-user guide's Salt Lake Valley-shaped world (400 cells, 120 observations, a
-log standard deviation of 1, 200 trials) the lognormal model took a median of
+iterate. Newton converges quadratically where Gauss-Newton crawls: on the
+user guide's comparison problem (400 state elements, 120 observations, a log
+standard deviation of 1, 200 trials) the lognormal model took a median of
 7 steps and at most 14, against Gauss-Newton's 9 and 23; the softplus model 9
 and 14, against 18 and 153. A model fips did not write has no curvature, and
 its steps are Gauss-Newton's.
@@ -72,7 +72,7 @@ Hamiltonian Monte Carlo (``_Sampler``): the Gaussian at the mode is its mass
 and its exactly solved part, the rest of the cost its kicks, and a Metropolis
 test keeps the chain exact. Where the model bends over the posterior's
 spread, the Gaussian at the mode is not the posterior (a total of lognormal
-fluxes from its draws runs high and covers the truth too rarely); the draws
+values from its draws runs high and covers the truth too rarely); the draws
 are. The misfits and the chi-squared are the cost's terms at the mode, from
 the model itself. With a forward operator (a linear problem)
 ``_gauss_newton`` returns the analytic solution itself.
@@ -529,7 +529,7 @@ class _Sampler:
     S_z^{-1} r - \gamma J_*^T S_z^{-1} d`, so a kick is :math:`\hat{S} \rho`
     (``_cov_times``). The kinetic energy is never formed either: a kick of
     :math:`h` changes it by :math:`-h \rho^T v + \tfrac{1}{2} h^2 \rho^T
-    \hat{S} \rho`, and a rotation not at all. A singular :math:`S_0` (cells
+    \hat{S} \rho`, and a rotation not at all. A singular :math:`S_0` (elements
     with no prior spread) leaves those elements at the mode.
 
     Each draw starts from the last with a new velocity and travels a quarter
@@ -796,7 +796,7 @@ def _newton(
     :math:`\hat{S} b`, the Gauss-Newton step. It is solved by conjugate
     gradients preconditioned by :math:`\hat{S}`, the analytic solve's own
     covariance (``_cov_times``, one product an iteration; in exact arithmetic
-    at most one iteration more than the cells :math:`D` is not zero on, and a
+    at most one iteration more than the elements :math:`D` is not zero on, and a
     few near the mode, where :math:`D` is small beside :math:`\hat{S}^{-1}`).
     Each search direction :math:`p` is :math:`\hat{S} s` with :math:`s`
     carried beside it, so :math:`A p = s - D p` needs no inverse of

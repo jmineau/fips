@@ -1,21 +1,24 @@
 r"""
 Forward models that keep one block of the state positive: lognormal and softplus.
 
-A flux that cannot be negative is solved as a hidden variable :math:`u` that
-can be anything, and a transform :math:`T` that makes it positive:
+A block of the state that cannot be negative (a flux, a concentration, a
+rate) is solved as a hidden variable :math:`u` that can be anything, and a
+transform :math:`T` that makes it positive:
 the observations are :math:`z = H\, [T(u); \text{the other blocks}] + c + e`,
 where :math:`H` is the forward operator on the whole state. The other blocks
 (a bias, a background) pass through as they are. The state, its prior and its
 covariance are in :math:`u`'s units, written by the user;
 :meth:`LognormalForward.prior_for` and :meth:`SoftplusForward.prior_for`
-give the prior on :math:`u` whose flux has a mean and a standard deviation
-asked for. ``fips.solve(problem, "gauss_newton")`` finds the mode of
+give the prior on :math:`u` whose transformed value has a mean and a
+standard deviation asked for. ``fips.solve(problem, "gauss_newton")`` finds the mode of
 :math:`u`; :meth:`~LognormalForward.transform` maps it, or draws of the
-posterior (:meth:`Posterior.sample <fips.Posterior.sample>`), to the flux.
+posterior (:meth:`Posterior.sample <fips.Posterior.sample>`), to the
+transformed value :math:`T(u)`.
 
 - :class:`LognormalForward`: :math:`T(u) = r\, e^{u}`, a scale factor of a
-  reference :math:`r` (an inventory): the uncertainty is a factor.
-- :class:`SoftplusForward`: :math:`T(u) = s \log(1 + e^{u/s})`: the flux
+  reference :math:`r` (a prior estimate, such as an emission inventory): the
+  uncertainty is a factor.
+- :class:`SoftplusForward`: :math:`T(u) = s \log(1 + e^{u/s})`: the value
   itself where it is large (:math:`T(u) \approx u` for :math:`u \gg s`),
   bending to stay above zero within about :math:`s` of it.
 """
@@ -52,7 +55,7 @@ _NEAREST = 1e-14
 """The near panel starts this fraction of its width from the bend (what it leaves out is below roundoff)."""
 
 _CHUNK = 2048
-"""The cells whose softplus moments are computed at once (each holds 384 nodes)."""
+"""The elements whose softplus moments are computed at once (each holds 384 nodes)."""
 
 _MATCHED = 1e-12
 """The relative error of the mean and the standard deviation at which the softplus prior stops."""
@@ -289,25 +292,26 @@ class _Transformed(ForwardModel):
 
 class LognormalForward(_Transformed):
     r"""
-    A forward model whose state on one block is the logarithm of a scale factor of a reference: the flux :math:`r\, e^{u}`.
+    A forward model whose state on one block is the logarithm of a scale factor of a reference: the value :math:`r\, e^{u}`.
 
     The observations are :math:`F(x) = H\, [r \circ e^{u}; \text{the other
     blocks}]`: :math:`H` is the forward operator on the whole state, the
     state on `block` is :math:`u`, the log of the factor that scales the
-    reference :math:`r` (an inventory), and every other block (a bias)
-    passes through as it is. The Jacobian is :math:`H` with each column of
-    the block scaled by its flux, :math:`H \operatorname{diag}(r \circ
+    reference :math:`r` (a prior estimate, such as an emission inventory),
+    and every other block (a bias) passes through as it is. The Jacobian is
+    :math:`H` with each column of the block scaled by its value,
+    :math:`H \operatorname{diag}(r \circ
     e^{u}, 1)`, in the form of :math:`H` (sparse stays sparse).
 
     The prior and its covariance on the block are in log units: a standard
-    deviation of 0.5 is a factor of :math:`e^{0.5} = 1.65` either way. A cell
-    whose reference is zero has a zero flux whatever :math:`u` is, and its
-    column of the Jacobian is zero: no observation moves it, so a source
-    the reference has not got cannot appear (:class:`SoftplusForward` or the
+    deviation of 0.5 is a factor of :math:`e^{0.5} = 1.65` either way. An
+    element whose reference is zero has a zero value whatever :math:`u` is,
+    and its column of the Jacobian is zero: no observation moves it, so the
+    data cannot make it positive (:class:`SoftplusForward` or the
     ``"bounded"`` method can). :meth:`prior_for` gives the prior on
-    :math:`u` whose flux has a mean and a standard deviation;
+    :math:`u` whose value has a mean and a standard deviation;
     :meth:`transform` maps the estimate, or draws of the posterior, to the
-    flux.
+    value.
 
     Parameters
     ----------
@@ -315,9 +319,10 @@ class LognormalForward(_Transformed):
         The forward operator: its rows the observations' labels, its columns
         the whole state's (the block and any other).
     reference : Vector, Series or float
-        The reference flux :math:`r` of each cell of the block, not negative:
-        a Vector on the block (``inventory["flux"]``), a Series on its labels
-        (without a ``block`` level), or one number for every cell.
+        The reference :math:`r` of each element of the block, not negative: a
+        Vector on the block (``inventory["flux"]`` in a flux inversion), a
+        Series on its labels (without a ``block`` level), or one number for
+        every element.
     block : str, optional
         The block of the state that is :math:`u`. By default the state's one
         block.
@@ -336,21 +341,21 @@ class LognormalForward(_Transformed):
 
     See Also
     --------
-    SoftplusForward : A flux that is additive away from zero.
+    SoftplusForward : A positive value whose uncertainty is additive away from zero.
     fips.ForwardModel : A forward model written by hand.
 
     Notes
     -----
     The mode :math:`\hat{u}` is the mean and the median of the Gaussian at
-    the mode, so :math:`r\, e^{\hat{u}}` is the median of each cell's flux
-    under it, below its mean :math:`r\, e^{\hat{u} + \sigma^2/2}` (with
+    the mode, so :math:`r\, e^{\hat{u}}` is the median of each element's
+    value under it, below its mean :math:`r\, e^{\hat{u} + \sigma^2/2}` (with
     :math:`\sigma^2` the variance at the mode). A sum of lognormals has no
     closed form: draws of the total are ``model.transform(post.sample(n))``
-    summed by draw. Where the data constrain sums of cells whose prior is
+    summed by draw. Where the data constrain sums of elements whose prior is
     wide, the Gaussian at the mode lies along the tangent of the curved set
-    of states they allow, and the draws' totals run high: the sum of the flux
-    at the mode is the better total (the user guide's "Fluxes that stay
-    positive" measures both).
+    of states they allow, and the draws' totals run high: the sum of the
+    values at the mode is the better total (the user guide's "Values that
+    stay positive" measures both).
 
     Examples
     --------
@@ -387,15 +392,15 @@ class LognormalForward(_Transformed):
 
     @property
     def reference(self) -> Vector:
-        r"""The reference flux :math:`r` of each cell of the block, on the block's labels."""
+        r"""The reference :math:`r` of each element of the block, on the block's labels."""
         return Vector._adopt(self._reference, self._labels, "reference")
 
     def _values(self, u: np.ndarray) -> np.ndarray:
         """Return :math:`r e^u`, zero where the reference is zero (whatever `u`)."""
         r = self._reference.reshape(-1, *([1] * (u.ndim - 1)))
         with np.errstate(over="ignore", invalid="ignore"):
-            flux = r * np.exp(u)
-        return np.where(r > 0, flux, 0.0)
+            value = r * np.exp(u)
+        return np.where(r > 0, value, 0.0)
 
     def _slopes(self, u: np.ndarray) -> np.ndarray:
         """Return the derivative of :math:`r e^u`, which is itself."""
@@ -422,7 +427,7 @@ class LognormalForward(_Transformed):
         Raises
         ------
         ValueError
-            If `x` does not have the model's columns' labels, or the flux
+            If `x` does not have the model's columns' labels, or the value
             overflows (:math:`u` above about 700).
         """
         return self._forward(x)
@@ -431,7 +436,7 @@ class LognormalForward(_Transformed):
         r"""
         Return the Jacobian at `x`: :math:`H \operatorname{diag}(r \circ e^{u}, 1)`.
 
-        Each column of the block is scaled by its flux; the columns of the
+        Each column of the block is scaled by its value; the columns of the
         other blocks are those of :math:`H`. The form is that of :math:`H`.
 
         Parameters
@@ -456,16 +461,16 @@ class LognormalForward(_Transformed):
 
     def transform(self, x: "Vector | pd.DataFrame") -> "Vector | pd.DataFrame":
         r"""
-        Return the state with the block as the flux, :math:`r\, e^{u}`: of a state, or of each draw.
+        Return the state with the block as the transformed value, :math:`r\, e^{u}`: of a state, or of each draw.
 
-        The other blocks are as they are. For the estimate, the flux at the
-        mode, the median of each cell's flux under the Gaussian at the mode
-        (not its mean). For draws of the posterior (:meth:`Posterior.sample
-        <fips.Posterior.sample>`, one column each), draws of the flux: the
-        total of each column is a draw of the total (see the class's Notes
-        for when they run high). Aggregating ``u`` first
-        (``post.sample(n, W=W)``) and transforming that is not a total of
-        the flux.
+        The other blocks are as they are. For the estimate, the value at the
+        mode, the median of each element's value under the Gaussian at the
+        mode (not its mean). For draws of the posterior
+        (:meth:`Posterior.sample <fips.Posterior.sample>`, one column each),
+        draws of the value: the total of each column is a draw of the total
+        (see the class's Notes for when they run high). Aggregating ``u``
+        first (``post.sample(n, W=W)``) and transforming that is not a total
+        of the values.
 
         Parameters
         ----------
@@ -484,7 +489,7 @@ class LognormalForward(_Transformed):
         TypeError
             If `x` is neither a Vector nor a DataFrame.
         ValueError
-            If its labels are not the model's columns', or the flux
+            If its labels are not the model's columns', or the value
             overflows.
 
         Examples
@@ -509,21 +514,21 @@ class LognormalForward(_Transformed):
         self, mean: "Vector | pd.Series | float", std: "Vector | pd.Series | float"
     ) -> tuple[Vector, Vector]:
         r"""
-        Return the prior on :math:`u` (its mean and standard deviation, each cell's) whose flux :math:`r\, e^{u}` has the mean and the standard deviation asked for.
+        Return the prior on :math:`u` (its mean and standard deviation, each element's) whose value :math:`r\, e^{u}` has the mean and the standard deviation asked for.
 
-        The flux is lognormal, with :math:`u \sim N(\mu, \sigma^2)`:
+        The value is lognormal, with :math:`u \sim N(\mu, \sigma^2)`:
         :math:`\sigma^2 = \log(1 + s^2 / m^2)` and :math:`\mu = \log(m / r) -
         \sigma^2 / 2`, so that its mean is :math:`m` and its standard
-        deviation :math:`s` exactly. With the reference as the mean (an
-        inventory), :math:`\mu = -\sigma^2 / 2`: the prior median of the flux,
-        :math:`r\, e^{\mu}`, is below the inventory, and its mean is the
-        inventory. A prior of :math:`\mu = 0` instead makes the inventory the
+        deviation :math:`s` exactly. With the reference as the mean,
+        :math:`\mu = -\sigma^2 / 2`: the prior median of the value,
+        :math:`r\, e^{\mu}`, is below the reference, and its mean is the
+        reference. A prior of :math:`\mu = 0` instead makes the reference the
         median, and the prior's total :math:`e^{\sigma^2/2}` times the
-        inventory's (1.65 times for :math:`\sigma = 1`).
+        reference's (1.65 times for :math:`\sigma = 1`).
 
-        The correlations are those of :math:`u`, not of the flux: build the
-        covariance with them (``Exponential(...).with_std(sigma)``). Two cells
-        whose :math:`u` correlate by :math:`\rho` have fluxes that correlate
+        The correlations are those of :math:`u`, not of the value: build the
+        covariance with them (``Exponential(...).with_std(sigma)``). Two
+        elements whose :math:`u` correlate by :math:`\rho` have values that correlate
         by :math:`(e^{\rho \sigma_i \sigma_j} - 1) / \sqrt{(e^{\sigma_i^2} -
         1)(e^{\sigma_j^2} - 1)}`, less than :math:`\rho` (0.38 for
         :math:`\rho = 0.5` and :math:`\sigma = 1`).
@@ -531,20 +536,20 @@ class LognormalForward(_Transformed):
         Parameters
         ----------
         mean : Vector, Series or float
-            The prior mean :math:`m` of each cell's flux, on the block's labels
+            The prior mean :math:`m` of each element's value, on the block's labels
             (or one number). Positive where the reference is; zero where it
             is zero.
         std : Vector, Series or float
-            The prior standard deviation :math:`s` of each cell's flux, not
-            negative; zero where the reference is zero.
+            The prior standard deviation :math:`s` of each element's value,
+            not negative; zero where the reference is zero.
 
         Returns
         -------
         mean, std : Vector
-            :math:`\mu` and :math:`\sigma`, on the block's labels. A cell whose
-            reference is zero gets 0 and 0: its flux is zero whatever its
-            :math:`u`, and any prior there gives the other cells the same
-            posterior.
+            :math:`\mu` and :math:`\sigma`, on the block's labels. An element
+            whose reference is zero gets 0 and 0: its value is zero whatever
+            its :math:`u`, and any prior there gives the other elements the
+            same posterior.
 
         Raises
         ------
@@ -557,8 +562,8 @@ class LognormalForward(_Transformed):
 
         Examples
         --------
-        A flux of mean 2 and standard deviation 1 in each cell, the reference
-        its mean:
+        A mean of 2 and a standard deviation of 1 in each element, the
+        reference its mean:
 
         >>> import numpy as np
         >>> import pandas as pd
@@ -586,15 +591,15 @@ class LognormalForward(_Transformed):
             if bad.any():
                 raise ValueError(
                     f"The {what} is not zero at {int(bad.sum())} labels where the "
-                    "reference is zero, whose flux is zero whatever u is: "
-                    f"{_listed(labels.index[bad])}. A source the reference has "
-                    "not got needs a reference there, or SoftplusForward."
+                    "reference is zero, whose value is zero whatever u is: "
+                    f"{_listed(labels.index[bad])}. A positive value at those labels "
+                    "needs a reference, or SoftplusForward."
                 )
         bad = ~zero & (m == 0)
         if bad.any():
             raise ValueError(
                 f"The mean is zero at {int(bad.sum())} labels whose reference is "
-                f"not, and a lognormal flux is never zero: "
+                f"not, and a lognormal value is never zero: "
                 f"{_listed(labels.index[bad])}."
             )
         safe = np.where(zero, 1.0, m)
@@ -608,7 +613,7 @@ class LognormalForward(_Transformed):
 
 def _softplus_rule(a: np.ndarray, b: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     r"""
-    Return nodes :math:`\xi` and weights (one row per cell) for :math:`E[f(a + b \xi)]`, :math:`\xi \sim N(0, 1)`, for a function that bends at :math:`a + b \xi = 0`.
+    Return nodes :math:`\xi` and weights (one row per element) for :math:`E[f(a + b \xi)]`, :math:`\xi \sim N(0, 1)`, for a function that bends at :math:`a + b \xi = 0`.
 
     Each side of the bend, :math:`\xi_0 = -a/b`, is one panel of
     Gauss-Legendre nodes in the logarithm of the distance to it, up to 1 (the
@@ -654,7 +659,7 @@ def _softplus_moments(
     The deviations are taken from :math:`f(a)` as :math:`f(t) - f(a) =
     \log(1 + \sigma(a)(e^{t - a} - 1))` (with :math:`\sigma` the logistic
     function), so a standard deviation far below the mean loses no digits.
-    The cells are taken ``_CHUNK`` at a time.
+    The elements are taken ``_CHUNK`` at a time.
     """
     parts = [
         _softplus_chunk(a[k : k + _CHUNK], b[k : k + _CHUNK])
@@ -667,7 +672,7 @@ def _softplus_moments(
 def _softplus_chunk(
     a: np.ndarray, b: np.ndarray
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Return :func:`_softplus_moments` of a few cells."""
+    """Return :func:`_softplus_moments` of a few elements."""
     xi, w = _softplus_rule(a, b)
     step = b[:, None] * xi
     t = a[:, None] + step
@@ -696,10 +701,10 @@ def _softplus_chunk(
 
 
 def _steps(A: np.ndarray, b: np.ndarray) -> np.ndarray:
-    """Return the solution of each cell's 2 x 2 system ``A x = b`` (``k x 2``), NaN for a cell whose matrix is singular."""
+    """Return the solution of each element's 2 x 2 system ``A x = b`` (``k x 2``), NaN for an element whose matrix is singular."""
     try:
         return np.linalg.solve(A, b[:, :, None])[:, :, 0]
-    except LinAlgError:  # some cell is singular: the others one by one
+    except LinAlgError:  # some element is singular: the others one by one
         x = np.full(b.shape, np.nan)
         for k in range(len(b)):
             with contextlib.suppress(LinAlgError):
@@ -708,32 +713,32 @@ def _steps(A: np.ndarray, b: np.ndarray) -> np.ndarray:
 
 
 def _softplus_match(
-    m: np.ndarray, s: np.ndarray, cells: pd.Index
+    m: np.ndarray, s: np.ndarray, labels: pd.Index
 ) -> tuple[np.ndarray, np.ndarray]:
     r"""
     Return :math:`a, b` with :math:`\log(1 + e^t)`, :math:`t \sim N(a, b^2)`, of mean `m` and standard deviation `s` (both positive).
 
     Newton's method on the logarithms of the two moments, in :math:`\alpha =
-    a/b` and :math:`\beta = \log b` (where the flux is far above the bend,
+    a/b` and :math:`\beta = \log b` (where the value is far above the bend,
     each moment is :math:`b` times a function of :math:`\alpha`, so the
     equations are nearly linear), from the better of the lognormal answer
     (right for :math:`m \ll 1`) and the additive one (:math:`a = m, b = s`,
-    right for :math:`m \gg 1`). Each cell's step is halved until its error
+    right for :math:`m \gg 1`). Each element's step is halved until its error
     falls.
 
     Raises
     ------
     RuntimeError
-        If some cell does not reach a relative error of ``_ACCEPTED`` (its
-        Newton matrix singular, or its steps stalled), naming `cells`, the
-        labels of the cells.
+        If some element does not reach a relative error of ``_ACCEPTED`` (its
+        Newton matrix singular, or its steps stalled), naming `labels`, the
+        labels of the elements.
     """
     log_m, log_s = np.log(m), np.log(s)
 
     def errors(
         alpha: np.ndarray, beta: np.ndarray, k: np.ndarray
     ) -> tuple[np.ndarray, np.ndarray]:
-        """Return the errors of the log moments of the cells `k`, and their derivatives by alpha and beta."""
+        """Return the errors of the log moments of the elements `k`, and their derivatives by alpha and beta."""
         b = np.exp(beta)
         a = alpha * b
         mean, std, J = _softplus_moments(a, b)
@@ -771,7 +776,7 @@ def _softplus_match(
             step = _steps(dr[pending], -r[pending])
         step[~np.isfinite(step)] = 0.0
         fraction, moved = 1.0, np.zeros(len(pending), dtype=bool)
-        for _ in range(40):  # halve each cell's step until its error falls
+        for _ in range(40):  # halve each element's step until its error falls
             left = np.flatnonzero(~moved)
             k = pending[left]
             new_alpha = alpha[k] + fraction * step[left, 0]
@@ -790,10 +795,10 @@ def _softplus_match(
     failed = ~(worst <= _ACCEPTED)
     if failed.any():
         raise RuntimeError(
-            f"The softplus prior did not match the mean and standard deviation in "
-            f"{int(failed.sum())} cells (relative error up to {worst.max():.2g}), "
+            f"The softplus prior did not match the mean and standard deviation at "
+            f"{int(failed.sum())} labels (relative error up to {worst.max():.2g}), "
             f"such as a mean of {m[failed][0]:.4g} and a standard deviation of "
-            f"{s[failed][0]:.4g} times the scale: {_listed(cells[failed])}."
+            f"{s[failed][0]:.4g} times the scale: {_listed(labels[failed])}."
         )
     b = np.exp(beta)
     return alpha * b, b
@@ -801,26 +806,28 @@ def _softplus_match(
 
 class SoftplusForward(_Transformed):
     r"""
-    A forward model whose state on one block is a flux that bends to stay above zero: :math:`s \log(1 + e^{u/s})`.
+    A forward model whose state on one block bends to stay above zero: the value :math:`s \log(1 + e^{u/s})`.
 
     The observations are :math:`F(x) = H\, [s \log(1 + e^{u/s}); \text{the
     other blocks}]`: :math:`H` is the forward operator on the whole state,
-    the state on `block` is :math:`u`, in the flux's units, and every other
-    block passes through as it is. Where :math:`u` is several `scale` above
-    zero the flux is :math:`u` (the problem is the linear one); where it is
-    several below, the flux is :math:`s\, e^{u/s}`, near zero and positive.
+    the state on `block` is :math:`u`, in the units of the value, and every
+    other block passes through as it is. Where :math:`u` is several `scale`
+    above zero the value is :math:`u` (the problem is the linear one); where
+    it is several below, the value is :math:`s\, e^{u/s}`, near zero and
+    positive.
     The Jacobian is :math:`H \operatorname{diag}(\operatorname{expit}(u/s),
     1)`, the logistic function on the block, in the form of :math:`H`. Both
     are computed without overflow for any :math:`u` (``np.logaddexp`` and
     ``scipy.special.expit``).
 
-    `scale` is in the flux's units and says where the bend is: the transform
-    is not the same in other units (:math:`\log(1 + e^u)` bends within 1 of
-    zero, whatever 1 is), so it has no default. A scale near the prior's standard deviation of
-    the flux in the cells near zero bends where the prior says the flux
-    could be zero. :meth:`prior_for` gives the prior on :math:`u` whose flux
-    has a mean and a standard deviation; :meth:`transform` maps the
-    estimate, or draws of the posterior, to the flux.
+    `scale` is in the value's units and says where the bend is: the
+    transform is not the same in other units (:math:`\log(1 + e^u)` bends
+    within 1 of zero, whatever 1 is), so it has no default. A scale near the
+    prior's standard deviation of the value in the elements near zero bends
+    where the prior says the value could be zero. :meth:`prior_for` gives the
+    prior on :math:`u` whose value has a mean and a standard deviation;
+    :meth:`transform` maps the estimate, or draws of the posterior, to the
+    value.
 
     Parameters
     ----------
@@ -848,13 +855,13 @@ class SoftplusForward(_Transformed):
 
     See Also
     --------
-    LognormalForward : A flux whose uncertainty is a factor of a reference.
+    LognormalForward : A positive value whose uncertainty is a factor of a reference.
 
     Notes
     -----
     The transform is monotone, so the mode :math:`\hat{u}` (the median of
-    the Gaussian at the mode) maps to the median of each cell's flux under
-    it, :meth:`transform` of the estimate. Draws of a total are
+    the Gaussian at the mode) maps to the median of each element's value
+    under it, :meth:`transform` of the estimate. Draws of a total are
     ``model.transform(post.sample(n))`` summed by draw; near the bend they run
     high, as :class:`LognormalForward`'s do (see its Notes).
 
@@ -868,7 +875,7 @@ class SoftplusForward(_Transformed):
     >>> H = fips.Operator(np.ones((1, 3)), observed, state)
     >>> model = fips.SoftplusForward(H, scale=0.1)
     >>> u = fips.Vector([5.0, 0.0, -1.0], state)
-    >>> model.transform(u).values.round(5)  # u far above the scale is the flux
+    >>> model.transform(u).values.round(5)  # u far above the scale is the value
     array([5.     , 0.06931, 0.     ])
     >>> fips.taylortest(model, u)
     True
@@ -886,7 +893,7 @@ class SoftplusForward(_Transformed):
 
     @property
     def scale(self) -> float:
-        """The scale of the bend, in the flux's units: the flux is ``scale * log(1 + exp(u / scale))``."""
+        """The scale of the bend, in the value's units: the value is ``scale * log(1 + exp(u / scale))``."""
         return self._scale
 
     def _values(self, u: np.ndarray) -> np.ndarray:
@@ -954,12 +961,12 @@ class SoftplusForward(_Transformed):
 
     def transform(self, x: "Vector | pd.DataFrame") -> "Vector | pd.DataFrame":
         r"""
-        Return the state with the block as the flux, :math:`s \log(1 + e^{u/s})`: of a state, or of each draw.
+        Return the state with the block as the transformed value, :math:`s \log(1 + e^{u/s})`: of a state, or of each draw.
 
-        The other blocks are as they are. For the estimate, the flux at the
-        mode, the median of each cell's flux under the Gaussian at the mode.
-        For draws of the posterior (:meth:`Posterior.sample
-        <fips.Posterior.sample>`, one column each), draws of the flux: the
+        The other blocks are as they are. For the estimate, the value at the
+        mode, the median of each element's value under the Gaussian at the
+        mode. For draws of the posterior (:meth:`Posterior.sample
+        <fips.Posterior.sample>`, one column each), draws of the value: the
         total of each column is a draw of the total (see the class's Notes
         for when they run high).
 
@@ -987,32 +994,32 @@ class SoftplusForward(_Transformed):
         self, mean: "Vector | pd.Series | float", std: "Vector | pd.Series | float"
     ) -> tuple[Vector, Vector]:
         r"""
-        Return the prior on :math:`u` (its mean and standard deviation, each cell's) whose flux :math:`s \log(1 + e^{u/s})` has the mean and the standard deviation asked for.
+        Return the prior on :math:`u` (its mean and standard deviation, each element's) whose value :math:`s \log(1 + e^{u/s})` has the mean and the standard deviation asked for.
 
         There is no closed form: for :math:`u \sim N(\mu, \sigma^2)` the mean
-        and the standard deviation of the flux are integrals, computed by
+        and the standard deviation of the value are integrals, computed by
         quadrature (to about 1e-13), and :math:`\mu, \sigma` are found by
         Newton's method until both match to 1e-12, relative. Far above the
         scale (:math:`m \gg s`) the answer is :math:`\mu = m`, :math:`\sigma
-        = s` (the flux is :math:`u`); far below, the lognormal's. A cell with
-        no spread asked (a standard deviation of zero) gets :math:`\sigma =
-        0` and the :math:`\mu` whose flux is the mean.
+        = s` (the value is :math:`u`); far below, the lognormal's. An element
+        with no spread asked (a standard deviation of zero) gets :math:`\sigma
+        = 0` and the :math:`\mu` whose value is the mean.
 
-        The correlations are those of :math:`u`: where the flux is far above
-        the scale they are the flux's too; near zero the flux's are weaker.
+        The correlations are those of :math:`u`: where the value is far above
+        the scale they are the value's too; near zero the value's are weaker.
 
         Parameters
         ----------
         mean : Vector, Series or float
-            The prior mean of each cell's flux, positive (the flux is never
-            zero), on the block's labels or one number.
+            The prior mean of each element's value, positive (the value is
+            never zero), on the block's labels or one number.
         std : Vector, Series or float
-            The prior standard deviation of each cell's flux, not negative.
+            The prior standard deviation of each element's value, not negative.
 
         Returns
         -------
         mean, std : Vector
-            :math:`\mu` and :math:`\sigma`, in the flux's units, on the block's
+            :math:`\mu` and :math:`\sigma`, in the value's units, on the block's
             labels.
 
         Raises
@@ -1023,13 +1030,13 @@ class SoftplusForward(_Transformed):
             If their labels are not the block's, a mean is not positive, or a
             standard deviation is negative or not finite.
         RuntimeError
-            If Newton's method does not match some cell (it has not failed in
+            If Newton's method does not match some element (it has not failed in
             the tests, over means from 1e-6 to 1e6 scales and standard
             deviations from 1e-6 to 1e3 times the mean).
 
         Examples
         --------
-        A flux of mean 1 and standard deviation 1, with the bend at 1: the
+        A mean of 1 and a standard deviation of 1, with the bend at 1: the
         prior on :math:`u` is centered below the mean, and wider:
 
         >>> import numpy as np
@@ -1045,23 +1052,23 @@ class SoftplusForward(_Transformed):
         """
         labels = self._labels
         m = _on_block(mean, labels, "mean")
-        s_flux = _on_block(std, labels, "std")
-        _negative(s_flux, labels, "std")
+        s_value = _on_block(std, labels, "std")
+        _negative(s_value, labels, "std")
         bad = m <= 0
         if bad.any():
             raise ValueError(
                 f"The mean is not positive at {int(bad.sum())} labels, and a "
-                f"softplus flux is always above zero: {_listed(labels.index[bad])}."
+                f"softplus value is always above zero: {_listed(labels.index[bad])}."
             )
         scale = self._scale
-        m, s_flux = m / scale, s_flux / scale  # in units of the scale
+        m, s_value = m / scale, s_value / scale  # in units of the scale
         mu, sigma = np.empty(len(m)), np.zeros(len(m))
-        fixed = s_flux == 0
-        # no spread: the u whose flux is the mean, log(e^m - 1)
+        fixed = s_value == 0
+        # no spread: the u whose value is the mean, log(e^m - 1)
         mu[fixed] = m[fixed] + np.log(-np.expm1(-m[fixed]))
         if (~fixed).any():
             mu[~fixed], sigma[~fixed] = _softplus_match(
-                m[~fixed], s_flux[~fixed], labels.index[~fixed]
+                m[~fixed], s_value[~fixed], labels.index[~fixed]
             )
         return (
             Vector._adopt(mu * scale, labels, "prior"),

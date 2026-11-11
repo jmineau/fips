@@ -82,10 +82,10 @@ Checking the Jacobian
 
    taylortest
 
-Fluxes that stay positive
+Values that stay positive
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 Two models that solve for a variable :math:`u` whose transform, on one block,
-is a positive flux; the other blocks pass through. The guide is
+is a positive value; the other blocks pass through. The guide is
 :doc:`/user_guide/positive`.
 
 .. autosummary::

@@ -1288,7 +1288,7 @@ class Posterior:
         The distribution of any function of the state, which :meth:`cov` and
         :meth:`uncertainty` give only for a linear one and only as a spread:
         the probability that a total is above a value or below zero, a
-        quantile of a ratio of two totals, the share of cells below zero. Take
+        quantile of a ratio of two totals, the share of elements below zero. Take
         the function of each draw, and read the answer off the draws.
 
         The analytic method draws exactly, by perturbing the prior and the
@@ -1332,10 +1332,11 @@ class Posterior:
         solved part of its paths, and a Metropolis test: each call continues
         the chain from where the solve's burn-in ended, at its tuned step
         (``GaussNewtonOptions``), and returns the next `n` draws. A draw of
-        the state (log scale factors), carried through the model or its
-        transform, is a draw of the result: a total of fluxes, its interval.
-        The draws are correlated (an autocorrelation time of 1 to 3 draws for
-        most elements in a Salt Lake Valley-shaped test; hundreds along a
+        the state (log scale factors, under a lognormal transform), carried
+        through the model or its transform, is a draw of the result: a total
+        of the transformed values, its interval. The draws are correlated (an
+        autocorrelation time of 1 to 3 draws for most elements of the user
+        guide's 400-element comparison problem; hundreds along a
         curve the data pin, which the totals they constrain do not share). A
         draw costs a few evaluations of the model and of the product of its
         Jacobian's transpose (one for a linear model), each with a product of
@@ -2382,10 +2383,10 @@ class Posterior:
         step from the mode). It is exact for a linear forward model; for a
         model that bends, it is the evidence of the Gaussian at the mode, and
         leaves out how the posterior departs from it (the skew its draws show,
-        :meth:`sample`): for a lognormal flux in a few cells with a log-std of
-        0.8, it was within about 0.1 of the evidence by importance sampling. The
-        ``"bounded"`` method gives it only with no finite bound, when its
-        posterior is the analytic one.
+        :meth:`sample`): for a lognormal block of a few elements with a
+        log-std of 0.8, it was within about 0.1 of the evidence by importance
+        sampling. The ``"bounded"`` method gives it only with no finite bound,
+        when its posterior is the analytic one.
 
         For the ``"variational"`` method, it is the same formula with the
         information content of its low-rank posterior: exact for a linear
@@ -2980,9 +2981,9 @@ class Posterior:
 
         The world's state may have other labels than the posterior's (a
         monthly truth recovered by an annual inversion, the whole state where
-        the solve was restricted, a gridded truth and a basin inversion) when
-        both are added up to the same totals: `W` on the posterior's state and
-        `W_world` on the world's, with the same rows. The error of a total is
+        the solve was restricted, a truth on a fine grid and an inversion on a
+        coarse one) when both are added up to the same totals: `W` on the
+        posterior's state and `W_world` on the world's, with the same rows. The error of a total is
         then :math:`W \hat{x} - W_w x`, with mean :math:`W x_0 + W K (H_w \mu
         + c_w - H x_0 - c) - W_w \mu` and covariance :math:`G P G^T + W K R_w
         K^T W^T`, :math:`G = W K H_w - W_w` (``k x n_w``): the same formula,
@@ -2997,7 +2998,7 @@ class Posterior:
             the posterior's problem.
         truth : Vector, optional
             A fixed truth, on the world's state labels in any order, instead
-            of the world's prior (another inventory, 1.5 times the prior).
+            of the world's prior (another prior estimate, 1.5 times the prior).
             Only the observation error is then random.
         W : Operator, optional
             An aggregation, as :meth:`cov` takes it: one row per total. By
