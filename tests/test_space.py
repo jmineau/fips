@@ -145,6 +145,14 @@ class TestRefusals:
         with pytest.raises(ValueError, match="Every level of block 'a' must be named"):
             Space({"a": pd.Index([1, 2])})
 
+    def test_unnamed_level_says_how_to_name_it(self):
+        """The error shows ``rename`` for an Index and ``set_names`` for a MultiIndex."""
+        with pytest.raises(ValueError, match=r"index\.rename\(.*set_names"):
+            Space({"a": pd.Index([1, 2])})
+        unnamed = pd.MultiIndex.from_product([[1, 2], [3, 4]], names=["x", None])
+        with pytest.raises(ValueError, match=r"index\.rename\(.*set_names"):
+            Space({"a": unnamed})
+
     def test_block_level(self):
         idx = pd.MultiIndex.from_tuples([("x", 1)], names=["block", "cell"])
         with pytest.raises(ValueError, match="has a 'block' level"):

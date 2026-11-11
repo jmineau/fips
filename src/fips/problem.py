@@ -245,7 +245,9 @@ class Problem:
             self._offset = Vector(np.full(len(observed), float(offset)), observed)
         else:
             raise TypeError(
-                f"offset must be a Vector, a number or None, got {type(offset).__name__}."
+                f"offset must be a Vector, a number or None, got {type(offset).__name__}. "
+                "Build a Vector with Vector.from_series(series, block=...) or "
+                "Vector.from_blocks({...})."
             )
 
     @property
