@@ -48,14 +48,15 @@ src/fips/
   operator.py       Operator: a fips.linalg form with a Space on each axis
   forward.py        Forward (what problem.forward is), ForwardModel (F and its Jacobian, or its products
                     jvp/vjp), taylortest (and the adjoint)
-  transforms.py     LognormalForward, SoftplusForward: H on a positive T(u) of one block; prior_for
+  transforms.py     LogNormalForward, SoftplusForward: H on a positive T(u) of one block; prior_for
                     (softplus moments by panels split at the bend: Gauss-Hermite fails past 2 scales)
   problem.py        Problem: the inputs, checked once; predict, linearized, aggregate, restrict
   posterior.py      Posterior (labels a method's answer); the Solution and Options protocols
   aggregate.py      sum, mean (an aggregation W), offset_block
-  settings.py       hierarchical, Hierarchical, Prior (LogNormal, HalfNormal, Uniform): the settings
-                    by Metropolis on the exact evidence, the state drawn at each kept step;
-                    `_Built` (the caller's function) or `_Scales` (a Problem: the fast path)
+  distributions.py  LogNormal, HalfNormal, Uniform: the priors of a setting, on `_Distribution`
+  settings.py       hierarchical, Hierarchical: the settings by Metropolis on the exact evidence,
+                    the state drawn at each kept step; `_Built` (the caller's function) or
+                    `_Scales` (a Problem: the fast path)
   visualization.py  plot_comparison, the one plot (the `viz` extra: matplotlib)
   covariance/       Covariance and the models that write one down (public)
     covariance.py   Covariance: diagonal, block_diag, variances, solve, logdet, sqrt, sample,
@@ -81,9 +82,9 @@ tests/              pytest; test_oracle.py holds every exact method to the close
 docs/               Sphinx: guides, reference/ (by topic), examples/ (notebooks)
 ```
 
-Imports run one way: `space` < `vector`, `linalg` < `operator` < `forward` <
-`transforms`, `covariance` < `problem` < `posterior` < `methods` < `settings`, with `aggregate` and
-`visualization` on top. No import inside a function to dodge a cycle, none under `TYPE_CHECKING`.
+Imports run one way: `space` < `vector`, `linalg` < `operator` < `forward` < `transforms`, `covariance` <
+`problem` < `posterior` < `methods` < `settings`, with `aggregate` and `visualization` on top; `distributions`
+imports nothing of fips's. No import inside a function to dodge a cycle, none under `TYPE_CHECKING`.
 `Covariance` does not import the models: `models.py` sets
 `Covariance._block_diag_models`, so `Covariance.block_diag` takes model parts.
 `posterior.py` imports no method: a method imports `posterior` and returns

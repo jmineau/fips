@@ -35,7 +35,7 @@ Here the state is the logarithm of a scale factor of each cell's inventory
 :math:`r`, so the flux :math:`r\, e^{x}` cannot be negative and the prior is a
 factor of the inventory, not a flux. The model is :math:`F(x) = H (r\, e^{x})`
 and its Jacobian :math:`H \operatorname{diag}(r\, e^{x})` (fips has it ready
-made, with the prior that goes with it, as :class:`~fips.LognormalForward`:
+made, with the prior that goes with it, as :class:`~fips.LogNormalForward`:
 :doc:`positive`):
 
 .. ipython:: python
@@ -171,7 +171,7 @@ Near the mode, :math:`d^2` falls by orders of magnitude a step. When it falls
 only by a constant factor, the model bends much over the posterior's spread,
 the estimate may be further from the mode than the last step, and the solve
 logs a warning saying so. A model written by hand gives only its Jacobian, so
-its steps are Gauss-Newton's; for :class:`~fips.LognormalForward` and
+its steps are Gauss-Newton's; for :class:`~fips.LogNormalForward` and
 :class:`~fips.SoftplusForward`, whose second derivatives fips knows, the steps
 are Newton's where those are better, and the solve takes about half as many
 where Gauss-Newton's crawl (:doc:`positive`).
@@ -246,7 +246,7 @@ the prior covariance is formed, so a prior with zero spread somewhere (an
 element with no reference) works.
 
 Each step evaluates the model and the product of its Jacobian's transpose with
-a vector (``fips.LognormalForward`` and ``fips.SoftplusForward`` form no
+a vector (``fips.LogNormalForward`` and ``fips.SoftplusForward`` form no
 Jacobian for it; a model of your own forms one with ``jacobian``), and one
 product with the covariance of the Gaussian at the mode. The draws are
 correlated, a few draws apart for most elements; a solve logs a warning when

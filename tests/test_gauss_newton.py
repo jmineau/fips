@@ -983,7 +983,7 @@ def one_cell(kind: str) -> tuple[Problem, "callable"]:
     obs = Space({"conc": pd.RangeIndex(1, name="obs_id")})
     H = Operator(np.ones((1, 1)), obs, state)
     if kind == "lognormal":
-        model, std, z, noise = fips.LognormalForward(H, 1.0), 1.5, 0.3, 0.1
+        model, std, z, noise = fips.LogNormalForward(H, 1.0), 1.5, 0.3, 0.1
         transform = np.exp
     else:
         model, std, z, noise = fips.SoftplusForward(H, scale=0.5), 1.0, 0.05, 0.05
@@ -1057,7 +1057,7 @@ def two_cells(noise: float = 0.05) -> Problem:
     """
     state = Space({"flux": pd.Index(["a", "b"], name="cell")})
     obs = Space({"conc": pd.RangeIndex(1, name="obs_id")})
-    model = fips.LognormalForward(Operator(np.ones((1, 2)), obs, state), 1.0)
+    model = fips.LogNormalForward(Operator(np.ones((1, 2)), obs, state), 1.0)
     mu, sigma = model.prior_for(1.0, np.sqrt(np.e - 1.0))
     return Problem(
         prior=mu,

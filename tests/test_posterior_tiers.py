@@ -62,7 +62,7 @@ def posts() -> dict[str, fips.Posterior]:
         )
 
     linear = problem(forward, np.ones(4))
-    model = problem(fips.LognormalForward(forward, 1.0), np.zeros(4))
+    model = problem(fips.LogNormalForward(forward, 1.0), np.zeros(4))
     return {
         "analytic": fips.solve(linear),
         "bounded, no finite bound": fips.solve(linear, "bounded", draws=50),

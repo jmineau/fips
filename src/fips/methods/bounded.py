@@ -1464,7 +1464,7 @@ def _warn_if_wide(
         "the data constrain little, their mean, intervals and totals sit that "
         "far from the prior's. The estimate (the mode) is not affected; for a "
         "total, read the analytic posterior (fips.solve(problem)) or use "
-        "fips.LognormalForward.",
+        "fips.LogNormalForward.",
         "; ".join(reports),
         draws,
     )

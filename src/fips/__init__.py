@@ -8,10 +8,11 @@ itself), kept in its cheapest form. A covariance is written as a correlation
 model with standard deviations: ``Exponential("time", "30D").with_std(std)``.
 A :class:`Problem` puts the prior, the observations, the forward operator (or
 a :class:`ForwardModel` that is not linear, with its Jacobian;
-:class:`LognormalForward` and :class:`SoftplusForward` keep a block positive)
+:class:`LogNormalForward` and :class:`SoftplusForward` keep a block positive)
 and the covariances together, and :func:`solve` returns its :class:`Posterior`.
-With priors on the covariance settings, :func:`hierarchical` draws them from
-their posterior and the state at each draw (:class:`Hierarchical`).
+With priors on the covariance settings (:mod:`fips.distributions`),
+:func:`hierarchical` draws them from their posterior and the state at each
+draw (:class:`Hierarchical`).
 :mod:`fips.aggregate` sums or averages a space by group (the observations to
 daily means, the state to monthly totals), and :func:`offset_block` adds a
 block of offsets to the state.
@@ -21,7 +22,7 @@ import logging
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as _version
 
-from . import aggregate
+from . import aggregate, distributions
 from .aggregate import offset_block
 from .covariance import (
     Constant,
@@ -37,9 +38,9 @@ from .methods import available_methods, solve
 from .operator import Operator
 from .posterior import Posterior, UnavailableError
 from .problem import Problem
-from .settings import HalfNormal, Hierarchical, LogNormal, Prior, Uniform, hierarchical
+from .settings import Hierarchical, hierarchical
 from .space import Space
-from .transforms import LognormalForward, SoftplusForward
+from .transforms import LogNormalForward, SoftplusForward
 from .vector import Vector
 
 try:
@@ -56,7 +57,7 @@ __all__ = [
     "Operator",
     "ForwardModel",
     "taylortest",
-    "LognormalForward",
+    "LogNormalForward",
     "SoftplusForward",
     "Covariance",
     "Exponential",
@@ -72,10 +73,7 @@ __all__ = [
     "UnavailableError",
     "hierarchical",
     "Hierarchical",
-    "Prior",
-    "LogNormal",
-    "HalfNormal",
-    "Uniform",
+    "distributions",
     "aggregate",
     "offset_block",
 ]

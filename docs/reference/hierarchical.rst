@@ -38,18 +38,35 @@ The result
    Hierarchical.sample
    Hierarchical.at
 
-The priors
-~~~~~~~~~~
-Each has a log density and a map to unbounded coordinates (the log of a
-positive setting, the logit of a bounded one), where the chain moves.
+The priors of the settings
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. automodule:: fips.distributions
+   :no-members:
+
+.. currentmodule:: fips.distributions
 
 .. autosummary::
    :toctree: api/
 
-   Prior
    LogNormal
+   LogNormal.mu
+   LogNormal.sigma
+   LogNormal.median
+   LogNormal.logpdf
+   LogNormal.sample
    HalfNormal
+   HalfNormal.scale
+   HalfNormal.median
+   HalfNormal.logpdf
+   HalfNormal.sample
    Uniform
+   Uniform.low
+   Uniform.high
+   Uniform.median
+   Uniform.logpdf
+   Uniform.sample
+
+.. currentmodule:: fips
 
 Serialization
 ~~~~~~~~~~~~~

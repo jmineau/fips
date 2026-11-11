@@ -1,5 +1,5 @@
 """
-Tests for ``fips.LognormalForward`` and ``fips.SoftplusForward``: forward models that keep one block of the state positive.
+Tests for ``fips.LogNormalForward`` and ``fips.SoftplusForward``: forward models that keep one block of the state positive.
 
 A wrong Jacobian, a wrong prior correspondence or a misread posterior still
 gives a labeled answer of the right shape, so each is held to an answer that
@@ -7,7 +7,7 @@ does not use the code under test, in layers:
 
 1. **The Taylor test** of each model's Jacobian: dense and sparse ``H``, a
    bias block that passes through, labels in another order, a zero reference.
-2. **Hand-written models.** ``LognormalForward`` gives the mode and the
+2. **Hand-written models.** ``LogNormalForward`` gives the mode and the
    posterior of the user guide's ``ScaledInventory``; both models' values and
    Jacobians are the formulas written with NumPy.
 3. **The mode against an independent optimizer**: SciPy's ``least_squares``
@@ -49,7 +49,7 @@ from scipy.special import ndtri
 from scipy.stats import norm
 
 import fips
-from fips import Covariance, LognormalForward, Operator, SoftplusForward, Space, Vector
+from fips import Covariance, LogNormalForward, Operator, SoftplusForward, Space, Vector
 from fips.linalg import (
     DenseOperator,
     DiagonalOperator,
@@ -270,12 +270,12 @@ class Case:
             H = H.align(rows, cols)
         return H
 
-    def model(self, H: Operator | None = None) -> "LognormalForward | SoftplusForward":
+    def model(self, H: Operator | None = None) -> "LogNormalForward | SoftplusForward":
         """The fips model of this case."""
         H = self.operator() if H is None else H
         if self.kind == "lognormal":
             labels = self.spaces()[0].select("flux")  # matched to H's by label
-            return LognormalForward(
+            return LogNormalForward(
                 H, pd.Series(self.reference, index=labels), block="flux"
             )
         return SoftplusForward(H, block="flux", scale=self.scale)
@@ -393,7 +393,7 @@ def test_softplus_is_computed_without_overflow():
 
 
 def test_lognormal_is_the_guides_scaled_inventory():
-    """On the guide's problem, LognormalForward and ScaledInventory give the same model, Jacobian, mode, iterations and posterior."""
+    """On the guide's problem, LogNormalForward and ScaledInventory give the same model, Jacobian, mode, iterations and posterior."""
     rng = np.random.default_rng(0)
     cells = Space({"flux": pd.RangeIndex(10, name="cell")})
     observed = Space({"ch4": pd.RangeIndex(25, name="obs_id")})
@@ -412,7 +412,7 @@ def test_lognormal_is_the_guides_scaled_inventory():
         )
 
     guide = ScaledInventory(H, inventory)
-    ours = LognormalForward(H, inventory)
+    ours = LogNormalForward(H, inventory)
     _, obs = build(guide, Vector(np.zeros(25), observed)).simulate(rng=1)
     x = Vector(rng.normal(0.0, 0.5, 10), cells)
     np.testing.assert_allclose(ours(x).values, guide(x).values, rtol=1e-15)
@@ -521,7 +521,7 @@ def one_cell_model(kind: str, n: int, reference=1.0, scale: float = 1.0):
         np.ones((1, n)), Space({"conc": pd.RangeIndex(1, name="obs_id")}), state
     )
     if kind == "lognormal":
-        return LognormalForward(H, reference)
+        return LogNormalForward(H, reference)
     return SoftplusForward(H, scale=scale)
 
 
@@ -737,7 +737,7 @@ def own_world(
     H = Operator(rng.uniform(0.0, 1.0, (m, n)), obs, state)
     mean = pd.Series(rng.uniform(1.0, 2.0, n), index=state.select("flux"))
     if kind == "lognormal":
-        model = LognormalForward(H, mean)
+        model = LogNormalForward(H, mean)
         cv = np.sqrt(np.expm1(std**2))
     else:
         model = SoftplusForward(H, scale=0.5)
@@ -822,18 +822,18 @@ def test_in_a_narrow_prior_the_intervals_of_cells_and_totals_cover(kind):
 
 def without_the_reference(monkeypatch):
     """The lognormal's Jacobian scaled by e^u, without the reference."""
-    monkeypatch.setattr(LognormalForward, "_slopes", lambda self, u: np.exp(u))
+    monkeypatch.setattr(LogNormalForward, "_slopes", lambda self, u: np.exp(u))
 
 
 def the_median_convention(monkeypatch):
     """prior_for with the reference as the median: mu = log(m / r), without -sigma^2 / 2."""
-    real = LognormalForward.prior_for
+    real = LogNormalForward.prior_for
 
     def wrong(self, mean, std):
         mu, sigma = real(self, mean, std)
         return mu + sigma * sigma / 2, sigma
 
-    monkeypatch.setattr(LognormalForward, "prior_for", wrong)
+    monkeypatch.setattr(LogNormalForward, "prior_for", wrong)
 
 
 def softplus_slope_as_exp(monkeypatch):
@@ -925,7 +925,7 @@ def two_block_operator() -> Operator:
 def test_a_wrong_reference_is_refused(reference, error, match):
     """A reference on other labels, negative, not finite or without labels raises, naming what is wrong."""
     with pytest.raises(error, match=match):
-        LognormalForward(two_block_operator(), reference, block="flux")
+        LogNormalForward(two_block_operator(), reference, block="flux")
 
 
 def test_the_block_and_the_operator_are_checked():
@@ -934,7 +934,7 @@ def test_the_block_and_the_operator_are_checked():
     with pytest.raises(KeyError, match=r"No block named 'fluxes'"):
         SoftplusForward(H, 1.0, block="fluxes")
     with pytest.raises(ValueError, match=r"block="):
-        LognormalForward(H, 1.0)
+        LogNormalForward(H, 1.0)
     with pytest.raises(TypeError, match="Operator"):
         SoftplusForward(H.dense(), 1.0, block="flux")
     model = SoftplusForward(H, 1.0, block="flux")
@@ -960,7 +960,7 @@ def test_the_scale_is_required():
 def test_an_overflow_is_refused_naming_the_cell():
     """A u whose flux overflows raises a ValueError naming its label (which Gauss-Newton's step halving catches); a cell with no reference never overflows."""
     H = two_block_operator()
-    model = LognormalForward(
+    model = LogNormalForward(
         H, pd.Series([1.0, 0.0, 1.0], index=H.cols.select("flux")), block="flux"
     )
     x = Vector([1e3, 1e4, 0.0, 0.0], H.cols)
@@ -977,7 +977,7 @@ def test_an_overflow_is_refused_naming_the_cell():
 def test_transform_takes_states_and_draws_by_label():
     """A state in another order comes back in its order; draws with rows shuffled are transformed row by row; anything else is refused."""
     H = two_block_operator()
-    model = LognormalForward(
+    model = LogNormalForward(
         H, pd.Series([1.0, 2.0, 3.0], index=H.cols.select("flux")), block="flux"
     )
     x = Vector([0.0, np.log(2.0), 1.0, 5.0], H.cols)
@@ -1004,7 +1004,7 @@ def test_prior_for_refuses_what_it_cannot_make():
     """A lognormal flux is never zero nor below zero, and is zero where the reference is; a softplus flux is above zero."""
     H = two_block_operator()
     labels = H.cols.select("flux")
-    lognormal = LognormalForward(
+    lognormal = LogNormalForward(
         H, pd.Series([1.0, 0.0, 1.0], index=labels), block="flux"
     )
     with pytest.raises(
@@ -1380,7 +1380,7 @@ def slv_shaped(kind: str, side: int = 10, m: int = 40, log_std: float = 1.0):
     inventory = pd.Series(rng.lognormal(0.0, 0.8, side * side), index=cells.index)
     cv = np.sqrt(np.expm1(log_std**2))
     if kind == "lognormal":
-        model = LognormalForward(H, inventory)
+        model = LogNormalForward(H, inventory)
         mu, sigma = model.prior_for(model.reference, model.reference * cv)
     else:
         model = SoftplusForward(H, scale=float(inventory.median()))

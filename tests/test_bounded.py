@@ -534,7 +534,7 @@ def test_a_wide_prior_warns_with_the_shift_of_the_cut_prior(caplog, a):
     assert f"a total about {shift:.0f}% above the prior's" in message
     assert "each element taken alone" in message
     assert "The estimate (the mode) is not affected" in message
-    assert "fips.solve(problem)" in message and "fips.LognormalForward" in message
+    assert "fips.solve(problem)" in message and "fips.LogNormalForward" in message
 
 
 def test_a_prior_narrow_against_its_bounds_does_not_warn(caplog):
