@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.linalg.forms &#8212; fips 0.2.0b3.dev36+g72e79b0cb documentation</title>
+    <title>fips.linalg.forms &#8212; fips 0.2.0b3.dev37+g63f5b0216 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../../_static/documentation_options.js?v=9265c06b"></script>
+    <script src="../../../_static/documentation_options.js?v=36a0ec1c"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev36+g72e79b0cb documentation - Home"/>
-    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev36+g72e79b0cb documentation - Home"/>
+    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev37+g63f5b0216 documentation - Home"/>
+    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev37+g63f5b0216 documentation - Home"/>
   
   
 </a></div>
@@ -451,11 +451,6 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.sparse.linalg._interface</span><span class="w"> </span><span class="kn">import</span> <span class="n">_CustomLinearOperator</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
-
-<span class="n">LinearOperatorLike</span><span class="p">:</span> <span class="n">TypeAlias</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="s2">"LinearOperator | _SciPyLinearOperator | sp.spmatrix | sp.sparray | npt.ArrayLike"</span>
-<span class="p">)</span>
-<span class="sd">"""What :func:`as_linear_operator` takes: a form, a SciPy linear operator, a SciPy sparse matrix or a 2D array."""</span>
 
 <span class="n">_DENSE_FILL</span> <span class="o">=</span> <span class="mf">0.25</span>
 <span class="sd">"""</span>
@@ -1874,6 +1869,14 @@
             <span class="k">return</span> <span class="n">SparseOperator</span><span class="o">.</span><span class="n">_adopt</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">DiagonalOperator</span><span class="o">.</span><span class="n">_adopt</span><span class="p">(</span><span class="n">diagonal</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">DenseOperator</span><span class="o">.</span><span class="n">_adopt</span><span class="p">(</span><span class="n">_matrix_2d</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+
+
+<span class="n">LinearOperatorLike</span><span class="p">:</span> <span class="n">TypeAlias</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">LinearOperator</span> <span class="o">|</span> <span class="n">_SciPyLinearOperator</span> <span class="o">|</span> <span class="n">sp</span><span class="o">.</span><span class="n">spmatrix</span> <span class="o">|</span> <span class="n">sp</span><span class="o">.</span><span class="n">sparray</span> <span class="o">|</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span>
+<span class="p">)</span>
+<span class="sd">"""What :func:`as_linear_operator` takes: a form, a SciPy linear operator, a SciPy sparse matrix or a 2D array."""</span>
+<span class="c1"># A real union, not a string: a string alias is looked up in the module that</span>
+<span class="c1"># uses it, where `_SciPyLinearOperator` is not imported (`typing.get_type_hints`).</span>
 
 
 <div class="viewcode-block" id="as_linear_operator">
