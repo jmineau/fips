@@ -1,0 +1,6 @@
+fips.Operator.jacobian
+======================
+
+.. currentmodule:: fips
+
+.. automethod:: Operator.jacobian

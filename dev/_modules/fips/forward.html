@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.forward &#8212; fips 0.2.0b3.dev26+g4d65592e7 documentation</title>
+    <title>fips.forward &#8212; fips 0.2.0b3.dev27+gc35c2fa49 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=05a089fb"></script>
+    <script src="../../_static/documentation_options.js?v=e3cce90a"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev26+g4d65592e7 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev26+g4d65592e7 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev27+gc35c2fa49 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev27+gc35c2fa49 documentation - Home"/>
   
   
 </a></div>
@@ -424,8 +424,9 @@
 <span></span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">Forward models: a map from the state to the observations that is not linear.</span>
 
-<span class="sd">A :class:`~fips.Problem` takes its forward map as an :class:`~fips.Operator`,</span>
-<span class="sd">the matrix :math:`H` of a linear map, or as a :class:`ForwardModel`, a class</span>
+<span class="sd">A :class:`~fips.Problem` takes its forward map (a :class:`Forward`) as an</span>
+<span class="sd">:class:`~fips.Operator`, the matrix :math:`H` of a linear map and its own</span>
+<span class="sd">Jacobian, or as a :class:`ForwardModel`, a class</span>
 <span class="sd">the caller writes with two methods: the model itself, :math:`F(x)`, and its</span>
 <span class="sd">Jacobian, :math:`J(x) = \partial F / \partial x` at a state, as an</span>
 <span class="sd">:class:`~fips.Operator` (or, for a model with an adjoint, its products</span>
@@ -441,6 +442,7 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Protocol</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
@@ -450,6 +452,52 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.vector</span><span class="w"> </span><span class="kn">import</span> <span class="n">Vector</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Forward">
+<a class="viewcode-back" href="../../reference/api/fips.forward.Forward.html#fips.Forward">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Forward</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    A problem's forward map, linear or not: what :attr:`Problem.forward &lt;fips.Problem.forward&gt;` is.</span>
+
+<span class="sd">    Two kinds of object answer it. An :class:`~fips.Operator` :math:`H` is a</span>
+<span class="sd">    forward model whose Jacobian is constant: ``H(x)`` is ``H @ x`` and</span>
+<span class="sd">    ``H.jacobian(x)`` is ``H``. A :class:`ForwardModel` :math:`F` is one the</span>
+<span class="sd">    caller writes. Code that reads a problem's forward through these four</span>
+<span class="sd">    members holds for both; what needs the matrix (``@``, ``.data``,</span>
+<span class="sd">    ``.dense()``) is an operator's own, and :class:`~fips.Problem` takes</span>
+<span class="sd">    only these two kinds as ``forward=``.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    ForwardModel : A forward map that is not linear, written by the caller.</span>
+<span class="sd">    fips.Operator : A linear one.</span>
+<span class="sd">    """</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">rows</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Space</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The labels of the observations the map makes."""</span>
+        <span class="o">...</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cols</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Space</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The labels of the state it takes."""</span>
+        <span class="o">...</span>
+
+<div class="viewcode-block" id="Forward.__call__">
+<a class="viewcode-back" href="../../reference/api/fips.forward.Forward.__call__.html#fips.Forward.__call__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Vector</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vector</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return the observations the state `x` models, without the offset: :math:`F(x)`, or :math:`H x`, on :attr:`rows`."""</span>
+        <span class="o">...</span></div>
+
+
+<div class="viewcode-block" id="Forward.jacobian">
+<a class="viewcode-back" href="../../reference/api/fips.forward.Forward.jacobian.html#fips.Forward.jacobian">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">jacobian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Vector</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Operator</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return the Jacobian at `x`, :math:`J(x)`, an Operator on :attr:`rows` and :attr:`cols` (for an operator, itself)."""</span>
+        <span class="o">...</span></div>
+</div>
+
 
 
 <div class="viewcode-block" id="ForwardModel">
@@ -481,7 +529,8 @@
 <span class="sd">    subclass's ``__init__``. fips calls both methods with a vector on</span>
 <span class="sd">    :attr:`cols` itself, so ``self.H @ x`` with ``self.H`` on the same columns</span>
 <span class="sd">    needs no reordering. A model with a linear map is an</span>
-<span class="sd">    :class:`~fips.Operator`, and needs no class.</span>
+<span class="sd">    :class:`~fips.Operator`, and needs no class: an operator is a forward</span>
+<span class="sd">    model whose Jacobian is itself (both answer :class:`Forward`).</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -816,7 +865,7 @@
     <span class="k">return</span> <span class="n">_on</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"what </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2"> returns"</span><span class="p">,</span> <span class="s2">"its labels"</span><span class="p">)</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_evaluated</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">ForwardModel</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_evaluated</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">Forward</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Return the model's observations of the state `values` (in the order of its columns), in the order of its rows.</span>
 

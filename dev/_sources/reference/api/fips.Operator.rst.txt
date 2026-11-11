@@ -28,10 +28,12 @@
 .. autosummary::
    :toctree:
 
+   ~Operator.__call__
    ~Operator.align
    ~Operator.dense
    ~Operator.from_blocks
    ~Operator.from_frame
+   ~Operator.jacobian
    ~Operator.round_labels
    ~Operator.sparse
    ~Operator.to_frame

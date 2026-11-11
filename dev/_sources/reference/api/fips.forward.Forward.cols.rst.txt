@@ -1,0 +1,6 @@
+fips.forward.Forward.cols
+=========================
+
+.. currentmodule:: fips.forward
+
+.. autoproperty:: Forward.cols

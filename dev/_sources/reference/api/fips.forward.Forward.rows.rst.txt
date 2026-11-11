@@ -1,0 +1,6 @@
+fips.forward.Forward.rows
+=========================
+
+.. currentmodule:: fips.forward
+
+.. autoproperty:: Forward.rows

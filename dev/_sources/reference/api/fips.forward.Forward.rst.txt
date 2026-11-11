@@ -1,0 +1,32 @@
+﻿fips.forward.Forward
+====================
+
+.. currentmodule:: fips.forward
+
+.. autoclass:: Forward
+   :no-members:
+   :show-inheritance:
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~Forward.cols
+   ~Forward.rows
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~Forward.__call__
+   ~Forward.jacobian
+
+
+

@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>A problem too large to factor: the variational method &#8212; fips 0.2.0b3.dev26+g4d65592e7 documentation</title>
+    <title>A problem too large to factor: the variational method &#8212; fips 0.2.0b3.dev27+gc35c2fa49 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=05a089fb"></script>
+    <script src="../_static/documentation_options.js?v=e3cce90a"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev26+g4d65592e7 documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev26+g4d65592e7 documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev27+gc35c2fa49 documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev27+gc35c2fa49 documentation - Home"/>
   
   
 </a></div>
@@ -598,13 +598,13 @@ checked against the exact one:</p>
 <span class="gp">In [30]: </span><span class="n">sd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">exact</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
 
 <span class="gp">In [31]: </span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">estimate</span><span class="o">.</span><span class="n">values</span> <span class="o">-</span> <span class="n">exact</span><span class="o">.</span><span class="n">estimate</span><span class="o">.</span><span class="n">values</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">/</span> <span class="n">sd</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>  <span class="c1"># in posterior sd</span>
-<span class="gh">Out[31]: </span><span class="go">np.float64(1.120009985500065e-06)</span>
+<span class="gh">Out[31]: </span><span class="go">np.float64(1.042597175554417e-06)</span>
 
 <span class="gp">In [32]: </span><span class="n">post</span><span class="o">.</span><span class="n">iterations</span>
 <span class="gh">Out[32]: </span>
 <span class="go">                     d2        cost  cg_iterations</span>
 <span class="go">iteration                                         </span>
-<span class="go">1          12438.282033  1159.59161            122</span>
+<span class="go">1          12438.282056  1159.59161            124</span>
 </pre></div>
 </div>
 <p>The estimate is the analytic one far inside its uncertainty (the conjugate
@@ -675,10 +675,10 @@ exact ones, as <code class="docutils literal notranslate"><span class="pre">rank
 <span class="gp">In [40]: </span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">))</span>
 
 <span class="gp">In [41]: </span><span class="n">ax</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span><span class="n">curve</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">curve</span><span class="p">[</span><span class="s2">"largest sd error"</span><span class="p">],</span> <span class="s2">"o-"</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"largest"</span><span class="p">)</span>
-<span class="gh">Out[41]: </span><span class="go">[&lt;matplotlib.lines.Line2D at 0x72782b788440&gt;]</span>
+<span class="gh">Out[41]: </span><span class="go">[&lt;matplotlib.lines.Line2D at 0x715c105f2cf0&gt;]</span>
 
 <span class="gp">In [42]: </span><span class="n">ax</span><span class="o">.</span><span class="n">semilogy</span><span class="p">(</span><span class="n">curve</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">curve</span><span class="p">[</span><span class="s2">"median sd error"</span><span class="p">],</span> <span class="s2">"s-"</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"median"</span><span class="p">)</span>
-<span class="gh">Out[42]: </span><span class="go">[&lt;matplotlib.lines.Line2D at 0x72782b789160&gt;]</span>
+<span class="gh">Out[42]: </span><span class="go">[&lt;matplotlib.lines.Line2D at 0x715c105f2f90&gt;]</span>
 
 <span class="gp">In [43]: </span><span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">"rank"</span><span class="p">)</span>
 <span class="gh">Out[43]: </span><span class="go">Text(0.5, 0, 'rank')</span>
@@ -687,7 +687,7 @@ exact ones, as <code class="docutils literal notranslate"><span class="pre">rank
 <span class="gh">Out[44]: </span><span class="go">Text(0, 0.5, 'relative error of the posterior sd')</span>
 
 <span class="gp">In [45]: </span><span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
-<span class="gh">Out[45]: </span><span class="go">&lt;matplotlib.legend.Legend at 0x72782b789be0&gt;</span>
+<span class="gh">Out[45]: </span><span class="go">&lt;matplotlib.legend.Legend at 0x715c105f2a50&gt;</span>
 </pre></div>
 </div>
 <a class="reference internal image-reference" href="../_images/variational_rank.png"><img alt="../_images/variational_rank.png" src="../_images/variational_rank.png" style="width: 5in;" />
@@ -857,23 +857,23 @@ at the last estimate, with the same stopping rule as <code class="docutils liter
 <span class="gh">Out[58]: </span>
 <span class="go">                      d2           cost  cg_iterations</span>
 <span class="go">iteration                                             </span>
-<span class="go">1          130264.831519  114083.989483             68</span>
-<span class="go">2          114003.712451    2315.786242             81</span>
-<span class="go">3            2237.555312      84.467890             78</span>
-<span class="go">4               6.163438      78.468280             67</span>
-<span class="go">5               0.122497      78.384408             67</span>
-<span class="go">6               0.025351      78.369842             62</span>
+<span class="go">1          130264.826673  114083.979645             68</span>
+<span class="go">2          114003.701713    2315.785863             81</span>
+<span class="go">3            2237.554852      84.467883             78</span>
+<span class="go">4               6.163445      78.468278             69</span>
+<span class="go">5               0.122493      78.384409             67</span>
+<span class="go">6               0.025352      78.369842             62</span>
 <span class="go">7               0.006698      78.366694             60</span>
-<span class="go">8               0.002122      78.365784             47</span>
-<span class="go">9               0.000725      78.365483             58</span>
+<span class="go">8               0.002122      78.365784             51</span>
+<span class="go">9               0.000725      78.365483             56</span>
 <span class="go">10              0.000252      78.365380             46</span>
 <span class="go">11              0.000089      78.365344             46</span>
-<span class="go">12              0.000031      78.365331             46</span>
+<span class="go">12              0.000031      78.365331             44</span>
 
 <span class="gp">In [59]: </span><span class="n">newton</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">lognormal</span><span class="p">,</span> <span class="s2">"gauss_newton"</span><span class="p">,</span> <span class="n">draws</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
 
 <span class="gp">In [60]: </span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">by_products</span><span class="o">.</span><span class="n">estimate</span><span class="o">.</span><span class="n">values</span> <span class="o">-</span> <span class="n">newton</span><span class="o">.</span><span class="n">estimate</span><span class="o">.</span><span class="n">values</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
-<span class="gh">Out[60]: </span><span class="go">np.float64(2.3905648343092167e-06)</span>
+<span class="gh">Out[60]: </span><span class="go">np.float64(5.233401845883279e-06)</span>
 </pre></div>
 </div>
 <p>The two modes agree to within their stopping rules (both stop when a step is

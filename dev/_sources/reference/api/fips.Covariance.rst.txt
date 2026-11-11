@@ -40,6 +40,6 @@
 .. rubric:: Inherited
 
 
-From :class:`~.Operator`: :py:obj:`~.Operator.align`, :py:obj:`~.Operator.cols`, :py:obj:`~.Operator.data`, :py:obj:`~.Operator.dense`, :py:obj:`~.Operator.from_blocks`, :py:obj:`~.Operator.from_frame`, :py:obj:`~.Operator.name`, :py:obj:`~.Operator.round_labels`, :py:obj:`~.Operator.rows`, :py:obj:`~.Operator.shape`, :py:obj:`~.Operator.sparse`, :py:obj:`~.Operator.T`, :py:obj:`~.Operator.to_frame`
+From :class:`~.Operator`: :py:obj:`~.Operator.__call__`, :py:obj:`~.Operator.align`, :py:obj:`~.Operator.cols`, :py:obj:`~.Operator.data`, :py:obj:`~.Operator.dense`, :py:obj:`~.Operator.from_blocks`, :py:obj:`~.Operator.from_frame`, :py:obj:`~.Operator.jacobian`, :py:obj:`~.Operator.name`, :py:obj:`~.Operator.round_labels`, :py:obj:`~.Operator.rows`, :py:obj:`~.Operator.shape`, :py:obj:`~.Operator.sparse`, :py:obj:`~.Operator.T`, :py:obj:`~.Operator.to_frame`
 
 

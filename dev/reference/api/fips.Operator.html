@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.Operator &#8212; fips 0.2.0b3.dev26+g4d65592e7 documentation</title>
+    <title>fips.Operator &#8212; fips 0.2.0b3.dev27+gc35c2fa49 documentation</title>
   
   
   
@@ -42,11 +42,13 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=05a089fb"></script>
+    <script src="../../_static/documentation_options.js?v=e3cce90a"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'reference/api/fips.Operator';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
@@ -135,8 +137,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev26+g4d65592e7 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev26+g4d65592e7 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev27+gc35c2fa49 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev27+gc35c2fa49 documentation - Home"/>
   
   
 </a></div>
@@ -442,10 +444,12 @@
 <li class="toctree-l3"><a class="reference internal" href="fips.Operator.rows.html">fips.Operator.rows</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Operator.shape.html">fips.Operator.shape</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Operator.T.html">fips.Operator.T</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Operator.__call__.html">fips.Operator.__call__</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Operator.align.html">fips.Operator.align</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Operator.dense.html">fips.Operator.dense</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Operator.from_blocks.html">fips.Operator.from_blocks</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Operator.from_frame.html">fips.Operator.from_frame</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Operator.jacobian.html">fips.Operator.jacobian</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Operator.round_labels.html">fips.Operator.round_labels</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Operator.sparse.html">fips.Operator.sparse</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Operator.to_frame.html">fips.Operator.to_frame</a></li>
@@ -463,6 +467,8 @@
 <li class="toctree-l2"><a class="reference internal" href="fips.Operator.align.html">fips.Operator.align</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Operator.round_labels.html">fips.Operator.round_labels</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Operator.__matmul__.html">fips.Operator.__matmul__</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Operator.__call__.html">fips.Operator.__call__</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Operator.jacobian.html">fips.Operator.jacobian</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Operator.__add__.html">fips.Operator.__add__</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Operator.__sub__.html">fips.Operator.__sub__</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Operator.__mul__.html">fips.Operator.__mul__</a></li>
@@ -489,6 +495,17 @@
 <li class="toctree-l2"><a class="reference internal" href="fips.ForwardModel.jacobian.html">fips.ForwardModel.jacobian</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.ForwardModel.jvp.html">fips.ForwardModel.jvp</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.ForwardModel.vjp.html">fips.ForwardModel.vjp</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="fips.forward.Forward.html">fips.forward.Forward</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="fips.forward.Forward.cols.html">fips.forward.Forward.cols</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.forward.Forward.rows.html">fips.forward.Forward.rows</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.forward.Forward.__call__.html">fips.forward.Forward.__call__</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.forward.Forward.jacobian.html">fips.forward.Forward.jacobian</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.forward.Forward.rows.html">fips.forward.Forward.rows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.forward.Forward.cols.html">fips.forward.Forward.cols</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.forward.Forward.__call__.html">fips.forward.Forward.__call__</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.forward.Forward.jacobian.html">fips.forward.Forward.jacobian</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.taylortest.html">fips.taylortest</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="fips.LognormalForward.html">fips.LognormalForward</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="fips.LognormalForward.block.html">fips.LognormalForward.block</a></li>
@@ -1104,17 +1121,23 @@ a string is converted to one.</p></li>
 <p class="rubric">Methods</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="fips.Operator.align.html#fips.Operator.align" title="fips.Operator.align"><code class="xref py py-obj docutils literal notranslate"><span class="pre">align</span></code></a>(rows, cols)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="fips.Operator.__call__.html#fips.Operator.__call__" title="fips.Operator.__call__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code></a>(x)</p></td>
+<td><p>Return the observations the state <cite>x</cite> models: the product <span class="math notranslate nohighlight">\(H x\)</span>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="fips.Operator.align.html#fips.Operator.align" title="fips.Operator.align"><code class="xref py py-obj docutils literal notranslate"><span class="pre">align</span></code></a>(rows, cols)</p></td>
 <td><p>Return the operator on <cite>rows</cite> and <cite>cols</cite>, which must have exactly its labels.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="fips.Operator.dense.html#fips.Operator.dense" title="fips.Operator.dense"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dense</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="fips.Operator.dense.html#fips.Operator.dense" title="fips.Operator.dense"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dense</span></code></a>()</p></td>
 <td><p>Return the matrix as a new dense array, rows and columns in the spaces' order.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="fips.Operator.from_blocks.html#fips.Operator.from_blocks" title="fips.Operator.from_blocks"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_blocks</span></code></a>(blocks[, rows, cols, name])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="fips.Operator.from_blocks.html#fips.Operator.from_blocks" title="fips.Operator.from_blocks"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_blocks</span></code></a>(blocks[, rows, cols, name])</p></td>
 <td><p>Build an operator from its blocks, each named by its row and its column block.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="fips.Operator.from_frame.html#fips.Operator.from_frame" title="fips.Operator.from_frame"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_frame</span></code></a>(frame[, row_block, col_block, name])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="fips.Operator.from_frame.html#fips.Operator.from_frame" title="fips.Operator.from_frame"><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_frame</span></code></a>(frame[, row_block, col_block, name])</p></td>
 <td><p>Build an operator from a DataFrame, reading its labels.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="fips.Operator.jacobian.html#fips.Operator.jacobian" title="fips.Operator.jacobian"><code class="xref py py-obj docutils literal notranslate"><span class="pre">jacobian</span></code></a>(x)</p></td>
+<td><p>Return the Jacobian of <span class="math notranslate nohighlight">\(H x\)</span> at <cite>x</cite>: the operator itself, at every state.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="fips.Operator.round_labels.html#fips.Operator.round_labels" title="fips.Operator.round_labels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">round_labels</span></code></a>(decimals)</p></td>
 <td><p>Return the operator with its float labels rounded (<a class="reference internal" href="fips.Space.round_labels.html#fips.Space.round_labels" title="fips.Space.round_labels"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Space.round_labels()</span></code></a>).</p></td>

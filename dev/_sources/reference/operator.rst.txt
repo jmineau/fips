@@ -77,6 +77,8 @@ Arithmetic
    :toctree: api/
 
    Operator.__matmul__
+   Operator.__call__
+   Operator.jacobian
    Operator.__add__
    Operator.__sub__
    Operator.__mul__
