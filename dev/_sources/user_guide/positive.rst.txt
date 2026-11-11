@@ -297,8 +297,9 @@ prior's units.
 
 The solve warns and raises as ``"gauss_newton"`` does (:doc:`nonlinear`): a
 wide prior makes the problem more nonlinear, and a solve that has not
-stopped after ``max_iterations`` raises. Raise it, or narrow the prior. Each
-warning is a :class:`~fips.FipsWarning`, which Python shows without any setup
+stopped after ``max_iterations`` raises :class:`~fips.ConvergenceError`:
+raise ``max_iterations``, or narrow the prior. Each warning is a
+:class:`~fips.FipsWarning`, which Python shows without any setup
 (:ref:`repeated-inversions`).
 
 

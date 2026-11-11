@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips._errors &#8212; fips 0.2.0b3.dev42+g5347e97e0 documentation</title>
+    <title>fips._errors &#8212; fips 0.2.0b3.dev43+gd59a2333c documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=5a88ebcd"></script>
+    <script src="../../_static/documentation_options.js?v=bc76ec41"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev42+g5347e97e0 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev42+g5347e97e0 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev43+gd59a2333c documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev43+gd59a2333c documentation - Home"/>
   
   
 </a></div>
@@ -422,7 +422,7 @@
                   
   <h1>Source code for fips._errors</h1><div class="highlight"><pre>
 <span></span><span class="sd">"""</span>
-<span class="sd">fips's warning class, and the one helper that logs a warning and issues it.</span>
+<span class="sd">fips's warning class, its error for an iteration that did not converge, and the one helper that logs a warning and issues it.</span>
 
 <span class="sd">A warning that changes how far an answer can be trusted goes to both places:</span>
 <span class="sd">the ``fips`` logger, for a program that configures logging, and Python's</span>
@@ -491,6 +491,36 @@
 <span class="sd">    Traceback (most recent call last):</span>
 <span class="sd">    ...</span>
 <span class="sd">    fips.FipsWarning: The last of the 2 pairs of the low-rank posterior still has ...</span>
+<span class="sd">    """</span></div>
+
+
+
+<div class="viewcode-block" id="ConvergenceError">
+<a class="viewcode-back" href="../../reference/api/fips.ConvergenceError.html#fips.ConvergenceError">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ConvergenceError</span><span class="p">(</span><span class="ne">RuntimeError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Raised when an iterative solve stops at its limit before it converges.</span>
+
+<span class="sd">    ``"gauss_newton"`` and ``"variational"`` raise it when their steps have</span>
+<span class="sd">    not stopped after ``max_iterations``, and ``"variational"`` when its</span>
+<span class="sd">    conjugate gradients have not reached ``cg_tol`` after</span>
+<span class="sd">    ``max_cg_iterations`` or Lanczos does not find the eigenpairs. The message</span>
+<span class="sd">    says what each step did and what to change. It is a</span>
+<span class="sd">    :class:`RuntimeError`, so code that catches that still catches it; catch</span>
+<span class="sd">    ``fips.ConvergenceError`` to retry with more iterations without also</span>
+<span class="sd">    catching what is not an iteration limit (a cost that rises along a step</span>
+<span class="sd">    however short it is made, which points to a wrong Jacobian, stays a plain</span>
+<span class="sd">    :class:`RuntimeError`).</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    FipsWarning : Warned when a solve converged slowly, among other things.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import fips</span>
+<span class="sd">    &gt;&gt;&gt; issubclass(fips.ConvergenceError, RuntimeError)</span>
+<span class="sd">    True</span>
 <span class="sd">    """</span></div>
 
 

@@ -330,16 +330,17 @@ and the conjugate-gradient iterations. The warning is a
 :class:`~fips.FipsWarning`, which Python shows without any setup; the INFO
 lines are silent until you configure logging (:ref:`repeated-inversions`).
 
-It raises :class:`RuntimeError` when:
+It raises :class:`~fips.ConvergenceError` (a :class:`RuntimeError`) when:
 
 - the conjugate gradients have not reached ``cg_tol`` after
   ``max_cg_iterations``: raise either. Observations far more precise than
   the prior make large eigenvalues, and the solve slow;
 - Lanczos does not find the pairs: lower ``rank``, or raise ``cg_tol``;
-- with a forward model, the steps have not stopped after ``max_iterations``,
-  or the cost rises along a step however short it is made. The second means
-  the products are not the derivative of the model: check them with
-  :func:`fips.taylortest`.
+- with a forward model, the steps have not stopped after ``max_iterations``.
+
+With a forward model it raises :class:`RuntimeError` when the cost rises
+along a step however short it is made: the products are not the derivative
+of the model; check them with :func:`fips.taylortest`.
 
 It raises :class:`ValueError` for an option out of range (``cg_tol`` must be
 below 1), and :class:`~fips.UnavailableError` for a member it cannot give

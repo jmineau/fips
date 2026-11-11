@@ -1,0 +1,6 @@
+﻿fips.ConvergenceError
+=====================
+
+.. currentmodule:: fips
+
+.. autoexception:: ConvergenceError

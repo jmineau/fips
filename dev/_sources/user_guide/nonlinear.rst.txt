@@ -319,7 +319,8 @@ tuned step and acceptance rate.
 
 It raises:
 
-- :class:`RuntimeError` if it has not stopped after ``max_iterations``,
+- :class:`~fips.ConvergenceError` (a :class:`RuntimeError`) if it has not
+  stopped after ``max_iterations``,
   naming each step's :math:`d^2`. If they are still falling, raise
   ``max_iterations``; if the whole steps do not shrink while the steps taken
   do, check the Jacobian; a very wide prior can also be too nonlinear to
