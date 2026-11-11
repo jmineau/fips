@@ -218,6 +218,11 @@ of answer; for the ensemble:
   mean of the updated members. :attr:`~fips.Posterior.variances`,
   :meth:`~fips.Posterior.cov` and :attr:`~fips.Posterior.kalman_gain` are
   those of the updated members.
+- The ``prior_std`` and ``reduction`` of :meth:`~fips.Posterior.uncertainty`,
+  and :attr:`~fips.Posterior.uncertainty_reduction`, compare with the **prior
+  members' spread**, the prior the update used, not with :math:`S_0`: so
+  observations that tell nothing reduce nothing, and the members' sampling
+  error is on both sides.
 - :meth:`~fips.Posterior.sample` returns the updated members themselves, so
   it raises when asked for more than there are.
 - :attr:`~fips.Posterior.dofs`, :attr:`~fips.Posterior.information_content`,

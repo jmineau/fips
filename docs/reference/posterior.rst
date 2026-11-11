@@ -229,6 +229,12 @@ raise.
      - the estimate plus or minus ``z`` standard deviations
      - the kept draws' quantiles
      - the estimate plus or minus ``z`` standard deviations
+   * - ``prior_std``, ``reduction`` (``uncertainty``),
+       ``uncertainty_reduction``
+     - against :math:`S_0`; ``"ensemble"``: against its prior members
+     - ``"bounded"``: against draws of the prior with the bounds;
+       ``"gauss_newton"``: against :math:`S_0`
+     - against :math:`S_0`
    * - ``with_gamma``
      - yes
      - ``"bounded"``: yes; ``"gauss_newton"``: raises (its linearization
