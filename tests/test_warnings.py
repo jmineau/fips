@@ -5,7 +5,9 @@ The ``fips`` logger has a NullHandler, so a log line alone reaches no screen
 unless the program configures logging. Here: a warning is issued with
 logging left as it is, at the line of this file that called fips, with the
 same text as the log line; a filter makes it an error; and a solve with
-nothing to warn about issues none (INFO lines stay log-only).
+nothing to warn about issues none (INFO lines stay log-only). And
+:class:`fips.ConvergenceError`, the error of an iteration limit, is a
+:class:`RuntimeError` (the methods' tests raise it).
 """
 
 import logging
@@ -30,6 +32,12 @@ def low_rank_problem() -> fips.Problem:
         obs_cov=fips.Independent().with_std(0.1),
         forward=fips.Operator(H, observed, state),
     )
+
+
+def test_convergence_error_is_a_public_runtime_error():
+    """``fips.ConvergenceError`` is exported and a :class:`RuntimeError`, so ``except RuntimeError`` still catches it."""
+    assert "ConvergenceError" in fips.__all__
+    assert issubclass(fips.ConvergenceError, RuntimeError)
 
 
 def test_fips_warning_is_a_public_user_warning():

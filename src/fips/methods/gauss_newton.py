@@ -99,7 +99,7 @@ from typing import ClassVar
 import numpy as np
 from numpy.linalg import LinAlgError
 
-from fips._errors import warn
+from fips._errors import ConvergenceError, warn
 from fips.linalg import LinearOperator
 from fips.linalg.forms import _read_only
 from fips.methods._draws import _warn_if_imprecise
@@ -943,9 +943,10 @@ def _iterate(
 
     Raises
     ------
+    fips.ConvergenceError
+        If the iterations have not stopped after ``max_iterations``.
     RuntimeError
-        If the iterations have not stopped after ``max_iterations``, or the
-        cost rises along a step however short.
+        If the cost rises along a step however short.
     """
     gamma = options.gamma
     S_0 = problem.prior_cov.data
@@ -1059,7 +1060,7 @@ def _iterate(
                 options=options,
             )
         here, current, analytic = taken, trial, None
-    raise RuntimeError(_unconverged(options.max_iterations, whole, d2s, limit))
+    raise ConvergenceError(_unconverged(options.max_iterations, whole, d2s, limit))
 
 
 def _shown(values: list[float]) -> str:

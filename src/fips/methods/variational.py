@@ -108,7 +108,7 @@ import numpy as np
 from scipy.linalg import eigh
 from scipy.sparse.linalg import ArpackNoConvergence, eigsh
 
-from fips._errors import warn
+from fips._errors import ConvergenceError, warn
 from fips.linalg import LinearOperator
 from fips.linalg.forms import _read_only
 from fips.methods.analytic import AnalyticOptions
@@ -289,7 +289,7 @@ def _cg(
 
     Raises
     ------
-    RuntimeError
+    fips.ConvergenceError
         If the residual is above the tolerance after `max_iterations`.
     """
     size = float(np.linalg.norm(b))
@@ -312,7 +312,7 @@ def _cg(
             return xi, k
         p = r + (rr_new / rr) * p
         rr = rr_new
-    raise RuntimeError(
+    raise ConvergenceError(
         f"The conjugate gradients did not converge in {max_iterations} iterations: "
         f"the residual is {math.sqrt(rr) / size:.3g} of the right side, above "
         f"cg_tol = {cg_tol:.3g}. Raise max_cg_iterations, or cg_tol; a prior-preconditioned "
@@ -342,7 +342,7 @@ def _eigenpairs(
 
     Raises
     ------
-    RuntimeError
+    fips.ConvergenceError
         If Lanczos does not converge.
     """
     r, m = system.r, system.H.shape[0]
@@ -362,7 +362,7 @@ def _eigenpairs(
                 for a in eigsh(_Hessian(system), k=k, which="LA", tol=cg_tol, v0=start)
             )
         except ArpackNoConvergence as error:
-            raise RuntimeError(
+            raise ConvergenceError(
                 f"Lanczos did not find the {k} leading eigenpairs of the "
                 "prior-preconditioned Hessian; lower rank, or raise cg_tol."
             ) from error
@@ -745,9 +745,10 @@ def _iterate(
 
     Raises
     ------
+    fips.ConvergenceError
+        If the steps have not stopped after ``max_iterations``.
     RuntimeError
-        If the steps have not stopped after ``max_iterations``, or the cost
-        rises along a step however short.
+        If the cost rises along a step however short.
     """
     gamma, n = options.gamma, len(problem.prior)
     x_0, z = problem.prior.values, problem.obs.values
@@ -854,7 +855,7 @@ def _iterate(
             solution.__dict__["_system_"] = system
             return solution
         xi, here = xi + fraction * step, taken
-    raise RuntimeError(_unconverged(options.max_iterations, whole, d2s, limit))
+    raise ConvergenceError(_unconverged(options.max_iterations, whole, d2s, limit))
 
 
 def _variational(problem: Problem, options: VariationalOptions) -> Posterior:

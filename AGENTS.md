@@ -43,7 +43,7 @@ no Jacobian: the caller places one with `Operator.from_blocks`, or writes it.
 ```
 src/fips/
   __init__.py       the public names (`__all__`), each from the module below that owns it
-  _errors.py        FipsWarning, and `warn`, which logs a warning and issues it
+  _errors.py        FipsWarning, ConvergenceError, and `warn`, which logs a warning and issues it
   space.py          Space: ordered named blocks, the padded MultiIndex, select, align
   vector.py         Vector: values on a Space (read-only), from_series/from_blocks
   operator.py       Operator: a fips.linalg form with a Space on each axis

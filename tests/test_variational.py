@@ -527,7 +527,7 @@ def test_no_recovery_but_trials():
 
 def test_cg_that_does_not_converge_raises():
     """A solve whose conjugate gradients have not reached cg_tol raises, saying what to change."""
-    with pytest.raises(RuntimeError, match="max_cg_iterations"):
+    with pytest.raises(fips.ConvergenceError, match="max_cg_iterations"):
         fips.solve(build(seed=18), "variational", max_cg_iterations=1)
 
 

@@ -854,10 +854,21 @@ def test_the_posterior_refuses_what_its_method_cannot_give():
 
 
 def test_a_solve_that_does_not_converge_raises():
-    """Too few steps raise, naming the steps' d2 and what to try."""
+    """Too few steps raise fips.ConvergenceError (a RuntimeError), naming the steps' d2 and what to try."""
     problem = Arrays.random(15, 6, 10).problem()
-    with pytest.raises(RuntimeError, match=r"did not converge in 2 steps.*taylortest"):
+    with pytest.raises(
+        fips.ConvergenceError, match=r"did not converge in 2 steps.*taylortest"
+    ):
         fips.solve(problem, "gauss_newton", max_iterations=2)
+    with pytest.raises(RuntimeError):  # what callers caught before still catches it
+        fips.solve(problem, "gauss_newton", max_iterations=2)
+
+
+def test_a_variational_solve_that_does_not_converge_raises():
+    """The variational method's outer steps with a forward model raise fips.ConvergenceError at max_iterations too."""
+    problem = Arrays.random(15, 6, 10).problem()
+    with pytest.raises(fips.ConvergenceError, match=r"did not converge in 2 steps"):
+        fips.solve(problem, "variational", max_iterations=2)
 
 
 def test_a_wrong_jacobian_that_stalls_reports_the_d2_the_rule_compared():
@@ -873,7 +884,7 @@ def test_a_wrong_jacobian_that_stalls_reports_the_d2_the_rule_compared():
         ExpModel(Operator(arrays.H, obs, state), scale=2.0),
         offset=problem.offset,
     )
-    with pytest.raises(RuntimeError) as raised:
+    with pytest.raises(fips.ConvergenceError) as raised:
         fips.solve(wrong, "gauss_newton", max_iterations=30)
     message = str(raised.value)
     whole = float(message.split("last whole step's d2 is ")[1].split(",")[0])
@@ -883,7 +894,7 @@ def test_a_wrong_jacobian_that_stalls_reports_the_d2_the_rule_compared():
     assert "does not shrink while the steps taken do" in message
     assert "taylortest" in message
     with pytest.raises(
-        RuntimeError, match=r"last whole step's d2 is .* above tol \* n"
+        fips.ConvergenceError, match=r"last whole step's d2 is .* above tol \* n"
     ):
         fips.solve(wrong, "variational", max_iterations=30)
 
