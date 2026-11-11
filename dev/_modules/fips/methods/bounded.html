@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.methods.bounded &#8212; fips 0.2.0b3.dev27+gc35c2fa49 documentation</title>
+    <title>fips.methods.bounded &#8212; fips 0.2.0b3.dev28+g2d3770dcc documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../../_static/documentation_options.js?v=e3cce90a"></script>
+    <script src="../../../_static/documentation_options.js?v=2612ccf9"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev27+gc35c2fa49 documentation - Home"/>
-    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev27+gc35c2fa49 documentation - Home"/>
+    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev28+g2d3770dcc documentation - Home"/>
+    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev28+g2d3770dcc documentation - Home"/>
   
   
 </a></div>
@@ -476,6 +476,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">numpy.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinAlgError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">cho_factor</span><span class="p">,</span> <span class="n">cho_solve</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.stats</span><span class="w"> </span><span class="kn">import</span> <span class="n">truncnorm</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">DenseOperator</span><span class="p">,</span> <span class="n">LinearOperator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg.forms</span><span class="w"> </span><span class="kn">import</span> <span class="n">_read_only</span>
@@ -615,7 +616,14 @@
 <span class="sd">        blocks it does not name unbounded (``lower={"flux": 0.0}`` keeps a</span>
 <span class="sd">        bias block free). A finite number on a state of several blocks bounds</span>
 <span class="sd">        them all, and the solve logs a warning naming them. None is no bound.</span>
-<span class="sd">        With no finite bound, the posterior is the analytic one.</span>
+<span class="sd">        With no finite bound, the posterior is the analytic one. The solve</span>
+<span class="sd">        also logs one warning when the prior is wide against the bounds (a</span>
+<span class="sd">        prior standard deviation over half the distance to a bound, for more</span>
+<span class="sd">        than 10% of a block's bounded elements): the draws are of the posterior</span>
+<span class="sd">        cut at the bounds, whose mean is higher than the Gaussian's at a lower</span>
+<span class="sd">        bound (lower, at an upper one), so a total read from them sits above</span>
+<span class="sd">        (or below) the prior's; the warning says by how much, for each such</span>
+<span class="sd">        block.</span>
 <span class="sd">    draws : int, default 2000</span>
 <span class="sd">        The number of draws of the truncated posterior kept for its variances</span>
 <span class="sd">        and the covariance of aggregates. They are Monte Carlo estimates from a</span>
@@ -1541,6 +1549,86 @@
             <span class="p">)</span>
 
 
+<span class="n">_WIDE</span> <span class="o">=</span> <span class="mf">2.0</span>
+<span class="sd">"""A prior is wide against a bound when the bound is less than this many of its standard deviations from its mean."""</span>
+
+<span class="n">_WIDE_SHARE</span> <span class="o">=</span> <span class="mf">0.10</span>
+<span class="sd">"""The share of a block's bounded elements that must be wide for the solve to warn of the block."""</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_warn_if_wide</span><span class="p">(</span><span class="n">problem</span><span class="p">:</span> <span class="n">Problem</span><span class="p">,</span> <span class="n">lower</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">upper</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Log one warning when a block's prior is wide against its bounds, so that a total read from the draws sits above (or below) the prior's.</span>
+
+<span class="sd">    The draws are of the posterior cut at the bounds, and a Gaussian cut at a</span>
+<span class="sd">    lower bound has a higher mean than the Gaussian (a lower one, at an upper</span>
+<span class="sd">    bound): where the data constrain little, the draws' mean, intervals and</span>
+<span class="sd">    totals are those of the cut prior. An element</span>
+<span class="sd">    is wide on a side when that side's bound is finite, its prior standard</span>
+<span class="sd">    deviation :math:`s` is positive and the bound is less than two standard</span>
+<span class="sd">    deviations from the prior mean :math:`x_0` (:math:`a = (x_0 - l) / s &lt; 2`</span>
+<span class="sd">    for a lower bound :math:`l`; an upper bound is the mirror image). A block</span>
+<span class="sd">    is reported when more than 10% of its bounded elements (those with a</span>
+<span class="sd">    finite bound) are wide. Its shift is the sum, over its bounded elements,</span>
+<span class="sd">    of the mean of the prior cut at the bounds less the prior mean (each</span>
+<span class="sd">    element alone: :math:`s\, \phi(a) / \Phi(a)` for one bound), as a share</span>
+<span class="sd">    of the sum of the elements' distances from the prior mean to the nearer</span>
+<span class="sd">    bound: the share of the prior's total, for a bound of zero.</span>
+<span class="sd">    """</span>
+    <span class="n">state</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span>
+    <span class="n">x_0</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+    <span class="n">bounded</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">lower</span><span class="p">)</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">upper</span><span class="p">)</span>
+    <span class="n">positive</span> <span class="o">=</span> <span class="n">std</span> <span class="o">&gt;</span> <span class="mf">0.0</span>
+    <span class="n">scale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">positive</span><span class="p">,</span> <span class="n">std</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>  <span class="c1"># a zero-spread element has no shift to divide</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">((</span><span class="n">x_0</span> <span class="o">-</span> <span class="n">lower</span><span class="p">)</span> <span class="o">/</span> <span class="n">scale</span><span class="p">,</span> <span class="p">(</span><span class="n">upper</span> <span class="o">-</span> <span class="n">x_0</span><span class="p">)</span> <span class="o">/</span> <span class="n">scale</span><span class="p">)</span>  <span class="c1"># inf where unbounded</span>
+    <span class="n">wide</span> <span class="o">=</span> <span class="n">bounded</span> <span class="o">&amp;</span> <span class="n">positive</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">a</span> <span class="o">&lt;</span> <span class="n">_WIDE</span><span class="p">)</span>
+    <span class="n">shift</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">state</span><span class="p">))</span>
+    <span class="n">cut</span> <span class="o">=</span> <span class="n">bounded</span> <span class="o">&amp;</span> <span class="n">positive</span>
+    <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span>
+        <span class="n">invalid</span><span class="o">=</span><span class="s2">"ignore"</span>
+    <span class="p">):</span>  <span class="c1"># SciPy's skewness, unused, at a bound 1000 sd away</span>
+        <span class="n">shift</span><span class="p">[</span><span class="n">cut</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">truncnorm</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">lower</span><span class="p">[</span><span class="n">cut</span><span class="p">]</span> <span class="o">-</span> <span class="n">x_0</span><span class="p">[</span><span class="n">cut</span><span class="p">])</span> <span class="o">/</span> <span class="n">scale</span><span class="p">[</span><span class="n">cut</span><span class="p">],</span>
+                <span class="p">(</span><span class="n">upper</span><span class="p">[</span><span class="n">cut</span><span class="p">]</span> <span class="o">-</span> <span class="n">x_0</span><span class="p">[</span><span class="n">cut</span><span class="p">])</span> <span class="o">/</span> <span class="n">scale</span><span class="p">[</span><span class="n">cut</span><span class="p">],</span>
+                <span class="n">loc</span><span class="o">=</span><span class="n">x_0</span><span class="p">[</span><span class="n">cut</span><span class="p">],</span>
+                <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">[</span><span class="n">cut</span><span class="p">],</span>
+            <span class="p">)</span>
+            <span class="o">-</span> <span class="n">x_0</span><span class="p">[</span><span class="n">cut</span><span class="p">]</span>
+        <span class="p">)</span>
+    <span class="n">distance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">bounded</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">x_0</span> <span class="o">-</span> <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span> <span class="o">-</span> <span class="n">x_0</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">)</span>
+    <span class="n">reports</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">state</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
+        <span class="n">where</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+        <span class="n">n_bounded</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">bounded</span><span class="p">[</span><span class="n">where</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+        <span class="n">n_wide</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">wide</span><span class="p">[</span><span class="n">where</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">n_wide</span> <span class="o">&lt;=</span> <span class="n">_WIDE_SHARE</span> <span class="o">*</span> <span class="n">n_bounded</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">total</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">shift</span><span class="p">[</span><span class="n">where</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+        <span class="n">away</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">distance</span><span class="p">[</span><span class="n">where</span><span class="p">])</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+        <span class="n">side</span> <span class="o">=</span> <span class="s2">"above"</span> <span class="k">if</span> <span class="n">total</span> <span class="o">&gt;=</span> <span class="mf">0.0</span> <span class="k">else</span> <span class="s2">"below"</span>
+        <span class="n">by</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="mi">100</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="nb">abs</span><span class="p">(</span><span class="n">total</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">away</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2">%"</span> <span class="k">if</span> <span class="n">away</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="k">else</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">abs</span><span class="p">(</span><span class="n">total</span><span class="p">)</span><span class="si">:</span><span class="s2">.3g</span><span class="si">}</span><span class="s2">"</span>
+        <span class="n">units</span> <span class="o">=</span> <span class="s2">""</span> <span class="k">if</span> <span class="n">away</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="k">else</span> <span class="s2">", in the state's units"</span>
+        <span class="c1"># "two" is _WIDE</span>
+        <span class="n">reports</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">block</span><span class="si">!r}</span><span class="s2">: </span><span class="si">{</span><span class="n">n_wide</span><span class="si">}</span><span class="s2"> of </span><span class="si">{</span><span class="n">n_bounded</span><span class="si">}</span><span class="s2"> bounded elements are within two "</span>
+            <span class="s2">"prior standard deviations of a bound, and the prior cut at the "</span>
+            <span class="sa">f</span><span class="s2">"bounds has a total about </span><span class="si">{</span><span class="n">by</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">side</span><span class="si">}</span><span class="s2"> the prior's</span><span class="si">{</span><span class="n">units</span><span class="si">}</span><span class="s2"> (each "</span>
+            <span class="s2">"element taken alone)"</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">reports</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+        <span class="s2">"The prior is wide against the bounds: </span><span class="si">%s</span><span class="s2">. The draws are of the "</span>
+        <span class="s2">"posterior cut at the bounds, so where the data constrain little, their "</span>
+        <span class="s2">"mean, intervals and totals sit that far from the prior's. The estimate "</span>
+        <span class="s2">"(the mode) is not affected; for a total, read the analytic posterior "</span>
+        <span class="s2">"(fips.solve(problem)) or use fips.LognormalForward."</span><span class="p">,</span>
+        <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">reports</span><span class="p">),</span>
+    <span class="p">)</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_bounded</span><span class="p">(</span><span class="n">problem</span><span class="p">:</span> <span class="n">Problem</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="n">BoundedOptions</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Posterior</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Factor the problem as the analytic method does, then hold the estimate to the bounds; with no finite bound, the analytic posterior."""</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span> <span class="n">Operator</span><span class="p">):</span>
@@ -1569,6 +1657,7 @@
     <span class="n">analytic</span> <span class="o">=</span> <span class="n">_factor</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">gamma</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">lower</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">()</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">upper</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">()):</span>
         <span class="k">return</span> <span class="n">Posterior</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">analytic</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span>
+    <span class="n">_warn_if_wide</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">)</span>
     <span class="n">solution</span> <span class="o">=</span> <span class="n">Bounded</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span>
         <span class="n">analytic</span><span class="p">,</span> <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">draws</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">burn_in</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">seed</span>
     <span class="p">)</span>

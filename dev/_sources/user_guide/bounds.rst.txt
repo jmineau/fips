@@ -41,6 +41,15 @@ its mean is not its mode:
   (``lower`` and ``upper``) are the draws' quantiles, not the mode plus or
   minus a multiple of the standard deviation.
 
+Where the prior is wide against its bounds (a standard deviation over half the
+distance to a bound, for more than a tenth of a block's bounded elements) the
+solve logs one warning naming the block, how many of its elements are wide,
+and by how much the cut prior's total sits above the prior's (below it, at an
+upper bound), each element taken alone, as a percentage of the total's
+distance from the bounds: of the prior's total, for a bound of zero. That is
+how far the draws' totals sit from the prior's where the data constrain little;
+the estimate is not affected.
+
 The bounds are ``lower`` and ``upper``: a number for every element, a
 :class:`~fips.Vector` with an element's own bound (``-inf`` or ``inf`` for
 none), or a dict by block. ``{"flux": 0.0}`` bounds the fluxes and leaves the
