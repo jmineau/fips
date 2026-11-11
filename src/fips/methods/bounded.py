@@ -85,7 +85,10 @@ _KKT_RTOL = float(np.sqrt(np.finfo(float).eps))
 """How far from the optimality conditions the mode may be, relative to the scale of the state (1.5e-8)."""
 
 _DECISION_RTOL = 1e-10
-"""How wrong the sign of a multiplier must be before the active set releases its element, relative to the scale of the state."""
+"""How far outside its bounds a free element, or how wrong the sign of a held element's multiplier, must be before the active set exchanges it, relative to the scale of the state."""
+
+_TRIES = 3
+"""The steps of block exchanges the active set takes in a row without a new least count of broken conditions before it exchanges one element a step instead (``_one_exchange``)."""
 
 _BLOCK = 512
 """The number of velocities the sampler draws in one block."""
@@ -259,12 +262,12 @@ class BoundedOptions:
         mean sits less far above the prior's than the truncated one (for one
         element whose prior standard deviation equals its distance from a
         lower bound, 8% of that distance against 29%). Each draw costs an
-        active set, as the mode does, a step for each element it holds or
-        releases on the way. With a correlated prior whose standard
-        deviation equals its mean and weak data, a draw took 28 ms for 400
-        elements (70 on a bound in a typical draw) and 0.28 s for 2000 (120
-        on a bound: 9 minutes for 2000 draws), against 4 and 15 ms for a
-        truncated draw. Both keep the columns of the posterior covariance
+        active set, as the mode does: a few steps, each exchanging at once
+        every element to hold or release. With a correlated prior whose
+        standard deviation equals its mean and weak data, a draw took 1.7 ms
+        for 400 elements (70 on a bound in a typical draw) and 7.6 ms for
+        2000 (120 on a bound: 15 s for 2000 draws), against 4 and 14 ms for
+        a truncated draw. Both keep the columns of the posterior covariance
         at every element a draw reaches a bound at, up to all of them
         (``n x n``: 30 MiB for 2000 elements).
 
@@ -478,15 +481,9 @@ def _mode(
     Return the mode in the box, which side of its bound each element is held at (``1`` lower, ``-1`` upper, ``0`` free), and the multipliers.
 
     The mode minimizes :math:`\tfrac{1}{2} (x - \hat{x})^T P (x - \hat{x})`,
-    :math:`P = \hat{S}^{-1}`, over :math:`l \le x \le u`, by the primal
-    active-set method for a convex quadratic program (Nocedal and Wright,
-    2006, algorithm 16.3), here with bounds only: the method of which Lawson
-    and Hanson's nonnegative least squares, and its bounded variant, are the
-    least-squares case, with the step back to the box at the first element
-    that would leave it. It keeps a feasible
-    point and a working set :math:`a` of elements held at a bound,
-    :math:`b_a`. Holding them there, the least cost is the analytic posterior
-    conditioned on :math:`x_a = b_a`,
+    :math:`P = \hat{S}^{-1}`, over :math:`l \le x \le u`. It keeps a set
+    :math:`a` of elements held at a bound, :math:`b_a`. Holding them there,
+    the least cost is the analytic posterior conditioned on :math:`x_a = b_a`,
 
     .. math::
 
@@ -495,25 +492,109 @@ def _mode(
 
     whose gradient is :math:`P (x(a) - \hat{x}) = \lambda` (zero off
     :math:`a`): :math:`\lambda_a` are the multipliers, positive at a lower
-    bound and negative at an upper one when :math:`a` is right. Each step
-    moves toward :math:`x(a)` and stops at the first free element that would
-    leave the box, which joins :math:`a`; at :math:`x(a)` itself, an element
-    whose multiplier has the wrong sign leaves :math:`a` (the most wrong
-    first, measured as :math:`\lambda_i \hat{S}_{ii}`, the distance it pulls
-    the element), and with none the point is the mode. It starts from
-    :math:`\hat{x}` put into the box, with the elements it put on a bound in
-    :math:`a`. Each step lowers the cost or changes :math:`a` at the same
-    cost, so it ends (a degenerate problem could cycle among sets of the
-    same cost: ``10 n + 100`` steps at most, then it raises); only
-    :math:`\hat{S}_{:a}` is used (``columns``). The solve then checks the
-    optimality conditions of what it returns (``_kkt``).
+    bound and negative at an upper one when :math:`a` is right. :math:`x(a)`
+    is the mode when it is in the box and every multiplier has its sign
+    (the optimality conditions of the problem, a linear complementarity
+    problem whose matrix :math:`P` is positive definite, so the mode and its
+    :math:`a` are unique).
+
+    The set is found by block principal pivoting: starting from the elements
+    :math:`\hat{x}` puts outside the box, each step computes :math:`x(a)`
+    and exchanges at once every element that breaks a condition, a free one
+    outside the box joining :math:`a` at the bound it crossed and a held one
+    whose multiplier has the wrong sign leaving it. Wrong means beyond
+    :data:`_DECISION_RTOL` of the scale, measured for a multiplier as
+    :math:`\lambda_i \hat{S}_{ii}`, the distance it pulls the element. A
+    step costs one Cholesky factor of :math:`\hat{S}_{aa}` and one product
+    with :math:`\hat{S}_{:a}` (``columns``); a few steps usually do, where
+    exchanging one element a step takes one per element exchanged.
+
+    Block exchanges do not lower the cost at each step, and can cycle or
+    wander (a strongly correlated :math:`\hat{S}` with an :math:`\hat{x}`
+    far rougher than it). While the count of broken conditions reaches a new
+    least they go on; after :data:`_TRIES` steps in a row without one, the
+    mode is found by exchanging one element a step instead
+    (``_one_exchange``), which lowers the cost at each step and so ends. The
+    block exchanges therefore take ``(_TRIES + 1) (n + 1)`` steps at most.
+    The solve then checks the optimality conditions of what it returns
+    (``_kkt``).
 
     Raises
     ------
     numpy.linalg.LinAlgError
         If :math:`\hat{S}_{aa}` is not positive definite (an element on a
         bound whose posterior variance is zero, or two whose errors the
-        posterior ties together), or the active set does not end.
+        posterior ties together), or the set does not end.
+    """
+    n = len(x_hat)
+    side = np.zeros(n, dtype=np.int8)
+    side[x_hat < lower] = 1
+    side[x_hat > upper] = -1
+    tolerance = _DECISION_RTOL * scale
+    least, tries = n + 1, _TRIES
+    while True:
+        active = np.flatnonzero(side)
+        x = x_hat.copy()
+        lam = np.zeros(0)
+        if len(active):
+            bound = np.where(side[active] > 0, lower[active], upper[active])
+            S_a = columns(active)
+            lam = _conditioned_solve(S_a[active], bound - x_hat[active])
+            x = x_hat + S_a @ lam
+            x[active] = bound
+        free = side == 0
+        below = np.flatnonzero(free & (x < lower - tolerance))
+        above = np.flatnonzero(free & (x > upper + tolerance))
+        pull = side[active] * lam * variances[active]  # below zero: the wrong sign
+        wrong = active[pull < -tolerance]
+        broken = len(below) + len(above) + len(wrong)
+        if not broken:
+            multipliers = np.zeros(n)
+            multipliers[active] = lam
+            return x, side, multipliers
+        if broken < least:
+            least, tries = broken, _TRIES
+        elif tries:
+            tries -= 1
+        else:
+            return _one_exchange(x_hat, lower, upper, columns, variances, scale)
+        side[below] = 1
+        side[above] = -1
+        side[wrong] = 0
+
+
+def _one_exchange(
+    x_hat: np.ndarray,
+    lower: np.ndarray,
+    upper: np.ndarray,
+    columns: _Columns,
+    variances: np.ndarray,
+    scale: float,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    r"""
+    Return what ``_mode`` returns, by exchanging one element a step: the active set ``_mode`` falls back to.
+
+    The primal active-set method for a convex quadratic program (Nocedal and
+    Wright, 2006, algorithm 16.3), here with bounds only: the method of which
+    Lawson and Hanson's nonnegative least squares, and its bounded variant,
+    are the least-squares case, with the step back to the box at the first
+    element that would leave it. It keeps a feasible point and the set
+    :math:`a` of ``_mode``. Each step moves toward :math:`x(a)` and stops at
+    the first free element that would leave the box, which joins :math:`a`;
+    at :math:`x(a)` itself, an element whose multiplier has the wrong sign
+    leaves :math:`a` (the most wrong first, measured as :math:`\lambda_i
+    \hat{S}_{ii}`, the distance it pulls the element), and with none the
+    point is the mode. It starts from :math:`\hat{x}` put into the box, with
+    the elements it put on a bound in :math:`a`. Each step lowers the cost
+    or changes :math:`a` at the same cost, so it ends (a degenerate problem
+    could cycle among sets of the same cost: ``10 n + 100`` steps at most,
+    then it raises), in about a step for each element it holds or releases.
+
+    Raises
+    ------
+    numpy.linalg.LinAlgError
+        If :math:`\hat{S}_{aa}` is not positive definite, or the active set
+        does not end.
     """
     n = len(x_hat)
     side = np.zeros(n, dtype=np.int8)
