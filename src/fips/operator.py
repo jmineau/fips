@@ -875,17 +875,23 @@ class Operator:
             )
         theirs = other._on(self._rows, self._cols)
         total = self._data + theirs if sign > 0 else self._data - theirs
-        # two covariances sum to a covariance; a covariance and any other operator, to an operator
+        # two covariances sum to a covariance; a difference, or a covariance and
+        # any other operator, is an operator (a difference need not be positive
+        # semidefinite)
         summed = (
             self._like(total, self._rows, self._cols)
-            if isinstance(other, type(self))
+            if sign > 0 and isinstance(other, type(self))
             else Operator(total, self._rows, self._cols)
         )
         summed._name = self._name if self._name == other.name else None
         return summed
 
     def __add__(self, other: "Operator") -> "Operator":
-        """Return the sum with an operator on the same labels (in any order)."""
+        """
+        Return the sum with an operator on the same labels (in any order).
+
+        The sum of two covariances is a covariance.
+        """
         if not isinstance(other, Operator):
             # a covariance model adds itself (CovarianceModel.__radd__); for
             # anything else Python raises a TypeError
@@ -893,14 +899,24 @@ class Operator:
         return self._combine(other, 1.0)
 
     def __sub__(self, other: "Operator") -> "Operator":
-        """Return the difference with an operator on the same labels (in any order)."""
+        """
+        Return the difference with an operator on the same labels (in any order).
+
+        The difference of two covariances is a plain operator, since it need
+        not be positive semidefinite.
+        """
         return self._combine(other, -1.0)
 
     def __mul__(self, scalar: float) -> "Operator":
-        """Return the operator times a scalar, in the same form."""
+        """
+        Return the operator times a scalar, in the same form.
+
+        A covariance times a negative scalar is a plain operator, since it need
+        not be positive semidefinite.
+        """
         if np.ndim(scalar) != 0:
             raise TypeError("An Operator is multiplied by a scalar with '*'; use '@'.")
-        return self._like(self._data * float(scalar), self._rows, self._cols)
+        return self._scaled(self._data * float(scalar), float(scalar) >= 0)
 
     def __rmul__(self, scalar: float) -> "Operator":
         """Return a scalar times the operator."""
@@ -910,11 +926,22 @@ class Operator:
         """Return the operator divided by a scalar."""
         if np.ndim(scalar) != 0:
             raise TypeError("An Operator can only be divided by a scalar.")
-        return self._like(self._data / float(scalar), self._rows, self._cols)
+        return self._scaled(self._data / float(scalar), float(scalar) > 0)
 
     def __neg__(self) -> "Operator":
-        """Return ``-self``."""
-        return self._like(-self._data, self._rows, self._cols)
+        """
+        Return ``-self``.
+
+        The negation of a covariance is a plain operator, since it is not
+        positive semidefinite.
+        """
+        return self._scaled(-self._data, False)
+
+    def _scaled(self, data: LinearOperatorLike, keeps_class: bool) -> "Operator":
+        """Return `data` on this operator's labels: `_like` when scaling keeps the class, else a plain operator."""
+        if keeps_class:
+            return self._like(data, self._rows, self._cols)
+        return Operator(data, self._rows, self._cols, name=self._name)
 
     def dense(self) -> np.ndarray:
         """

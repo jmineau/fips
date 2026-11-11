@@ -958,11 +958,19 @@ class TestScalarArithmetic:
             np.ones((2, 2)) @ H
 
     def test_covariance_stays_a_covariance(self, state):
-        """Scaling or negating a covariance gives a covariance."""
+        """Scaling a covariance by a nonnegative number gives a covariance; negating or a negative factor, an operator."""
         cov = Covariance.diagonal(2.0, state, name="S")
 
-        for result in (cov * 3.0, 3.0 * cov, cov / 2.0, -cov):
-            assert type(result) is Covariance
+        for result, expected in [
+            (cov * 3.0, Covariance),
+            (3.0 * cov, Covariance),
+            (cov / 2.0, Covariance),
+            (0 * cov, Covariance),
+            (-cov, Operator),
+            (-3.0 * cov, Operator),
+            (cov / -2.0, Operator),
+        ]:
+            assert type(result) is expected
             assert type(result.data) is DiagonalOperator
             assert result.name == "S"
 

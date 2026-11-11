@@ -291,8 +291,8 @@ def _indefinite_problem() -> tuple[Problem, Operator]:
     """
     A prior that is not positive semidefinite, and the total along its negative direction.
 
-    ``Covariance(...)`` refuses such a matrix, but a difference of two
-    covariances is not checked (#148). The total ``q^T x`` has a prior
+    ``Covariance(...)`` refuses such a matrix, so it is built unchecked, as a
+    computed covariance is (#148). The total ``q^T x`` has a prior
     variance of -0.3 and a posterior variance below zero too.
     """
     rng = np.random.default_rng(5)
@@ -305,7 +305,7 @@ def _indefinite_problem() -> tuple[Problem, Operator]:
     positive = 0.5 * (positive + positive.T)
     problem = Problem(
         prior=Vector(np.zeros(n), state),
-        prior_cov=Covariance(positive, state) - Covariance(0.3 * np.outer(q, q), state),
+        prior_cov=Covariance._computed(positive - 0.3 * np.outer(q, q), state),
         obs=Vector(rng.standard_normal(m), observed),
         obs_cov=Covariance.diagonal(1.0, observed),
         forward=Operator(rng.standard_normal((m, n)), observed, state),
@@ -376,9 +376,7 @@ def _boundary_problem(delta: float) -> tuple[Problem, Operator]:
     a = BOUNDARY_SCALE
     state = Space({"flux": pd.Index(range(2), name="cell")})
     observed = Space({"ch4": pd.Index(range(2), name="obs_id")})
-    prior_cov = Covariance(np.diag([a, 0.0]), state) - Covariance(
-        np.diag([0.0, a + delta]), state
-    )
+    prior_cov = Covariance._computed(np.diag([a, -(a + delta)]), state)
     problem = Problem(
         prior=Vector(np.zeros(2), state),
         prior_cov=prior_cov,
