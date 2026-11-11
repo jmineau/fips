@@ -877,7 +877,14 @@ def test_trials_is_the_loop_draw_for_draw(analytic_form):
     W = _flux_totals()
     table = post.trials(world, 5, rng=3, W=W)
     assert table.index.names == ["trial", *W.rows.index.names]
-    assert list(table.columns) == ["truth", "estimate", "posterior_std", "reduced_chi2"]
+    assert list(table.columns) == [
+        "truth",
+        "estimate",
+        "posterior_std",
+        "lower",
+        "upper",
+        "reduced_chi2",
+    ]
     rng = np.random.default_rng(3)
     for i in range(5):
         x, z = world.simulate(rng)
@@ -889,6 +896,11 @@ def test_trials_is_the_loop_draw_for_draw(analytic_form):
             row["estimate"], (W @ trial.estimate).values, rtol=1e-12
         )
         np.testing.assert_allclose(row["reduced_chi2"], trial.reduced_chi2, rtol=1e-12)
+        interval = trial.uncertainty(
+            W
+        )  # the trial's own interval, as uncertainty gives it
+        for end in ("lower", "upper"):
+            np.testing.assert_allclose(row[end], interval[end], rtol=1e-12, atol=1e-12)
     np.testing.assert_allclose(
         table.xs(0, level="trial")["posterior_std"],
         np.sqrt(post.cov(W).variances.values),

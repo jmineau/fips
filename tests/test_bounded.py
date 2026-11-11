@@ -694,7 +694,7 @@ def test_draws_piled_against_a_bound_warn_how_many_would_do(caplog):
         _ = post.variances
     assert "The posterior's draws mix slowly" in caplog.text
     assert "draws would bring it to 10%" in caplog.text
-    error, _ = _draws._std_errors(np.asarray(post._solution._kept()))
+    error, _ = _draws._std_errors(np.asarray(post._solution.kept()))
     assert error[1:5].max() > 0.1 and error[[0, 5]].max() < 0.07
     caplog.clear()
     with caplog.at_level("WARNING", logger="fips.methods.bounded"):
@@ -800,7 +800,7 @@ def _calibration(trials: int, draws: int, seed: int) -> tuple[np.ndarray, float]
         # the prior truncated to the bounds, element by element (it is diagonal)
         truth = truncnorm.rvs(-x_0 / std, np.inf, loc=x_0, scale=std, random_state=rng)
         z = H @ truth + rng.normal(0.0, sz)
-        kept = post.with_data(Vector(z, obs))._solution._kept()
+        kept = post.with_data(Vector(z, obs))._solution.kept()
         ranks[k] = ((Q @ kept) < (Q @ truth)[:, None]).mean(axis=1)
     counts = np.stack([np.histogram(r, bins=10, range=(0.0, 1.0))[0] for r in ranks.T])
     expected = trials / 10
@@ -834,6 +834,50 @@ def test_draws_are_calibrated_in_their_own_world_many_trials():
     p_values, coverage = _calibration(trials=600, draws=1000, seed=1)
     assert p_values.min() > 1e-4, p_values
     assert abs(coverage - 0.9) < 0.02, coverage
+
+
+def test_trials_read_a_bounded_totals_interval_from_the_draws():
+    """
+    In its own world a bounded total's 95% interval from ``trials`` holds the truth about 95% of the time; read about the mode it would not.
+
+    Twelve cells with a prior mean of 0.2 and a standard deviation of 1,
+    truncated at zero (a mean of about 0.87 a cell), seen weakly: the mode
+    stays near the prior's 0.2 a cell, far below the truths' total, and the
+    draws are where the posterior is. ``trials``' ``lower`` and ``upper`` are
+    each trial's draws' quantiles, so the coverage is near 0.95 (40 trials
+    know it to about 0.035; 0.8 is four of those below). The mode plus or
+    minus 1.96 of the draws' standard deviations covers about 0.05 here, as
+    the comparison page's 0.025, which the test checks too, so that a
+    ``trials`` that went back to that reading fails.
+    """
+    n, m, mu, sd, noise = 12, 4, 0.2, 1.0, 10.0
+    state = Space({"flux": pd.RangeIndex(n, name="cell")})
+    observed = Space({"conc": pd.RangeIndex(m, name="obs_id")})
+    H = np.random.default_rng(0).uniform(0.0, 0.3, (m, n))
+    problem = Problem(
+        prior=Vector(np.full(n, mu), state),
+        prior_cov=fips.Independent().with_std(sd),
+        obs=Vector(np.zeros(m), observed),
+        obs_cov=fips.Independent().with_std(noise),
+        forward=Operator(H, observed, state),
+    )
+    total = Operator(
+        np.ones((1, n)), Space({"total": pd.Index(["all"], name="what")}), state
+    )
+
+    def world(rng):
+        """A truth from the prior truncated at zero, and its observations."""
+        x = truncnorm.rvs(-mu / sd, np.inf, loc=mu, scale=sd, size=n, random_state=rng)
+        return Vector(x, state), Vector(H @ x + rng.normal(0.0, noise, m), observed)
+
+    post = fips.solve(problem, "bounded", lower=0.0, draws=300)
+    table = post.trials(world, 40, rng=0, W=total)
+    covered = (table["lower"] <= table["truth"]) & (table["truth"] <= table["upper"])
+    assert covered.mean() >= 0.8, covered.mean()
+    about_the_mode = (table["estimate"] - table["truth"]).abs() <= 1.96 * table[
+        "posterior_std"
+    ]
+    assert about_the_mode.mean() <= 0.25, about_the_mode.mean()
 
 
 # ---------------------------------------------------------------------------
@@ -983,7 +1027,7 @@ def test_with_gamma_and_with_data_are_a_fresh_solve():
         np.testing.assert_allclose(reused.chi2, fresh.chi2, rtol=1e-9)
         # the draws: chains of the same posterior from factors equal to roundoff,
         # which part after some bounces: the same moments within their errors
-        a, b = reused._solution._kept(), fresh._solution._kept()
+        a, b = reused._solution.kept(), fresh._solution.kept()
         for i in range(len(a)):
             se = math.hypot(standard_error(a[i]), standard_error(b[i]))
             assert abs(a[i].mean() - b[i].mean()) < 5 * se, i
@@ -1002,11 +1046,13 @@ def test_trials_runs_the_bounded_posterior_of_each_trial():
 
 
 def test_what_a_bounded_posterior_cannot_give():
-    """The mode is neither the mean nor linear in the data: no mean, no recovery, no data worth."""
+    """The mode is neither the mean nor linear in the data: the mean is the draws', and no recovery, no data worth."""
     problem = Arrays.random(0, 6, 8).problem()
     post = fips.solve(problem, "bounded", lower=0.0, draws=50)
-    with pytest.raises(AttributeError, match="does not give the posterior mean"):
-        _ = post.mean
+    kept = post._solution.kept()
+    np.testing.assert_array_equal(post.mean.values, kept.mean(axis=1))
+    assert post.mean.space == post.estimate.space
+    assert not np.allclose(post.mean.values, post.estimate.values)
     with pytest.raises(TypeError, match="estimate_is_linear"):
         post.recovery()
     W = _halves(problem.prior.space)

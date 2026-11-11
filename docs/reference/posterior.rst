@@ -191,9 +191,9 @@ What a posterior can give
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 A posterior's members belong to the kind of answer, not the method. There are
 three kinds: a *Gaussian* posterior (``estimate`` is its mean and the
-covariance is known), a *sampled* one (``estimate`` is the mode, and the spread
-is that of draws) and a *low-rank* one (the covariance is kept as ``rank``
-directions). A member its kind cannot give raises :class:`UnavailableError`, an
+covariance is known), a *sampled* one (``estimate`` is the mode, and the mean,
+the spread and the intervals are those of draws) and a *low-rank* one (the
+covariance is kept as ``rank`` directions). A member its kind cannot give raises :class:`UnavailableError`, an
 :class:`AttributeError` and a :class:`TypeError`: ``hasattr(post,
 "at_bound")`` is False where it would raise.
 
@@ -223,8 +223,12 @@ directions). A member its kind cannot give raises :class:`UnavailableError`, an
      - the prior's less ``rank`` pairs: too large below the problem's rank
    * - ``mean``
      - yes
-     - raises
+     - the kept draws' mean
      - yes (linear problem); raises (forward model)
+   * - ``lower``, ``upper`` (``uncertainty``, ``trials``)
+     - the estimate plus or minus ``z`` standard deviations
+     - the kept draws' quantiles
+     - the estimate plus or minus ``z`` standard deviations
    * - ``with_gamma``
      - yes
      - ``"bounded"``: yes; ``"gauss_newton"``: raises (its linearization

@@ -33,10 +33,13 @@ its mean is not its mode:
   metric of :math:`\hat{S}`. fips finds it with an active set that needs only
   the columns of :math:`\hat{S}` at the elements on a bound, from the analytic
   factors, and checks the optimality conditions of the answer before it
-  returns it. ``post.mean`` raises: the mode is not the mean;
+  returns it. The mode is not the mean: ``post.mean`` is the mean of the draws;
 - the **uncertainty** comes from **draws** of the truncated posterior, by exact
   Hamiltonian Monte Carlo (Pakman and Paninski, 2014). An element on its bound
-  still has spread, on one side of the bound.
+  still has spread, on one side of the bound. The intervals of
+  :meth:`~fips.Posterior.uncertainty` and :meth:`~fips.Posterior.trials`
+  (``lower`` and ``upper``) are the draws' quantiles, not the mode plus or
+  minus a multiple of the standard deviation.
 
 The bounds are ``lower`` and ``upper``: a number for every element, a
 :class:`~fips.Vector` with an element's own bound (``-inf`` or ``inf`` for
@@ -246,7 +249,7 @@ the total:
        cell = error.xs("cell", level="block")
        total = table.xs("total", level="block")
        total_error = total["estimate"] - total["truth"]
-       covered = total_error.abs() <= 1.96 * total["posterior_std"]
+       covered = (total["lower"] <= total["truth"]) & (total["truth"] <= total["upper"])
        return pd.Series(
            {
                "cell RMSE": float(np.sqrt((cell**2).mean())),
@@ -264,8 +267,10 @@ the total:
 With 100 trials the bias is known to about a tenth of the spread, and a
 coverage near 0.9 to about 0.03. In this world the bounds make the map better
 (a smaller cell RMSE) and move the total: up, by a few Monte Carlo standard
-errors of the bias, with a smaller spread and a smaller claimed spread (the
-two coverages are within their Monte Carlo error of each other). That is the
+errors of the bias, with a smaller spread and a smaller claimed spread. The
+bounded total's interval, the quantiles of its draws, holds the truth much
+less often than the analytic one: the draws are of the truncated posterior,
+whose total is above this world's wherever the data see little. That is the
 pattern to expect: **bounds mostly improve maps and can move totals**, and since the
 estimate is the mode of a skewed posterior, a total read from it is not the
 posterior's mean total (above, the draws'). Which matters depends on the

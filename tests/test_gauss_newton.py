@@ -837,11 +837,10 @@ def test_the_analytic_and_bounded_methods_refuse_a_model():
 
 
 def test_the_posterior_refuses_what_its_method_cannot_give():
-    """No mean, no other gamma without a solve, no closed-form recovery, no data worth."""
+    """No other gamma without a solve, no closed-form recovery, no data worth; the mean is the draws'."""
     problem = Arrays.random(14, 4, 6).problem()
     post = fips.solve(problem, "gauss_newton")
-    with pytest.raises(AttributeError, match="mode|point estimate"):
-        _ = post.mean
+    np.testing.assert_array_equal(post.mean.values, post._solution.kept().mean(axis=1))
     with pytest.raises(TypeError, match="with_gamma"):
         post.with_gamma(2.0)
     with pytest.raises(TypeError, match="trials"):
@@ -1022,7 +1021,7 @@ def test_one_cell_draws_are_the_posterior(kind):
     """
     post = check_one_cell(kind, chains=16, draws=1000)
     # and the kept draws are the variances' and the covariance's
-    kept = post._solution._kept()
+    kept = post._solution.kept()
     np.testing.assert_allclose(
         post.variances.values, kept.var(axis=1, ddof=1), rtol=1e-12
     )
@@ -1210,7 +1209,7 @@ def _calibration(trials: int, draws: int, seed: int) -> tuple[np.ndarray, float]
     ranks = np.empty((trials, n + 2))
     for k in range(trials):
         truth, z = problem.simulate(rng=rng)
-        kept = post.with_data(z)._solution._kept()
+        kept = post.with_data(z)._solution.kept()
         flux, true = np.exp(kept), np.exp(truth.values)
         quantities = np.vstack([kept, flux.sum(axis=0), flux[0] - flux[1]])
         values = np.concatenate([truth.values, [true.sum(), true[0] - true[1]]])
@@ -1370,11 +1369,11 @@ def test_with_data_draws_the_posterior_of_the_new_data():
     )
     again = post.with_data(Vector(other.z, problem.obs.space))
     fresh = fips.solve(other.problem(), "gauss_newton", draws=1000, burn_in=100)
-    a, b = again._solution._kept(), fresh._solution._kept()
+    a, b = again._solution.kept(), fresh._solution.kept()
     # each chain's errors, with its own autocorrelation time
     tau_a, tau_b = (_autocorrelation_times(d) for d in (a, b))
     se = np.sqrt((a.var(axis=1) * tau_a + b.var(axis=1) * tau_b) / 1000)
     assert np.all(np.abs(a.mean(axis=1) - b.mean(axis=1)) < 4.5 * se)
     se_log = np.sqrt(2 * (tau_a + tau_b) / 1000)
     assert np.all(np.abs(np.log(a.var(axis=1) / b.var(axis=1))) < 4.5 * se_log)
-    assert not np.array_equal(a.mean(axis=1), post._solution._kept().mean(axis=1))
+    assert not np.array_equal(a.mean(axis=1), post._solution.kept().mean(axis=1))

@@ -229,7 +229,8 @@ with ``with_data``, and the totals of the two go into one row per total:
    table.head(6)
 
 The table is long: one row per trial and total, with the spread the posterior
-claims and the trial's reduced chi-squared, so pandas does the rest. The
+claims, its 95% interval (``lower`` and ``upper``, the draws' quantiles for a
+sampled posterior) and the trial's reduced chi-squared, so pandas does the rest. The
 performance measures come from a ``groupby`` over the totals, with the Monte
 Carlo standard error of each (Morris, White and Crowther, 2019): with ``n``
 trials a bias is known to ``std / sqrt(n)`` and a coverage near 0.95 to about
