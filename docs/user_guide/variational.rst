@@ -150,6 +150,7 @@ Below the problem's rank, the directions left out keep the prior's variance.
 of the standard deviations against the exact ones, as ``rank`` grows:
 
 .. ipython:: python
+   :okwarning:
 
    table = []
    for k in [25, 50, 100, 200]:
@@ -170,6 +171,7 @@ floor: read the last pairs' ``dofs``. Aggregates follow the same
 rule, here the sums of each six hours:
 
 .. ipython:: python
+   :okwarning:
 
    six_hours = pd.Series(np.arange(hours) // 6, index=pd.Index(range(hours), name="hour"), name="six_hours")
    W = fips.aggregate.sum(state, by=six_hours)
@@ -324,8 +326,9 @@ eigenvalue above 1 (that direction holds more from the data than from the
 prior). Raise ``rank``. The warning is a floor, not a target: read the last
 pairs' ``dofs`` in :attr:`~fips.Posterior.eigenvalues`. Each solve also logs,
 at INFO, the pairs kept, DOFS and the share of it in the last tenth of the pairs,
-and the conjugate-gradient iterations. fips logs these through
-:mod:`logging`, silent until you configure it (:ref:`repeated-inversions`).
+and the conjugate-gradient iterations. The warning is a
+:class:`~fips.FipsWarning`, which Python shows without any setup; the INFO
+lines are silent until you configure logging (:ref:`repeated-inversions`).
 
 It raises :class:`RuntimeError` when:
 

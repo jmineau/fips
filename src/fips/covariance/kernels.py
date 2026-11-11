@@ -23,6 +23,7 @@ import scipy.sparse as sp
 from scipy.linalg import eigh
 from scipy.special import gammaln, kve
 
+from fips._errors import warn
 from fips.covariance.distances import (
     _chord,
     _great_circle,
@@ -229,7 +230,8 @@ class _Kernel(CorrelationModel):
                 sum(len(C) for C in blocks),
             )
         if shrink > _LARGE_SHRINK:
-            logger.warning(
+            warn(
+                logger,
                 "rtol=%g is large for the correlation of %r: scaling it back to "
                 "ones on the diagonal shrank its correlations by up to %.0f%%, "
                 "which changes the model. A small rtol, such as 1e-8, keeps it "

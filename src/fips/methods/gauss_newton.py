@@ -99,6 +99,7 @@ from typing import ClassVar
 import numpy as np
 from numpy.linalg import LinAlgError
 
+from fips._errors import warn
 from fips.linalg import LinearOperator
 from fips.linalg.forms import _read_only
 from fips.methods._draws import _warn_if_imprecise
@@ -303,7 +304,8 @@ class GaussNewton:
                 tuning.acceptance,
             )
             if steps >= _MANY_STEPS:
-                logger.warning(
+                warn(
+                    logger,
                     "The posterior sampler takes %d steps a draw: the posterior "
                     "bends very much over its spread, or the Jacobian is not the "
                     "derivative of the model (a wrong one leaves the draws exact "
@@ -726,7 +728,7 @@ _RISE = 1e-12
 
 def _warn_if_slow(d2s: list[float], limit: float) -> None:
     r"""
-    Log a warning when the steps fell so slowly that the estimate may be further from the mode than the stopping rule meant.
+    Warn when the steps fell so slowly that the estimate may be further from the mode than the stopping rule meant.
 
     Rodgers' rule measures the step, not the distance to the mode. When each
     step is a factor :math:`q` of the last (Gauss-Newton converges so, by a
@@ -744,7 +746,8 @@ def _warn_if_slow(d2s: list[float], limit: float) -> None:
     left = (q / (1 - q)) ** 2 * d2s[-1] if q < 1 else math.inf
     if left <= _SLOW * limit:
         return
-    logger.warning(
+    warn(
+        logger,
         "Gauss-Newton converged slowly: each step was about %.2f of the last, so "
         "the estimate may still be about %.3g from the mode (as d2), above tol * "
         "n = %.3g. Lower tol to get closer. A model that bends this much over the "

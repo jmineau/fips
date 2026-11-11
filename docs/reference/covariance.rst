@@ -99,8 +99,8 @@ A smooth kernel on points close together for its scale is nearly singular:
 its smallest eigenvalues are roundoff. A prior covariance may be
 singular, but an observation covariance must be positive definite, and a solve with
 one loses about as many digits as the condition number of its correlation has:
-:func:`fips.solve` logs a warning when that is above ``1e10``. ``rtol=`` on the
-kernel raises the eigenvalues below ``rtol`` times the largest to that value
+:func:`fips.solve` warns (:class:`~fips.FipsWarning`) when that is above
+``1e10``. ``rtol=`` on the kernel raises the eigenvalues below ``rtol`` times the largest to that value
 and scales the matrix back to ones on the diagonal, so the condition number
 stays near ``1 / rtol``. It acts on each matrix the kernel builds: the whole
 correlation, each group's with ``within=``, and the factor's own in a

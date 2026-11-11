@@ -361,14 +361,26 @@ settings, then :func:`fips.solve`:
    rows = [fips.solve(build_problem(config)).summary() for config in configs]
    table = pd.concat(rows, ignore_index=True)
 
-**fips prints nothing, and its warnings are silent until you configure
-logging.** It logs through the standard :mod:`logging` module, under the
-``fips`` logger (the solve under ``fips.methods``), with a
-:class:`~logging.NullHandler`, as a library should: nothing reaches the
-screen until your program configures logging. Several methods warn about
-things that change the answer (a covariance close to singular, a prior wide
-against its bounds, draws that mix slowly, iterations that converge slowly),
-so configure it before you solve:
+**fips's warnings show as Python warnings; the rest of its log is silent
+until you configure logging.** Several methods warn about things that change
+how far the answer can be trusted (a covariance close to singular, a prior
+wide against its bounds, draws that mix slowly, iterations that converge
+slowly). Each is a :class:`~fips.FipsWarning`, which Python prints once for
+each line of your code that leads to it, so you see it without setting
+anything up. :func:`warnings.filterwarnings` chooses what happens to them;
+in a loop of inversions, for example, make them errors so that no answer
+that drew one goes into the table unnoticed:
+
+.. code-block:: python
+
+   import warnings
+
+   warnings.filterwarnings("error", category=fips.FipsWarning)  # or "ignore", "always"
+
+fips also logs each warning, and what each solve did, through the standard
+:mod:`logging` module, under the ``fips`` logger (the solve under
+``fips.methods``), with a :class:`~logging.NullHandler`, as a library should.
+Configure logging to keep them with the rest of your program's log:
 
 .. code-block:: python
 

@@ -69,6 +69,18 @@ Solving
 
 .. currentmodule:: fips
 
+Warnings
+~~~~~~~~
+A solve that finds something that changes how far its answer can be trusted
+(a covariance close to singular, draws that mix slowly, iterations that
+converge slowly) says so with a :class:`FipsWarning`, which Python shows
+without any setup, and logs the same line under the ``fips`` logger.
+
+.. autosummary::
+   :toctree: api/
+
+   FipsWarning
+
 Constructor
 ~~~~~~~~~~~
 .. autosummary::

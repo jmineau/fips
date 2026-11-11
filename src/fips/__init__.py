@@ -13,6 +13,8 @@ and the covariances together, and :func:`solve` returns its :class:`Posterior`.
 With priors on the covariance settings (:mod:`fips.distributions`),
 :func:`hierarchical` draws them from their posterior and the state at each
 draw (:class:`Hierarchical`).
+A finding that changes how far an answer can be trusted is logged under the
+``fips`` logger and issued as a :class:`FipsWarning`.
 :mod:`fips.aggregate` sums or averages a space by group (the observations to
 daily means, the state to monthly totals), and :func:`offset_block` adds a
 block of offsets to the state.
@@ -23,6 +25,7 @@ from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as _version
 
 from . import aggregate, distributions
+from ._errors import FipsWarning
 from .aggregate import offset_block
 from .covariance import (
     Constant,
@@ -71,6 +74,7 @@ __all__ = [
     "available_methods",
     "Posterior",
     "UnavailableError",
+    "FipsWarning",
     "hierarchical",
     "Hierarchical",
     "distributions",

@@ -287,7 +287,7 @@ The method warns about nothing. **A spread too small for the number of
 members comes with no message**: check it with
 :meth:`~fips.Posterior.trials` in a synthetic world, as above. When fips runs
 the forward itself, it logs one INFO line, naming the model and the number of
-members. fips logs through :mod:`logging`, silent until you configure it
+members; INFO lines are silent until you configure logging
 (:ref:`repeated-inversions`).
 
 It raises:
