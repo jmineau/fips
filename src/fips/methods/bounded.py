@@ -50,6 +50,7 @@ from typing import Any, ClassVar
 import numpy as np
 from numpy.linalg import LinAlgError
 from scipy.linalg import cho_factor, cho_solve
+from scipy.stats import truncnorm
 
 from fips.linalg import DenseOperator, LinearOperator
 from fips.linalg.forms import _read_only
@@ -187,7 +188,14 @@ class BoundedOptions:
         blocks it does not name unbounded (``lower={"flux": 0.0}`` keeps a
         bias block free). A finite number on a state of several blocks bounds
         them all, and the solve logs a warning naming them. None is no bound.
-        With no finite bound, the posterior is the analytic one.
+        With no finite bound, the posterior is the analytic one. The solve
+        also logs one warning when the prior is wide against the bounds (a
+        prior standard deviation over half the distance to a bound, for more
+        than 10% of a block's bounded elements): the draws are of the posterior
+        cut at the bounds, whose mean is higher than the Gaussian's at a lower
+        bound (lower, at an upper one), so a total read from them sits above
+        (or below) the prior's; the warning says by how much, for each such
+        block.
     draws : int, default 2000
         The number of draws of the truncated posterior kept for its variances
         and the covariance of aggregates. They are Monte Carlo estimates from a
@@ -1112,6 +1120,86 @@ def _warn_if_every_block(options: BoundedOptions, state: Space) -> None:
             )
 
 
+_WIDE = 2.0
+"""A prior is wide against a bound when the bound is less than this many of its standard deviations from its mean."""
+
+_WIDE_SHARE = 0.10
+"""The share of a block's bounded elements that must be wide for the solve to warn of the block."""
+
+
+def _warn_if_wide(problem: Problem, lower: np.ndarray, upper: np.ndarray) -> None:
+    r"""
+    Log one warning when a block's prior is wide against its bounds, so that a total read from the draws sits above (or below) the prior's.
+
+    The draws are of the posterior cut at the bounds, and a Gaussian cut at a
+    lower bound has a higher mean than the Gaussian (a lower one, at an upper
+    bound): where the data constrain little, the draws' mean, intervals and
+    totals are those of the cut prior. An element
+    is wide on a side when that side's bound is finite, its prior standard
+    deviation :math:`s` is positive and the bound is less than two standard
+    deviations from the prior mean :math:`x_0` (:math:`a = (x_0 - l) / s < 2`
+    for a lower bound :math:`l`; an upper bound is the mirror image). A block
+    is reported when more than 10% of its bounded elements (those with a
+    finite bound) are wide. Its shift is the sum, over its bounded elements,
+    of the mean of the prior cut at the bounds less the prior mean (each
+    element alone: :math:`s\, \phi(a) / \Phi(a)` for one bound), as a share
+    of the sum of the elements' distances from the prior mean to the nearer
+    bound: the share of the prior's total, for a bound of zero.
+    """
+    state = problem.prior.space
+    x_0 = problem.prior.values
+    std = np.sqrt(np.maximum(problem.prior_cov.variances.values, 0.0))
+    bounded = np.isfinite(lower) | np.isfinite(upper)
+    positive = std > 0.0
+    scale = np.where(positive, std, 1.0)  # a zero-spread element has no shift to divide
+    a = np.minimum((x_0 - lower) / scale, (upper - x_0) / scale)  # inf where unbounded
+    wide = bounded & positive & (a < _WIDE)
+    shift = np.zeros(len(state))
+    cut = bounded & positive
+    with np.errstate(
+        invalid="ignore"
+    ):  # SciPy's skewness, unused, at a bound 1000 sd away
+        shift[cut] = (
+            truncnorm.mean(
+                (lower[cut] - x_0[cut]) / scale[cut],
+                (upper[cut] - x_0[cut]) / scale[cut],
+                loc=x_0[cut],
+                scale=scale[cut],
+            )
+            - x_0[cut]
+        )
+    distance = np.where(bounded, np.minimum(x_0 - lower, upper - x_0), 0.0)
+    reports = []
+    for block in state.names:
+        where = state.slice(block)
+        n_bounded = int(bounded[where].sum())
+        n_wide = int(wide[where].sum())
+        if n_wide <= _WIDE_SHARE * n_bounded:
+            continue
+        total = float(shift[where].sum())
+        away = float(np.abs(distance[where]).sum())
+        side = "above" if total >= 0.0 else "below"
+        by = f"{100 * abs(total) / away:.0f}%" if away > 0.0 else f"{abs(total):.3g}"
+        units = "" if away > 0.0 else ", in the state's units"
+        # "two" is _WIDE
+        reports.append(
+            f"{block!r}: {n_wide} of {n_bounded} bounded elements are within two "
+            "prior standard deviations of a bound, and the prior cut at the "
+            f"bounds has a total about {by} {side} the prior's{units} (each "
+            "element taken alone)"
+        )
+    if not reports:
+        return
+    logger.warning(
+        "The prior is wide against the bounds: %s. The draws are of the "
+        "posterior cut at the bounds, so where the data constrain little, their "
+        "mean, intervals and totals sit that far from the prior's. The estimate "
+        "(the mode) is not affected; for a total, read the analytic posterior "
+        "(fips.solve(problem)) or use fips.LognormalForward.",
+        "; ".join(reports),
+    )
+
+
 def _bounded(problem: Problem, options: BoundedOptions) -> Posterior:
     """Factor the problem as the analytic method does, then hold the estimate to the bounds; with no finite bound, the analytic posterior."""
     if not isinstance(problem.forward, Operator):
@@ -1140,6 +1228,7 @@ def _bounded(problem: Problem, options: BoundedOptions) -> Posterior:
     analytic = _factor(problem, options.gamma)
     if not (np.isfinite(lower).any() or np.isfinite(upper).any()):
         return Posterior(problem, analytic, options)
+    _warn_if_wide(problem, lower, upper)
     solution = Bounded.solve(
         analytic, lower, upper, options.draws, options.burn_in, options.seed
     )
