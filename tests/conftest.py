@@ -16,6 +16,22 @@ import numpy as np
 import pandas as pd
 import pytest
 
+
+def pytest_collection_modifyitems(items):
+    """
+    Ignore fips's own warnings in every test and docstring example.
+
+    Many tests reach one on purpose and check its log line with caplog;
+    tests/test_warnings.py checks the Python warning itself. The filter is a
+    mark, read when a test runs, and not a ``filterwarnings`` line in
+    pyproject.toml: pytest resolves those at startup, which imports fips
+    before pytest-cov starts measuring, so every module-level line of fips
+    (each ``def``, ``class`` and import) is reported as never run.
+    """
+    for item in items:
+        item.add_marker(pytest.mark.filterwarnings("ignore::fips.FipsWarning"))
+
+
 # ---------------------------------------------------------------------------
 # Pandas version compatibility utilities
 # ---------------------------------------------------------------------------

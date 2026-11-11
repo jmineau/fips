@@ -272,6 +272,10 @@ dependency needs a reason, proposed first.
   statement that is its 10th (or 100th), so split long blocks; napoleon reads a colon in an attribute docstring's first
   line as a type; docstr-coverage counts each `@overload` (give it a one-liner
   with `# noqa: D418`); a `.. currentmodule::` goes after an `.. automodule::`.
+- **Name no fips class in pyproject's `filterwarnings`**: pytest resolves those
+  lines at startup, importing fips before pytest-cov measures, and coverage then
+  misses every module-level line (`__init__.py` reads 0%). `tests/conftest.py`
+  ignores `fips.FipsWarning` with a mark; `tests/test_pkg.py` checks the lines.
 - **SciPy is not annotated**: pyrefly takes a `LinearOperator` default's private
   return class as the type an override must return. `linalg/forms.py` marks
   those lines; call `form._transpose()` rather than `form.T` to keep a fips form.
