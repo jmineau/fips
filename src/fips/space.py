@@ -8,6 +8,7 @@ not have is missing (NaN) on that block's rows. This module is the one place
 that pads those levels and strips them again.
 """
 
+import builtins
 from collections.abc import Hashable, Iterable, Iterator, Mapping, Sequence
 from functools import cached_property
 
@@ -300,7 +301,7 @@ class Space:
         sizes = [len(index) for index in self._blocks.values()]
         return np.concatenate([[0], np.cumsum(sizes)]).astype(np.intp)
 
-    def slice(self, block: str) -> slice:
+    def slice(self, block: str) -> builtins.slice:
         """
         Return the positions of `block` in :attr:`index`, as a slice.
 
