@@ -1,6 +1,0 @@
-fips.LogNormal.sigma
-====================
-
-.. currentmodule:: fips
-
-.. autoattribute:: LogNormal.sigma

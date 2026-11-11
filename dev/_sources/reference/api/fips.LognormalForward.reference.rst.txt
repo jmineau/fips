@@ -1,6 +1,0 @@
-fips.LognormalForward.reference
-===============================
-
-.. currentmodule:: fips
-
-.. autoproperty:: LognormalForward.reference

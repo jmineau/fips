@@ -1,0 +1,6 @@
+fips.distributions.LogNormal.mu
+===============================
+
+.. currentmodule:: fips.distributions
+
+.. autoattribute:: LogNormal.mu

@@ -1,6 +1,0 @@
-fips.LogNormal.sample
-=====================
-
-.. currentmodule:: fips
-
-.. automethod:: LogNormal.sample

@@ -1,0 +1,6 @@
+fips.LogNormalForward.H
+=======================
+
+.. currentmodule:: fips
+
+.. autoproperty:: LogNormalForward.H

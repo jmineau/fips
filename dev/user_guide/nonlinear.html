@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>A nonlinear forward model &#8212; fips 0.2.0b3.dev32+gff32ffda2 documentation</title>
+    <title>A nonlinear forward model &#8212; fips 0.2.0b3.dev33+g1b3edda40 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=bdbe5e4b"></script>
+    <script src="../_static/documentation_options.js?v=d42acb76"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev32+gff32ffda2 documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev32+gff32ffda2 documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev33+g1b3edda40 documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev33+g1b3edda40 documentation - Home"/>
   
   
 </a></div>
@@ -500,7 +500,7 @@ derivatives <span class="math notranslate nohighlight">\(J_{ij} = \partial F_i /
 <span class="math notranslate nohighlight">\(r\)</span>, so the flux <span class="math notranslate nohighlight">\(r\, e^{x}\)</span> cannot be negative and the prior is a
 factor of the inventory, not a flux. The model is <span class="math notranslate nohighlight">\(F(x) = H (r\, e^{x})\)</span>
 and its Jacobian <span class="math notranslate nohighlight">\(H \operatorname{diag}(r\, e^{x})\)</span> (fips has it ready
-made, with the prior that goes with it, as <a class="reference internal" href="../reference/api/fips.LognormalForward.html#fips.LognormalForward" title="fips.LognormalForward"><code class="xref py py-class docutils literal notranslate"><span class="pre">LognormalForward</span></code></a>:
+made, with the prior that goes with it, as <a class="reference internal" href="../reference/api/fips.LogNormalForward.html#fips.LogNormalForward" title="fips.LogNormalForward"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogNormalForward</span></code></a>:
 <a class="reference internal" href="positive.html"><span class="doc">Values that stay positive</span></a>):</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [1]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
@@ -659,7 +659,7 @@ a few posterior standard deviations, which one linearization would have missed:<
 only by a constant factor, the model bends much over the posterior’s spread,
 the estimate may be further from the mode than the last step, and the solve
 logs a warning saying so. A model written by hand gives only its Jacobian, so
-its steps are Gauss-Newton’s; for <a class="reference internal" href="../reference/api/fips.LognormalForward.html#fips.LognormalForward" title="fips.LognormalForward"><code class="xref py py-class docutils literal notranslate"><span class="pre">LognormalForward</span></code></a> and
+its steps are Gauss-Newton’s; for <a class="reference internal" href="../reference/api/fips.LogNormalForward.html#fips.LogNormalForward" title="fips.LogNormalForward"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogNormalForward</span></code></a> and
 <a class="reference internal" href="../reference/api/fips.SoftplusForward.html#fips.SoftplusForward" title="fips.SoftplusForward"><code class="xref py py-class docutils literal notranslate"><span class="pre">SoftplusForward</span></code></a>, whose second derivatives fips knows, the steps
 are Newton’s where those are better, and the solve takes about half as many
 where Gauss-Newton’s crawl (<a class="reference internal" href="positive.html"><span class="doc">Values that stay positive</span></a>).</p>
@@ -736,7 +736,7 @@ deviation of 1, at most 38). No inverse of
 the prior covariance is formed, so a prior with zero spread somewhere (an
 element with no reference) works.</p>
 <p>Each step evaluates the model and the product of its Jacobian’s transpose with
-a vector (<code class="docutils literal notranslate"><span class="pre">fips.LognormalForward</span></code> and <code class="docutils literal notranslate"><span class="pre">fips.SoftplusForward</span></code> form no
+a vector (<code class="docutils literal notranslate"><span class="pre">fips.LogNormalForward</span></code> and <code class="docutils literal notranslate"><span class="pre">fips.SoftplusForward</span></code> form no
 Jacobian for it; a model of your own forms one with <code class="docutils literal notranslate"><span class="pre">jacobian</span></code>), and one
 product with the covariance of the Gaussian at the mode. The draws are
 correlated, a few draws apart for most elements; a solve logs a warning when

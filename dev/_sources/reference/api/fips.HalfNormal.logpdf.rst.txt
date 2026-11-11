@@ -1,6 +1,0 @@
-fips.HalfNormal.logpdf
-======================
-
-.. currentmodule:: fips
-
-.. automethod:: HalfNormal.logpdf

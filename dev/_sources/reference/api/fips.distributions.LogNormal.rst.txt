@@ -1,0 +1,33 @@
+﻿fips.distributions.LogNormal
+============================
+
+.. currentmodule:: fips.distributions
+
+.. autoclass:: LogNormal
+   :no-members:
+   :show-inheritance:
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~LogNormal.median
+   ~LogNormal.mu
+   ~LogNormal.sigma
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~LogNormal.logpdf
+   ~LogNormal.sample
+
+
+

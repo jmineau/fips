@@ -1,0 +1,6 @@
+fips.LogNormalForward.transform
+===============================
+
+.. currentmodule:: fips
+
+.. automethod:: LogNormalForward.transform

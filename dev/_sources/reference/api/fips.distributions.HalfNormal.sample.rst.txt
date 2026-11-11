@@ -1,0 +1,6 @@
+fips.distributions.HalfNormal.sample
+====================================
+
+.. currentmodule:: fips.distributions
+
+.. automethod:: HalfNormal.sample

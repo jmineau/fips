@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.transforms &#8212; fips 0.2.0b3.dev32+gff32ffda2 documentation</title>
+    <title>fips.transforms &#8212; fips 0.2.0b3.dev33+g1b3edda40 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=bdbe5e4b"></script>
+    <script src="../../_static/documentation_options.js?v=d42acb76"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev32+gff32ffda2 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev32+gff32ffda2 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev33+g1b3edda40 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev33+g1b3edda40 documentation - Home"/>
   
   
 </a></div>
@@ -431,14 +431,14 @@
 <span class="sd">where :math:`H` is the forward operator on the whole state. The other blocks</span>
 <span class="sd">(a bias, a background) pass through as they are. The state, its prior and its</span>
 <span class="sd">covariance are in :math:`u`'s units, written by the user;</span>
-<span class="sd">:meth:`LognormalForward.prior_for` and :meth:`SoftplusForward.prior_for`</span>
+<span class="sd">:meth:`LogNormalForward.prior_for` and :meth:`SoftplusForward.prior_for`</span>
 <span class="sd">give the prior on :math:`u` whose transformed value has a mean and a</span>
 <span class="sd">standard deviation asked for. ``fips.solve(problem, "gauss_newton")`` finds the mode of</span>
-<span class="sd">:math:`u`; :meth:`~LognormalForward.transform` maps it, or draws of the</span>
+<span class="sd">:math:`u`; :meth:`~LogNormalForward.transform` maps it, or draws of the</span>
 <span class="sd">posterior (:meth:`Posterior.sample &lt;fips.Posterior.sample&gt;`), to the</span>
 <span class="sd">transformed value :math:`T(u)`.</span>
 
-<span class="sd">- :class:`LognormalForward`: :math:`T(u) = r\, e^{u}`, a scale factor of a</span>
+<span class="sd">- :class:`LogNormalForward`: :math:`T(u) = r\, e^{u}`, a scale factor of a</span>
 <span class="sd">  reference :math:`r` (a prior estimate, such as an emission inventory): the</span>
 <span class="sd">  uncertainty is a factor.</span>
 <span class="sd">- :class:`SoftplusForward`: :math:`T(u) = s \log(1 + e^{u/s})`: the value</span>
@@ -713,9 +713,9 @@
         <span class="p">)</span>
 
 
-<div class="viewcode-block" id="LognormalForward">
-<a class="viewcode-back" href="../../reference/api/fips.LognormalForward.html#fips.LognormalForward">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">LognormalForward</span><span class="p">(</span><span class="n">_Transformed</span><span class="p">):</span>
+<div class="viewcode-block" id="LogNormalForward">
+<a class="viewcode-back" href="../../reference/api/fips.LogNormalForward.html#fips.LogNormalForward">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">LogNormalForward</span><span class="p">(</span><span class="n">_Transformed</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    A forward model whose state on one block is the logarithm of a scale factor of a reference: the value :math:`r\, e^{u}`.</span>
 
@@ -793,7 +793,7 @@
 <span class="sd">    ...     np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]), observed, state</span>
 <span class="sd">    ... )</span>
 <span class="sd">    &gt;&gt;&gt; inventory = pd.Series([2.0, 0.0], index=state.select("flux"))</span>
-<span class="sd">    &gt;&gt;&gt; model = fips.LognormalForward(H, inventory, block="flux")</span>
+<span class="sd">    &gt;&gt;&gt; model = fips.LogNormalForward(H, inventory, block="flux")</span>
 <span class="sd">    &gt;&gt;&gt; u = fips.Vector([np.log(1.5), 3.0], state)</span>
 <span class="sd">    &gt;&gt;&gt; model(u).values  # cell b has no reference, so no flux</span>
 <span class="sd">    array([3., 0., 3.])</span>
@@ -835,8 +835,8 @@
 <span class="w">        </span><span class="sd">"""Return the second derivative of :math:`r e^u`, itself again."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
 
-<div class="viewcode-block" id="LognormalForward.__call__">
-<a class="viewcode-back" href="../../reference/api/fips.LognormalForward.__call__.html#fips.LognormalForward.__call__">[docs]</a>
+<div class="viewcode-block" id="LogNormalForward.__call__">
+<a class="viewcode-back" href="../../reference/api/fips.LogNormalForward.__call__.html#fips.LogNormalForward.__call__">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Vector</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vector</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Return the observations of the state `x`, without the offset: :math:`H\, [r \circ e^{u}; \text{the other blocks}]`.</span>
@@ -860,8 +860,8 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="LognormalForward.jacobian">
-<a class="viewcode-back" href="../../reference/api/fips.LognormalForward.jacobian.html#fips.LognormalForward.jacobian">[docs]</a>
+<div class="viewcode-block" id="LogNormalForward.jacobian">
+<a class="viewcode-back" href="../../reference/api/fips.LogNormalForward.jacobian.html#fips.LogNormalForward.jacobian">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">jacobian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Vector</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Operator</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Return the Jacobian at `x`: :math:`H \operatorname{diag}(r \circ e^{u}, 1)`.</span>
@@ -890,8 +890,8 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>  <span class="c1"># noqa: D418</span>
 <span class="w">        </span><span class="sd">"""Of draws: a DataFrame on their labels."""</span>
 
-<div class="viewcode-block" id="LognormalForward.transform">
-<a class="viewcode-back" href="../../reference/api/fips.LognormalForward.transform.html#fips.LognormalForward.transform">[docs]</a>
+<div class="viewcode-block" id="LogNormalForward.transform">
+<a class="viewcode-back" href="../../reference/api/fips.LogNormalForward.transform.html#fips.LogNormalForward.transform">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="s2">"Vector | pd.DataFrame"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Vector | pd.DataFrame"</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Return the state with the block as the transformed value, :math:`r\, e^{u}`: of a state, or of each draw.</span>
@@ -934,7 +934,7 @@
 <span class="sd">        &gt;&gt;&gt; H = fips.Operator(</span>
 <span class="sd">        ...     np.ones((1, 2)), fips.Space({"ch4": pd.RangeIndex(1, name="i")}), state</span>
 <span class="sd">        ... )</span>
-<span class="sd">        &gt;&gt;&gt; model = fips.LognormalForward(H, 2.0)</span>
+<span class="sd">        &gt;&gt;&gt; model = fips.LogNormalForward(H, 2.0)</span>
 <span class="sd">        &gt;&gt;&gt; draws = pd.DataFrame(</span>
 <span class="sd">        ...     [[0.0, np.log(2.0)], [np.log(0.5), 0.0]], index=state.index</span>
 <span class="sd">        ... )</span>
@@ -944,8 +944,8 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="LognormalForward.prior_for">
-<a class="viewcode-back" href="../../reference/api/fips.LognormalForward.prior_for.html#fips.LognormalForward.prior_for">[docs]</a>
+<div class="viewcode-block" id="LogNormalForward.prior_for">
+<a class="viewcode-back" href="../../reference/api/fips.LogNormalForward.prior_for.html#fips.LogNormalForward.prior_for">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">prior_for</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">mean</span><span class="p">:</span> <span class="s2">"Vector | pd.Series | float"</span><span class="p">,</span> <span class="n">std</span><span class="p">:</span> <span class="s2">"Vector | pd.Series | float"</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Vector</span><span class="p">,</span> <span class="n">Vector</span><span class="p">]:</span>
@@ -1008,7 +1008,7 @@
 <span class="sd">        &gt;&gt;&gt; H = fips.Operator(</span>
 <span class="sd">        ...     np.ones((1, 2)), fips.Space({"ch4": pd.RangeIndex(1, name="i")}), state</span>
 <span class="sd">        ... )</span>
-<span class="sd">        &gt;&gt;&gt; model = fips.LognormalForward(H, 2.0)</span>
+<span class="sd">        &gt;&gt;&gt; model = fips.LogNormalForward(H, 2.0)</span>
 <span class="sd">        &gt;&gt;&gt; mu, sigma = model.prior_for(mean=2.0, std=1.0)</span>
 <span class="sd">        &gt;&gt;&gt; sigma.values.round(4)  # sqrt(log(1.25))</span>
 <span class="sd">        array([0.4724, 0.4724])</span>
@@ -1295,7 +1295,7 @@
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
-<span class="sd">    LognormalForward : A positive value whose uncertainty is a factor of a reference.</span>
+<span class="sd">    LogNormalForward : A positive value whose uncertainty is a factor of a reference.</span>
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
@@ -1303,7 +1303,7 @@
 <span class="sd">    the Gaussian at the mode) maps to the median of each element's value</span>
 <span class="sd">    under it, :meth:`transform` of the estimate. Draws of a total are</span>
 <span class="sd">    ``model.transform(post.sample(n))`` summed by draw; near the bend they run</span>
-<span class="sd">    high, as :class:`LognormalForward`'s do (see its Notes).</span>
+<span class="sd">    high, as :class:`LogNormalForward`'s do (see its Notes).</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>

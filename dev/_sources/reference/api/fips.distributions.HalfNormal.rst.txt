@@ -1,0 +1,32 @@
+﻿fips.distributions.HalfNormal
+=============================
+
+.. currentmodule:: fips.distributions
+
+.. autoclass:: HalfNormal
+   :no-members:
+   :show-inheritance:
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~HalfNormal.median
+   ~HalfNormal.scale
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~HalfNormal.logpdf
+   ~HalfNormal.sample
+
+
+

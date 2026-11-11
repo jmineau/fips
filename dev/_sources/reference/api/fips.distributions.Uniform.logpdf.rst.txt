@@ -1,0 +1,6 @@
+fips.distributions.Uniform.logpdf
+=================================
+
+.. currentmodule:: fips.distributions
+
+.. automethod:: Uniform.logpdf

@@ -1,0 +1,6 @@
+fips.distributions.LogNormal.median
+===================================
+
+.. currentmodule:: fips.distributions
+
+.. autoproperty:: LogNormal.median

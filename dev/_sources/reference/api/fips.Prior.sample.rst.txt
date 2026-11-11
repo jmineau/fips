@@ -1,6 +1,0 @@
-fips.Prior.sample
-=================
-
-.. currentmodule:: fips
-
-.. automethod:: Prior.sample

@@ -8,7 +8,7 @@ Gaussian posterior of a problem that estimates them often is where the prior
 is small and the observations see little. One way to keep the state positive
 is to hold it to bounds (:doc:`bounds`). The other, on this page: **solve for
 a variable** :math:`u` **that can be anything, and make the quantity a
-positive function of it.** :class:`fips.LognormalForward` makes it a factor of
+positive function of it.** :class:`fips.LogNormalForward` makes it a factor of
 a reference (a prior estimate), :math:`r\, e^{u}`;
 :class:`fips.SoftplusForward` makes it :math:`u` itself where it is large,
 bending to stay above zero near zero. Each is a forward model
@@ -54,7 +54,7 @@ observations, each of a few neighboring cells over a background of 1900 ppb:
    H = fips.Operator(footprint, observed, cells)
    inventory = pd.Series(rng.lognormal(0.0, 0.8, 40), index=cells.select("flux"))
    inventory.iloc[[5, 17, 29]] = 0.0
-   model = fips.LognormalForward(H, inventory)
+   model = fips.LogNormalForward(H, inventory)
    model
 
 The state on the ``flux`` block (the state's one block here; with a bias block
@@ -82,7 +82,7 @@ A prior standard deviation of 0.5 on :math:`u` is a factor of :math:`e^{0.5} =
 
 A reference is usually an estimate of the mean (an inventory is), and a total
 is a sum of means, so fips's helper takes the mean.
-:meth:`~fips.LognormalForward.prior_for` takes the prior mean :math:`m` and
+:meth:`~fips.LogNormalForward.prior_for` takes the prior mean :math:`m` and
 standard deviation :math:`s` of each element's value and returns the :math:`u`
 prior whose value has exactly those:
 :math:`\sigma^2 = \log(1 + s^2/m^2)` and :math:`\mu = \log(m/r) - \sigma^2/2`.
@@ -139,7 +139,7 @@ prior, below), Newton's take over near the mode and :math:`d^2` falls by
 squares. The mode is the one Gauss-Newton alone would reach, and the Gaussian
 at the mode is still the problem linearized there (:doc:`nonlinear`).
 
-The estimate is the mode of :math:`u`. :meth:`~fips.LognormalForward.transform`
+The estimate is the mode of :math:`u`. :meth:`~fips.LogNormalForward.transform`
 maps it to the flux, :math:`r\, e^{\hat{u}}`, the flux at the mode: near each
 cell's posterior **median**, not its mean (which is higher, by about
 :math:`e^{\hat\sigma^2/2}`). :meth:`~fips.Posterior.sample` draws :math:`u` from
@@ -237,7 +237,7 @@ prior factor of :math:`e = 2.7` either way, show why:
 
    two = fips.Space({"flux": pd.Index(["a", "b"], name="cell")})
    one = fips.Space({"ch4": pd.RangeIndex(1, name="obs_id")})
-   pair = fips.LognormalForward(fips.Operator(np.ones((1, 2)), one, two), 1.0)
+   pair = fips.LogNormalForward(fips.Operator(np.ones((1, 2)), one, two), 1.0)
    m, s = pair.prior_for(1.0, np.sqrt(np.e - 1.0))  # sigma = 1
    problem = fips.Problem(m, fips.Independent().with_std(s), fips.Vector([2.0], one), fips.Independent().with_std(0.05), pair)
    post2 = fips.solve(problem, "gauss_newton")
@@ -292,7 +292,7 @@ unbiased with either prior.
 In the larger world of :doc:`comparison` (400 cells, three sites,
 three quarters of the cells with an averaging kernel below 0.1, a log standard
 deviation of 1), over 200 trials with 1000 kept draws each, the 95% interval
-of the total held the truth in 95.5% of them for ``LognormalForward`` and 96%
+of the total held the truth in 95.5% of them for ``LogNormalForward`` and 96%
 for ``SoftplusForward`` (21% and 40% from the Gaussian at the mode), and each
 element's 95% interval, the quantiles of its draws (as
 :meth:`~fips.Posterior.trials` reads it), in 94.7% and 94.6%. Read
@@ -329,7 +329,7 @@ the curve: the total, which the data constrain, mixes in a few draws).
 Which to use
 ------------
 
-- :class:`~fips.LognormalForward` when the uncertainty is a **factor** of a
+- :class:`~fips.LogNormalForward` when the uncertainty is a **factor** of a
   reference (an inventory), the same in relative terms at small and large
   values. An element with no reference stays at zero.
 - :class:`~fips.SoftplusForward` when the uncertainty is **additive**

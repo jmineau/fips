@@ -1,0 +1,6 @@
+fips.LogNormalForward.block
+===========================
+
+.. currentmodule:: fips
+
+.. autoproperty:: LogNormalForward.block

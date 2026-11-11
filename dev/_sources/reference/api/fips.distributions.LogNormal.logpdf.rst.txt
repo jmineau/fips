@@ -1,0 +1,6 @@
+fips.distributions.LogNormal.logpdf
+===================================
+
+.. currentmodule:: fips.distributions
+
+.. automethod:: LogNormal.logpdf

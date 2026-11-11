@@ -1,0 +1,6 @@
+fips.distributions.LogNormal.sigma
+==================================
+
+.. currentmodule:: fips.distributions
+
+.. autoattribute:: LogNormal.sigma

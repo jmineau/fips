@@ -1,0 +1,6 @@
+fips.distributions.LogNormal.sample
+===================================
+
+.. currentmodule:: fips.distributions
+
+.. automethod:: LogNormal.sample

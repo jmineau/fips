@@ -102,17 +102,18 @@ The function from the settings to the problem takes them as a dict, by name:
    truth, obs = world.simulate(rng)
 
 Each setting gets a prior that knows it to a factor of :math:`e` (a
-:class:`~fips.LogNormal` with a standard deviation of 1 in the log), about a
+:class:`~fips.distributions.LogNormal` with a standard deviation of 1 in the log), about a
 guess that is off by a factor of two in the two standard deviations and 2.5 in
-the length. :class:`~fips.HalfNormal` and :class:`~fips.Uniform` are the other
-two priors fips has.
+the length. :class:`~fips.distributions.HalfNormal` and
+:class:`~fips.distributions.Uniform` are the other two
+(:mod:`fips.distributions`).
 
 .. ipython:: python
 
    priors = {
-       "std": fips.LogNormal(np.log(0.5), 1.0),
-       "length": fips.LogNormal(np.log(2.0), 1.0),
-       "noise": fips.LogNormal(np.log(1.0), 1.0),
+       "std": fips.distributions.LogNormal(np.log(0.5), 1.0),
+       "length": fips.distributions.LogNormal(np.log(2.0), 1.0),
+       "noise": fips.distributions.LogNormal(np.log(1.0), 1.0),
    }
    result = fips.hierarchical(lambda s: build(s, obs), priors, draws=2000, burn_in=500, seed=0)
    table = result.settings.quantile([0.025, 0.5, 0.975]).T.set_axis(["2.5%", "median", "97.5%"], axis=1)
@@ -209,7 +210,7 @@ takes about a tenth of a second, where the function would take a solve each:
 .. ipython:: python
 
    unit = {"std": 1.0, "length": 5.0, "noise": 1.0}
-   scales = {"prior_scale": fips.LogNormal(np.log(0.5), 1.0), "obs_scale": fips.LogNormal(0.0, 1.0)}
+   scales = {"prior_scale": fips.distributions.LogNormal(np.log(0.5), 1.0), "obs_scale": fips.distributions.LogNormal(0.0, 1.0)}
    fast = fips.hierarchical(build(unit, obs_few, H=H_few), scales, seed=0)
    fast.settings.quantile([0.025, 0.5, 0.975]).round(3)
    intervals(fast, truth_few).round(2)

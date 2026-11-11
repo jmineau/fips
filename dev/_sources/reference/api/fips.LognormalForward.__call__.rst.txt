@@ -1,6 +1,0 @@
-fips.LognormalForward.\_\_call\_\_
-==================================
-
-.. currentmodule:: fips
-
-.. automethod:: LognormalForward.__call__

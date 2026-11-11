@@ -1,0 +1,6 @@
+fips.distributions.Uniform.median
+=================================
+
+.. currentmodule:: fips.distributions
+
+.. autoproperty:: Uniform.median

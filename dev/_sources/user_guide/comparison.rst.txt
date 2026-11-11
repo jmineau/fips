@@ -6,7 +6,7 @@ Choosing a method
 fips solves a problem whose state cannot be negative (a flux, a
 concentration, a rate) in four ways: the analytic posterior, which ignores
 the bound, ``"bounded"`` with ``lower=0``, and ``"gauss_newton"`` with a
-:class:`~fips.LognormalForward` or a :class:`~fips.SoftplusForward`. This page
+:class:`~fips.LogNormalForward` or a :class:`~fips.SoftplusForward`. This page
 runs the four on one example, a problem shaped like a Salt Lake Valley methane
 inversion (the flux of each cell of a grid, with an inventory as its prior,
 seen from a few sites), with one prior written four ways, and scores each on
@@ -86,7 +86,7 @@ same mean and standard deviation, and the correlation is then that of
 .. ipython:: python
 
    std = np.sqrt(np.e - 1.0) * inventory
-   lognormal = fips.LognormalForward(H, inventory.to_series("flux"))
+   lognormal = fips.LogNormalForward(H, inventory.to_series("flux"))
    softplus = fips.SoftplusForward(H, scale=float(np.median(inventory.values)))
    priors = {
        "analytic": (inventory, std, H),

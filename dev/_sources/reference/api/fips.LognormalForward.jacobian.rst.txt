@@ -1,6 +1,0 @@
-fips.LognormalForward.jacobian
-==============================
-
-.. currentmodule:: fips
-
-.. automethod:: LognormalForward.jacobian

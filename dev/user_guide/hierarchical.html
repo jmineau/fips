@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>The uncertainty of the settings &#8212; fips 0.2.0b3.dev32+gff32ffda2 documentation</title>
+    <title>The uncertainty of the settings &#8212; fips 0.2.0b3.dev33+g1b3edda40 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=bdbe5e4b"></script>
+    <script src="../_static/documentation_options.js?v=d42acb76"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev32+gff32ffda2 documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev32+gff32ffda2 documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev33+g1b3edda40 documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev33+g1b3edda40 documentation - Home"/>
   
   
 </a></div>
@@ -561,14 +561,15 @@ drawn at a prior std of 1, a correlation length of 5 km and a mismatch std of
 </pre></div>
 </div>
 <p>Each setting gets a prior that knows it to a factor of <span class="math notranslate nohighlight">\(e\)</span> (a
-<a class="reference internal" href="../reference/api/fips.LogNormal.html#fips.LogNormal" title="fips.LogNormal"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogNormal</span></code></a> with a standard deviation of 1 in the log), about a
+<a class="reference internal" href="../reference/api/fips.distributions.LogNormal.html#fips.distributions.LogNormal" title="fips.distributions.LogNormal"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogNormal</span></code></a> with a standard deviation of 1 in the log), about a
 guess that is off by a factor of two in the two standard deviations and 2.5 in
-the length. <a class="reference internal" href="../reference/api/fips.HalfNormal.html#fips.HalfNormal" title="fips.HalfNormal"><code class="xref py py-class docutils literal notranslate"><span class="pre">HalfNormal</span></code></a> and <a class="reference internal" href="../reference/api/fips.Uniform.html#fips.Uniform" title="fips.Uniform"><code class="xref py py-class docutils literal notranslate"><span class="pre">Uniform</span></code></a> are the other
-two priors fips has.</p>
+the length. <a class="reference internal" href="../reference/api/fips.distributions.HalfNormal.html#fips.distributions.HalfNormal" title="fips.distributions.HalfNormal"><code class="xref py py-class docutils literal notranslate"><span class="pre">HalfNormal</span></code></a> and
+<a class="reference internal" href="../reference/api/fips.distributions.Uniform.html#fips.distributions.Uniform" title="fips.distributions.Uniform"><code class="xref py py-class docutils literal notranslate"><span class="pre">Uniform</span></code></a> are the other two
+(<a class="reference internal" href="../reference/hierarchical.html#module-fips.distributions" title="fips.distributions"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fips.distributions</span></code></a>).</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [17]: </span><span class="n">priors</span> <span class="o">=</span> <span class="p">{</span>
-<span class="gp">   ....: </span>    <span class="s2">"std"</span><span class="p">:</span> <span class="n">fips</span><span class="o">.</span><span class="n">LogNormal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">0.5</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">),</span>
-<span class="gp">   ....: </span>    <span class="s2">"length"</span><span class="p">:</span> <span class="n">fips</span><span class="o">.</span><span class="n">LogNormal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">2.0</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">),</span>
-<span class="gp">   ....: </span>    <span class="s2">"noise"</span><span class="p">:</span> <span class="n">fips</span><span class="o">.</span><span class="n">LogNormal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">1.0</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">),</span>
+<span class="gp">   ....: </span>    <span class="s2">"std"</span><span class="p">:</span> <span class="n">fips</span><span class="o">.</span><span class="n">distributions</span><span class="o">.</span><span class="n">LogNormal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">0.5</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">),</span>
+<span class="gp">   ....: </span>    <span class="s2">"length"</span><span class="p">:</span> <span class="n">fips</span><span class="o">.</span><span class="n">distributions</span><span class="o">.</span><span class="n">LogNormal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">2.0</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">),</span>
+<span class="gp">   ....: </span>    <span class="s2">"noise"</span><span class="p">:</span> <span class="n">fips</span><span class="o">.</span><span class="n">distributions</span><span class="o">.</span><span class="n">LogNormal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">1.0</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">),</span>
 <span class="gp">   ....: </span><span class="p">}</span>
 <span class="gp">   ....: </span>
 
@@ -679,7 +680,7 @@ the state’s draws at every kept step in one product. This run of 2500 steps
 takes about a tenth of a second, where the function would take a solve each:</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [34]: </span><span class="n">unit</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"std"</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s2">"length"</span><span class="p">:</span> <span class="mf">5.0</span><span class="p">,</span> <span class="s2">"noise"</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">}</span>
 
-<span class="gp">In [35]: </span><span class="n">scales</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"prior_scale"</span><span class="p">:</span> <span class="n">fips</span><span class="o">.</span><span class="n">LogNormal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">0.5</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">),</span> <span class="s2">"obs_scale"</span><span class="p">:</span> <span class="n">fips</span><span class="o">.</span><span class="n">LogNormal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)}</span>
+<span class="gp">In [35]: </span><span class="n">scales</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"prior_scale"</span><span class="p">:</span> <span class="n">fips</span><span class="o">.</span><span class="n">distributions</span><span class="o">.</span><span class="n">LogNormal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">0.5</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">),</span> <span class="s2">"obs_scale"</span><span class="p">:</span> <span class="n">fips</span><span class="o">.</span><span class="n">distributions</span><span class="o">.</span><span class="n">LogNormal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)}</span>
 
 <span class="gp">In [36]: </span><span class="n">fast</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">hierarchical</span><span class="p">(</span><span class="n">build</span><span class="p">(</span><span class="n">unit</span><span class="p">,</span> <span class="n">obs_few</span><span class="p">,</span> <span class="n">H</span><span class="o">=</span><span class="n">H_few</span><span class="p">),</span> <span class="n">scales</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 

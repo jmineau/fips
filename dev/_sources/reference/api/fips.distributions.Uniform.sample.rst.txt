@@ -1,0 +1,6 @@
+fips.distributions.Uniform.sample
+=================================
+
+.. currentmodule:: fips.distributions
+
+.. automethod:: Uniform.sample

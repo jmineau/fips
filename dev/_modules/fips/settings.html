@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.settings &#8212; fips 0.2.0b3.dev32+gff32ffda2 documentation</title>
+    <title>fips.settings &#8212; fips 0.2.0b3.dev33+g1b3edda40 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=bdbe5e4b"></script>
+    <script src="../../_static/documentation_options.js?v=d42acb76"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev32+gff32ffda2 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev32+gff32ffda2 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev33+g1b3edda40 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev33+g1b3edda40 documentation - Home"/>
   
   
 </a></div>
@@ -441,8 +441,10 @@
 <span class="sd">posteriors of every setting, and their intervals hold the uncertainty of the</span>
 <span class="sd">settings. :class:`Hierarchical` holds them.</span>
 
-<span class="sd">The settings' priors are :class:`LogNormal`, :class:`HalfNormal` and</span>
-<span class="sd">:class:`Uniform`: each has a log density and a map to unbounded coordinates</span>
+<span class="sd">The settings' priors are the distributions of :mod:`fips.distributions`</span>
+<span class="sd">(:class:`~fips.distributions.LogNormal`,</span>
+<span class="sd">:class:`~fips.distributions.HalfNormal` and</span>
+<span class="sd">:class:`~fips.distributions.Uniform`): each has a log density and a map to unbounded coordinates</span>
 <span class="sd">(the log of a positive setting, the logit of a bounded one), where the</span>
 <span class="sd">sampler works. The sampler is a random-walk Metropolis whose proposal is</span>
 <span class="sd">Laplace's approximation of the settings' posterior at its mode (a numerical</span>
@@ -454,18 +456,16 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numbers</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Mapping</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">numpy.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinAlgError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">minimize</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.special</span><span class="w"> </span><span class="kn">import</span> <span class="n">log_expit</span><span class="p">,</span> <span class="n">logit</span><span class="p">,</span> <span class="n">ndtri</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.covariance</span><span class="w"> </span><span class="kn">import</span> <span class="n">Covariance</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.distributions</span><span class="w"> </span><span class="kn">import</span> <span class="n">_LOG_2PI</span><span class="p">,</span> <span class="n">_Distribution</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg.forms</span><span class="w"> </span><span class="kn">import</span> <span class="n">_adopt</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.methods</span><span class="w"> </span><span class="kn">import</span> <span class="n">solve</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.methods.analytic</span><span class="w"> </span><span class="kn">import</span> <span class="n">AnalyticOptions</span><span class="p">,</span> <span class="n">Information</span><span class="p">,</span> <span class="n">Whitened</span>
@@ -477,323 +477,11 @@
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
-<span class="n">_LOG_2PI</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
-
 <span class="n">_SCALES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"prior_scale"</span><span class="p">,</span> <span class="s2">"obs_scale"</span><span class="p">,</span> <span class="s2">"gamma"</span><span class="p">)</span>
 <span class="sd">"""The settings the scales-only fast path takes, when :func:`hierarchical` is given a problem."""</span>
 
 <span class="n">_ACCEPTANCE</span> <span class="o">=</span> <span class="mf">0.3</span>
 <span class="sd">"""The acceptance the burn-in steers the proposal's scale towards."""</span>
-
-
-<span class="c1"># -- the priors -------------------------------------------------------------</span>
-
-
-<div class="viewcode-block" id="Prior">
-<a class="viewcode-back" href="../../reference/api/fips.Prior.html#fips.Prior">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">Prior</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    The prior of one setting: its log density, and a map to unbounded coordinates, where the sampler works.</span>
-
-<span class="sd">    :class:`LogNormal`, :class:`HalfNormal` and :class:`Uniform` are the</span>
-<span class="sd">    ones fips has. A new one is a subclass with :meth:`logpdf`,</span>
-<span class="sd">    :meth:`sample`, and the three private members of the map</span>
-<span class="sd">    (``_to_unbounded``, ``_from_unbounded``, ``_log_density_unbounded``).</span>
-<span class="sd">    """</span>
-
-<div class="viewcode-block" id="Prior.logpdf">
-<a class="viewcode-back" href="../../reference/api/fips.Prior.logpdf.html#fips.Prior.logpdf">[docs]</a>
-    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">logpdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Return the log density at `x` (``-inf`` outside the support)."""</span></div>
-
-
-<div class="viewcode-block" id="Prior.sample">
-<a class="viewcode-back" href="../../reference/api/fips.Prior.sample.html#fips.Prior.sample">[docs]</a>
-    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="s2">"int | np.random.Generator | None"</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Return `n` draws, from a seed or a generator (as :meth:`fips.Posterior.sample` takes it)."""</span></div>
-
-
-    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_to_unbounded</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Return the unbounded coordinate of `x`."""</span>
-
-    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_from_unbounded</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Return the setting at the unbounded coordinate `u`."""</span>
-
-    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_log_density_unbounded</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return the log density of the unbounded coordinate, :math:`\ln p(x(u)) + \ln \lvert dx/du \rvert`."""</span>
-
-    <span class="nd">@property</span>
-    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">median</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""The prior median, where the search for the mode starts."""</span></div>
-
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_positive</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">what</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Return `value` as a float, or raise unless it is positive and finite."""</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">numbers</span><span class="o">.</span><span class="n">Real</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> is a number, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
-    <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">and</span> <span class="n">value</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> must be positive and finite, got </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">value</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_finite</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">what</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Return `value` as a float, or raise unless it is finite."""</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">numbers</span><span class="o">.</span><span class="n">Real</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> is a number, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
-    <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">math</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> must be finite, got </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">value</span>
-
-
-<span class="k">class</span><span class="w"> </span><span class="nc">_Positive</span><span class="p">(</span><span class="n">Prior</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""A prior of a positive setting, sampled in its log."""</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_to_unbounded</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return :math:`\ln x`."""</span>
-        <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_from_unbounded</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Return :math:`e^u` (``inf`` past the largest float)."""</span>
-        <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="k">if</span> <span class="n">u</span> <span class="o">&lt;</span> <span class="mf">709.0</span> <span class="k">else</span> <span class="n">math</span><span class="o">.</span><span class="n">inf</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_log_density_unbounded</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return :math:`\ln p(e^u) + u`."""</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_from_unbounded</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">logpdf</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">u</span> <span class="k">if</span> <span class="mf">0.0</span> <span class="o">&lt;</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="n">math</span><span class="o">.</span><span class="n">inf</span> <span class="k">else</span> <span class="o">-</span><span class="n">math</span><span class="o">.</span><span class="n">inf</span>
-
-
-<div class="viewcode-block" id="LogNormal">
-<a class="viewcode-back" href="../../reference/api/fips.LogNormal.html#fips.LogNormal">[docs]</a>
-<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">LogNormal</span><span class="p">(</span><span class="n">_Positive</span><span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">    A lognormal prior: the log of the setting is normal, :math:`\ln s \sim N(\mu, \sigma^2)`.</span>
-
-<span class="sd">    The prior of a standard deviation or a length known to a factor:</span>
-<span class="sd">    ``LogNormal(np.log(2.0), 0.5)`` has its median at 2 and a 95% interval</span>
-<span class="sd">    from 0.75 to 5.3 (a factor :math:`e^{1.96 \sigma}` either side).</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    mu : float</span>
-<span class="sd">        The mean of the log, the log of the median.</span>
-<span class="sd">    sigma : float</span>
-<span class="sd">        The standard deviation of the log, positive.</span>
-
-<span class="sd">    Raises</span>
-<span class="sd">    ------</span>
-<span class="sd">    ValueError</span>
-<span class="sd">        If `mu` is not finite or `sigma` is not positive and finite.</span>
-
-<span class="sd">    Examples</span>
-<span class="sd">    --------</span>
-<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
-<span class="sd">    &gt;&gt;&gt; import fips</span>
-<span class="sd">    &gt;&gt;&gt; prior = fips.LogNormal(np.log(2.0), 0.5)</span>
-<span class="sd">    &gt;&gt;&gt; round(prior.median, 3)</span>
-<span class="sd">    2.0</span>
-<span class="sd">    &gt;&gt;&gt; round(prior.logpdf(2.0), 4)</span>
-<span class="sd">    -0.9189</span>
-<span class="sd">    """</span>
-
-    <span class="n">mu</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
-<span class="w">    </span><span class="sd">"""The mean of the log of the setting."""</span>
-    <span class="n">sigma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
-<span class="w">    </span><span class="sd">"""The standard deviation of the log of the setting."""</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">"""Check the parameters."""</span>
-        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"mu"</span><span class="p">,</span> <span class="n">_finite</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">,</span> <span class="s2">"LogNormal's mu"</span><span class="p">))</span>
-        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"sigma"</span><span class="p">,</span> <span class="n">_positive</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">,</span> <span class="s2">"LogNormal's sigma"</span><span class="p">))</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">median</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">"""The median, :math:`e^\mu`."""</span>
-        <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">)</span>
-
-<div class="viewcode-block" id="LogNormal.logpdf">
-<a class="viewcode-back" href="../../reference/api/fips.LogNormal.logpdf.html#fips.LogNormal.logpdf">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">logpdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return :math:`-\ln x - \ln \sigma - \tfrac{1}{2} \ln 2\pi - (\ln x - \mu)^2 / 2\sigma^2` (``-inf`` at and below 0)."""</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">return</span> <span class="o">-</span><span class="n">math</span><span class="o">.</span><span class="n">inf</span>
-        <span class="n">u</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_log_density_unbounded</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="o">-</span> <span class="n">u</span></div>
-
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_log_density_unbounded</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return the normal log density of the log, :math:`N(\mu, \sigma^2)`."""</span>
-        <span class="k">return</span> <span class="p">(</span>
-            <span class="o">-</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">)</span>
-            <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">_LOG_2PI</span>
-            <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">((</span><span class="n">u</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
-        <span class="p">)</span>
-
-<div class="viewcode-block" id="LogNormal.sample">
-<a class="viewcode-back" href="../../reference/api/fips.LogNormal.sample.html#fips.LogNormal.sample">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="s2">"int | np.random.Generator | None"</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return `n` draws, :math:`e^{\mu + \sigma \xi}`."""</span>
-        <span class="n">normals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">*</span> <span class="n">normals</span><span class="p">)</span></div>
-</div>
-
-
-
-<div class="viewcode-block" id="HalfNormal">
-<a class="viewcode-back" href="../../reference/api/fips.HalfNormal.html#fips.HalfNormal">[docs]</a>
-<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">HalfNormal</span><span class="p">(</span><span class="n">_Positive</span><span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">    A half-normal prior: the absolute value of a normal of mean 0 and standard deviation `scale`.</span>
-
-<span class="sd">    A weak prior on a positive setting that is likely below a few times</span>
-<span class="sd">    `scale` and may be near zero: its median is :math:`0.674` `scale`, and</span>
-<span class="sd">    95% of it is below :math:`1.96` `scale`.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    scale : float</span>
-<span class="sd">        The standard deviation of the normal, positive.</span>
-
-<span class="sd">    Raises</span>
-<span class="sd">    ------</span>
-<span class="sd">    ValueError</span>
-<span class="sd">        If `scale` is not positive and finite.</span>
-
-<span class="sd">    Examples</span>
-<span class="sd">    --------</span>
-<span class="sd">    &gt;&gt;&gt; import fips</span>
-<span class="sd">    &gt;&gt;&gt; prior = fips.HalfNormal(10.0)</span>
-<span class="sd">    &gt;&gt;&gt; round(prior.median, 3)</span>
-<span class="sd">    6.745</span>
-<span class="sd">    """</span>
-
-    <span class="n">scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
-<span class="w">    </span><span class="sd">"""The standard deviation of the normal the setting is the absolute value of."""</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">"""Check the parameter."""</span>
-        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"scale"</span><span class="p">,</span> <span class="n">_positive</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="s2">"HalfNormal's scale"</span><span class="p">))</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">median</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">"""The median, :math:`\Phi^{-1}(0.75)` `scale`."""</span>
-        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">ndtri</span><span class="p">(</span><span class="mf">0.75</span><span class="p">))</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span>
-
-<div class="viewcode-block" id="HalfNormal.logpdf">
-<a class="viewcode-back" href="../../reference/api/fips.HalfNormal.logpdf.html#fips.HalfNormal.logpdf">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">logpdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return :math:`\ln 2 - \ln \sigma - \tfrac{1}{2} \ln 2\pi - x^2 / 2\sigma^2` for :math:`x \ge 0` (``-inf`` below)."""</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">x</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">return</span> <span class="o">-</span><span class="n">math</span><span class="o">.</span><span class="n">inf</span>
-        <span class="k">return</span> <span class="p">(</span>
-            <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span>
-            <span class="o">-</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span>
-            <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">_LOG_2PI</span>
-            <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
-        <span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="HalfNormal.sample">
-<a class="viewcode-back" href="../../reference/api/fips.HalfNormal.sample.html#fips.HalfNormal.sample">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="s2">"int | np.random.Generator | None"</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return `n` draws, :math:`\lvert \sigma \xi \rvert`."""</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">(</span><span class="n">n</span><span class="p">))</span></div>
-</div>
-
-
-
-<div class="viewcode-block" id="Uniform">
-<a class="viewcode-back" href="../../reference/api/fips.Uniform.html#fips.Uniform">[docs]</a>
-<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">Uniform</span><span class="p">(</span><span class="n">Prior</span><span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">    A uniform prior on an interval, sampled in the logit of its position, :math:`\ln((s - a) / (b - s))`.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    low : float</span>
-<span class="sd">        The lower end of the interval.</span>
-<span class="sd">    high : float</span>
-<span class="sd">        The upper end, above `low`.</span>
-
-<span class="sd">    Raises</span>
-<span class="sd">    ------</span>
-<span class="sd">    ValueError</span>
-<span class="sd">        If the ends are not finite, or `high` is not above `low`.</span>
-
-<span class="sd">    Examples</span>
-<span class="sd">    --------</span>
-<span class="sd">    &gt;&gt;&gt; import fips</span>
-<span class="sd">    &gt;&gt;&gt; prior = fips.Uniform(1.0, 9.0)</span>
-<span class="sd">    &gt;&gt;&gt; prior.median, round(prior.logpdf(2.0), 4), prior.logpdf(10.0)</span>
-<span class="sd">    (5.0, -2.0794, -inf)</span>
-<span class="sd">    """</span>
-
-    <span class="n">low</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
-<span class="w">    </span><span class="sd">"""The lower end of the interval."""</span>
-    <span class="n">high</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
-<span class="w">    </span><span class="sd">"""The upper end of the interval."""</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">"""Check the ends."""</span>
-        <span class="n">low</span> <span class="o">=</span> <span class="n">_finite</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">low</span><span class="p">,</span> <span class="s2">"Uniform's low"</span><span class="p">)</span>
-        <span class="n">high</span> <span class="o">=</span> <span class="n">_finite</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">high</span><span class="p">,</span> <span class="s2">"Uniform's high"</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">high</span> <span class="o">&gt;</span> <span class="n">low</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Uniform's high (</span><span class="si">{</span><span class="n">high</span><span class="si">}</span><span class="s2">) must be above its low (</span><span class="si">{</span><span class="n">low</span><span class="si">}</span><span class="s2">)."</span><span class="p">)</span>
-        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"low"</span><span class="p">,</span> <span class="n">low</span><span class="p">)</span>
-        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"high"</span><span class="p">,</span> <span class="n">high</span><span class="p">)</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">median</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""The middle of the interval."""</span>
-        <span class="k">return</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">low</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">high</span><span class="p">)</span>
-
-<div class="viewcode-block" id="Uniform.logpdf">
-<a class="viewcode-back" href="../../reference/api/fips.Uniform.logpdf.html#fips.Uniform.logpdf">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">logpdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return :math:`-\ln(b - a)` inside the interval, ``-inf`` outside."""</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">low</span> <span class="o">&lt;=</span> <span class="n">x</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">high</span><span class="p">:</span>
-            <span class="k">return</span> <span class="o">-</span><span class="n">math</span><span class="o">.</span><span class="n">inf</span>
-        <span class="k">return</span> <span class="o">-</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">high</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">low</span><span class="p">)</span></div>
-
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_to_unbounded</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Return the logit of the position of `x` in the interval."""</span>
-        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">logit</span><span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">low</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">high</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">low</span><span class="p">)))</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_from_unbounded</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Return the setting whose position's logit is `u`."""</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">low</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">high</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">low</span><span class="p">)</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">log_expit</span><span class="p">(</span><span class="n">u</span><span class="p">)))</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_log_density_unbounded</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return :math:`\ln \sigma(u) + \ln \sigma(-u)`, the logistic density of the logit."""</span>
-        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">log_expit</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="o">+</span> <span class="n">log_expit</span><span class="p">(</span><span class="o">-</span><span class="n">u</span><span class="p">))</span>
-
-<div class="viewcode-block" id="Uniform.sample">
-<a class="viewcode-back" href="../../reference/api/fips.Uniform.sample.html#fips.Uniform.sample">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="s2">"int | np.random.Generator | None"</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Return `n` draws."""</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">low</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">high</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span></div>
-</div>
-
 
 
 <span class="c1"># -- what one step of the chain solves ---------------------------------------</span>
@@ -1062,7 +750,7 @@
 <a class="viewcode-back" href="../../reference/api/fips.hierarchical.html#fips.hierarchical">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">hierarchical</span><span class="p">(</span>
     <span class="n">build</span><span class="p">:</span> <span class="s2">"Callable[[dict[str, float]], Problem | Posterior] | Problem"</span><span class="p">,</span>
-    <span class="n">settings</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Prior</span><span class="p">],</span>
+    <span class="n">settings</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Distribution</span><span class="p">],</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">draws</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2000</span><span class="p">,</span>
     <span class="n">burn_in</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">500</span><span class="p">,</span>
@@ -1105,9 +793,11 @@
 <span class="sd">        :class:`~fips.Problem` they make, or to its analytic</span>
 <span class="sd">        :class:`~fips.Posterior` (``fips.solve(problem, gamma=s["gamma"])``,</span>
 <span class="sd">        to make gamma a setting). Or, for the fast path, the problem itself.</span>
-<span class="sd">    settings : mapping of str to Prior</span>
-<span class="sd">        The prior of each setting, by the name `build` reads it by:</span>
-<span class="sd">        :class:`LogNormal`, :class:`HalfNormal` or :class:`Uniform`. Its</span>
+<span class="sd">    settings : mapping of str to a distribution</span>
+<span class="sd">        The prior of each setting, by the name `build` reads it by: a</span>
+<span class="sd">        :class:`~fips.distributions.LogNormal`,</span>
+<span class="sd">        :class:`~fips.distributions.HalfNormal` or</span>
+<span class="sd">        :class:`~fips.distributions.Uniform`. Its</span>
 <span class="sd">        order is the columns' of :attr:`Hierarchical.settings`.</span>
 <span class="sd">    draws : int, default 2000</span>
 <span class="sd">        The number of kept steps, each with one draw of the state.</span>
@@ -1127,9 +817,9 @@
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
 <span class="sd">    TypeError</span>
-<span class="sd">        If a setting's prior is not a :class:`Prior`, `build` is neither</span>
-<span class="sd">        callable nor a problem, or it makes neither a problem nor an analytic</span>
-<span class="sd">        posterior.</span>
+<span class="sd">        If a setting's prior is not one of :mod:`fips.distributions`, `build`</span>
+<span class="sd">        is neither callable nor a problem, or it makes neither a problem nor</span>
+<span class="sd">        an analytic posterior.</span>
 <span class="sd">    ValueError</span>
 <span class="sd">        If `settings` is empty, the fast path is given other names than its</span>
 <span class="sd">        three (or both ``"obs_scale"`` and ``"gamma"``), `draws`, `burn_in` or</span>
@@ -1174,8 +864,8 @@
 <span class="sd">    &gt;&gt;&gt; result = fips.hierarchical(</span>
 <span class="sd">    ...     problem,</span>
 <span class="sd">    ...     {</span>
-<span class="sd">    ...         "prior_scale": fips.LogNormal(0.0, 1.0),</span>
-<span class="sd">    ...         "obs_scale": fips.LogNormal(0.0, 1.0),</span>
+<span class="sd">    ...         "prior_scale": fips.distributions.LogNormal(0.0, 1.0),</span>
+<span class="sd">    ...         "obs_scale": fips.distributions.LogNormal(0.0, 1.0),</span>
 <span class="sd">    ...     },</span>
 <span class="sd">    ...     draws=1000,</span>
 <span class="sd">    ...     burn_in=300,</span>
@@ -1199,7 +889,10 @@
 <span class="sd">    ...     )</span>
 <span class="sd">    &gt;&gt;&gt; general = fips.hierarchical(</span>
 <span class="sd">    ...     build,</span>
-<span class="sd">    ...     {"prior_std": fips.LogNormal(0.0, 1.0), "mdm": fips.LogNormal(0.0, 1.0)},</span>
+<span class="sd">    ...     {</span>
+<span class="sd">    ...         "prior_std": fips.distributions.LogNormal(0.0, 1.0),</span>
+<span class="sd">    ...         "mdm": fips.distributions.LogNormal(0.0, 1.0),</span>
+<span class="sd">    ...     },</span>
 <span class="sd">    ...     draws=1000,</span>
 <span class="sd">    ...     burn_in=300,</span>
 <span class="sd">    ... )</span>
@@ -1209,17 +902,17 @@
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">settings</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
             <span class="s2">"settings maps each setting's name to its prior, such as "</span>
-            <span class="s1">'{"prior_std": fips.LogNormal(0.0, 0.5)}; it is empty or not a mapping.'</span>
+            <span class="s1">'{"prior_std": fips.distributions.LogNormal(0.0, 0.5)}; it is empty or not a mapping.'</span>
         <span class="p">)</span>
     <span class="n">names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
     <span class="n">priors</span> <span class="o">=</span> <span class="p">[</span><span class="n">settings</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">]</span>
     <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">prior</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">names</span><span class="p">,</span> <span class="n">priors</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"A setting's name is a str, got </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">."</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prior</span><span class="p">,</span> <span class="n">Prior</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prior</span><span class="p">,</span> <span class="n">_Distribution</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"The prior of setting </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> is a fips.LogNormal, HalfNormal or "</span>
-                <span class="sa">f</span><span class="s2">"Uniform, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">prior</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span>
+                <span class="sa">f</span><span class="s2">"The prior of setting </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> is a fips.distributions.LogNormal, "</span>
+                <span class="sa">f</span><span class="s2">"HalfNormal or Uniform, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">prior</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span>
             <span class="p">)</span>
     <span class="n">draws</span> <span class="o">=</span> <span class="n">_count</span><span class="p">(</span><span class="n">draws</span><span class="p">,</span> <span class="s2">"draws"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
     <span class="n">burn_in</span> <span class="o">=</span> <span class="n">_count</span><span class="p">(</span><span class="n">burn_in</span><span class="p">,</span> <span class="s2">"burn_in"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>

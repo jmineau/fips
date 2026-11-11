@@ -1,6 +1,0 @@
-fips.LogNormal.median
-=====================
-
-.. currentmodule:: fips
-
-.. autoproperty:: LogNormal.median

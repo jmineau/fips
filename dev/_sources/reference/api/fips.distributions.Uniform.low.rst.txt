@@ -1,0 +1,6 @@
+fips.distributions.Uniform.low
+==============================
+
+.. currentmodule:: fips.distributions
+
+.. autoattribute:: Uniform.low

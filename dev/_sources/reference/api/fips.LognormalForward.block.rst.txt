@@ -1,6 +1,0 @@
-fips.LognormalForward.block
-===========================
-
-.. currentmodule:: fips
-
-.. autoproperty:: LognormalForward.block
