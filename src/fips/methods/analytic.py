@@ -46,6 +46,7 @@ from scipy.linalg import cholesky, eigh, solve_triangular
 from scipy.linalg.blas import get_blas_funcs
 from scipy.linalg.lapack import get_lapack_funcs
 
+from fips._errors import warn
 from fips.linalg import (
     BlockDiagonalOperator,
     DenseOperator,
@@ -66,9 +67,10 @@ _ILL_CONDITIONED = 1e10
 
 
 def _warn_if_ill_conditioned(condition: float) -> None:
-    """Log a warning if the correlation of the observation covariance has a `condition` number above ``_ILL_CONDITIONED``."""
+    """Warn if the correlation of the observation covariance has a `condition` number above ``_ILL_CONDITIONED``."""
     if condition > _ILL_CONDITIONED:
-        logger.warning(
+        warn(
+            logger,
             "The correlation of the observation covariance has a condition number "
             "of about %.1e: a solve with it loses about as many digits as the "
             "condition number has, of sixteen. Pass rtol= to its kernel "
@@ -1242,7 +1244,8 @@ def _clip(eigenvalues: np.ndarray, matrix: str, covariance: str) -> None:
     if low < 0:
         roundoff = len(eigenvalues) * np.finfo(float).eps * np.abs(eigenvalues).max()
         if -low > roundoff:
-            logger.warning(
+            warn(
+                logger,
                 "%s has a negative eigenvalue, %.3g, larger than roundoff (%.3g); it "
                 "and the other negative eigenvalues are set to zero. Check that %s "
                 "is positive semidefinite.",
@@ -1309,7 +1312,8 @@ def _factor(problem: Problem, gamma: float) -> "Whitened | Information":
     logger.debug("The analytic method uses the whitened form: %s.", why)
     m, n = problem._operator.data.shape
     if m > _LARGE_M and m > 2 * n:
-        logger.warning(
+        warn(
+            logger,
             "The whitened form factors an m x m matrix, with m = %d "
             "observations, more than twice the n = %d state elements: its time "
             "grows as m^3. The information form (n x n) would be cheaper, but %s. "

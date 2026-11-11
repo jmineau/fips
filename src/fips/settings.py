@@ -41,6 +41,7 @@ import pandas as pd
 from numpy.linalg import LinAlgError
 from scipy.optimize import minimize
 
+from fips._errors import warn
 from fips.covariance import Covariance
 from fips.distributions import _LOG_2PI, _Distribution
 from fips.linalg.forms import _adopt
@@ -272,7 +273,8 @@ def _laplace(
     eigenvalues, vectors = np.linalg.eigh(curvature)
     flat = ~(eigenvalues > 0) | ~np.isfinite(eigenvalues)
     if flat.any():
-        logger.warning(
+        warn(
+            logger,
             "The settings' log posterior does not curve down in %d of its %d "
             "directions at its mode (eigenvalues of the negative Hessian %s): "
             "the proposal takes a variance of 1 in them.",

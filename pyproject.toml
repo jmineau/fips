@@ -98,6 +98,9 @@ filterwarnings = [
     # numpy ignores this one itself (compiled packages such as netCDF4 raise it on
     # import); pytest's "error" filter would bring it back.
     "ignore:numpy.ndarray size changed:RuntimeWarning",
+    # fips's own warnings: many tests reach one on purpose and check its log line
+    # with caplog; tests/test_warnings.py checks the Python warning itself.
+    "ignore::fips.FipsWarning",
 ]
 markers = [
     "network: needs live network access; excluded from default runs",

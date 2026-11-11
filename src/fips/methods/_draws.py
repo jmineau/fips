@@ -15,6 +15,8 @@ import math
 
 import numpy as np
 
+from fips._errors import warn
+
 _IMPRECISE = 0.1
 """The relative error of a standard deviation from the kept draws above which a solve warns."""
 
@@ -94,7 +96,7 @@ def _warn_if_imprecise(
     draws: np.ndarray, logger: logging.Logger, why: str, independent: bool = False
 ) -> None:
     """
-    Log a warning to `logger` when a standard deviation from the kept `draws` is uncertain by more than :data:`_IMPRECISE` (:func:`_std_errors`), saying how many draws would do; `why` is the method's sentence on the cause and the remedy.
+    Warn (`logger`, and a :class:`~fips.FipsWarning`) when a standard deviation from the kept `draws` is uncertain by more than :data:`_IMPRECISE` (:func:`_std_errors`), saying how many draws would do; `why` is the method's sentence on the cause and the remedy.
 
     Draws `independent` by construction are not a chain: their error is
     counted with no autocorrelation, and the warning says they are too few
@@ -114,7 +116,8 @@ def _warn_if_imprecise(
     else:
         what = "mix slowly"
         chain = f" (its variance has {float(tau[worst]):.0f} draws for each independent one)"
-    logger.warning(
+    warn(
+        logger,
         "The posterior's draws %s: %d state elements have a standard deviation "
         "from the %d kept draws uncertain by more than %d%%, the worst (element "
         "%d) by about %d%%%s; about %d draws would bring it to %d%%. %s",

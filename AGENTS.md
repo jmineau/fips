@@ -43,6 +43,7 @@ no Jacobian: the caller places one with `Operator.from_blocks`, or writes it.
 ```
 src/fips/
   __init__.py       the public names (`__all__`), each from the module below that owns it
+  _errors.py        FipsWarning, and `warn`, which logs a warning and issues it
   space.py          Space: ordered named blocks, the padded MultiIndex, select, align
   vector.py         Vector: values on a Space (read-only), from_series/from_blocks
   operator.py       Operator: a fips.linalg form with a Space on each axis
@@ -84,7 +85,7 @@ docs/               Sphinx: guides, reference/ (by topic), examples/ (notebooks)
 
 Imports run one way: `space` < `vector`, `linalg` < `operator` < `forward` < `transforms`, `covariance` <
 `problem` < `posterior` < `methods` < `settings`, with `aggregate` and `visualization` on top; `distributions`
-imports nothing of fips's. No import inside a function to dodge a cycle, none under `TYPE_CHECKING`.
+and `_errors` import nothing of fips's. No import inside a function to dodge a cycle, none under `TYPE_CHECKING`.
 `Covariance` does not import the models: `models.py` sets
 `Covariance._block_diag_models`, so `Covariance.block_diag` takes model parts.
 `posterior.py` imports no method: a method imports `posterior` and returns
@@ -174,6 +175,10 @@ inversion is a function that builds the `Problem`.
   `Posterior` pickle with plain `pickle` (a posterior never stores an output).
 - **Logging, not printing.** A module that logs uses
   `logger = logging.getLogger(__name__)`; `__init__.py` adds a `NullHandler`.
+  A warning goes through `_errors.warn(logger, msg, *args)`, which logs it and
+  issues a `FipsWarning` at the user's line (never `logger.warning` alone; INFO
+  and DEBUG stay log-only). The tests ignore `FipsWarning` (`pyproject.toml`) and
+  check a warning's log line with `caplog`; `tests/test_warnings.py` the warning.
   A report is returned (`summary()` is a DataFrame), and a plot returns its
   figure and axes without `plt.show()`.
 

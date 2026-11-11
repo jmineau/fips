@@ -96,6 +96,7 @@ The analytic estimate and the bounded one, at the cells on a bound and their
 neighbors:
 
 .. ipython:: python
+   :okwarning:
 
    analytic = fips.solve(problem)
    post = fips.solve(problem, "bounded", lower={"flux": 0.0})
@@ -265,6 +266,7 @@ aggregates. Where the data see little, the truncated draws' mean sits above
 the prior mean at a lower bound, and the rectified draws' less far above:
 
 .. ipython:: python
+   :okwarning:
 
    rectified = fips.solve(problem, "bounded", lower={"flux": 0.0}, distribution="rectified")
    first = post.at_bound[post.at_bound].index[0]  # the first cell on its bound
@@ -283,9 +285,9 @@ problem.
 Warnings and checks
 -------------------
 
-fips logs its warnings through Python's :mod:`logging`, which is silent
-until you configure it (:ref:`repeated-inversions`). The solve logs a
-warning when:
+Each warning is a :class:`~fips.FipsWarning`, which Python shows without any
+setup, and is also logged (:ref:`repeated-inversions`). The solve warns
+when:
 
 - **a number bounds a state of several blocks.** It bounds every block, a
   bias block too. Give a dict to bound only some: ``lower={"flux": 0.0}``.

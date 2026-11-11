@@ -20,6 +20,7 @@ import numpy.typing as npt
 from numpy.linalg import LinAlgError
 from scipy import sparse
 
+from fips._errors import warn
 from fips.linalg.forms import (
     DenseOperator,
     LinearOperator,
@@ -526,7 +527,8 @@ class KroneckerOperator(LinearOperator):
 
         X = self._by_columns(B[:, None] if B.ndim == 1 else B, apply)
         if worst > tol:
-            logger.warning(
+            warn(
+                logger,
                 "The factored solve of the %d x %d Kronecker covariance lost "
                 "accuracy (backward error %.1e, more than %.1e), likely from "
                 "ill-conditioned factors; solving the dense matrix instead.",

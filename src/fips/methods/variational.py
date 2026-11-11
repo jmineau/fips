@@ -108,6 +108,7 @@ import numpy as np
 from scipy.linalg import eigh
 from scipy.sparse.linalg import ArpackNoConvergence, eigsh
 
+from fips._errors import warn
 from fips.linalg import LinearOperator
 from fips.linalg.forms import _read_only
 from fips.methods.analytic import AnalyticOptions
@@ -409,7 +410,8 @@ def _report(eigenvalues: np.ndarray, limited: bool) -> None:
         float(dofs[-last:].sum()),
     )
     if _unresolved(eigenvalues, limited):
-        logger.warning(
+        warn(
+            logger,
             "The last of the %d pairs of the low-rank posterior still has an "
             "eigenvalue of %.3g (it adds %.2f to DOFS): the data inform more "
             "directions than rank keeps, so the variances are too large, DOFS "

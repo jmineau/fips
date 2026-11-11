@@ -33,6 +33,7 @@ from numpy.linalg import LinAlgError
 from scipy.linalg import inv, solve
 from scipy.special import chdtrc, ndtr, ndtri  # chi-squared sf, normal CDF, inverse
 
+from fips._errors import warn
 from fips.covariance import Covariance, CovarianceModel
 from fips.linalg import LinearOperator
 from fips.linalg.forms import _adopt, _solve_psd
@@ -450,7 +451,8 @@ def _std(variance: np.ndarray, scale: np.ndarray, what: str) -> np.ndarray:
         lowest = np.unravel_index(
             np.argmax(np.where(negative, -variance, -np.inf)), variance.shape
         )
-        logger.warning(
+        warn(
+            logger,
             "%d of the %d %s are below zero by more than roundoff (the lowest is "
             "%.3g, where roundoff is %.3g); their standard deviation is NaN. A "
             "variance is negative only when a covariance is not positive "

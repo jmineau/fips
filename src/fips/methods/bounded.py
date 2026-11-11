@@ -69,6 +69,7 @@ from numpy.linalg import LinAlgError
 from scipy.linalg import cho_factor, cho_solve
 from scipy.stats import norm, truncnorm
 
+from fips._errors import warn
 from fips.linalg import DenseOperator, LinearOperator
 from fips.linalg.forms import _read_only
 from fips.methods._draws import _warn_if_imprecise
@@ -1323,13 +1324,14 @@ def _logdet(S: np.ndarray) -> float:
 
 
 def _warn_if_every_block(options: BoundedOptions, state: Space) -> None:
-    """Log a warning when a finite bound given as a number bounds a state of several blocks: every block, a bias block too, which is rarely meant."""
+    """Warn when a finite bound given as a number bounds a state of several blocks: every block, a bias block too, which is rarely meant."""
     if len(state.names) < 2:
         return
     for side in ("lower", "upper"):
         bound = getattr(options, side)
         if isinstance(bound, float) and math.isfinite(bound):
-            logger.warning(
+            warn(
+                logger,
                 "%s=%g bounds every block of the state: %s. A bias or an offset "
                 "block is usually free; to bound only some blocks, give a dict, "
                 "such as %s={%r: %g}.",
@@ -1453,7 +1455,8 @@ def _warn_if_wide(
         )
     if not reports:
         return
-    logger.warning(
+    warn(
+        logger,
         "The prior is wide against the bounds: %s. The draws are %s, so where "
         "the data constrain little, their mean, intervals and aggregates sit "
         "that far from the prior's. The estimate (the mode) is not affected; for "

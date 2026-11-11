@@ -27,6 +27,8 @@ from scipy.sparse.linalg import LinearOperator as _SciPyLinearOperator
 from scipy.sparse.linalg import splu
 from scipy.sparse.linalg._interface import _CustomLinearOperator
 
+from fips._errors import warn
+
 logger = logging.getLogger(__name__)
 
 LinearOperatorLike: TypeAlias = (
@@ -72,10 +74,11 @@ def _solve_psd(A: np.ndarray, B: np.ndarray) -> np.ndarray:
     try:
         return solve(A, B, assume_a="pos")
     except LinAlgError:
-        logger.warning(
+        warn(
+            logger,
             "Covariance matrix is numerically non-positive-definite (likely "
             "roundoff from a dominant H S_0 H^T term); falling back to a symmetric "
-            "LDL^T solve. Inspect problem conditioning if results look unphysical."
+            "LDL^T solve. Inspect problem conditioning if results look unphysical.",
         )
         A = 0.5 * (A + A.T)
         return solve(A, B, assume_a="sym")

@@ -182,6 +182,7 @@ posterior of a problem with no data, so its truths are that posterior's
 draws:
 
 .. ipython:: python
+   :okwarning:
 
    nothing = fips.Space({"obs": pd.RangeIndex(1, name="obs_id")})
    no_data = fips.Problem(reference, fips.Exponential(["x", "y"], 2.0).with_std(std), fips.Vector([0.0], nothing), fips.Independent().with_std(1.0), fips.Operator(np.zeros((1, side * side)), nothing, state))
@@ -279,6 +280,7 @@ The results
 **The lognormal truth**, 40 trials:
 
 .. ipython:: python
+   :okwarning:
 
    methods = ["analytic", "bounded", "lognormal", "softplus"]
    in_lognormal = {m: score(m, lognormal_world) for m in methods}
@@ -287,6 +289,7 @@ The results
 **Each method in its own world** (the lognormal model's is the table above):
 
 .. ipython:: python
+   :okwarning:
 
    own = {m: score(m, own_world(m)) for m in ["analytic", "softplus"]}
    own["bounded"] = score("bounded", truncated_world)
