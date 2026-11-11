@@ -69,17 +69,20 @@ Solving
 
 .. currentmodule:: fips
 
-Warnings
-~~~~~~~~
+Warnings and errors
+~~~~~~~~~~~~~~~~~~~
 A solve that finds something that changes how far its answer can be trusted
 (a covariance close to singular, draws that mix slowly, iterations that
 converge slowly) says so with a :class:`FipsWarning`, which Python shows
-without any setup, and logs the same line under the ``fips`` logger.
+without any setup, and logs the same line under the ``fips`` logger. An
+iterative method that stops at its limit before it converges raises
+:class:`ConvergenceError`, a :class:`RuntimeError`.
 
 .. autosummary::
    :toctree: api/
 
    FipsWarning
+   ConvergenceError
 
 Constructor
 ~~~~~~~~~~~

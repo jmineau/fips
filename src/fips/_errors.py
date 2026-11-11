@@ -1,5 +1,5 @@
 """
-fips's warning class, and the one helper that logs a warning and issues it.
+fips's warning class, its error for an iteration that did not converge, and the one helper that logs a warning and issues it.
 
 A warning that changes how far an answer can be trusted goes to both places:
 the ``fips`` logger, for a program that configures logging, and Python's
@@ -66,6 +66,33 @@ class FipsWarning(UserWarning):
     Traceback (most recent call last):
     ...
     fips.FipsWarning: The last of the 2 pairs of the low-rank posterior still has ...
+    """
+
+
+class ConvergenceError(RuntimeError):
+    """
+    Raised when an iterative solve stops at its limit before it converges.
+
+    ``"gauss_newton"`` and ``"variational"`` raise it when their steps have
+    not stopped after ``max_iterations``, and ``"variational"`` when its
+    conjugate gradients have not reached ``cg_tol`` after
+    ``max_cg_iterations`` or Lanczos does not find the eigenpairs. The message
+    says what each step did and what to change. It is a
+    :class:`RuntimeError`, so code that catches that still catches it; catch
+    ``fips.ConvergenceError`` to retry with more iterations without also
+    catching what is not an iteration limit (a cost that rises along a step
+    however short it is made, which points to a wrong Jacobian, stays a plain
+    :class:`RuntimeError`).
+
+    See Also
+    --------
+    FipsWarning : Warned when a solve converged slowly, among other things.
+
+    Examples
+    --------
+    >>> import fips
+    >>> issubclass(fips.ConvergenceError, RuntimeError)
+    True
     """
 
 

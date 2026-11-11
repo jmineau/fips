@@ -25,7 +25,7 @@ from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as _version
 
 from . import aggregate, distributions
-from ._errors import FipsWarning
+from ._errors import ConvergenceError, FipsWarning
 from .aggregate import offset_block
 from .covariance import (
     Constant,
@@ -75,6 +75,7 @@ __all__ = [
     "Posterior",
     "UnavailableError",
     "FipsWarning",
+    "ConvergenceError",
     "hierarchical",
     "Hierarchical",
     "distributions",
