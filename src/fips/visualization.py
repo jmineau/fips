@@ -115,9 +115,11 @@ def plot_comparison(
     Parameters
     ----------
     *series : pd.Series or Vector
-        Variable number of series to compare.
+        Variable number of series to compare. A series with no name is called
+        ``"series 1"``, ``"series 2"``, ... (its position) in the legend.
     x : str or int, optional
-        Name or level of the index to use for x-axis. Required if series have MultiIndex.
+        Name or level of the index to use for x-axis. Required if series have
+        MultiIndex. It must identify each row: one point is drawn for each x.
     truth : pd.Series or Vector, optional
         True values to plot as reference, matched to the series by label (in
         any order), as the errors are.
@@ -147,14 +149,22 @@ def plot_comparison(
     Raises
     ------
     ValueError
-        If `x` is not given for series with a MultiIndex, `truth` or an error
-        has no value for a label of the series, or a plain array or list of
-        errors is not as long as the series.
+        If `x` is not given for series with a MultiIndex, `x` is shared by
+        more than one row (aggregate the series first, with
+        :func:`fips.aggregate.mean`, or choose a level that identifies each
+        row), `truth` or an error has no value for a label of the series, or a
+        plain array or list of errors is not as long as the series.
     """
     plt = _require_matplotlib()
 
-    # Unpack data
-    df = pd.concat([_unwrap(s) for s in series], axis=1)
+    # Unpack data; a series with no name is called "series 1", "series 2", ... by its position
+    named = []
+    for position, s in enumerate(series, start=1):
+        s = _unwrap(s)
+        if isinstance(s, pd.Series) and s.name is None:
+            s = s.rename(f"series {position}")
+        named.append(s)
+    df = pd.concat(named, axis=1)
 
     # Standard deviations for the error bounds, each on the series' labels (as the
     # truth is): ``errors_on[i]`` is None for a series without an error
@@ -171,6 +181,17 @@ def plot_comparison(
     else:
         x_vals = df.index
         x = x or str(df.index.name or "index")
+
+    # One point for each x: a line drawn through rows that share an x is a zigzag
+    if not x_vals.is_unique:
+        repeated = x_vals[x_vals.duplicated()].unique()
+        raise ValueError(
+            f"x={x!r} does not identify the rows: {int(x_vals.isin(repeated).sum())} "
+            f"rows share {len(repeated)} of its values (for example "
+            f"{_listed(repeated)}), and one line cannot go through them. Aggregate "
+            f"the series first (fips.aggregate.mean(space, by={x!r}) averages over "
+            "the other levels), or choose a level that identifies each row."
+        )
 
     # Auto-detect plot kind
     if kind is None:
