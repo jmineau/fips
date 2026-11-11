@@ -932,12 +932,12 @@ def test_the_block_and_the_operator_are_checked():
     """An unknown block, a missing block= with several blocks, and an H that is not an Operator."""
     H = two_block_operator()
     with pytest.raises(KeyError, match=r"No block named 'fluxes'"):
-        SoftplusForward(H, block="fluxes")
+        SoftplusForward(H, 1.0, block="fluxes")
     with pytest.raises(ValueError, match=r"block="):
         LognormalForward(H, 1.0)
     with pytest.raises(TypeError, match="Operator"):
-        SoftplusForward(H.dense(), block="flux")
-    model = SoftplusForward(H, block="flux")
+        SoftplusForward(H.dense(), 1.0, block="flux")
+    model = SoftplusForward(H, 1.0, block="flux")
     assert model.block == "flux" and model.H is H
     assert "SoftplusForward(block: 'flux'" in repr(model)
 
@@ -947,6 +947,14 @@ def test_a_wrong_scale_is_refused(scale):
     """The scale is a positive, finite number."""
     with pytest.raises(ValueError, match="scale"):
         SoftplusForward(two_block_operator(), block="flux", scale=scale)
+
+
+def test_the_scale_is_required():
+    """A softplus model without a scale is refused: no one number suits every unit."""
+    with pytest.raises(TypeError, match="scale"):
+        # the missing scale is what is tested
+        # pyrefly: ignore[missing-argument]
+        SoftplusForward(two_block_operator(), block="flux")
 
 
 def test_an_overflow_is_refused_naming_the_cell():
@@ -1017,7 +1025,7 @@ def test_prior_for_refuses_what_it_cannot_make():
         )
     with pytest.raises(TypeError, match="array"):
         lognormal.prior_for(np.ones(3), 1.0)
-    softplus = SoftplusForward(H, block="flux")
+    softplus = SoftplusForward(H, 1.0, block="flux")
     with pytest.raises(ValueError, match=r"not positive at 1 labels.*'a'"):
         softplus.prior_for(pd.Series([0.0, 1.0, 1.0], index=labels), 1.0)
 
@@ -1031,7 +1039,7 @@ def test_a_singular_softplus_newton_matrix_is_a_runtime_error(monkeypatch):
     the solve is made singular everywhere here.
     """
     H = two_block_operator()
-    softplus = SoftplusForward(H, block="flux")
+    softplus = SoftplusForward(H, 1.0, block="flux")
 
     def singular(A, b):
         raise np.linalg.LinAlgError("Singular matrix")

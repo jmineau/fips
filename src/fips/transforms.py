@@ -816,7 +816,7 @@ class SoftplusForward(_Transformed):
 
     `scale` is in the flux's units and says where the bend is: the transform
     is not the same in other units (:math:`\log(1 + e^u)` bends within 1 of
-    zero, whatever 1 is). A scale near the prior's standard deviation of
+    zero, whatever 1 is), so it has no default. A scale near the prior's standard deviation of
     the flux in the cells near zero bends where the prior says the flux
     could be zero. :meth:`prior_for` gives the prior on :math:`u` whose flux
     has a mean and a standard deviation; :meth:`transform` maps the
@@ -827,11 +827,14 @@ class SoftplusForward(_Transformed):
     H : Operator
         The forward operator: its rows the observations' labels, its columns
         the whole state's (the block and any other).
+    scale : float
+        The scale :math:`s` of the bend, positive, in the units of the
+        transformed value: within a few :math:`s` of zero the value bends
+        away from zero, and above that it is :math:`u`. It has no default,
+        since no number is right in every unit.
     block : str, optional
         The block of the state that is :math:`u`. By default the state's one
         block.
-    scale : float, default 1.0
-        The scale :math:`s` of the bend, in the flux's units, positive.
 
     Raises
     ------
@@ -871,7 +874,7 @@ class SoftplusForward(_Transformed):
     True
     """
 
-    def __init__(self, H: Operator, block: str | None = None, scale: float = 1.0):
+    def __init__(self, H: Operator, scale: float, block: str | None = None):
         super().__init__(H, block)
         try:
             value = float(scale)
@@ -1036,7 +1039,7 @@ class SoftplusForward(_Transformed):
         >>> H = fips.Operator(
         ...     np.ones((1, 1)), fips.Space({"ch4": pd.RangeIndex(1, name="i")}), state
         ... )
-        >>> mu, sigma = fips.SoftplusForward(H).prior_for(mean=1.0, std=1.0)
+        >>> mu, sigma = fips.SoftplusForward(H, scale=1.0).prior_for(mean=1.0, std=1.0)
         >>> mu.values.round(3), sigma.values.round(3)
         (array([-0.059]), array([1.872]))
         """
