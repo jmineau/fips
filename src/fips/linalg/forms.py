@@ -29,11 +29,6 @@ from scipy.sparse.linalg._interface import _CustomLinearOperator
 
 logger = logging.getLogger(__name__)
 
-LinearOperatorLike: TypeAlias = (
-    "LinearOperator | _SciPyLinearOperator | sp.spmatrix | sp.sparray | npt.ArrayLike"
-)
-"""What :func:`as_linear_operator` takes: a form, a SciPy linear operator, a SciPy sparse matrix or a 2D array."""
-
 _DENSE_FILL = 0.25
 """
 The share of stored entries above which a product of sparse operators is dense.
@@ -1379,6 +1374,14 @@ def _adopt(x) -> LinearOperator:
             return SparseOperator._adopt(x)
         return DiagonalOperator._adopt(diagonal)
     return DenseOperator._adopt(_matrix_2d(x))
+
+
+LinearOperatorLike: TypeAlias = (
+    LinearOperator | _SciPyLinearOperator | sp.spmatrix | sp.sparray | npt.ArrayLike
+)
+"""What :func:`as_linear_operator` takes: a form, a SciPy linear operator, a SciPy sparse matrix or a 2D array."""
+# A real union, not a string: a string alias is looked up in the module that
+# uses it, where `_SciPyLinearOperator` is not imported (`typing.get_type_hints`).
 
 
 def as_linear_operator(x: LinearOperatorLike) -> LinearOperator:
