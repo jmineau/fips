@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from fips import aggregate as fips_aggregate
 from fips.covariance import Covariance
 from fips.operator import Operator
 from fips.space import Space
@@ -126,16 +127,6 @@ class TestPlotComparison:
 
         np.testing.assert_array_equal(next(iter(self._lines(ax).values())), a.values)
 
-    def test_unnamed_series_are_labeled_by_position(self):
-        """Series with no name get the integer labels ``concat`` gives their columns."""
-        idx = pd.Index([0.0, 1.0, 2.0], name="x")
-        a = pd.Series([1.0, 2.0, 3.0], index=idx)
-        b = pd.Series([1.5, 2.5, 3.5], index=idx)
-
-        _, ax = plot_comparison(a, b)
-
-        assert list(self._lines(ax)) == ["0", "1"]
-
     @pytest.mark.parametrize(
         ("name", "x", "label"),
         [
@@ -161,6 +152,56 @@ class TestPlotComparison:
         _, ax = plot_comparison(_block(a).to_series(), x="x")
 
         assert ax.get_xlabel() == "x"
+
+    def test_x_that_repeats_across_rows_raises(self):
+        """Several levels with ``x`` naming one of them would draw a zigzag: the error says to aggregate or choose another level."""
+        index = pd.MultiIndex.from_product(
+            [[0.0, 1.0, 2.0], ["u", "v"]], names=["x", "group"]
+        )
+        a = pd.Series(np.arange(6.0), index=index, name="a")
+
+        with pytest.raises(
+            ValueError, match=r"x='x' does not identify.*aggregate\.mean"
+        ):
+            plot_comparison(a, x="x")
+
+    def test_a_level_that_identifies_the_rows_is_drawn(self):
+        """The same series is drawn when ``x`` is the level that is unique to a row; one point for each row."""
+        index = pd.MultiIndex.from_arrays(
+            [[0.0, 1.0, 2.0, 3.0], ["u", "u", "v", "v"]], names=["x", "group"]
+        )
+        a = pd.Series(np.arange(4.0), index=index, name="a")
+
+        _, ax = plot_comparison(a, x="x")
+
+        np.testing.assert_array_equal(ax.lines[0].get_xdata(), [0.0, 1.0, 2.0, 3.0])
+
+    def test_an_aggregated_series_is_drawn(self):
+        """Averaging over the other level first (``fips.aggregate.mean``) leaves one row for each x, which draws."""
+        space = Space(
+            {
+                "a": pd.MultiIndex.from_product(
+                    [[0.0, 1.0], ["u", "v"]], names=["x", "g"]
+                )
+            }
+        )
+        W = fips_aggregate.mean(space, by="x")
+        mean = W @ Vector(np.array([1.0, 3.0, 5.0, 7.0]), space)
+
+        _, ax = plot_comparison(mean, x="x")
+
+        np.testing.assert_array_equal(ax.lines[0].get_ydata(), [2.0, 6.0])
+
+    def test_unnamed_series_are_named_by_position(self):
+        """A Series with no name is "series 1", "series 2" in the legend, not "0" and "1"."""
+        index = pd.Index([0.0, 1.0, 2.0], name="x")
+        first = pd.Series([1.0, 2.0, 3.0], index=index)
+        second = pd.Series([1.5, 2.5, 3.5], index=index)
+        named = pd.Series([2.0, 3.0, 4.0], index=index, name="c")
+
+        _, ax = plot_comparison(first, named, second)
+
+        assert list(self._lines(ax)) == ["series 1", "c", "series 3"]
 
     def test_truth_is_drawn_as_a_line(self):
         """The truth of a line plot is a dashed black line."""
@@ -508,10 +549,11 @@ class TestErrorsAreMatchedByLabel:
 
     def test_errors_of_several_blocks_are_matched_by_label(self):
         """With a block level too, a covariance on reordered blocks and labels is matched."""
-        x = pd.Index([1.0, 2.0], name="x")
-        est = Vector([10.0, 20.0, 30.0, 40.0], Space({"v": x, "u": x}))  # v1 v2 u1 u2
-        std = {("u", 1.0): 1.0, ("u", 2.0): 2.0, ("v", 1.0): 3.0, ("v", 2.0): 4.0}
-        order = {"u": x[::-1], "v": x}  # u2 u1 v1 v2
+        xv = pd.Index([1.0, 2.0], name="x")
+        xu = pd.Index([3.0, 4.0], name="x")
+        est = Vector([10.0, 20.0, 30.0, 40.0], Space({"v": xv, "u": xu}))  # v1 v2 u3 u4
+        std = {("u", 3.0): 1.0, ("u", 4.0): 2.0, ("v", 1.0): 3.0, ("v", 2.0): 4.0}
+        order = {"u": xu[::-1], "v": xv}  # u4 u3 v1 v2
         variances = [std[(b, k)] ** 2 for b, idx in order.items() for k in idx]
 
         cov = Covariance.diagonal(variances, Space(order))
