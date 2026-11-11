@@ -1,0 +1,6 @@
+﻿fips.FipsWarning
+================
+
+.. currentmodule:: fips
+
+.. autoexception:: FipsWarning

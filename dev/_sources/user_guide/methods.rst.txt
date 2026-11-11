@@ -177,12 +177,13 @@ over draws yourself, as :doc:`examples/comparison` does.
 Warnings
 --------
 
-Each method logs a warning when something it found changes how far its answer
+Each method warns when something it found changes how far its answer
 can be trusted (a prior wide against its bounds, draws that mix slowly, steps
-that converge slowly, rank too small to hold what the data inform). The
-warnings go through :mod:`logging` and are **silent until your program
-configures logging**: call ``logging.basicConfig()`` before you solve
-(:ref:`repeated-inversions`).
+that converge slowly, rank too small to hold what the data inform). Each
+warning is a :class:`~fips.FipsWarning`, which **Python shows without any
+setup**, once for each line of your code that leads to it; make them errors
+or hide them with :func:`warnings.filterwarnings`. fips also logs each one
+under the ``fips`` logger (:ref:`repeated-inversions`).
 
 
 Cost

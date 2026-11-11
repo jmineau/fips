@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.covariance.kernels &#8212; fips 0.2.0b3.dev40+g4b8cbb6d8 documentation</title>
+    <title>fips.covariance.kernels &#8212; fips 0.2.0b3.dev41+g3c34b0298 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../../_static/documentation_options.js?v=7b642406"></script>
+    <script src="../../../_static/documentation_options.js?v=045c8eee"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev40+g4b8cbb6d8 documentation - Home"/>
-    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev40+g4b8cbb6d8 documentation - Home"/>
+    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev41+g3c34b0298 documentation - Home"/>
+    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev41+g3c34b0298 documentation - Home"/>
   
   
 </a></div>
@@ -446,6 +446,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">eigh</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.special</span><span class="w"> </span><span class="kn">import</span> <span class="n">gammaln</span><span class="p">,</span> <span class="n">kve</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips._errors</span><span class="w"> </span><span class="kn">import</span> <span class="n">warn</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.covariance.distances</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">_chord</span><span class="p">,</span>
     <span class="n">_great_circle</span><span class="p">,</span>
@@ -652,7 +653,8 @@
                 <span class="nb">sum</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">C</span><span class="p">)</span> <span class="k">for</span> <span class="n">C</span> <span class="ow">in</span> <span class="n">blocks</span><span class="p">),</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="n">shrink</span> <span class="o">&gt;</span> <span class="n">_LARGE_SHRINK</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="n">warn</span><span class="p">(</span>
+                <span class="n">logger</span><span class="p">,</span>
                 <span class="s2">"rtol=</span><span class="si">%g</span><span class="s2"> is large for the correlation of </span><span class="si">%r</span><span class="s2">: scaling it back to "</span>
                 <span class="s2">"ones on the diagonal shrank its correlations by up to </span><span class="si">%.0f%%</span><span class="s2">, "</span>
                 <span class="s2">"which changes the model. A small rtol, such as 1e-8, keeps it "</span>

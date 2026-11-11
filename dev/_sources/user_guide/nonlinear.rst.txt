@@ -286,9 +286,9 @@ the posterior where the model bends, is
 Warnings and checks
 -------------------
 
-fips logs its warnings through Python's :mod:`logging`, which is silent
-until you configure it (:ref:`repeated-inversions`). The solve logs a
-warning when:
+Each warning is a :class:`~fips.FipsWarning`, which Python shows without any
+setup, and is also logged (:ref:`repeated-inversions`). The solve warns
+when:
 
 - **it converged slowly**: each step was a large fraction of the last, so the
   estimate may be further from the mode than ``tol`` meant. Lower ``tol``.

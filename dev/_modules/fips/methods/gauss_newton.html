@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.methods.gauss_newton &#8212; fips 0.2.0b3.dev40+g4b8cbb6d8 documentation</title>
+    <title>fips.methods.gauss_newton &#8212; fips 0.2.0b3.dev41+g3c34b0298 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../../_static/documentation_options.js?v=7b642406"></script>
+    <script src="../../../_static/documentation_options.js?v=045c8eee"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev40+g4b8cbb6d8 documentation - Home"/>
-    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev40+g4b8cbb6d8 documentation - Home"/>
+    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev41+g3c34b0298 documentation - Home"/>
+    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev41+g3c34b0298 documentation - Home"/>
   
   
 </a></div>
@@ -525,6 +525,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">numpy.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinAlgError</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips._errors</span><span class="w"> </span><span class="kn">import</span> <span class="n">warn</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearOperator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg.forms</span><span class="w"> </span><span class="kn">import</span> <span class="n">_read_only</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.methods._draws</span><span class="w"> </span><span class="kn">import</span> <span class="n">_warn_if_imprecise</span>
@@ -732,7 +733,8 @@
                 <span class="n">tuning</span><span class="o">.</span><span class="n">acceptance</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="k">if</span> <span class="n">steps</span> <span class="o">&gt;=</span> <span class="n">_MANY_STEPS</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="n">warn</span><span class="p">(</span>
+                    <span class="n">logger</span><span class="p">,</span>
                     <span class="s2">"The posterior sampler takes </span><span class="si">%d</span><span class="s2"> steps a draw: the posterior "</span>
                     <span class="s2">"bends very much over its spread, or the Jacobian is not the "</span>
                     <span class="s2">"derivative of the model (a wrong one leaves the draws exact "</span>
@@ -1155,7 +1157,7 @@
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_warn_if_slow</span><span class="p">(</span><span class="n">d2s</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">limit</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">    Log a warning when the steps fell so slowly that the estimate may be further from the mode than the stopping rule meant.</span>
+<span class="sd">    Warn when the steps fell so slowly that the estimate may be further from the mode than the stopping rule meant.</span>
 
 <span class="sd">    Rodgers' rule measures the step, not the distance to the mode. When each</span>
 <span class="sd">    step is a factor :math:`q` of the last (Gauss-Newton converges so, by a</span>
@@ -1173,7 +1175,8 @@
     <span class="n">left</span> <span class="o">=</span> <span class="p">(</span><span class="n">q</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">q</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">d2s</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">q</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">math</span><span class="o">.</span><span class="n">inf</span>
     <span class="k">if</span> <span class="n">left</span> <span class="o">&lt;=</span> <span class="n">_SLOW</span> <span class="o">*</span> <span class="n">limit</span><span class="p">:</span>
         <span class="k">return</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+    <span class="n">warn</span><span class="p">(</span>
+        <span class="n">logger</span><span class="p">,</span>
         <span class="s2">"Gauss-Newton converged slowly: each step was about </span><span class="si">%.2f</span><span class="s2"> of the last, so "</span>
         <span class="s2">"the estimate may still be about </span><span class="si">%.3g</span><span class="s2"> from the mode (as d2), above tol * "</span>
         <span class="s2">"n = </span><span class="si">%.3g</span><span class="s2">. Lower tol to get closer. A model that bends this much over the "</span>
