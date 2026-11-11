@@ -620,9 +620,11 @@ class _DenseSolution:
         # barely see (an eigenvalue of 1e-11 of the largest here) still counts.
         # The modeled increment's covariance has that eigenvalue squared, below
         # roundoff, so its row is the increment's: the oracle checks that pair
+        # (the rank is counted by hand: matrix_rank's rtol= is NumPy 2 only)
+        singular = np.linalg.svd(C_increment, compute_uv=False)
         increment = (
             float(dx @ np.linalg.pinv(C_increment, rcond=1e-13) @ dx),
-            int(np.linalg.matrix_rank(C_increment, rtol=1e-13)),
+            int(np.sum(singular > 1e-13 * singular.max())),
         )
         m = len(self.d)
         return {
