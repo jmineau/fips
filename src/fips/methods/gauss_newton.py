@@ -36,7 +36,7 @@ the steps fall by a constant factor near 1 (a model that bends much over the
 posterior's spread), the solve logs a warning that the estimate may be
 further from the mode (``_warn_if_slow``).
 
-For a transform (:class:`~fips.LognormalForward`,
+For a transform (:class:`~fips.LogNormalForward`,
 :class:`~fips.SoftplusForward`), whose second derivatives are diagonal, the
 cost's whole Hessian is :math:`\hat{S}_i^{-1} - D_i`, with :math:`D_i =
 \gamma \operatorname{diag}(T''(u) \circ H^T S_z^{-1} r)` on the block

@@ -537,13 +537,13 @@ def test_cg_that_does_not_converge_raises():
 
 
 def lognormal_problem(seed: int = 0, n: int = 24, m: int = 16):
-    """A lognormal flux (``fips.LognormalForward``) and the same model written with products only."""
+    """A lognormal flux (``fips.LogNormalForward``) and the same model written with products only."""
     rng = np.random.default_rng(seed)
     state = fips.Space({"flux": pd.RangeIndex(n, name="cell")})
     observed = fips.Space({"co2": pd.RangeIndex(m, name="obs_id")})
     H = fips.Operator(np.abs(rng.standard_normal((m, n))), observed, state)
     reference = rng.uniform(0.5, 2.0, n)
-    model = fips.LognormalForward(
+    model = fips.LogNormalForward(
         H, reference=fips.Vector(reference, state), block="flux"
     )
     truth = fips.Vector(rng.normal(0.0, 0.5, n), state)

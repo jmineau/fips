@@ -37,7 +37,7 @@ from scipy.integrate import trapezoid
 
 import fips
 import fips.settings
-from fips import HalfNormal, LogNormal, Uniform
+from fips.distributions import HalfNormal, LogNormal, Uniform
 from fips.methods import analytic
 from fips.settings import _effective_size, _Scales
 

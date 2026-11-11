@@ -483,7 +483,7 @@ def _lognormal_problem(seed: int, sigma: float, n: int = 4, m: int = 10):
     observed = Space({"ch4": pd.RangeIndex(m, name="obs_id")})
     H = rng.uniform(0.0, 1.0, (m, n)) * (rng.uniform(size=(m, n)) < 0.6)
     reference = rng.lognormal(0.0, 0.5, n)
-    model = fips.LognormalForward(
+    model = fips.LogNormalForward(
         Operator(H, observed, state),
         pd.Series(reference, index=state.select("flux")),
     )

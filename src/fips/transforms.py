@@ -8,14 +8,14 @@ the observations are :math:`z = H\, [T(u); \text{the other blocks}] + c + e`,
 where :math:`H` is the forward operator on the whole state. The other blocks
 (a bias, a background) pass through as they are. The state, its prior and its
 covariance are in :math:`u`'s units, written by the user;
-:meth:`LognormalForward.prior_for` and :meth:`SoftplusForward.prior_for`
+:meth:`LogNormalForward.prior_for` and :meth:`SoftplusForward.prior_for`
 give the prior on :math:`u` whose transformed value has a mean and a
 standard deviation asked for. ``fips.solve(problem, "gauss_newton")`` finds the mode of
-:math:`u`; :meth:`~LognormalForward.transform` maps it, or draws of the
+:math:`u`; :meth:`~LogNormalForward.transform` maps it, or draws of the
 posterior (:meth:`Posterior.sample <fips.Posterior.sample>`), to the
 transformed value :math:`T(u)`.
 
-- :class:`LognormalForward`: :math:`T(u) = r\, e^{u}`, a scale factor of a
+- :class:`LogNormalForward`: :math:`T(u) = r\, e^{u}`, a scale factor of a
   reference :math:`r` (a prior estimate, such as an emission inventory): the
   uncertainty is a factor.
 - :class:`SoftplusForward`: :math:`T(u) = s \log(1 + e^{u/s})`: the value
@@ -290,7 +290,7 @@ class _Transformed(ForwardModel):
         )
 
 
-class LognormalForward(_Transformed):
+class LogNormalForward(_Transformed):
     r"""
     A forward model whose state on one block is the logarithm of a scale factor of a reference: the value :math:`r\, e^{u}`.
 
@@ -368,7 +368,7 @@ class LognormalForward(_Transformed):
     ...     np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]), observed, state
     ... )
     >>> inventory = pd.Series([2.0, 0.0], index=state.select("flux"))
-    >>> model = fips.LognormalForward(H, inventory, block="flux")
+    >>> model = fips.LogNormalForward(H, inventory, block="flux")
     >>> u = fips.Vector([np.log(1.5), 3.0], state)
     >>> model(u).values  # cell b has no reference, so no flux
     array([3., 0., 3.])
@@ -501,7 +501,7 @@ class LognormalForward(_Transformed):
         >>> H = fips.Operator(
         ...     np.ones((1, 2)), fips.Space({"ch4": pd.RangeIndex(1, name="i")}), state
         ... )
-        >>> model = fips.LognormalForward(H, 2.0)
+        >>> model = fips.LogNormalForward(H, 2.0)
         >>> draws = pd.DataFrame(
         ...     [[0.0, np.log(2.0)], [np.log(0.5), 0.0]], index=state.index
         ... )
@@ -572,7 +572,7 @@ class LognormalForward(_Transformed):
         >>> H = fips.Operator(
         ...     np.ones((1, 2)), fips.Space({"ch4": pd.RangeIndex(1, name="i")}), state
         ... )
-        >>> model = fips.LognormalForward(H, 2.0)
+        >>> model = fips.LogNormalForward(H, 2.0)
         >>> mu, sigma = model.prior_for(mean=2.0, std=1.0)
         >>> sigma.values.round(4)  # sqrt(log(1.25))
         array([0.4724, 0.4724])
@@ -855,7 +855,7 @@ class SoftplusForward(_Transformed):
 
     See Also
     --------
-    LognormalForward : A positive value whose uncertainty is a factor of a reference.
+    LogNormalForward : A positive value whose uncertainty is a factor of a reference.
 
     Notes
     -----
@@ -863,7 +863,7 @@ class SoftplusForward(_Transformed):
     the Gaussian at the mode) maps to the median of each element's value
     under it, :meth:`transform` of the estimate. Draws of a total are
     ``model.transform(post.sample(n))`` summed by draw; near the bend they run
-    high, as :class:`LognormalForward`'s do (see its Notes).
+    high, as :class:`LogNormalForward`'s do (see its Notes).
 
     Examples
     --------

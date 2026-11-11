@@ -91,14 +91,14 @@ is a positive value; the other blocks pass through. The guide is
 .. autosummary::
    :toctree: api/
 
-   LognormalForward
-   LognormalForward.H
-   LognormalForward.block
-   LognormalForward.reference
-   LognormalForward.__call__
-   LognormalForward.jacobian
-   LognormalForward.transform
-   LognormalForward.prior_for
+   LogNormalForward
+   LogNormalForward.H
+   LogNormalForward.block
+   LogNormalForward.reference
+   LogNormalForward.__call__
+   LogNormalForward.jacobian
+   LogNormalForward.transform
+   LogNormalForward.prior_for
    SoftplusForward
    SoftplusForward.H
    SoftplusForward.block
