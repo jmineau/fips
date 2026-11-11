@@ -4,40 +4,51 @@ A problem too large to factor: the variational method
 =====================================================
 
 ``fips.solve(problem)`` factors an :math:`m \times m` or an :math:`n \times n`
-matrix and forms :math:`H S_0` (:math:`m \times n`). With an hourly state on a
-fine grid and a year of observations, both :math:`n` and :math:`m` pass
-:math:`10^5`, and then none of them fits in memory. The rule: **give** :math:`H`
-**as a sparse matrix (or as its products), keep the prior as Kronecker
-factors, and solve with** ``fips.solve(problem, "variational", rank=k)``. It
-needs only products, :math:`H v`, :math:`H^T w`, the prior's root through its
-factors and solves with :math:`S_z`, and never forms anything :math:`n \times
-n` or :math:`m \times m`. Its estimate is the analytic one, by conjugate
-gradients, to ``cg_tol``; its uncertainty is a low-rank posterior: the prior, less
-what the ``k`` directions the data inform most remove. Check
-:attr:`post.eigenvalues <fips.Posterior.eigenvalues>` to see whether ``k`` was
-enough.
-
-**When not to use it**: when ``fips.solve(problem)`` fits in memory, it is
-exact, gives every diagnostic at no extra cost, and is often as fast. The
-variational method is for the problem it cannot hold. It is also the method for
-a forward model with a tangent linear and an adjoint (its products, written as
-:meth:`~fips.ForwardModel.jvp` and :meth:`~fips.ForwardModel.vjp`), whose
-Jacobian is never formed: that is incremental 4D-Var (`A model with an
-adjoint`_).
+matrix and forms :math:`H S_0`, which is :math:`m \times n`. When both the
+state and the observations number in the hundreds of thousands, none of these
+fits in memory. **Give** :math:`H` **as a sparse matrix or by its products,
+keep the prior covariance as its factors, and solve with**
+``fips.solve(problem, "variational", rank=k)``. The method needs only
+products: :math:`H v`, :math:`H^T w`, the prior covariance's root through its
+factors, and solves with :math:`S_z`. It never forms anything
+:math:`n \times n` or :math:`m \times m`. The estimate is the posterior mean,
+found by conjugate gradients to a tolerance (the mode, with a forward model).
+The uncertainty is a low-rank posterior: the prior, less what the data remove
+along the ``k`` directions they inform most.
 
 .. contents:: On this page
    :local:
    :depth: 1
 
 
-One problem, two ways
----------------------
+When to use it
+--------------
 
-A day of hourly fluxes on a 20 by 20 grid (9,600 state elements) and eight
-sites, each measuring six times an hour (1,152 observations). Each observation
-sees a plume upwind of its site, in its hour and the two before, drifting with
-that hour's wind: a stand-in for STILT footprints, which are sparse and
-overlap from one observation to the next.
+Use it when the problem is too large for ``fips.solve(problem)``, or when the
+forward model is known only by a tangent linear and an adjoint (its
+:meth:`~fips.ForwardModel.jvp` and :meth:`~fips.ForwardModel.vjp`), whose
+Jacobian is never formed.
+
+- When ``fips.solve(problem)`` fits in memory, use it (:doc:`posterior`): it
+  is exact, gives every diagnostic, and is often as fast. A large sparse
+  :math:`H` with a Kronecker prior covariance often still fits.
+- With a forward model whose Jacobian you can write, and a posterior that may
+  not be Gaussian, use ``"gauss_newton"`` (:doc:`nonlinear`): it draws the
+  posterior, where this method gives the Gaussian at the mode.
+- With a model that can only be run, use ``"ensemble"`` (:doc:`ensemble`).
+- With bounds on the state, use ``"bounded"`` (:doc:`bounds`): this method
+  takes none.
+
+
+An example
+----------
+
+Here the state is a flux on a 16 by 16 grid for each of 24 hours: 6,144
+elements. Six sensors each measure four times an hour, 576 observations in
+all. Each observation sees a plume upwind of its sensor, in its hour and the
+two before, drifting with that hour's wind. ``plume`` writes one
+observation's row of :math:`H`: a few hundred elements, so :math:`H` is
+sparse.
 
 .. ipython:: python
 
@@ -45,17 +56,19 @@ overlap from one observation to the next.
    import pandas as pd
    import scipy.sparse as sp
    import fips
-   from fips.linalg import KroneckerOperator
 
-   hours, ny, nx, sites = 24, 20, 20, 8
+   hours, ny, nx, sites = 24, 16, 16, 6
    n = hours * ny * nx
    rng = np.random.default_rng(0)
    site_y, site_x = rng.integers(4, ny - 4, sites), rng.integers(4, nx - 4, sites)
-   wind = rng.normal(0.0, 1.0, (hours, 2))  # cells an hour
+   wind = rng.normal(0.0, 1.0, (hours, 2))  # grid cells an hour
+
+.. ipython:: python
+
    Y, X = np.meshgrid(np.arange(ny), np.arange(nx), indexing="ij")
 
    def plume(s, t, jitter):
-       """The footprint of one observation at site s in hour t: a dict of cell positions and weights."""
+       """One observation's row of H, at sensor s in hour t: the positions it sees and their weights."""
        cells, weights = [], []
        for back in range(min(3, t + 1)):
            h, width = t - back, 1.0 + back
@@ -67,45 +80,43 @@ overlap from one observation to the next.
            weights.append(w[keep])
        return np.concatenate(cells), np.concatenate(weights)
 
-   m = sites * hours * 6  # six observations an hour at each site
-   footprints = [plume(s, t, rng.normal(0.0, 0.3, 2)) for s, t, _ in np.ndindex(sites, hours, 6)]
+.. ipython:: python
+
+   m = sites * hours * 4
+   footprints = [plume(s, t, rng.normal(0.0, 0.3, 2)) for s, t, _ in np.ndindex(sites, hours, 4)]
    rows = np.concatenate([np.full(len(c), i) for i, (c, _) in enumerate(footprints)])
    cols = np.concatenate([c for c, _ in footprints])
    H = sp.csr_array((np.concatenate([w for _, w in footprints]), (rows, cols)), shape=(m, n))
-   H.nnz / m  # cells each observation sees
+   H.nnz / m  # elements each observation sees
 
-The prior is a flux of 1 with a standard deviation of 0.5, correlated over 3
-hours and 3 cells in each direction: a Kronecker product of three
-correlations, kept as its factors (:class:`~fips.linalg.KroneckerOperator`).
-The footprints are scaled so that the prior's spread, seen through them, is
-three times the observations' error of 0.1.
+The prior is 1 everywhere with a standard deviation of 0.5, correlated over 3
+hours and 3 grid cells in each direction. :class:`~fips.Kronecker` keeps it as
+three small factors, never the :math:`n \times n` matrix. The observation
+error, 1.5, is about a third of the spread the prior gives the observations.
 
 .. ipython:: python
 
-   def exponential(k, length):
-       d = np.abs(np.subtract.outer(np.arange(k), np.arange(k)))
-       return np.exp(-d / length)
-
    state = fips.Space({"flux": pd.MultiIndex.from_product(
        [range(hours), range(ny), range(nx)], names=["hour", "y", "x"])})
-   observed = fips.Space({"ch4": pd.RangeIndex(m, name="obs_id")})
-   prior_cov = fips.Covariance(KroneckerOperator(
-       [exponential(hours, 3.0), exponential(ny, 3.0), exponential(nx, 3.0)], std=0.5), state)
-   root = prior_cov.data._root  # the prior's square root, through the factors
-   H = H * (3 * 0.1 / (H @ (root @ rng.standard_normal((root.shape[1], 20)))).std())
+   observed = fips.Space({"obs": pd.RangeIndex(m, name="obs_id")})
 
-   world = fips.Problem(
-       prior=fips.Vector(np.ones(n), state), prior_cov=prior_cov,
-       obs=fips.Vector(np.zeros(m), observed),
-       obs_cov=fips.Covariance.diagonal(np.full(m, 0.1**2), observed),
-       forward=fips.Operator(H, observed, state),
-   )
-   truth, obs = world.simulate(rng=1)
-   problem = fips.Problem(prior=world.prior, prior_cov=prior_cov, obs=obs,
-                          obs_cov=world.obs_cov, forward=world.forward)
+   def build(obs):
+       return fips.Problem(
+           prior=fips.Vector(np.ones(n), state),
+           prior_cov=fips.Kronecker(
+               fips.Exponential("hour", 3.0), fips.Exponential("y", 3.0), fips.Exponential("x", 3.0)
+           ).with_std(0.5),
+           obs=obs,
+           obs_cov=fips.Independent().with_std(1.5),
+           forward=fips.Operator(H, observed, state),
+       )
 
-This one is small enough for both methods, so the variational answer can be
-checked against the exact one:
+   truth, obs = build(fips.Vector(np.zeros(m), observed)).simulate(rng=1)
+   problem = build(obs)
+
+This problem is small enough for both methods, so the variational answer can
+be checked against the exact one. The estimates agree far inside the
+uncertainty:
 
 .. ipython:: python
 
@@ -115,177 +126,74 @@ checked against the exact one:
    np.abs(post.estimate.values - exact.estimate.values).max() / sd.min()  # in posterior sd
    post.iterations
 
-The estimate is the analytic one far inside its uncertainty (the conjugate
-gradients stop when their residual is below ``cg_tol``, 1e-8 of the right side,
-by default). It took one solve of about 120 iterations: the data have about
-170 degrees of freedom among the 9,600 cells, and conjugate gradients converge
-in about as many steps as there are directions that stand out, not in
-:math:`n`. Each iteration is one product with :math:`H` and one with
-:math:`H^T` (and the prior's root and its transpose, through the factors).
+The conjugate gradients took one solve of under a hundred iterations. Each
+is one product with :math:`H` and one with :math:`H^T`. Their number follows
+the directions the data inform (DOFS is about 95 here), not the 6,144
+elements.
 
 
 How much rank is enough
------------------------
+~~~~~~~~~~~~~~~~~~~~~~~
 
-The posterior covariance is :math:`\hat{S} = R (I + \tilde{H})^{-1} R^T`, with
-:math:`S_0 = R R^T` and :math:`\tilde{H} = \gamma R^T H^T S_z^{-1} H R`, the
-data's information on the state whitened by the prior. Its eigenvalues
-:math:`\tilde\lambda_j` say how many times more the data know about each
-direction than the prior did; along that direction the data remove the share
-:math:`\tilde\lambda_j / (1 + \tilde\lambda_j)` of the prior's variance, and
-these shares add up to DOFS. ``rank`` keeps the ``k`` largest (by Lanczos,
-from products) and leaves the prior in the other directions:
-
-.. math::
-
-   \hat{S}_k = S_0 - G \operatorname{diag}\big(\tilde\lambda_j / (1 + \tilde\lambda_j)\big) G^T,
-   \qquad G = R V \ (n \times k).
-
-So each variance is the prior's less a sum over the pairs: too large when ``k``
-is too small, never too small, and exact once ``k`` reaches the number of
-directions the data see. :attr:`~fips.Posterior.eigenvalues` lists the pairs:
+**Read** :attr:`post.eigenvalues <fips.Posterior.eigenvalues>`. Each row is
+one direction the data inform, from the most informed. ``eigenvalue`` says how
+many times more the data know about that direction than the prior did, and
+``dofs`` is the share of the prior's variance the data remove along it. When
+the last rows' ``dofs`` are near zero, ``rank`` held what the data inform.
 
 .. ipython:: python
 
-   post.eigenvalues.iloc[[0, 9, 49, 99, 149, 199]].round(3)
+   post.eigenvalues.iloc[[0, 24, 49, 99, 149, 199]].round(3)
 
-The last pairs still add about a third of a degree of freedom each: more
-directions are informed. The error of the standard deviations, against the
-exact ones, as ``rank`` grows:
+Below the problem's rank, the directions left out keep the prior's variance.
+**So a low rank makes every variance too large, never too small.** The error
+of the standard deviations against the exact ones, as ``rank`` grows:
 
 .. ipython:: python
 
-   ranks = [25, 50, 100, 200, 400]
-   curve = []
-   for k in ranks:
+   table = []
+   for k in [25, 50, 100, 200]:
        low = fips.solve(problem, "variational", rank=k)
        error = np.sqrt(low.variances.values) / sd - 1
-       curve.append({"rank": k, "dofs": low.dofs, "last pair": low.eigenvalues["dofs"].iloc[-1],
-                     "median sd error": np.median(error), "largest sd error": error.max()})
+       last = low.eigenvalues.iloc[-1]
+       table.append({"rank": k, "dofs": low.dofs, "last eigenvalue": last["eigenvalue"],
+                     "last dofs": last["dofs"], "median error": np.median(error), "worst error": error.max()})
 
-   curve = pd.DataFrame(curve).set_index("rank")
-   curve.assign(exact_dofs=exact.dofs).round(4)
+   pd.DataFrame(table).set_index("rank").round(3)
+   exact.dofs
 
-.. ipython:: python
-
-   import matplotlib.pyplot as plt
-   fig, ax = plt.subplots(figsize=(5, 3.5))
-   ax.semilogy(curve.index, curve["largest sd error"], "o-", label="largest")
-   ax.semilogy(curve.index, curve["median sd error"], "s-", label="median")
-   ax.set_xlabel("rank")
-   ax.set_ylabel("relative error of the posterior sd")
-   @savefig variational_rank.png width=5in
-   ax.legend()
-
-The error falls with every pair, from above (the test suite holds that: the
-variances never cross the exact ones, and DOFS never falls as ``rank`` grows).
-At 200 pairs, the median standard deviation is within a percent of the exact
-one and the worst about 5% too large; at 400, within 0.2%. Read the last pairs'
-``dofs``: when they are near zero, ``rank`` held what the data inform. A solve
-warns when the last pair's eigenvalue is still above 1 (that direction holds
-more from the data than from the prior). A pair costs Lanczos two or three
-products with :math:`H` and :math:`H^T`; the whole loop above took about ten
-seconds on four cores.
-
-Everything the posterior reports comes from the same factors, with nothing
-:math:`n \times n`: DOFS (the sum over the pairs, a lower bound),
-:attr:`~fips.Posterior.dofs_per_element`, the gain and the averaging kernel of
-the ``k`` directions, the information content, :meth:`~fips.Posterior.cov`
-of aggregates (:math:`W S_0 W^T - (W G) D (W G)^T`), and exact draws of
-:math:`\hat{S}_k` (:meth:`~fips.Posterior.sample`). The standard deviations
-of the totals of each six hours, at 50 and 200 pairs:
+At ranks 25 and 50 the last pair kept still has an eigenvalue above 1, and
+the solve warns. At rank 100 it does not, yet the last pair still adds about
+four tenths of a degree of freedom and the worst standard deviation is
+several percent too large; at 200 the pairs have run out of information. The warning is a
+floor: read the last pairs' ``dofs``. Aggregates follow the same
+rule, here the sums of each six hours:
 
 .. ipython:: python
 
-   quarter = pd.Series(np.arange(hours) // 6, index=pd.Index(range(hours), name="hour"), name="quarter")
-   W = fips.aggregate.sum(state, by=quarter)  # the totals of each six hours
-   pd.DataFrame({k: np.sqrt(np.diag(fips.solve(problem, "variational", rank=k).cov(W).dense()))
-                 for k in (50, 200)}).assign(exact=np.sqrt(np.diag(exact.cov(W).dense()))).round(3)
-
-They are about 10% too large at 50 pairs and 1% at 200, as a typical cell's are.
-
-:meth:`~fips.Posterior.with_data` (and so :meth:`~fips.Posterior.trials`) and
-:meth:`~fips.Posterior.with_gamma` cost one conjugate-gradient solve each: the
-eigenvectors depend neither on the observations' values nor on
-:math:`\gamma`.
-
-
-What it costs at a size fips.solve cannot hold
-----------------------------------------------
-
-Measured on one cluster node (eight cores of an Intel Xeon Gold 6230R, 48 GB),
-each solve in its own process with its address space capped at 40 GB, with the plume footprints above on a larger grid
-(the same plumes, prior and signal-to-noise, with an error of 0.3 and a
-prior's correlations of 3 hours and 4 cells):
-
-.. list-table::
-   :header-rows: 1
-
-   * - state :math:`n`
-     - observations :math:`m`
-     - method
-     - solve
-     - peak memory
-   * - 38,400
-     - 2,880
-     - ``fips.solve``
-     - 9 s
-     - 2.1 GB
-   * - 38,400
-     - 2,880
-     - variational, rank 100
-     - 3 s
-     - 0.3 GB
-   * - 38,400
-     - 2,880
-     - variational, rank 300
-     - 13 s
-     - 0.5 GB
-   * - 38,400
-     - 2,880
-     - variational, rank 600
-     - 45 s
-     - 0.9 GB
-   * - 259,200
-     - 17,280
-     - ``fips.solve``
-     - out of memory (``MemoryError`` at 38 GB, after 4 minutes)
-     - above 40 GB
-   * - 259,200
-     - 17,280
-     - variational, rank 100
-     - 41 s
-     - 1.2 GB
-   * - 259,200
-     - 17,280
-     - variational, rank 300
-     - 160 s
-     - 2.8 GB
-
-``fips.solve`` holds :math:`H S_0`, :math:`m \times n` dense, and factors the
-:math:`m \times m` innovation covariance: its memory grows as :math:`m n`. The
-variational solve holds the sparse :math:`H`, the Kronecker factors and
-:math:`G` (:math:`n \times k`): its memory grows as :math:`n k`, and its time
-as its products with :math:`\tilde{H}` (each one with :math:`H`, :math:`H^T`
-and the prior's root and its transpose): the CG iterations, about 200 at
-both sizes here, and two to three for each pair. The low ranks leave the
-standard deviations too large where the data inform more directions than
-``rank`` keeps (at 38,400 cells the exact DOFS is 459): the median cell's is
-9% too large at rank 100, 4% at 300 and 0.5% at 600 (the largest 65%, 21% and
-4%).
+   six_hours = pd.Series(np.arange(hours) // 6, index=pd.Index(range(hours), name="hour"), name="six_hours")
+   W = fips.aggregate.sum(state, by=six_hours)
+   pd.DataFrame({
+       "exact": exact.uncertainty(W)["posterior_std"],
+       "rank 50": fips.solve(problem, "variational", rank=50).uncertainty(W)["posterior_std"],
+       "rank 200": post.uncertainty(W)["posterior_std"],
+   }).round(3)
 
 
 A model with an adjoint
------------------------
+~~~~~~~~~~~~~~~~~~~~~~~
 
 A forward model whose Jacobian is too large to hold, but which can be run
-forward (tangent linear, :math:`J v`) and backward (adjoint, :math:`J^T w`),
-writes those two products in place of ``jacobian``. Here a lognormal flux,
-:math:`F(x) = H (r \circ e^{x})`, on a small grid:
+forward (the tangent linear model, :math:`J v`) and backward (the adjoint
+model, :math:`J^T w`), writes those two products in place of ``jacobian``.
+Here :math:`F(x) = H (r \circ e^{x})` on a small problem, the model
+:class:`~fips.LogNormalForward` writes for you (:doc:`positive`), written by
+its products:
 
 .. ipython:: python
 
-   class Lognormal(fips.ForwardModel):
+   class LogScale(fips.ForwardModel):
+       """F(x) = H (r * exp(x)), known by its products."""
        def __init__(self, H, reference, rows, cols):
            super().__init__(rows, cols)
            self.H, self.reference = H, reference
@@ -296,27 +204,26 @@ writes those two products in place of ``jacobian``. Here a lognormal flux,
        def vjp(self, x, w):  # the adjoint model
            return fips.Vector(self.reference * np.exp(x.values) * (self.H.T @ w.values), self.cols)
 
-   small = fips.Space({"flux": pd.RangeIndex(60, name="cell")})
-   seen = fips.Space({"ch4": pd.RangeIndex(40, name="obs_id")})
+   small = fips.Space({"state": pd.RangeIndex(60, name="element")})
+   seen = fips.Space({"obs": pd.RangeIndex(40, name="obs_id")})
    H_small = np.abs(rng.normal(size=(40, 60))) * (rng.random((40, 60)) < 0.2)
-   model = Lognormal(H_small, rng.uniform(0.5, 2.0, 60), seen, small)
+   model = LogScale(H_small, rng.uniform(0.5, 2.0, 60), seen, small)
    fips.taylortest(model, fips.Vector(rng.normal(0.0, 0.5, 60), small))
 
-:func:`fips.taylortest` checks both products: the tangent linear against the
-model (the remainder of :math:`F(x + \epsilon v) - F(x) - \epsilon J v` falls
-as :math:`\epsilon^2`) and the adjoint against the tangent linear
-(:math:`\langle J v, w \rangle = \langle v, J^T w \rangle`); an adjoint with a
-term missing fails the second. The variational method then solves by
-Gauss-Newton, each step a conjugate-gradient solve of the problem linearized
-at the last estimate, with the same stopping rule as ``"gauss_newton"``
-(:doc:`nonlinear`):
+:func:`fips.taylortest` checks both products. It checks the tangent linear
+against the model: the remainder of :math:`F(x + \epsilon v) - F(x) -
+\epsilon J v` falls as :math:`\epsilon^2`. It checks the adjoint against the
+tangent linear: :math:`\langle J v, w \rangle = \langle v, J^T w \rangle`.
+An adjoint with a term missing fails the second. The variational method then
+solves by Gauss-Newton, each step a conjugate-gradient solve of the problem
+linearized at the last estimate:
 
 .. ipython:: python
 
    log_truth = fips.Vector(rng.normal(0.0, 0.5, 60), small)
    lognormal = fips.Problem(
        prior=fips.Vector(np.zeros(60), small),
-       prior_cov=fips.Exponential("cell", 3.0).with_std(0.5),
+       prior_cov=fips.Exponential("element", 3.0).with_std(0.5),
        obs=fips.Vector(model(log_truth).values + 0.05 * rng.normal(size=40), seen),
        obs_cov=fips.Independent().with_std(0.05),
        forward=model,
@@ -326,18 +233,200 @@ at the last estimate, with the same stopping rule as ``"gauss_newton"``
    newton = fips.solve(lognormal, "gauss_newton", draws=200)
    np.abs(by_products.estimate.values - newton.estimate.values).max()
 
-The two modes agree to within their stopping rules (both stop when a step is
-a thousandth of a posterior standard deviation). ``"gauss_newton"`` forms the Jacobian (here from the same
-products, a column at a time) and draws the posterior itself; the variational
-method never forms it, and its uncertainty is the low-rank Gaussian at the
-mode, Laplace's approximation, which is not the posterior where the model
-bends much over the posterior's spread (:doc:`positive`). Its posterior is
-the low-rank kind, and :ref:`the table <posterior-members>` says what that
-gives (no ``with_gamma`` with a forward model, since the linearization depends
-on :math:`\gamma`); ``with_data`` solves again from the last linearization.
+The two modes agree to within their stopping rules. ``"gauss_newton"`` forms
+the Jacobian (here from the same products, a column at a time) and draws the
+posterior. The variational method never forms it, and its uncertainty is the
+low-rank Gaussian at the mode, which is not the posterior where the model
+bends much over the posterior's spread (:doc:`positive`).
 
-Out of this method, for now: bounds on the state, checkpointing an adjoint
-model, and a preconditioner for the conjugate gradients beyond the prior's
-root (a problem with observations far more precise than its prior has large
-eigenvalues, and the solve takes more iterations; ``max_cg_iterations`` caps
-them).
+
+What the posterior reports
+--------------------------
+
+The variational posterior is a low-rank one, or a Gaussian one when ``rank``
+reaches the problem's rank. The :ref:`members table <posterior-members>` lists
+every member for every kind of answer; for this method:
+
+- :attr:`~fips.Posterior.estimate` is the posterior mean to ``cg_tol`` for a
+  forward operator, and the mode for a forward model (whose
+  :attr:`~fips.Posterior.mean` raises).
+- :attr:`~fips.Posterior.variances` and :meth:`~fips.Posterior.cov` are the
+  prior's less ``rank`` pairs: too large below the problem's rank, exact at
+  it. The covariance of aggregates, :meth:`~fips.Posterior.cov` with ``W``,
+  forms nothing :math:`n \times n`.
+- :attr:`~fips.Posterior.eigenvalues` lists the pairs and the DOFS each adds;
+  :attr:`~fips.Posterior.iterations` lists each Gauss-Newton step (one for a
+  forward operator) with its conjugate-gradient iterations.
+- :attr:`~fips.Posterior.dofs` (a lower bound),
+  :attr:`~fips.Posterior.dofs_per_element`,
+  :attr:`~fips.Posterior.kalman_gain`,
+  :meth:`~fips.Posterior.averaging_kernel` and
+  :attr:`~fips.Posterior.information_content` are those of the ``rank``
+  directions kept.
+- :meth:`~fips.Posterior.sample` gives exact draws of the low-rank posterior.
+- :meth:`~fips.Posterior.with_data` and :meth:`~fips.Posterior.with_gamma`
+  cost one conjugate-gradient solve each, keeping the pairs. With a forward
+  model, ``with_data`` solves again from the last linearization, and
+  ``with_gamma`` raises: the linearization depends on :math:`\gamma`.
+- :attr:`~fips.Posterior.log_evidence` is exact at full rank for a forward
+  operator, and Laplace's for a forward model. It raises when ``rank`` left
+  out pairs that still hold information.
+- :meth:`~fips.Posterior.recovery` and the data worth raise: the estimate is
+  linear in the observations only to the tolerance.
+
+
+Options
+-------
+
+``fips.solve(problem, "variational", **options)`` takes
+(:class:`~fips.methods.variational.VariationalOptions`):
+
+.. list-table::
+   :header-rows: 1
+   :widths: 22 12 66
+
+   * - Option
+     - Default
+     - What it does
+   * - ``rank``
+     - 100
+     - The number of directions the low-rank posterior keeps (at most the
+       smaller of :math:`m` and the columns of the prior's root).
+   * - ``cg_tol``
+     - 1e-8
+     - The tolerance of the iterative solves, below 1: the conjugate
+       gradients stop when their residual is below ``cg_tol`` times the right
+       side, and Lanczos when each eigenvalue is good to ``cg_tol``.
+   * - ``max_cg_iterations``
+     - 1000
+     - The most conjugate-gradient iterations of one solve.
+   * - ``max_iterations``
+     - 50
+     - For a forward model, the most Gauss-Newton steps, as for
+       ``"gauss_newton"``.
+   * - ``tol``
+     - 1e-6
+     - For a forward model, the steps stop when one moves the estimate by
+       less than ``tol`` times :math:`n`, measured in the posterior
+       covariance (Rodgers' rule, as for ``"gauss_newton"``).
+   * - ``gamma``
+     - 1.0
+     - The regularization factor: the observation covariance is divided by
+       it, as for every method (:doc:`posterior`).
+
+
+Warnings and checks
+-------------------
+
+**It warns when** ``rank`` **is too small by a clear margin**: when ``rank``
+is below the most pairs the problem has and the last pair kept still has an
+eigenvalue above 1 (that direction holds more from the data than from the
+prior). Raise ``rank``. The warning is a floor, not a target: read the last
+pairs' ``dofs`` in :attr:`~fips.Posterior.eigenvalues`. Each solve also logs,
+at INFO, the pairs kept, DOFS and the share of it in the last tenth of the pairs,
+and the conjugate-gradient iterations. fips logs these through
+:mod:`logging`, silent until you configure it (:ref:`repeated-inversions`).
+
+It raises :class:`RuntimeError` when:
+
+- the conjugate gradients have not reached ``cg_tol`` after
+  ``max_cg_iterations``: raise either. Observations far more precise than
+  the prior make large eigenvalues, and the solve slow;
+- Lanczos does not find the pairs: lower ``rank``, or raise ``cg_tol``;
+- with a forward model, the steps have not stopped after ``max_iterations``,
+  or the cost rises along a step however short it is made. The second means
+  the products are not the derivative of the model: check them with
+  :func:`fips.taylortest`.
+
+It raises :class:`ValueError` for an option out of range (``cg_tol`` must be
+below 1), and :class:`~fips.UnavailableError` for a member it cannot give
+(above).
+
+
+Cost
+----
+
+**Memory grows as** :math:`n k`, **not** :math:`m n`. The method holds the
+sparse :math:`H` (or nothing, for products), the prior covariance's factors,
+and :math:`n \times k` for the pairs. ``fips.solve(problem)`` holds
+:math:`H S_0`, :math:`m \times n` dense.
+
+**Time grows with the directions the data inform, not with** :math:`n`. A
+conjugate-gradient iteration is a product with each of :math:`H`,
+:math:`H^T`, the prior's root and its transpose, and a solve takes about as
+many iterations as there are eigenvalues well above 1. The pairs cost about
+two such products each by Lanczos. When ``rank`` is at least half the
+columns of the prior's root, the method forms the whitened Hessian from that
+many products instead and eigendecomposes it, dense. A forward model costs a
+solve and a run of the model per Gauss-Newton step. The conjugate gradients
+are preconditioned only by the prior's root, so observations far more precise
+than the prior take more iterations. For scale: a few hundred thousand state
+elements and tens of thousands of observations, which ``fips.solve(problem)``
+cannot hold, take about a minute and a gigabyte or two at ``rank=100``.
+
+
+How it works
+------------
+
+Write the prior covariance by its root, :math:`S_0 = R R^T`, and the state in
+the whitened form :math:`x = x_0 + R \xi`. With the innovation :math:`d = z -
+H x_0 - c`, the cost is :math:`\xi^T \xi + \gamma (d - H R \xi)^T S_z^{-1}
+(d - H R \xi)`, and its minimum solves the whitened normal equations
+
+.. math::
+
+   (I + \tilde{H})\, \xi = \gamma R^T H^T S_z^{-1} d, \qquad
+   \tilde{H} = \gamma R^T H^T S_z^{-1} H R,
+
+where :math:`\tilde{H}` is the Hessian of the data misfit whitened by the
+prior. Their matrix is the identity plus a positive semidefinite one, so its
+eigenvalues are at least 1. Conjugate gradients solve the equations in about
+as many products as :math:`\tilde{H}` has eigenvalues standing above 1.
+
+The posterior covariance is :math:`\hat{S} = R (I + \tilde{H})^{-1} R^T`.
+The eigenvalues :math:`\tilde\lambda_j` of :math:`\tilde{H}` say how many
+times more the data know about each direction than the prior did; along that
+direction the data remove the share :math:`\tilde\lambda_j / (1 +
+\tilde\lambda_j)` of the prior's variance, and these shares add up to DOFS.
+The ``k`` leading pairs, :math:`\tilde{H} v_j = \tilde\lambda_j v_j`, found by
+Lanczos from products, give the low-rank posterior
+
+.. math::
+
+   \hat{S}_k = S_0 - G \operatorname{diag}\big(\tilde\lambda_j / (1 +
+   \tilde\lambda_j)\big) G^T, \qquad G = R V \ (n \times k).
+
+It is the posterior of the ``k`` directions the data inform most, with the
+prior left in the others. The covariance of aggregates is :math:`W S_0 W^T -
+(W G) D (W G)^T`, and a draw is :math:`\hat{x} + R (w - V
+\operatorname{diag}(1 - (1 + \tilde\lambda_j)^{-1/2}) V^T w)` with :math:`w`
+standard normal. The pairs depend neither on :math:`\gamma` (it only scales
+:math:`\tilde\lambda`) nor on the observations' values, so another
+:math:`\gamma` or other data cost one conjugate-gradient solve.
+
+With a forward model the same solve is the inner step of Gauss-Newton, which
+is incremental 4D-Var. At each iterate the problem linearized there, with the
+Jacobian known by ``jvp`` and ``vjp``, is solved by conjugate gradients, and
+the steps stop by the rule ``"gauss_newton"`` uses (:doc:`nonlinear`). A step
+that raises the cost is halved until it does not. The pairs are those of the
+last linearization, so the uncertainty is the Gaussian at the mode, Laplace's
+approximation.
+
+
+References
+----------
+
+Bui-Thanh, T., Ghattas, O., Martin, J., and Stadler, G. (2013). A
+computational framework for infinite-dimensional Bayesian inverse problems.
+Part I. *SIAM Journal on Scientific Computing*, 35(6), A2494-A2523.
+https://doi.org/10.1137/12089586X
+
+Courtier, P., Thépaut, J.-N., and Hollingsworth, A. (1994). A strategy for
+operational implementation of 4D-Var, using an incremental approach.
+*Quarterly Journal of the Royal Meteorological Society*, 120(519),
+1367-1387. https://doi.org/10.1002/qj.49712051912
+
+Spantini, A., Solonen, A., Cui, T., Martin, J., Tenorio, L., and Marzouk, Y.
+(2015). Optimal low-rank approximations of Bayesian linear inverse problems.
+*SIAM Journal on Scientific Computing*, 37(6), A2451-A2487.
+https://doi.org/10.1137/140977308
