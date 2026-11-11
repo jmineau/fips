@@ -1137,7 +1137,7 @@ class MatrixFreeOperator(LinearOperator):
     are applied term by term, one product of each part per vector. Its
     entries are formed only where a method asks for them: :meth:`dense`,
     :meth:`diagonal` and the solves take one product per column. The
-    ``"variational"`` method needs only products; ``fips.solve`` forms
+    ``"variational"`` method needs only products; the analytic method forms
     :math:`H S_0` (``m x n``) from ``n`` of them.
 
     Parameters

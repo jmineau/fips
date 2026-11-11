@@ -1,8 +1,8 @@
 r"""
 The ensemble method: a square-root ensemble Kalman update, for a forward model that can only be run.
 
-A model with no Jacobian (an atmospheric transport model, such as a TM5 or
-WRF configuration) cannot be linearized by hand, but it can be run. The ensemble method needs only its
+A model with no Jacobian (a simulation run as its own program, say) cannot
+be linearized by hand, but it can be run. The ensemble method needs only its
 runs: :meth:`Problem.ensemble <fips.Problem.ensemble>` draws ``N`` members
 from the prior, the model is run on each (outside fips, or by fips when the
 problem's forward is an :class:`~fips.Operator` or a
@@ -29,7 +29,7 @@ with :math:`P_{xy} = A B^T` and :math:`P_{yy} = B B^T`, each multiplied
 element by element by the user's localization weights when they are given
 (:math:`\rho_{xy} \circ P_{xy}`, :math:`\rho_{yy} \circ P_{yy}`). The
 observations are first whitened by :math:`S_z = L L^T` (its Cholesky factor,
-or the root of its diagonal), so that the mismatch is :math:`I / \gamma`;
+or the root of its diagonal), so that the observation covariance is :math:`I / \gamma`;
 then with :math:`M = L^{-1} P_{yy} L^{-T} = Q \Lambda Q^T`, the reduced gain
 of the batch EnSRF (its symmetric square roots, Andrews 1968) is
 
@@ -121,8 +121,8 @@ class EnsembleOptions:
     ----------
     gamma : float, default 1.0
         The regularization factor :math:`\gamma`, as for the analytic method
-        (:class:`~fips.methods.analytic.AnalyticOptions`): the model-data
-        mismatch is divided by it.
+        (:class:`~fips.methods.analytic.AnalyticOptions`): the observation
+        covariance is divided by it.
     members : int or pandas.DataFrame
         The prior ensemble. A DataFrame is the members
         :meth:`Problem.ensemble <fips.Problem.ensemble>` returned (or any
@@ -170,7 +170,7 @@ class EnsembleOptions:
     """
 
     gamma: float = 1.0
-    """The regularization factor: the model-data mismatch is divided by it."""
+    """The regularization factor: the observation covariance is divided by it."""
     members: "int | pd.DataFrame | None" = None
     """The prior members (a DataFrame), or how many to draw."""
     predicted: "pd.DataFrame | None" = None
@@ -530,17 +530,17 @@ def _whiten(root: np.ndarray, X: np.ndarray, transpose: bool = False) -> np.ndar
 
 def _obs_root(S_z: LinearOperator) -> np.ndarray:
     """
-    Return the root of the model-data mismatch: the square roots of a diagonal one, or the Cholesky factor of any other, made dense.
+    Return the root of the observation covariance: the square roots of a diagonal one, or the Cholesky factor of any other, made dense.
 
     Raises
     ------
     numpy.linalg.LinAlgError
-        If the mismatch is not positive-definite.
+        If the observation covariance is not positive-definite.
     """
     if isinstance(S_z, DiagonalOperator):
         if not np.all(S_z.values > 0):
             raise LinAlgError(
-                "The model-data mismatch has a variance that is not positive, so "
+                "The observation covariance has a variance that is not positive, so "
                 "it cannot whiten the observations."
             )
         return np.sqrt(np.asarray(S_z.values, dtype=float))
@@ -549,7 +549,7 @@ def _obs_root(S_z: LinearOperator) -> np.ndarray:
         return np.asarray(cholesky(S_z.dense(), lower=True))
     except LinAlgError as err:
         raise LinAlgError(
-            "The model-data mismatch is not positive-definite, so it cannot "
+            "The observation covariance is not positive-definite, so it cannot "
             "whiten the observations."
         ) from err
 

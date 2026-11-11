@@ -2,7 +2,7 @@ r"""
 The bounded method: the posterior with bounds on the state.
 
 The analytic posterior :math:`N(\hat{x}, \hat{S})` with the state held to a box,
-:math:`l \le x \le u` (a flux that cannot be negative, a fraction between 0 and
+:math:`l \le x \le u` (a quantity that cannot be negative, a fraction between 0 and
 1), is that Gaussian truncated to the box: the prior times the likelihood, with
 the prior set to zero outside the bounds. ``_bounded`` factors the problem as
 the analytic method does (``_factor``) and keeps two things from the factors:
@@ -25,8 +25,8 @@ the analytic method does (``_factor``) and keeps two things from the factors:
   observations: an exact draw of the analytic posterior moved onto the
   bounds by ``_mode``, as the analytic estimate is. A rectified draw is often
   exactly on a bound; a truncated one never is. Bardsley and Fox (2012)
-  solve such a nonnegativity-constrained problem for each sample, and Miller,
-  Michalak and Levi (2014, section 3.3.1) propose realizations this way, then
+  solve such a nonnegativity-constrained problem for each draw, and Miller,
+  Michalak and Levi (2014, section 3.3.1) propose draws this way, then
   test each by Metropolis-Hastings, which fips does not.
 
 The gain, DOFS and the information content are those of the analytic posterior
@@ -200,8 +200,8 @@ class BoundedOptions:
     ----------
     gamma : float, default 1.0
         The regularization factor :math:`\gamma`, as for the analytic method
-        (:class:`~fips.methods.analytic.AnalyticOptions`): the model-data
-        mismatch is divided by it.
+        (:class:`~fips.methods.analytic.AnalyticOptions`): the observation
+        covariance is divided by it.
     lower, upper : float, Vector, dict or None, default None
         The bounds on the state: ``lower <= x <= upper``. A number bounds
         every state element; a :class:`~fips.Vector` gives each element its
@@ -216,7 +216,7 @@ class BoundedOptions:
         prior standard deviation over half the distance to a bound, for more
         than 10% of a block's bounded elements): the draws are of the posterior
         cut at the bounds, whose mean is higher than the Gaussian's at a lower
-        bound (lower, at an upper one), so a total read from them sits above
+        bound (lower, at an upper one), so an aggregate read from them sits above
         (or below) the prior's; the warning says by how much, for each such
         block (for rectified draws, the smaller shift of the prior set to its
         bounds).
@@ -227,11 +227,10 @@ class BoundedOptions:
         last. At 2000, a
         standard deviation is good to about 1.5% for an element away from its
         bounds (:math:`1 / \sqrt{2\, \text{draws}}`, as for independent
-        draws), and to about 12% (root mean square over 24 solves; 25% at
-        worst) for an element whose analytic estimate is one to four standard
-        deviations outside its bound: its draws pile against the bound and mix
-        slowly (an autocorrelation time of 13 to 17 draws). One far outside
-        mixes faster. Rectified draws are independent; an element on its
+        draws), and several times worse for an element whose analytic
+        estimate is one to four standard deviations outside its bound: its
+        draws pile against the bound and mix slowly. One far outside mixes
+        faster. Rectified draws are independent; an element on its
         bound in nearly every one has its spread from the few that are not.
         The error falls as :math:`1/\sqrt{\text{draws}}`; the
         solve warns when a standard deviation is uncertain by more than 10%,
@@ -259,15 +258,10 @@ class BoundedOptions:
         distribution of the bounded estimate when the prior mean and the data
         are redrawn, not the Bayesian posterior of a prior fips writes down
         and not the truncated posterior; where the data constrain little its
-        mean sits less far above the prior's than the truncated one (for one
-        element whose prior standard deviation equals its distance from a
-        lower bound, 8% of that distance against 29%). Each draw costs an
-        active set, as the mode does: a few steps, each exchanging at once
-        every element to hold or release. With a correlated prior whose
-        standard deviation equals its mean and weak data, a draw took 1.7 ms
-        for 400 elements (70 on a bound in a typical draw) and 7.6 ms for
-        2000 (120 on a bound: 15 s for 2000 draws), against 4 and 14 ms for
-        a truncated draw. Both keep the columns of the posterior covariance
+        mean sits less far above the prior's than the truncated one. Each
+        draw costs an active set, as the mode does: a few steps, each
+        exchanging at once every element to hold or release, about the cost
+        of a truncated draw. Both keep the columns of the posterior covariance
         at every element a draw reaches a bound at, up to all of them
         (``n x n``: 30 MiB for 2000 elements).
 
@@ -287,7 +281,7 @@ class BoundedOptions:
     """
 
     gamma: float = 1.0
-    """The regularization factor: the model-data mismatch is divided by it."""
+    """The regularization factor: the observation covariance is divided by it."""
     lower: "float | Vector | Mapping[str, float | Vector] | None" = None
     """The lower bounds on the state, as given (a dict by block is kept as a mapping of its blocks)."""
     upper: "float | Vector | Mapping[str, float | Vector] | None" = None
@@ -1390,7 +1384,7 @@ def _warn_if_wide(
     r"""
     Log one warning when a block's prior is wide against its bounds, so that a total read from the draws sits above (or below) the prior's.
 
-    Where the data constrain little, the draws' mean, intervals and totals
+    Where the data constrain little, the draws' mean, intervals and aggregates
     are those of the prior as the draws treat it: for ``"truncated"`` draws,
     the prior cut at the bounds, whose mean is higher than the Gaussian's at
     a lower bound (lower, at an upper one); for ``"rectified"`` ones, the
@@ -1461,9 +1455,9 @@ def _warn_if_wide(
         return
     logger.warning(
         "The prior is wide against the bounds: %s. The draws are %s, so where "
-        "the data constrain little, their mean, intervals and totals sit that "
-        "far from the prior's. The estimate (the mode) is not affected; for a "
-        "total, read the analytic posterior (fips.solve(problem)) or use "
+        "the data constrain little, their mean, intervals and aggregates sit "
+        "that far from the prior's. The estimate (the mode) is not affected; for "
+        "an aggregate, read the analytic posterior (fips.solve(problem)) or use "
         "fips.LogNormalForward.",
         "; ".join(reports),
         draws,

@@ -650,7 +650,7 @@ class Covariance(Operator):
         and keeps its rows (a part of a Gaussian vector has the part of its
         covariance), so a subset of the grid costs what the whole grid does;
         a sparse one draws each group of correlated rows (a ``within=``
-        kernel's site-days) from the Cholesky factor of its own block; a dense
+        kernel's groups) from the Cholesky factor of its own block; a dense
         one uses its Cholesky factor. The root is built once and kept, so a
         loop of draws factors once: by ``Covariance(...)``, whose positive
         semidefinite check it is, or by the first draw of a covariance fips

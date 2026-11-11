@@ -40,14 +40,17 @@ below:
   (what ``Posterior.recovery`` needs), and ``evidence_is_laplace = True``
   when its posterior is the Gaussian at its estimate, exactly or
   approximately, so that ``chi2()`` and ``information()`` give the evidence
-  (``Posterior.log_evidence``); a posterior whose solution lacks one
-  of them raises when that feature is asked for;
+  (``Posterior.log_evidence``; ``no_evidence``, a sentence, says why when
+  it is False), ``kept()`` for a sampled posterior (the draws it reads its
+  mean, variances and intervals from), and ``innovation_precision(groups)``
+  with ``self_sensitivity()`` (for ``Posterior.data_worth``); a posterior
+  whose solution lacks one of them raises when that feature is asked for;
 - a function from a :class:`~fips.Problem` and the options to
   ``Posterior(problem, solution, options)``.
 
-A method's default options on a linear problem with no bounds give the
-analytic posterior: ``tests/test_oracle.py`` runs every registered method,
-with its default options, against the closed form. A method registered with
+On a linear problem with no bounds, every exact method gives the analytic
+posterior: ``tests/test_oracle.py`` runs each registered method, with its
+default options, against the closed form. A method registered with
 ``exact=False`` (the ensemble, which approaches it only as its members grow)
 is left out of the oracle and has its own convergence test. One that is
 exact only to the tolerance of its iterative solves (the variational method)

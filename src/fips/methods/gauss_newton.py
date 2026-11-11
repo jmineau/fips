@@ -33,7 +33,7 @@ the last one, is halved until it is not (a line search on the cost; the
 mode is the same), and only a whole step below the rule stops the
 iterations. The rule measures the step, not the distance to the mode: when
 the steps fall by a constant factor near 1 (a model that bends much over the
-posterior's spread), the solve logs a warning that the estimate may be
+posterior's spread), the solve logs a warning that the last iterate may be
 further from the mode (``_warn_if_slow``).
 
 For a transform (:class:`~fips.LogNormalForward`,
@@ -47,19 +47,17 @@ solved by conjugate gradients preconditioned by :math:`\hat{S}_i`
 not positive definite. The iterations stop when both steps are below the
 rule, with Gauss-Newton's, so the mode is the same and the Gaussian at the
 mode is still the analytic solution of the problem linearized at the last
-iterate. Newton converges quadratically where Gauss-Newton crawls: on the
-user guide's comparison problem (400 state elements, 120 observations, a log
-standard deviation of 1, 200 trials) the lognormal model took a median of
-7 steps and at most 14, against Gauss-Newton's 9 and 23; the softplus model 9
-and 14, against 18 and 153. A model fips did not write has no curvature, and
-its steps are Gauss-Newton's.
+iterate. Newton converges quadratically where Gauss-Newton crawls: where the
+model bends much over the posterior's spread, it takes a fraction of
+Gauss-Newton's steps. A model fips did not write has no curvature, and its
+steps are Gauss-Newton's.
 
 :math:`\hat{S}_i^{-1}` is never formed. Every estimate is :math:`x_0 + S_0 y`
 with :math:`y = J_i^T u_i` (:math:`u_i` the analytic solve's :math:`(J_i S_0
 J_i^T + S_z/\gamma)^{-1}` times its innovation), so the prior term of
 :math:`d^2` is :math:`\Delta y^T S_0 \Delta y` (no inverse of :math:`S_0`,
 which may be singular) and its data term :math:`\gamma (J_i \delta)^T
-S_z^{-1} (J_i \delta)`, a solve with the mismatch factored once.
+S_z^{-1} (J_i \delta)`, a solve with the observation covariance factored once.
 
 The solution (:class:`GaussNewton`) keeps the analytic solution of the last
 linearized problem, the Gaussian at the mode: the analytic posterior of the
@@ -71,7 +69,7 @@ are those of the posterior itself, :math:`p(x \mid z) \propto e^{-\chi^2(x)/2}`,
 Hamiltonian Monte Carlo (``_Sampler``): the Gaussian at the mode is its mass
 and its exactly solved part, the rest of the cost its kicks, and a Metropolis
 test keeps the chain exact. Where the model bends over the posterior's
-spread, the Gaussian at the mode is not the posterior (a total of lognormal
+spread, the Gaussian at the mode is not the posterior (a sum of lognormal
 values from its draws runs high and covers the truth too rarely); the draws
 are. The misfits and the chi-squared are the cost's terms at the mode, from
 the model itself. With a forward operator (a linear problem)
@@ -122,8 +120,8 @@ class GaussNewtonOptions:
     ----------
     gamma : float, default 1.0
         The regularization factor :math:`\gamma`, as for the analytic method
-        (:class:`~fips.methods.analytic.AnalyticOptions`): the model-data
-        mismatch is divided by it.
+        (:class:`~fips.methods.analytic.AnalyticOptions`): the observation
+        covariance is divided by it.
     max_iterations : int, default 50
         The most steps to take. A solve that has not stopped by then raises.
         A mildly nonlinear problem stops in a few; a strongly nonlinear one
@@ -141,8 +139,10 @@ class GaussNewtonOptions:
         The number of draws of the posterior kept for its variances and the
         covariance of aggregates (Monte Carlo estimates: the relative error of
         a standard deviation is about :math:`\sqrt{\tau / (2\,
-        \text{draws}})`, with :math:`\tau` the draws' autocorrelation time,
-        about 1 to 3 for most elements, 2% to 3% at 2000). They are made at
+        \text{draws}})`, with :math:`\tau` the draws' autocorrelation time).
+        An element the observations see only through a sum with others, on
+        a posterior that bends, mixes slowly: its spread can be far off with
+        no warning, so compare a few seeds. The draws are made at
         the first use of the variances or covariances, and each trial of
         :meth:`Posterior.trials <fips.Posterior.trials>` makes its own, so
         fewer make trials quicker. There is no setting without draws: the
@@ -165,7 +165,7 @@ class GaussNewtonOptions:
     """
 
     gamma: float = 1.0
-    """The regularization factor: the model-data mismatch is divided by it."""
+    """The regularization factor: the observation covariance is divided by it."""
     max_iterations: int = 50
     """The most steps to take."""
     tol: float = 1e-6
@@ -673,7 +673,7 @@ class _Sampler:
 _SLOW_DRAWS = (
     "The posterior bends much over its spread, along a direction the Gaussian "
     "at the mode does not follow; raise draws= for those elements' spread, or "
-    "read the totals the data constrain, which mix faster."
+    "read the aggregates the data constrain, which mix faster."
 )
 """What the slow-mixing warning of the kept draws says of the cause and the remedy."""
 

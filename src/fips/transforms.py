@@ -16,7 +16,7 @@ posterior (:meth:`Posterior.sample <fips.Posterior.sample>`), to the
 transformed value :math:`T(u)`.
 
 - :class:`LogNormalForward`: :math:`T(u) = r\, e^{u}`, a scale factor of a
-  reference :math:`r` (a prior estimate, such as an emission inventory): the
+  reference :math:`r` (a prior value of each element): the
   uncertainty is a factor.
 - :class:`SoftplusForward`: :math:`T(u) = s \log(1 + e^{u/s})`: the value
   itself where it is large (:math:`T(u) \approx u` for :math:`u \gg s`),
@@ -297,7 +297,7 @@ class LogNormalForward(_Transformed):
     The observations are :math:`F(x) = H\, [r \circ e^{u}; \text{the other
     blocks}]`: :math:`H` is the forward operator on the whole state, the
     state on `block` is :math:`u`, the log of the factor that scales the
-    reference :math:`r` (a prior estimate, such as an emission inventory),
+    reference :math:`r` (a prior value of each element),
     and every other block (a bias) passes through as it is. The Jacobian is
     :math:`H` with each column of the block scaled by its value,
     :math:`H \operatorname{diag}(r \circ
@@ -350,12 +350,13 @@ class LogNormalForward(_Transformed):
     the mode, so :math:`r\, e^{\hat{u}}` is the median of each element's
     value under it, below its mean :math:`r\, e^{\hat{u} + \sigma^2/2}` (with
     :math:`\sigma^2` the variance at the mode). A sum of lognormals has no
-    closed form: draws of the total are ``model.transform(post.sample(n))``
-    summed by draw. Where the data constrain sums of elements whose prior is
-    wide, the Gaussian at the mode lies along the tangent of the curved set
-    of states they allow, and the draws' totals run high: the sum of the
-    values at the mode is the better total (the user guide's "Values that
-    stay positive" measures both).
+    closed form: draws of a total are ``model.transform(post.sample(n))``
+    summed by draw. The ``"gauss_newton"`` method draws the posterior itself,
+    so these are draws of the posterior's total. The Gaussian at the mode is
+    not a substitute for them: where the data constrain a sum of elements
+    whose prior is wide, it lies along the tangent of the curved set of
+    states they allow, and a total from its draws runs high (the user
+    guide's "Values that stay positive", How it works).
 
     Examples
     --------
@@ -467,10 +468,9 @@ class LogNormalForward(_Transformed):
         mode, the median of each element's value under the Gaussian at the
         mode (not its mean). For draws of the posterior
         (:meth:`Posterior.sample <fips.Posterior.sample>`, one column each),
-        draws of the value: the total of each column is a draw of the total
-        (see the class's Notes for when they run high). Aggregating ``u``
-        first (``post.sample(n, W=W)``) and transforming that is not a total
-        of the values.
+        draws of the value: the total of each column is a draw of the total.
+        Aggregating ``u`` first (``post.sample(n, W=W)``) and transforming
+        that is not a total of the values.
 
         Parameters
         ----------
@@ -862,8 +862,8 @@ class SoftplusForward(_Transformed):
     The transform is monotone, so the mode :math:`\hat{u}` (the median of
     the Gaussian at the mode) maps to the median of each element's value
     under it, :meth:`transform` of the estimate. Draws of a total are
-    ``model.transform(post.sample(n))`` summed by draw; near the bend they run
-    high, as :class:`LogNormalForward`'s do (see its Notes).
+    ``model.transform(post.sample(n))`` summed by draw, as for
+    :class:`LogNormalForward` (see its Notes).
 
     Examples
     --------
@@ -967,8 +967,7 @@ class SoftplusForward(_Transformed):
         mode, the median of each element's value under the Gaussian at the
         mode. For draws of the posterior (:meth:`Posterior.sample
         <fips.Posterior.sample>`, one column each), draws of the value: the
-        total of each column is a draw of the total (see the class's Notes
-        for when they run high).
+        total of each column is a draw of the total.
 
         Parameters
         ----------
@@ -1030,9 +1029,8 @@ class SoftplusForward(_Transformed):
             If their labels are not the block's, a mean is not positive, or a
             standard deviation is negative or not finite.
         RuntimeError
-            If Newton's method does not match some element (it has not failed in
-            the tests, over means from 1e-6 to 1e6 scales and standard
-            deviations from 1e-6 to 1e3 times the mean).
+            If Newton's method does not match the mean and the standard
+            deviation of some element to a relative error of 1e-9.
 
         Examples
         --------

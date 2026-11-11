@@ -4,8 +4,9 @@ Distances between points: on the Earth, and in time.
 The functions give the haversine (great-circle) distance and the chordal
 distance through the Earth between points given by latitude and longitude in
 degrees, in kilometers on a sphere of radius 6371 km, and the time difference
-between datetimes. The covariance kernels measure with them; the chordal
-distance goes with the Gaussian and Matérn kernels.
+between datetimes, as matrices for your own use. The covariance kernels
+measure the same distances; the chordal one goes with the Gaussian and
+Matérn kernels.
 """
 
 import numpy as np

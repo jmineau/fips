@@ -54,7 +54,7 @@ class KroneckerOperator(LinearOperator):
         S = D \, P \, (C_1 \otimes C_2 \otimes \dots \otimes C_K) \, P^T D
 
     Each factor :math:`C_k` is the correlation matrix of one marginal (the
-    times, or the grid cells), :math:`P` picks the rows of the full product
+    times, or the points of a grid), :math:`P` picks the rows of the full product
     that the operator has, in its order (any subset of the product, in any
     order), and :math:`D` is the diagonal of standard deviations. Entry
     ``(i, j)`` is ``std[i] * std[j] * prod_k C_k[pos_k[i], pos_k[j]]``.
@@ -474,7 +474,7 @@ class KroneckerOperator(LinearOperator):
 
         Parameters
         ----------
-        B : array-like, SciPy sparse matrix or Operator
+        B : array-like, SciPy sparse matrix or LinearOperator
             The right-hand side: a vector, or a matrix with as many rows as the
             operator.
 
