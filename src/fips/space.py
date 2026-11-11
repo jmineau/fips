@@ -88,7 +88,11 @@ def _checked_block(name: str, index: pd.Index) -> pd.Index:
     if len(index) == 0:
         raise ValueError(f"Block {name!r} has no labels.")
     if None in index.names:
-        raise ValueError(f"Every level of block {name!r} must be named.")
+        raise ValueError(
+            f"Every level of block {name!r} must be named. Name an Index with "
+            'index.rename("name") and the levels of a MultiIndex with '
+            'index.set_names(["name", ...]).'
+        )
     if "block" in index.names:
         raise ValueError(
             f"Block {name!r} has a 'block' level; the block's name is its key."

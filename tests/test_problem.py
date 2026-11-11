@@ -102,7 +102,16 @@ class TestConstruction:
                 Operator(np.eye(3), OBS, OBS),
                 "obs_cov must be a Covariance",
             ),
-            ("offset", "1", "offset must be a Vector, a number or None"),
+            (
+                "offset",
+                "1",
+                "offset must be a Vector, a number or None, got str.*Vector.from_series",
+            ),
+            (
+                "offset",
+                pd.Series([1.0, 2.0, 3.0]),
+                "got Series. Build a Vector with Vector.from_series.*from_blocks",
+            ),
         ],
     )
     def test_refused_types_name_the_way_in(self, argument, value, match):
