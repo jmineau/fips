@@ -42,6 +42,9 @@ wrong distribution still gives with the right shape, are held to:
     the prior) fail the one-cell check.
 11. **Reproducibility**: a seed gives the same draws, after a pickle too, and
     ``with_data`` draws the new data's posterior.
+12. **Chains**: the split R-hat is near 1 for chains of one distribution and
+    above it when one chain is shifted or narrower; on the guide's two cells,
+    pinned closely, the chains disagree and the solve says so (issue #203).
 """
 
 import dataclasses
@@ -60,7 +63,7 @@ import fips
 from fips import Covariance, ForwardModel, Operator, Problem, Space, Vector
 from fips.linalg import DiagonalOperator, KroneckerOperator
 from fips.methods import gauss_newton
-from fips.methods._draws import _autocorrelation_times
+from fips.methods._draws import _autocorrelation_times, _split_rhat, _std_errors
 from fips.methods.analytic import Information, Whitened
 from fips.methods.gauss_newton import GaussNewton, GaussNewtonOptions
 from fips.problem import Problem as _Problem
@@ -914,6 +917,9 @@ def test_a_wrong_jacobian_that_stalls_reports_the_d2_the_rule_compared():
         ({"draws": 1}, "draws must be an integer of at least 2"),
         ({"burn_in": -1}, "burn_in"),
         ({"seed": 1.5}, "seed"),
+        ({"chains": 0}, "chains must be a positive integer"),
+        ({"chains": 1.5}, "chains"),
+        ({"draws": 7}, "at least 2 for each of the 4 chains"),
     ],
 )
 def test_the_options_are_checked(options, match):
@@ -1169,9 +1175,9 @@ def test_a_linear_model_draws_the_analytic_posterior(n, m):
     arrays = Arrays.random(1, n, m)
     post = fips.solve(linear_problem(arrays, model=True), "gauss_newton")
     ref = fips.solve(linear_problem(arrays, model=False))
-    tuning = post._solution._tuning()
-    assert tuning.step == pytest.approx(gauss_newton._QUARTER)
-    assert tuning.acceptance > 1 - 1e-9
+    for tuning in post._solution._tunings():
+        assert tuning.step == pytest.approx(gauss_newton._QUARTER)
+        assert tuning.acceptance > 1 - 1e-9
     N = 4000
     draws = post.sample(N, rng=0).to_numpy()
     assert _autocorrelation_times(draws).max() < 1.3
@@ -1325,7 +1331,7 @@ def test_a_wrong_jacobian_leaves_the_draws_exact_but_slow_and_warns(
     monkeypatch.setattr(type(model), "_gradient", wrong)
     with caplog.at_level("WARNING", logger="fips.methods.gauss_newton"):
         post = fips.solve(problem, "gauss_newton", burn_in=100)
-        steps = gauss_newton._steps(post._solution._tuning().step)
+        steps = max(gauss_newton._steps(t.step) for t in post._solution._tunings())
     assert steps >= gauss_newton._MANY_STEPS
     assert "steps a draw" in caplog.text and "taylortest" in caplog.text
 
@@ -1388,3 +1394,91 @@ def test_with_data_draws_the_posterior_of_the_new_data():
     se_log = np.sqrt(2 * (tau_a + tau_b) / 1000)
     assert np.all(np.abs(np.log(a.var(axis=1) / b.var(axis=1))) < 4.5 * se_log)
     assert not np.array_equal(a.mean(axis=1), post._solution.kept().mean(axis=1))
+
+
+# ---------------------------------------------------------------------------
+# 12. Chains
+# ---------------------------------------------------------------------------
+
+
+def test_split_rhat_finds_a_chain_that_is_shifted_or_narrower():
+    """
+    Chains of one distribution have a split R-hat near 1, whatever their lengths; a chain shifted by a standard deviation, or with a third of the others' spread and their mean (a chain held out of the tails), has one far above 1.05; a row that never moves has 1.
+
+    The narrower chain is what a chain that never enters a tail looks like: the
+    location's R-hat barely moves, and the folded one (of the distance from
+    the median) finds it.
+    """
+    rng = np.random.default_rng(0)
+    lengths = (501, 500, 500, 499)
+    same = rng.standard_normal((3, sum(lengths)))
+    assert _split_rhat(same, lengths).max() < 1.02
+    shifted, narrow = same.copy(), same.copy()
+    shifted[0, :501] += 1.0
+    narrow[1, :501] /= 3.0
+    rhat = _split_rhat(np.vstack([shifted[:1], narrow[1:2]]), lengths)
+    assert rhat.min() > 1.1
+    still = np.ones((1, sum(lengths)))
+    assert _split_rhat(still, lengths)[0] == 1.0
+
+
+def test_std_errors_of_chains_count_each_chains_own_autocorrelation():
+    """Independent draws cut into chains have the error of independent draws, ``1/sqrt(2N)``; an AR(1) chain cut in four has its own autocorrelation, counted in each part, not the jumps between them."""
+    rng = np.random.default_rng(1)
+    N, lengths = 2000, (500, 500, 500, 500)
+    error, _ = _std_errors(rng.standard_normal((200, N)), lengths=lengths)
+    assert np.median(error) == pytest.approx(1 / math.sqrt(2 * N), rel=0.1)
+    rho = 0.8
+    ar = np.empty((200, N))
+    for part in range(4):
+        start = part * 500
+        ar[:, start] = rng.standard_normal(200)
+        for j in range(start + 1, start + 500):
+            ar[:, j] = rho * ar[:, j - 1] + math.sqrt(1 - rho**2) * rng.standard_normal(
+                200
+            )
+    _, tau = _std_errors(ar, lengths=lengths)
+    assert np.median(tau) == pytest.approx((1 + rho**2) / (1 - rho**2), rel=0.2)
+
+
+def test_the_chains_disagree_on_a_closely_pinned_curve_and_the_solve_warns(caplog):
+    """
+    The guide's two cells with their total pinned to 2.5%: one chain stays out of an arm of the curve that another reaches, and the solve warns that the chains disagree, naming an element and its chains' standard deviations (issue #203).
+
+    One chain cannot give this warning: on main before it, with 2000 draws
+    in one chain, the standard deviation of a cell was 14% to 47% off in
+    seeds whose solve logged nothing. Measured (2026-11-11) over 20 seeds
+    at 400 draws: the largest split R-hat at least 1.30, against the warning's
+    1.05; with the total observed loosely (error 0.5) at most 1.06.
+    """
+    with caplog.at_level("WARNING", logger="fips.methods.gauss_newton"):
+        post = fips.solve(two_cells(), "gauss_newton", draws=400, burn_in=100)
+        post.variances  # noqa: B018 (the draws, and their checks, are made here)
+    assert "The posterior's 4 chains disagree" in caplog.text
+    assert "raise draws=" in caplog.text
+    assert len(post._solution._tunings()) == 4
+
+
+def test_one_chain_starts_from_the_mode_and_is_not_checked(caplog):
+    """With ``chains=1`` the chain starts at the mode (the sampler of 0.2.0b2) and the solve cannot check it against another: no warning that chains disagree, whatever the draws."""
+    with caplog.at_level("WARNING", logger="fips.methods.gauss_newton"):
+        post = fips.solve(two_cells(), "gauss_newton", draws=400, burn_in=100, chains=1)
+        post.variances  # noqa: B018
+    assert "disagree" not in caplog.text
+    (tuning,) = post._solution._tunings()
+    sampler = post._solution._sampler()
+    (child,) = np.random.SeedSequence(0).spawn(1)
+    again = sampler.tune(100, np.random.default_rng(child), None)
+    np.testing.assert_array_equal(again.point.x, tuning.point.x)
+
+
+def test_the_chains_start_apart_and_share_the_draws():
+    """Each chain starts from its own draw of the Gaussian at the mode, so their tunings end apart; the draws are split among them as evenly as they go, and fewer draws than chains are drawn too."""
+    arrays = Arrays.random(19, 4, 6)
+    post = fips.solve(arrays.problem(), "gauss_newton", draws=10, burn_in=0)
+    tunings = post._solution._tunings()
+    starts = np.array([t.point.x for t in tunings])
+    assert len({tuple(x) for x in starts}) == 4
+    assert gauss_newton._split(10, 4) == (3, 3, 2, 2)
+    assert post._solution.kept().shape == (4, 10)
+    assert post.sample(2, rng=0).to_numpy().shape == (4, 2)
