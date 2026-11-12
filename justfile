@@ -36,6 +36,10 @@ docstr:
 test *args:
     uv run pytest -n auto --maxprocesses=8 -m "not network and not slow" "$@"
 
+# Run only the slow tests: the long statistical checks (the weekly Slow tests workflow runs this)
+test-slow *args:
+    uv run pytest -n auto --maxprocesses=8 -m slow "$@"
+
 # Run the tests with coverage (coverage.xml, junit.xml for Codecov)
 cov *args:
     uv run pytest -n auto --maxprocesses=8 -m "not network and not slow" --cov --cov-report=term --cov-report=xml --junitxml=junit.xml -o junit_family=legacy "$@"
