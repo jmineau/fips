@@ -32,6 +32,8 @@ words.
      - :doc:`variational`
    * - choose the covariance hyperparameters from the data
      - :doc:`hyperparameters`
+   * - solve on a grid of hyperparameters, and see how much the answer moves
+     - :ref:`hyperparameters-grid`
    * - carry the uncertainty of those hyperparameters into the answer
      - :doc:`hierarchical`
    * - test an inversion on data whose answer you know

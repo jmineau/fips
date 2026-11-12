@@ -1,6 +1,6 @@
-================================
-The hyperparameters' uncertainty
-================================
+==============================
+The covariance hyperparameters
+==============================
 
 .. currentmodule:: fips
 
@@ -13,6 +13,12 @@ state's draws are those of the posterior mixed over the hyperparameters. Given a
 ``"prior_scale"`` and ``"obs_scale"`` (or ``"gamma"``), it takes the fast
 path: one eigendecomposition for the whole run. The guide is
 :doc:`/user_guide/hierarchical`.
+
+:func:`sweep` solves the problem at every combination of a grid of the
+hyperparameters' values instead: a :class:`Sweep` holds each member's
+diagnostics, estimate and variances, and the mean and spread of the
+estimates of the members kept. Its guide is
+:ref:`hyperparameters-grid`.
 
 Sampling the hyperparameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -37,6 +43,19 @@ The result
    Hierarchical.uncertainty
    Hierarchical.sample
    Hierarchical.at
+
+A grid of hyperparameters
+~~~~~~~~~~~~~~~~~~~~~~~~~
+.. autosummary::
+   :toctree: api/
+
+   sweep
+   Sweep
+   Sweep.table
+   Sweep.estimates
+   Sweep.variances
+   Sweep.uncertainty
+   Sweep.at
 
 The priors of the hyperparameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -70,5 +89,5 @@ The priors of the hyperparameters
 
 Serialization
 ~~~~~~~~~~~~~
-A result pickles when the function that builds the problem does (a function
-defined at the top level of a module); the fast path's always does.
+A result of either pickles when the function that builds the problem does (a
+function defined at the top level of a module); one given a problem always does.

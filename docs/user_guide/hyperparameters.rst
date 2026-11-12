@@ -22,7 +22,9 @@ the hyperparameters, and maximize the evidence over them with :mod:`scipy.optimi
 ``np.exp(fit.x)`` is the fitted hyperparameters, and ``fips.solve(build(...))`` at
 them is the posterior. fips has no fitting function of its own: the hyperparameters
 are yours, and so is the function that turns them into a problem (Michalak et
-al., 2005).
+al., 2005). To solve the problem at a grid of hyperparameters instead, and see
+how much the answer moves across them, use :func:`fips.sweep`
+(`A grid of hyperparameters`_).
 
 .. contents:: On this page
    :local:
@@ -39,7 +41,8 @@ When to use it
   between them (`Against a reduced chi-squared of 1`_).
 - **Only gamma, one factor on the observation covariance.**
   ``post.with_gamma(g).log_evidence`` gives the evidence at another gamma for
-  a few products, with no new solve, so a sweep or
+  a few products, with no new solve, so a sweep
+  (``fips.sweep(problem, {"gamma": [...]})``) or
   :func:`scipy.optimize.minimize_scalar` over gamma is cheap. Gamma scales the
   observation covariance, so it is the same hyperparameter as the observation
   standard deviation: fit one or the other, not both.
@@ -223,6 +226,70 @@ A reduced chi-squared of 1 is one condition the maximum satisfies, not a way
 to find it (`How it works`_).
 
 
+.. _hyperparameters-grid:
+
+A grid of hyperparameters
+-------------------------
+
+**A sweep solves the problem at every combination of a few values of each
+hyperparameter** (:func:`fips.sweep`), and keeps each member's diagnostics in a
+table, with its estimate and its posterior variances. It takes the same
+function as a fit, with the hyperparameters by name:
+
+.. ipython:: python
+
+   grid = {"std": [0.5, 1.0, 2.0], "length": [2.0, 5.0, 10.0], "noise": [0.3, 0.5, 1.0]}
+   result = fips.sweep(lambda s: build([s["std"], s["length"], s["noise"]], obs), grid)
+   columns = ["reduced_chi2", "state_misfit", "log_evidence"]
+   result.table[columns].sort_values("log_evidence", ascending=False).head(6).round(2)
+
+**Which members to keep is a filter of the table.** Here, the members within 2
+of the highest log evidence, and those whose reduced chi-squared is within 0.1
+of 1:
+
+.. ipython:: python
+
+   table = result.table
+   by_evidence = table.index[table["log_evidence"] > table["log_evidence"].max() - 2.0]
+   by_chi2 = table.index[abs(table["reduced_chi2"] - 1.0) < 0.1]
+   table.loc[by_evidence, columns].round(2)
+   table.loc[by_chi2, columns].round(2)
+
+The evidence keeps the two members at the true standard deviations, a
+correlation length apart. The reduced chi-squared keeps five, with prior
+standard deviations a factor of four apart, as the last section showed.
+:meth:`~fips.Sweep.uncertainty` gives, for each state element, the mean of
+the kept members' estimates, their posterior standard deviation, and the
+*spread* of their estimates: how much the answer moves between hyperparameters
+the rule could not tell apart. Averaged over the line:
+
+.. ipython:: python
+
+   pd.DataFrame({
+       "by evidence": result.uncertainty(by_evidence).mean(),
+       "by chi2": result.uncertainty(by_chi2).mean(),
+   }).loc[["posterior_std", "spread"]].round(3)
+
+A spread small next to the posterior standard deviation says the choice
+between the kept members does not matter; one as large says it does, and
+that the posterior standard deviation of any one member leaves it out. The
+members mixed with equal weights have a variance of ``posterior_std**2 +
+spread**2``. :meth:`~fips.Sweep.at` solves one member again for the rest of
+its posterior:
+
+.. ipython:: python
+
+   best = result.at(table["log_evidence"].idxmax())
+   round(best.dofs, 1)
+
+A grid costs one solve a member, so it suits two or three hyperparameters of
+a few values each. Given the problem itself instead of a function, with a
+grid of ``"prior_scale"``, ``"obs_scale"`` or ``"gamma"`` (factors on the
+prior's and the observation error's standard deviations, and gamma), the
+members that differ only in gamma share one solve. The members are equally
+weighted; :doc:`hierarchical` weighs the hyperparameters by their posterior instead.
+
+
 Warnings and checks
 -------------------
 
@@ -244,7 +311,7 @@ Warnings and checks
 Cost
 ----
 
-Each evaluation is one solve. L-BFGS-B with differences takes one more
+Each evaluation is one solve, and so is each member of a grid. L-BFGS-B with differences takes one more
 solve per hyperparameter at each step, so a fit of :math:`p` hyperparameters costs a few
 dozen times :math:`p + 1` solves. The evidence itself costs one
 :math:`\ln \lvert S_z \rvert` beyond the solve, and

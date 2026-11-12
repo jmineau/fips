@@ -12,7 +12,8 @@ a :class:`ForwardModel` that is not linear, with its Jacobian;
 and the covariances together, and :func:`solve` returns its :class:`Posterior`.
 With priors on the covariance hyperparameters (:mod:`fips.distributions`),
 :func:`hierarchical` draws them from their posterior and the state at each
-draw (:class:`Hierarchical`).
+draw (:class:`Hierarchical`); :func:`sweep` solves the problem on a grid of
+them (:class:`Sweep`).
 A finding that changes how far an answer can be trusted is logged under the
 ``fips`` logger and issued as a :class:`FipsWarning`.
 :mod:`fips.aggregate` sums or averages a space by group (the observations to
@@ -37,7 +38,7 @@ from .covariance import (
     Matern,
 )
 from .forward import ForwardModel, taylortest
-from .hyperparameters import Hierarchical, hierarchical
+from .hyperparameters import Hierarchical, Sweep, hierarchical, sweep
 from .methods import available_methods, solve
 from .operator import Operator
 from .posterior import Posterior, UnavailableError
@@ -78,6 +79,8 @@ __all__ = [
     "ConvergenceError",
     "hierarchical",
     "Hierarchical",
+    "sweep",
+    "Sweep",
     "distributions",
     "aggregate",
     "offset_block",

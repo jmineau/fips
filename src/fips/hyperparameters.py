@@ -28,12 +28,17 @@ Laplace's approximation of the hyperparameters' posterior at its mode (a numeric
 Hessian), scaled during the burn-in towards an acceptance of 0.3 (Gelman,
 Roberts and Gilks, 1996): a few hyperparameters need no gradient, and each step costs
 one solve.
+
+:func:`sweep` solves the problem at every combination of a grid of the
+hyperparameters' values instead, with no prior on them: :class:`Sweep` holds
+each member's diagnostics, estimate and posterior variances, and the mean
+and spread of the estimates of the members a filter of its table keeps.
 """
 
 import logging
 import math
 import numbers
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from typing import Any
 
 import numpy as np
@@ -48,7 +53,7 @@ from fips.linalg.forms import _adopt
 from fips.methods import solve
 from fips.methods.analytic import AnalyticOptions, Information, Whitened
 from fips.operator import Operator
-from fips.posterior import Posterior
+from fips.posterior import Posterior, UnavailableError
 from fips.problem import Problem
 from fips.space import Space
 from fips.vector import Vector
@@ -63,6 +68,20 @@ _ACCEPTANCE = 0.3
 
 
 # -- what one step of the chain solves ---------------------------------------
+
+
+def _scaled(problem: Problem, prior_factor: float, obs_factor: float) -> Problem:
+    """Return `problem` with its prior covariance times `prior_factor` and its observation covariance times `obs_factor`."""
+    prior_cov, obs_cov = problem.prior_cov * prior_factor, problem.obs_cov * obs_factor
+    assert isinstance(prior_cov, Covariance) and isinstance(obs_cov, Covariance)
+    return Problem(
+        prior=problem.prior,
+        prior_cov=prior_cov,
+        obs=problem.obs,
+        obs_cov=obs_cov,
+        forward=problem.forward,
+        offset=problem.offset,
+    )
 
 
 class _Built:
@@ -187,19 +206,7 @@ class _Scales:
     def posterior(self, values: dict[str, float]) -> Posterior:
         """Return the posterior of the problem with its covariances scaled, solved."""
         s, c = self.scales(values)
-        problem = self.problem
-        prior_cov, obs_cov = problem.prior_cov * (s * s), problem.obs_cov * c
-        assert isinstance(prior_cov, Covariance) and isinstance(obs_cov, Covariance)
-        return solve(
-            Problem(
-                prior=problem.prior,
-                prior_cov=prior_cov,
-                obs=problem.obs,
-                obs_cov=obs_cov,
-                forward=problem.forward,
-                offset=problem.offset,
-            )
-        )
+        return solve(_scaled(self.problem, s * s, c))
 
     def keep(self, payload: Any, rng: np.random.Generator) -> Any:
         r"""Return what a kept step's draw needs, :math:`(\gamma', s)`: the draws are made together, in :meth:`stack`."""
@@ -888,3 +895,463 @@ class Hierarchical:
             index=index,
             columns=pd.Index(self._hyperparameters.index[chosen], name="draw"),
         )
+
+
+# -- a grid of hyperparameters -----------------------------------------------------
+
+_COLUMNS = (
+    "gamma",
+    "dofs",
+    "information_content",
+    "chi2",
+    "reduced_chi2",
+    "data_misfit",
+    "state_misfit",
+    "log_evidence",
+    "r2",
+    "rmse",
+    "uncertainty_reduction",
+)
+"""The columns of :attr:`Sweep.table`: each a scalar of the member's :class:`~fips.Posterior`."""
+
+
+def _diagnostic(post: Posterior, name: str) -> float:
+    """Return the posterior's scalar `name`, or NaN where its method cannot give it."""
+    try:
+        return float(post._gamma if name == "gamma" else getattr(post, name))
+    except UnavailableError:
+        return math.nan
+
+
+def _grid(grid: Any) -> pd.Index:
+    """Return the members of `grid`, every combination of its values, as an index named by the hyperparameters (plain for one)."""
+    if not isinstance(grid, Mapping) or not grid:
+        raise ValueError(
+            "grid maps each hyperparameter's name to its values, such as "
+            '{"prior_scale": [0.5, 1.0, 2.0]}; it is empty or not a mapping.'
+        )
+    names, levels = [], []
+    for name, values in grid.items():
+        if not isinstance(name, str):
+            raise TypeError(f"A hyperparameter's name is a str, got {name!r}.")
+        if isinstance(values, (str, bytes)) or not isinstance(
+            values, (Sequence, np.ndarray, pd.Index, pd.Series)
+        ):
+            raise TypeError(
+                f"The values of hyperparameter {name!r} are a list, got {type(values).__name__}."
+            )
+        level = pd.Index(list(values))
+        if level.empty:
+            raise ValueError(f"Hyperparameter {name!r} has no values.")
+        if level.has_duplicates:
+            raise ValueError(
+                f"Hyperparameter {name!r} repeats values "
+                f"{level[level.duplicated()].unique().tolist()}: each member is labeled by its values."
+            )
+        names.append(name)
+        levels.append(level)
+    members = pd.MultiIndex.from_product(levels, names=names)
+    return members.get_level_values(0) if len(names) == 1 else members
+
+
+def _names(members: pd.Index) -> list[str]:
+    """Return the hyperparameters' names, the levels of a grid's index (each a str, as :func:`_grid` checked)."""
+    return [str(name) for name in members.names]
+
+
+def _values(names: list[str], label: Any) -> dict[str, Any]:
+    """Return a member's hyperparameters by name, from its label (a tuple, or the value itself for one hyperparameter)."""
+    return dict(zip(names, label if len(names) > 1 else (label,), strict=True))
+
+
+def _scales_of(values: Mapping[str, Any]) -> tuple[float, float, float]:
+    """Return the prior std's factor, the observation error std's factor and gamma of one member of a grid on a problem."""
+    return (
+        float(values.get("prior_scale", 1.0)),
+        float(values.get("obs_scale", 1.0)),
+        float(values.get("gamma", 1.0)),
+    )
+
+
+def _check_scales(members: pd.Index) -> None:
+    """Raise unless a grid on a problem names only the scales, not both obs_scale and gamma, each a positive number."""
+    names = _names(members)
+    unknown = [name for name in names if name not in _SCALES]
+    if unknown:
+        raise ValueError(
+            f"Given a problem, sweep varies only the scales of its covariances, "
+            f"named {', '.join(map(repr, _SCALES))}; it has no "
+            f"{', '.join(map(repr, unknown))}. For other hyperparameters, pass a "
+            "function that builds the problem from them."
+        )
+    if "obs_scale" in names and "gamma" in names:
+        raise ValueError(
+            "obs_scale and gamma both scale the observation covariance: give one."
+        )
+    for name in names:
+        values = members.get_level_values(name).unique()
+        bad = [
+            v
+            for v in values
+            if not isinstance(v, numbers.Real) or not 0.0 < float(v) < math.inf
+        ]
+        if bad:
+            raise ValueError(f"{name} takes positive numbers, got {bad}.")
+
+
+def _member_posterior(build: Any, values: dict[str, Any]) -> Posterior:
+    """Return the posterior of one member: the problem `build` makes, solved, or the posterior it gives."""
+    if isinstance(build, Problem):
+        prior_scale, obs_scale, gamma = _scales_of(values)
+        problem = _scaled(build, prior_scale**2, obs_scale**2)
+        return solve(problem, gamma=gamma)
+    made = build(dict(values))
+    if isinstance(made, Problem):
+        return solve(made)
+    if isinstance(made, Posterior):
+        return made
+    raise TypeError(
+        "The function sweep takes builds a Problem (or its Posterior) from a dict "
+        f"of hyperparameters; it returned {type(made).__name__}."
+    )
+
+
+def _posteriors(build: Any, members: pd.Index) -> "Iterator[tuple[Any, Posterior]]":
+    """
+    Yield each member's label and posterior.
+
+    On a problem, the members that differ only in gamma share one solve:
+    the first is solved at its gamma, the others are its
+    :meth:`~fips.Posterior.with_gamma`, which eigendecomposes once.
+    """
+    names = _names(members)
+    if not isinstance(build, Problem):
+        for label in members:
+            yield label, _member_posterior(build, _values(names, label))
+        return
+    groups: dict[tuple[float, float], list[tuple[Any, float]]] = {}
+    for label in members:
+        prior_scale, obs_scale, gamma = _scales_of(_values(names, label))
+        groups.setdefault((prior_scale, obs_scale), []).append((label, gamma))
+    for (prior_scale, obs_scale), group in groups.items():
+        problem = _scaled(build, prior_scale**2, obs_scale**2)
+        post: Posterior | None = None
+        for label, gamma in group:
+            post = (
+                solve(problem, gamma=gamma) if post is None else post.with_gamma(gamma)
+            )
+            yield label, post
+
+
+def sweep(
+    build: "Callable[[dict[str, Any]], Problem | Posterior] | Problem",
+    grid: Mapping[str, Any],
+) -> "Sweep":
+    r"""
+    Solve the problem at every combination of the hyperparameters' values: a grid of posteriors, their diagnostics, and the spread of their estimates.
+
+    `grid` gives each hyperparameter a list of values; every combination of
+    them is a *member*, and the member's posterior is the problem `build`
+    makes from them, solved. The result holds a table of each member's
+    diagnostics (the reduced chi-squared, the misfits, the log evidence, the
+    DOFS), its estimate and its posterior variances, and nothing larger:
+    :meth:`Sweep.at` solves one member again for the rest.
+
+    Which members to keep is a filter on :attr:`Sweep.table`: the member
+    of highest evidence, those within a few units of log evidence of it,
+    those whose reduced chi-squared is near 1, or whose state misfit per
+    state element is in a window (as the Integrated Methane Inversion does,
+    Varon et al., 2022). :meth:`Sweep.uncertainty` gives the mean of the kept
+    members' estimates, their posterior standard deviation, and the spread
+    of their estimates, a second uncertainty: how much the answer moves
+    with hyperparameters the data do not decide between.
+
+    **On a problem.** When the hyperparameters are a factor on the prior's standard
+    deviation and one on the observation error's, pass the problem at factors of 1
+    as `build`, and name them ``"prior_scale"`` and ``"obs_scale"``, or
+    ``"gamma"`` (the observation covariance over it) instead of
+    ``"obs_scale"``, as :func:`hierarchical` does. The members that differ only
+    in gamma then share one solve (:meth:`Posterior.with_gamma
+    <fips.Posterior.with_gamma>`): a grid over gamma alone costs about two solves.
+
+    Parameters
+    ----------
+    build : callable or Problem
+        The function from the hyperparameters (a dict, by name) to the
+        :class:`~fips.Problem` they make, or to its :class:`~fips.Posterior`
+        (``fips.solve(problem, gamma=s["gamma"])``, or another method's). Or
+        the problem itself, with a grid of its scales.
+    grid : mapping of str to list
+        The values of each hyperparameter, by the name `build` reads it by.
+        Its order is the order of the levels of :attr:`Sweep.table`'s index,
+        and the last varies fastest.
+
+    Returns
+    -------
+    Sweep
+        The members' diagnostics, estimates and variances.
+
+    Raises
+    ------
+    TypeError
+        If a name is not a str, a hyperparameter's values are not a list, or
+        `build` makes neither a problem nor a posterior.
+    ValueError
+        If `grid` is empty, a hyperparameter has no values or repeats one, or,
+        given a problem, a name is not one of its three scales, both
+        ``"obs_scale"`` and ``"gamma"`` are given, or a scale is not a positive number.
+
+    See Also
+    --------
+    hierarchical : The hyperparameters drawn from their posterior instead, each with its weight.
+    fips.Posterior.with_gamma : The posterior at another gamma.
+    fips.Posterior.summary : One posterior's diagnostics as a table row.
+
+    References
+    ----------
+    Varon, D. J., Jacob, D. J., Sulprizio, M., et al. (2022). Integrated
+    Methane Inversion (IMI 1.0). *Geoscientific Model Development*, 15,
+    5787-5805. https://doi.org/10.5194/gmd-15-5787-2022
+
+    Examples
+    --------
+    A problem of 60 observations of 20 cells, whose truth has a std of 2 and
+    whose observations an error of 0.5, solved with a prior std of 1 and an
+    observation error of 1, and a grid of factors on each:
+
+    >>> import numpy as np
+    >>> import pandas as pd
+    >>> import fips
+    >>> rng = np.random.default_rng(2)
+    >>> cells = fips.Space({"flux": pd.RangeIndex(20, name="cell")})
+    >>> observed = fips.Space({"ch4": pd.RangeIndex(60, name="obs_id")})
+    >>> H = fips.Operator(rng.uniform(0.0, 1.0, (60, 20)), observed, cells)
+    >>> truth = fips.Vector(2.0 * rng.standard_normal(20), cells)
+    >>> obs = H @ truth + fips.Vector(0.5 * rng.standard_normal(60), observed)
+    >>> problem = fips.Problem(
+    ...     prior=fips.Vector(np.zeros(20), cells),
+    ...     prior_cov=fips.Independent().with_std(1.0),
+    ...     obs=obs,
+    ...     obs_cov=fips.Independent().with_std(1.0),
+    ...     forward=H,
+    ... )
+    >>> result = fips.sweep(
+    ...     problem, {"prior_scale": [1.0, 2.0, 4.0], "obs_scale": [0.25, 0.5, 1.0]}
+    ... )
+    >>> result.table[["reduced_chi2", "log_evidence"]].round(
+    ...     2
+    ... )  # doctest: +NORMALIZE_WHITESPACE
+                           reduced_chi2  log_evidence
+    prior_scale obs_scale
+    1.0         0.25               4.14       -140.51
+                0.50               1.98       -103.99
+                1.00               1.23       -110.74
+    2.0         0.25               3.11       -123.32
+                0.50               1.03        -88.96
+                1.00               0.50       -101.00
+    4.0         0.25               2.85       -129.24
+                0.50               0.78        -94.97
+                1.00               0.26       -107.27
+
+    The member of highest evidence has the true factors, 2 and 0.5. A
+    reduced chi-squared near 1 keeps three members, with priors a factor of
+    four apart; the spread of their estimates is the answer's dependence on
+    that choice:
+
+    >>> kept = result.table.index[abs(result.table["reduced_chi2"] - 1.0) < 0.3]
+    >>> result.uncertainty(kept).head(3).round(3)  # doctest: +NORMALIZE_WHITESPACE
+                estimate  posterior_std  spread
+    block cell
+    flux  0        0.562          0.333   0.282
+          1        1.165          0.313   0.198
+          2       -0.672          0.326   0.146
+    """
+    members = _grid(grid)
+    if isinstance(build, Problem):
+        _check_scales(members)
+    elif not callable(build):
+        raise TypeError(
+            "build is a function from the hyperparameters to a Problem, or a Problem "
+            f"(a grid of its scales), got {type(build).__name__}."
+        )
+    rows: dict[Any, list[float]] = {}
+    estimates: dict[Any, np.ndarray] = {}
+    variances: dict[Any, np.ndarray] = {}
+    space: Space | None = None
+    for label, post in _posteriors(build, members):
+        rows[label] = [_diagnostic(post, name) for name in _COLUMNS]
+        own = post.problem.prior.space
+        if space is None:
+            space = own
+        order = (
+            slice(None)
+            if own is space or own == space
+            else space._align(
+                own,
+                "the state of a member's problem",
+                "The state of the problems built at two members",
+            )
+        )
+        estimates[label] = post.estimate.values[order]
+        variances[label] = post.variances.values[order]
+    assert space is not None  # a grid has a member
+    labels = list(members)
+    result = Sweep(
+        build=build,
+        table=pd.DataFrame(
+            [rows[label] for label in labels], index=members, columns=list(_COLUMNS)
+        ),
+        estimates=pd.DataFrame(
+            np.column_stack([estimates[label] for label in labels]),
+            index=space.index,
+            columns=members,
+        ),
+        variances=pd.DataFrame(
+            np.column_stack([variances[label] for label in labels]),
+            index=space.index,
+            columns=members,
+        ),
+    )
+    logger.info("sweep: %d members of %s.", len(members), list(members.names))
+    return result
+
+
+class Sweep:
+    """
+    The posteriors of a grid of hyperparameters: each member's diagnostics, estimate and variances.
+
+    :func:`sweep` builds it. A member is one combination of the
+    hyperparameters' values, labeled by them (a tuple, or the value itself for
+    one hyperparameter) in :attr:`table`'s index and in the columns of
+    :attr:`estimates` and :attr:`variances`. Choose members by filtering
+    :attr:`table`, then pass their labels to :meth:`uncertainty`, or one
+    label to :meth:`at` for that member's whole :class:`~fips.Posterior`.
+
+    Pickles with :mod:`pickle` when the function that builds the problem does
+    (a function defined at the top level of a module).
+    """
+
+    def __init__(
+        self,
+        *,
+        build: Any,
+        table: pd.DataFrame,
+        estimates: pd.DataFrame,
+        variances: pd.DataFrame,
+    ):
+        self._build = build
+        self._table = table
+        self._estimates = estimates
+        self._variances = variances
+
+    def __repr__(self) -> str:
+        """Return the hyperparameters and the number of members."""
+        return f"Sweep(hyperparameters={list(self._table.index.names)}, members={len(self._table)})"
+
+    @property
+    def table(self) -> pd.DataFrame:
+        """
+        The diagnostics of each member: one row a member, labeled by its hyperparameters.
+
+        The columns are the scalars of its :class:`~fips.Posterior`:
+        ``gamma``, ``dofs``, ``information_content``, ``chi2``,
+        ``reduced_chi2``, ``data_misfit``, ``state_misfit``,
+        ``log_evidence``, ``r2``, ``rmse`` and ``uncertainty_reduction``. A
+        scalar the member's method cannot give is NaN (the log evidence of an
+        ensemble solve).
+        """
+        return self._table
+
+    @property
+    def estimates(self) -> pd.DataFrame:
+        """The estimate of each member: one row a state element, one column a member."""
+        return self._estimates
+
+    @property
+    def variances(self) -> pd.DataFrame:
+        """The posterior variances of each member: one row a state element, one column a member."""
+        return self._variances
+
+    def _positions(self, members: Any) -> np.ndarray:
+        """Return the positions of the members labeled `members` (all of them for None), or raise naming those the grid has not."""
+        index = self._table.index
+        if members is None:
+            return np.arange(len(index))
+        if isinstance(index, pd.MultiIndex) and isinstance(members, tuple):
+            members = [members]
+        labels = (
+            members
+            if isinstance(members, (pd.Index, list))
+            else list(np.atleast_1d(members))
+        )
+        positions = np.asarray(index.get_indexer(pd.Index(labels)))
+        if positions.size == 0 or (positions < 0).any():
+            missing = [
+                label for label, at in zip(labels, positions, strict=True) if at < 0
+            ]
+            raise ValueError(
+                "members are labels of the sweep's table, such as "
+                f"{index[0]!r}; it has no {missing if missing else 'members given'}."
+            )
+        return positions
+
+    def uncertainty(self, members: Any = None) -> pd.DataFrame:
+        r"""
+        Return the mean of the members' estimates, their posterior standard deviation, and the spread of their estimates.
+
+        Parameters
+        ----------
+        members : list or pandas.Index, optional
+            The labels of the members to keep, from :attr:`table`'s index
+            (``result.table.index[mask]``). By default, every member.
+
+        Returns
+        -------
+        pandas.DataFrame
+            One row per state element: ``estimate`` (the mean of the
+            members' estimates), ``posterior_std`` (the root of the mean of
+            their posterior variances) and ``spread`` (the standard deviation
+            of their estimates, over the members as a whole set, so 0 for one).
+            The members mixed with equal weights have a variance of
+            ``posterior_std**2 + spread**2`` (the law of total variance).
+
+        Raises
+        ------
+        ValueError
+            If a label is not a member's, or none is given.
+        """
+        at = self._positions(members)
+        estimates = self._estimates.to_numpy()[:, at]
+        return pd.DataFrame(
+            {
+                "estimate": estimates.mean(axis=1),
+                "posterior_std": np.sqrt(
+                    self._variances.to_numpy()[:, at].mean(axis=1)
+                ),
+                "spread": estimates.std(axis=1),
+            },
+            index=self._estimates.index,
+        )
+
+    def at(self, member: Any) -> Posterior:
+        """
+        Return the posterior of one member, solved again: for what the table does not hold.
+
+        ``result.at(result.table["log_evidence"].idxmax())``.
+
+        Parameters
+        ----------
+        member : tuple or scalar
+            The member's label in :attr:`table`'s index: a tuple of the
+            hyperparameters' values, or the value itself for one hyperparameter.
+
+        Raises
+        ------
+        ValueError
+            If `member` is not a member's label.
+        """
+        index = self._table.index
+        position = int(
+            self._positions(member if isinstance(member, tuple) else [member])[0]
+        )
+        return _member_posterior(self._build, _values(_names(index), index[position]))
