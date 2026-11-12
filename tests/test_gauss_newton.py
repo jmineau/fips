@@ -48,6 +48,7 @@ wrong distribution still gives with the right shape, are held to:
 """
 
 import dataclasses
+import logging
 import math
 import pickle
 
@@ -63,7 +64,12 @@ import fips
 from fips import Covariance, ForwardModel, Operator, Problem, Space, Vector
 from fips.linalg import DiagonalOperator, KroneckerOperator
 from fips.methods import gauss_newton
-from fips.methods._draws import _autocorrelation_times, _split_rhat, _std_errors
+from fips.methods._draws import (
+    _autocorrelation_times,
+    _split_rhat,
+    _std_errors,
+    _warn_if_unmixed,
+)
 from fips.methods.analytic import Information, Whitened
 from fips.methods.gauss_newton import GaussNewton, GaussNewtonOptions
 from fips.problem import Problem as _Problem
@@ -1420,6 +1426,33 @@ def test_split_rhat_finds_a_chain_that_is_shifted_or_narrower():
     assert rhat.min() > 1.1
     still = np.ones((1, sum(lengths)))
     assert _split_rhat(still, lengths)[0] == 1.0
+
+
+def test_a_few_unmixed_elements_of_many_are_logged_and_a_share_of_them_warns(caplog):
+    """
+    Of 100 elements, chains that disagree on 4 are logged at INFO and on 5 (5%) warn; of 20 or fewer, one warns.
+
+    At 400 elements a few mix slowly at the default draws in nearly every
+    solve while totals of them are right (2026-11-12), so a warning of each
+    would come with every solve.
+    """
+    rng = np.random.default_rng(2)
+    lengths = (500, 500, 500, 500)
+    logger = logging.getLogger("fips.test.unmixed")
+
+    def check(n, shifted):
+        draws = rng.standard_normal((n, 2000))
+        draws[:shifted, :500] += 1.0
+        caplog.clear()
+        with caplog.at_level("INFO", logger="fips.test.unmixed"):
+            _warn_if_unmixed(draws, lengths, logger, "why")
+        return {r.levelname for r in caplog.records if "disagree" in r.getMessage()}
+
+    assert check(100, 4) == {"INFO"}
+    assert "4 of the 100 state elements" in caplog.text
+    assert check(100, 5) == {"WARNING"}
+    assert check(20, 1) == {"WARNING"}
+    assert check(100, 0) == set()
 
 
 def test_std_errors_of_chains_count_each_chains_own_autocorrelation():

@@ -171,7 +171,8 @@ class GaussNewtonOptions:
         The number of chains the draws are split among. Each starts from a
         draw of the Gaussian at the mode and tunes its own step over its own
         burn-in. Chains that disagree, by a split R-hat
-        above 1.05, are a warning that one chain cannot give: a chain that
+        above 1.05 on at least 5% of the elements (any one, at 20 or fewer;
+        fewer are logged at INFO), are a warning that one chain cannot give: a chain that
         never enters a tail of a curved posterior reports a small spread and
         a small error together. Each chain costs a burn-in more; one chain is
         the sampler of fips 0.2.0b2, from the mode.

@@ -305,12 +305,16 @@ when:
   A wrong Jacobian leaves the draws exact (the sampler's acceptance test
   corrects for it) but makes each draw cost hundreds of steps. Check it with
   ``fips.taylortest(problem.forward, post.estimate)``.
-- **the chains disagree**: an element's split R-hat, which compares the
-  spread between the chains with the spread within each, is above 1.05. One
+- **the chains disagree**: the split R-hat, which compares the spread
+  between the chains with the spread within each, is above 1.05 for at
+  least 5% of the elements (for any one, with 20 elements or fewer). One
   chain stayed out of a part of the posterior that another reached, so the
   variances are not yet the posterior's. It names the worst element and its
   standard deviation in two chains; raise ``draws``, or read the aggregates
-  the data constrain, which mix faster.
+  the data constrain, which mix faster. Fewer elements are logged at the
+  INFO level: with hundreds of elements a few mix slowly at the default
+  draws in nearly every solve, while totals of them are right (400
+  elements, 2026-11-12).
 - **the kept draws mix slowly**: a standard deviation from them is uncertain
   by more than 10%. It says how many draws would do; raise ``draws``, or read
   the aggregates the data constrain, which mix faster.

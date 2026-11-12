@@ -13,7 +13,8 @@ A chain that never enters a tail cannot see that it missed it: its error
 estimate is as wrong as its variance. Several chains from spread starts can
 (``"gauss_newton"`` runs them): :func:`_split_rhat` compares the spread
 between them with the spread within each, and :func:`_warn_if_unmixed` warns
-when they disagree by more than :data:`_UNMIXED`.
+when they disagree by more than :data:`_UNMIXED` on at least
+:data:`_UNMIXED_SHARE` of the elements.
 """
 
 import logging
@@ -27,7 +28,19 @@ _IMPRECISE = 0.1
 """The relative error of a standard deviation from the kept draws above which a solve warns."""
 
 _UNMIXED = 1.05
-"""The split R-hat of an element above which a solve warns that its chains disagree."""
+"""The split R-hat of an element above which its chains disagree."""
+
+_UNMIXED_SHARE = 0.05
+"""
+The share of the state elements whose chains must disagree for a solve to warn; fewer are logged at INFO.
+
+At 20 elements or fewer, one element is enough. With many, a few elements
+of a curved posterior mix slowly at the default draws whatever else does
+(seen at 400 elements, 2026-11-12: a median of 5 above 1.05 in a solve,
+while totals of the elements covered as claimed). Warning of them would warn
+of nearly every solve. A sampler that missed part of the posterior leaves
+many more: 2 of 2 elements, and up to 6 of 10.
+"""
 
 _ROWS = 256
 """The rows whose autocorrelation is computed at once."""
@@ -219,10 +232,11 @@ def _warn_if_unmixed(
     draws: np.ndarray, lengths: tuple[int, ...], logger: logging.Logger, why: str
 ) -> None:
     """
-    Warn (`logger`, and a :class:`~fips.FipsWarning`) when the chains held side by side in `draws`, of the `lengths` given, disagree: a split R-hat above :data:`_UNMIXED` (:func:`_split_rhat`), naming the worst element and the least and the most of its chains' standard deviations; `why` is the method's sentence on the cause and the remedy.
+    Warn (`logger`, and a :class:`~fips.FipsWarning`) when the chains held side by side in `draws`, of the `lengths` given, disagree: a split R-hat above :data:`_UNMIXED` (:func:`_split_rhat`) on at least :data:`_UNMIXED_SHARE` of the elements, naming the worst element and the least and the most of its chains' standard deviations; `why` is the method's sentence on the cause and the remedy.
 
-    One chain cannot give this warning: a chain that never entered a tail
-    reports a small spread and a small error together.
+    Fewer elements are logged at INFO, with the same names. One chain cannot
+    give this warning: a chain that never entered a tail reports a small
+    spread and a small error together.
     """
     if len(lengths) < 2:
         return
@@ -230,20 +244,34 @@ def _warn_if_unmixed(
     unmixed = rhat > _UNMIXED
     if not unmixed.any():
         return
+    count, n = int(unmixed.sum()), len(rhat)
     worst = int(np.argmax(rhat))
     stds = [float(chain[worst].std(ddof=1)) for chain in _chains(draws, lengths)]
-    warn(
-        logger,
-        "The posterior's %d chains disagree: %d state elements have a split "
-        "R-hat above %.2f, the worst (element %d) %.2f, its standard deviation "
-        "%.3g in one chain and %.3g in another. Their variances are not yet the "
-        "posterior's. %s",
+    found = (
         len(lengths),
-        int(unmixed.sum()),
+        count,
+        n,
         _UNMIXED,
         worst,
         float(rhat[worst]),
         min(stds),
         max(stds),
+    )
+    message = (
+        "The posterior's %d chains disagree: %d of the %d state elements have a "
+        "split R-hat above %.2f, the worst (element %d) %.2f, its standard "
+        "deviation %.3g in one chain and %.3g in another."
+    )
+    if count < _UNMIXED_SHARE * n:
+        logger.info(
+            message + " Those elements' variances are not yet the posterior's; "
+            "too few elements to warn of (aggregates of many mix faster).",
+            *found,
+        )
+        return
+    warn(
+        logger,
+        message + " Their variances are not yet the posterior's. %s",
+        *found,
         why,
     )
