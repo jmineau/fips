@@ -1,0 +1,6 @@
+﻿fips.sweep
+==========
+
+.. currentmodule:: fips
+
+.. autofunction:: sweep

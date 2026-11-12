@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>The hyperparameters’ uncertainty &#8212; fips 0.2.0b3.dev45+g64a0584cb documentation</title>
+    <title>The covariance hyperparameters &#8212; fips 0.2.0b3.dev46+ge5813d41f documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=345ee181"></script>
+    <script src="../_static/documentation_options.js?v=ba624b21"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev45+g64a0584cb documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev45+g64a0584cb documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev46+ge5813d41f documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev46+ge5813d41f documentation - Home"/>
   
   
 </a></div>
@@ -823,7 +823,7 @@
 <li class="toctree-l2"><a class="reference internal" href="api/fips.posterior.Options.gamma.html">fips.posterior.Options.gamma</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1 current active has-children"><a aria-current="page" class="current reference internal" href="#">The hyperparameters’ uncertainty</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l1 current active has-children"><a aria-current="page" class="current reference internal" href="#">The covariance hyperparameters</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="api/fips.hierarchical.html">fips.hierarchical</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.Hierarchical.html">fips.Hierarchical</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.Hierarchical.acceptance.html">fips.Hierarchical.acceptance</a></li>
@@ -848,6 +848,20 @@
 <li class="toctree-l2"><a class="reference internal" href="api/fips.Hierarchical.uncertainty.html">fips.Hierarchical.uncertainty</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/fips.Hierarchical.sample.html">fips.Hierarchical.sample</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/fips.Hierarchical.at.html">fips.Hierarchical.at</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.sweep.html">fips.sweep</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.Sweep.html">fips.Sweep</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Sweep.estimates.html">fips.Sweep.estimates</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Sweep.table.html">fips.Sweep.table</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Sweep.variances.html">fips.Sweep.variances</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Sweep.at.html">fips.Sweep.at</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Sweep.uncertainty.html">fips.Sweep.uncertainty</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Sweep.table.html">fips.Sweep.table</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Sweep.estimates.html">fips.Sweep.estimates</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Sweep.variances.html">fips.Sweep.variances</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Sweep.uncertainty.html">fips.Sweep.uncertainty</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Sweep.at.html">fips.Sweep.at</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.distributions.LogNormal.html">fips.distributions.LogNormal</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.distributions.LogNormal.median.html">fips.distributions.LogNormal.median</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.distributions.LogNormal.mu.html">fips.distributions.LogNormal.mu</a></li>
@@ -1018,7 +1032,7 @@
     
     <li class="breadcrumb-item"><a href="index.html" class="nav-link">API Reference</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">The hyperparameters’ uncertainty</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">The covariance hyperparameters</span></li>
   </ul>
 </nav>
 </div>
@@ -1035,8 +1049,8 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="the-hyperparameters-uncertainty">
-<h1>The hyperparameters’ uncertainty<a class="headerlink" href="#the-hyperparameters-uncertainty" title="Link to this heading">#</a></h1>
+  <section id="the-covariance-hyperparameters">
+<h1>The covariance hyperparameters<a class="headerlink" href="#the-covariance-hyperparameters" title="Link to this heading">#</a></h1>
 <p><a class="reference internal" href="api/fips.hierarchical.html#fips.hierarchical" title="fips.hierarchical"><code class="xref py py-func docutils literal notranslate"><span class="pre">hierarchical()</span></code></a> gives the covariance hyperparameters priors, draws them from
 their posterior with the exact evidence of the problem at each
 (<a class="reference internal" href="api/fips.Posterior.log_evidence.html#fips.Posterior.log_evidence" title="fips.Posterior.log_evidence"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Posterior.log_evidence</span></code></a>), and draws the state at each kept draw
@@ -1046,6 +1060,11 @@ state’s draws are those of the posterior mixed over the hyperparameters. Given
 <code class="docutils literal notranslate"><span class="pre">&quot;prior_scale&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;obs_scale&quot;</span></code> (or <code class="docutils literal notranslate"><span class="pre">&quot;gamma&quot;</span></code>), it takes the fast
 path: one eigendecomposition for the whole run. The guide is
 <a class="reference internal" href="../user_guide/hierarchical.html"><span class="doc">The uncertainty of the hyperparameters</span></a>.</p>
+<p><a class="reference internal" href="api/fips.sweep.html#fips.sweep" title="fips.sweep"><code class="xref py py-func docutils literal notranslate"><span class="pre">sweep()</span></code></a> solves the problem at every combination of a grid of the
+hyperparameters’ values instead: a <a class="reference internal" href="api/fips.Sweep.html#fips.Sweep" title="fips.Sweep"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sweep</span></code></a> holds each member’s
+diagnostics, estimate and variances, and the mean and spread of the
+estimates of the members kept. Its guide is
+<a class="reference internal" href="../user_guide/hyperparameters.html#hyperparameters-grid"><span class="std std-ref">A grid of hyperparameters</span></a>.</p>
 <section id="sampling-the-hyperparameters">
 <h2>Sampling the hyperparameters<a class="headerlink" href="#sampling-the-hyperparameters" title="Link to this heading">#</a></h2>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
@@ -1093,6 +1112,35 @@ path: one eigendecomposition for the whole run. The guide is
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="api/fips.Hierarchical.at.html#fips.Hierarchical.at" title="fips.Hierarchical.at"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Hierarchical.at</span></code></a>(hyperparameters)</p></td>
 <td><p>Return the posterior at one hyperparameter of every hyperparameter: the ordinary <a class="reference internal" href="api/fips.Posterior.html#fips.Posterior" title="fips.Posterior"><code class="xref py py-class docutils literal notranslate"><span class="pre">Posterior</span></code></a>, solved.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="a-grid-of-hyperparameters">
+<h2>A grid of hyperparameters<a class="headerlink" href="#a-grid-of-hyperparameters" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/fips.sweep.html#fips.sweep" title="fips.sweep"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sweep</span></code></a>(build, grid)</p></td>
+<td><p>Solve the problem at every combination of the hyperparameters' values: a grid of posteriors, their diagnostics, and the spread of their estimates.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/fips.Sweep.html#fips.Sweep" title="fips.Sweep"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sweep</span></code></a>(*, build, table, estimates, variances)</p></td>
+<td><p>The posteriors of a grid of hyperparameters: each member's diagnostics, estimate and variances.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/fips.Sweep.table.html#fips.Sweep.table" title="fips.Sweep.table"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sweep.table</span></code></a></p></td>
+<td><p>one row a member, labeled by its hyperparameters.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/fips.Sweep.estimates.html#fips.Sweep.estimates" title="fips.Sweep.estimates"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sweep.estimates</span></code></a></p></td>
+<td><p>one row a state element, one column a member.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/fips.Sweep.variances.html#fips.Sweep.variances" title="fips.Sweep.variances"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sweep.variances</span></code></a></p></td>
+<td><p>one row a state element, one column a member.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/fips.Sweep.uncertainty.html#fips.Sweep.uncertainty" title="fips.Sweep.uncertainty"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sweep.uncertainty</span></code></a>([members])</p></td>
+<td><p>Return the mean of the members' estimates, their posterior standard deviation, and the spread of their estimates.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/fips.Sweep.at.html#fips.Sweep.at" title="fips.Sweep.at"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Sweep.at</span></code></a>(member)</p></td>
+<td><p>Return the posterior of one member, solved again: for what the table does not hold.</p></td>
 </tr>
 </tbody>
 </table>
@@ -1174,8 +1222,8 @@ error’s scale), not of the state, whose prior is a <a class="reference interna
 </section>
 <section id="serialization">
 <h2>Serialization<a class="headerlink" href="#serialization" title="Link to this heading">#</a></h2>
-<p>A result pickles when the function that builds the problem does (a function
-defined at the top level of a module); the fast path’s always does.</p>
+<p>A result of either pickles when the function that builds the problem does (a
+function defined at the top level of a module); one given a problem always does.</p>
 </section>
 </section>
 
@@ -1228,6 +1276,7 @@ defined at the top level of a module); the fast path’s always does.</p>
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sampling-the-hyperparameters">Sampling the hyperparameters</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-result">The result</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-grid-of-hyperparameters">A grid of hyperparameters</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-fips.distributions">The priors of the hyperparameters</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#serialization">Serialization</a></li>
 </ul>

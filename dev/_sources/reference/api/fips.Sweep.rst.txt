@@ -1,0 +1,32 @@
+﻿fips.Sweep
+==========
+
+.. currentmodule:: fips
+
+.. autoclass:: Sweep
+   :no-members:
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~Sweep.estimates
+   ~Sweep.table
+   ~Sweep.variances
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~Sweep.at
+   ~Sweep.uncertainty
+
+
+

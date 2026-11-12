@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Fitting the covariance hyperparameters &#8212; fips 0.2.0b3.dev45+g64a0584cb documentation</title>
+    <title>Fitting the covariance hyperparameters &#8212; fips 0.2.0b3.dev46+ge5813d41f documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=345ee181"></script>
+    <script src="../_static/documentation_options.js?v=ba624b21"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev45+g64a0584cb documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev45+g64a0584cb documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev46+ge5813d41f documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev46+ge5813d41f documentation - Home"/>
   
   
 </a></div>
@@ -492,7 +492,9 @@ the hyperparameters, and maximize the evidence over them with <a class="referenc
 <p><code class="docutils literal notranslate"><span class="pre">np.exp(fit.x)</span></code> is the fitted hyperparameters, and <code class="docutils literal notranslate"><span class="pre">fips.solve(build(...))</span></code> at
 them is the posterior. fips has no fitting function of its own: the hyperparameters
 are yours, and so is the function that turns them into a problem (Michalak et
-al., 2005).</p>
+al., 2005). To solve the problem at a grid of hyperparameters instead, and see
+how much the answer moves across them, use <a class="reference internal" href="../reference/api/fips.sweep.html#fips.sweep" title="fips.sweep"><code class="xref py py-func docutils literal notranslate"><span class="pre">fips.sweep()</span></code></a>
+(<a class="reference internal" href="#a-grid-of-hyperparameters">A grid of hyperparameters</a>).</p>
 <nav class="contents local" id="on-this-page">
 <p class="topic-title">On this page</p>
 <ul class="simple">
@@ -501,10 +503,11 @@ al., 2005).</p>
 <li><p><a class="reference internal" href="#how-well-the-data-decide-a-hyperparameter" id="id3">How well the data decide a hyperparameter</a></p></li>
 <li><p><a class="reference internal" href="#which-methods-give-the-evidence" id="id4">Which methods give the evidence</a></p></li>
 <li><p><a class="reference internal" href="#against-a-reduced-chi-squared-of-1" id="id5">Against a reduced chi-squared of 1</a></p></li>
-<li><p><a class="reference internal" href="#warnings-and-checks" id="id6">Warnings and checks</a></p></li>
-<li><p><a class="reference internal" href="#cost" id="id7">Cost</a></p></li>
-<li><p><a class="reference internal" href="#how-it-works" id="id8">How it works</a></p></li>
-<li><p><a class="reference internal" href="#references" id="id9">References</a></p></li>
+<li><p><a class="reference internal" href="#a-grid-of-hyperparameters" id="id6">A grid of hyperparameters</a></p></li>
+<li><p><a class="reference internal" href="#warnings-and-checks" id="id7">Warnings and checks</a></p></li>
+<li><p><a class="reference internal" href="#cost" id="id8">Cost</a></p></li>
+<li><p><a class="reference internal" href="#how-it-works" id="id9">How it works</a></p></li>
+<li><p><a class="reference internal" href="#references" id="id10">References</a></p></li>
 </ul>
 </nav>
 <section id="when-to-use-it">
@@ -517,7 +520,8 @@ small or too large together, not which one is wrong; the evidence decides
 between them (<a class="reference internal" href="#against-a-reduced-chi-squared-of-1">Against a reduced chi-squared of 1</a>).</p></li>
 <li><p><strong>Only gamma, one factor on the observation covariance.</strong>
 <code class="docutils literal notranslate"><span class="pre">post.with_gamma(g).log_evidence</span></code> gives the evidence at another gamma for
-a few products, with no new solve, so a sweep or
+a few products, with no new solve, so a sweep
+(<code class="docutils literal notranslate"><span class="pre">fips.sweep(problem,</span> <span class="pre">{&quot;gamma&quot;:</span> <span class="pre">[...]})</span></code>) or
 <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize_scalar.html#scipy.optimize.minimize_scalar" title="(in SciPy v1.18.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.optimize.minimize_scalar()</span></code></a> over gamma is cheap. Gamma scales the
 observation covariance, so it is the same hyperparameter as the observation
 standard deviation: fit one or the other, not both.</p></li>
@@ -718,8 +722,96 @@ rows. At the maximum of the evidence, the reduced chi-squared is 1 by itself:</p
 <p>A reduced chi-squared of 1 is one condition the maximum satisfies, not a way
 to find it (<a class="reference internal" href="#how-it-works">How it works</a>).</p>
 </section>
+<section id="a-grid-of-hyperparameters">
+<span id="hyperparameters-grid"></span><h2><a class="toc-backref" href="#id6" role="doc-backlink">A grid of hyperparameters</a><a class="headerlink" href="#a-grid-of-hyperparameters" title="Link to this heading">#</a></h2>
+<p><strong>A sweep solves the problem at every combination of a few values of each
+hyperparameter</strong> (<a class="reference internal" href="../reference/api/fips.sweep.html#fips.sweep" title="fips.sweep"><code class="xref py py-func docutils literal notranslate"><span class="pre">fips.sweep()</span></code></a>), and keeps each member’s diagnostics in a
+table, with its estimate and its posterior variances. It takes the same
+function as a fit, with the hyperparameters by name:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [28]: </span><span class="n">grid</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"std"</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">],</span> <span class="s2">"length"</span><span class="p">:</span> <span class="p">[</span><span class="mf">2.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">],</span> <span class="s2">"noise"</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]}</span>
+
+<span class="gp">In [29]: </span><span class="n">result</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">sweep</span><span class="p">(</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">build</span><span class="p">([</span><span class="n">s</span><span class="p">[</span><span class="s2">"std"</span><span class="p">],</span> <span class="n">s</span><span class="p">[</span><span class="s2">"length"</span><span class="p">],</span> <span class="n">s</span><span class="p">[</span><span class="s2">"noise"</span><span class="p">]],</span> <span class="n">obs</span><span class="p">),</span> <span class="n">grid</span><span class="p">)</span>
+
+<span class="gp">In [30]: </span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"reduced_chi2"</span><span class="p">,</span> <span class="s2">"state_misfit"</span><span class="p">,</span> <span class="s2">"log_evidence"</span><span class="p">]</span>
+
+<span class="gp">In [31]: </span><span class="n">result</span><span class="o">.</span><span class="n">table</span><span class="p">[</span><span class="n">columns</span><span class="p">]</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s2">"log_evidence"</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gh">Out[31]: </span>
+<span class="go">                  reduced_chi2  state_misfit  log_evidence</span>
+<span class="go">std length noise                                          </span>
+<span class="go">1.0 2.0    0.5            0.87         81.16       -270.30</span>
+<span class="go">    5.0    0.5            1.08         92.45       -270.87</span>
+<span class="go">2.0 10.0   0.5            0.79         61.25       -277.76</span>
+<span class="go">1.0 10.0   0.5            1.39        116.51       -283.13</span>
+<span class="go">2.0 5.0    0.5            0.62         45.74       -287.34</span>
+<span class="go">1.0 2.0    0.3            1.56        118.23       -289.27</span>
+</pre></div>
+</div>
+<p><strong>Which members to keep is a filter of the table.</strong> Here, the members within 2
+of the highest log evidence, and those whose reduced chi-squared is within 0.1
+of 1:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [32]: </span><span class="n">table</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">table</span>
+
+<span class="gp">In [33]: </span><span class="n">by_evidence</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">table</span><span class="p">[</span><span class="s2">"log_evidence"</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">table</span><span class="p">[</span><span class="s2">"log_evidence"</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="mf">2.0</span><span class="p">]</span>
+
+<span class="gp">In [34]: </span><span class="n">by_chi2</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="nb">abs</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="s2">"reduced_chi2"</span><span class="p">]</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.1</span><span class="p">]</span>
+
+<span class="gp">In [35]: </span><span class="n">table</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">by_evidence</span><span class="p">,</span> <span class="n">columns</span><span class="p">]</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gh">Out[35]: </span>
+<span class="go">                  reduced_chi2  state_misfit  log_evidence</span>
+<span class="go">std length noise                                          </span>
+<span class="go">1.0 2.0    0.5            0.87         81.16       -270.30</span>
+<span class="go">    5.0    0.5            1.08         92.45       -270.87</span>
+
+<span class="gp">In [36]: </span><span class="n">table</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">by_chi2</span><span class="p">,</span> <span class="n">columns</span><span class="p">]</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gh">Out[36]: </span>
+<span class="go">                  reduced_chi2  state_misfit  log_evidence</span>
+<span class="go">std length noise                                          </span>
+<span class="go">0.5 2.0    1.0            0.96        111.48       -324.34</span>
+<span class="go">    5.0    1.0            0.95         86.95       -318.62</span>
+<span class="go">    10.0   1.0            1.09         83.25       -326.85</span>
+<span class="go">1.0 5.0    0.5            1.08         92.45       -270.87</span>
+<span class="go">2.0 2.0    0.3            1.03         43.26       -319.32</span>
+</pre></div>
+</div>
+<p>The evidence keeps the two members at the true standard deviations, a
+correlation length apart. The reduced chi-squared keeps five, with prior
+standard deviations a factor of four apart, as the last section showed.
+<a class="reference internal" href="../reference/api/fips.Sweep.uncertainty.html#fips.Sweep.uncertainty" title="fips.Sweep.uncertainty"><code class="xref py py-meth docutils literal notranslate"><span class="pre">uncertainty()</span></code></a> gives, for each state element, the mean of
+the kept members’ estimates, their posterior standard deviation, and the
+<em>spread</em> of their estimates: how much the answer moves between hyperparameters
+the rule could not tell apart. Averaged over the line:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [37]: </span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="gp">   ....: </span>    <span class="s2">"by evidence"</span><span class="p">:</span> <span class="n">result</span><span class="o">.</span><span class="n">uncertainty</span><span class="p">(</span><span class="n">by_evidence</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
+<span class="gp">   ....: </span>    <span class="s2">"by chi2"</span><span class="p">:</span> <span class="n">result</span><span class="o">.</span><span class="n">uncertainty</span><span class="p">(</span><span class="n">by_chi2</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
+<span class="gp">   ....: </span><span class="p">})</span><span class="o">.</span><span class="n">loc</span><span class="p">[[</span><span class="s2">"posterior_std"</span><span class="p">,</span> <span class="s2">"spread"</span><span class="p">]]</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gp">   ....: </span>
+<span class="gh">Out[37]: </span>
+<span class="go">               by evidence  by chi2</span>
+<span class="go">posterior_std        0.342    0.313</span>
+<span class="go">spread               0.043    0.207</span>
+</pre></div>
+</div>
+<p>A spread small next to the posterior standard deviation says the choice
+between the kept members does not matter; one as large says it does, and
+that the posterior standard deviation of any one member leaves it out. The
+members mixed with equal weights have a variance of <code class="docutils literal notranslate"><span class="pre">posterior_std**2</span> <span class="pre">+</span>
+<span class="pre">spread**2</span></code>. <a class="reference internal" href="../reference/api/fips.Sweep.at.html#fips.Sweep.at" title="fips.Sweep.at"><code class="xref py py-meth docutils literal notranslate"><span class="pre">at()</span></code></a> solves one member again for the rest of
+its posterior:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [38]: </span><span class="n">best</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="s2">"log_evidence"</span><span class="p">]</span><span class="o">.</span><span class="n">idxmax</span><span class="p">())</span>
+
+<span class="gp">In [39]: </span><span class="nb">round</span><span class="p">(</span><span class="n">best</span><span class="o">.</span><span class="n">dofs</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gh">Out[39]: </span><span class="go">93.2</span>
+</pre></div>
+</div>
+<p>A grid costs one solve a member, so it suits two or three hyperparameters of
+a few values each. Given the problem itself instead of a function, with a
+grid of <code class="docutils literal notranslate"><span class="pre">&quot;prior_scale&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;obs_scale&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;gamma&quot;</span></code> (factors on the
+prior’s and the observation error’s standard deviations, and gamma), the
+members that differ only in gamma share one solve. The members are equally
+weighted; <a class="reference internal" href="hierarchical.html"><span class="doc">The uncertainty of the hyperparameters</span></a> weighs the hyperparameters by their posterior instead.</p>
+</section>
 <section id="warnings-and-checks">
-<h2><a class="toc-backref" href="#id6" role="doc-backlink">Warnings and checks</a><a class="headerlink" href="#warnings-and-checks" title="Link to this heading">#</a></h2>
+<h2><a class="toc-backref" href="#id7" role="doc-backlink">Warnings and checks</a><a class="headerlink" href="#warnings-and-checks" title="Link to this heading">#</a></h2>
 <ul class="simple">
 <li><p><strong>The evidence is a density of the observations</strong>, so it depends on their
 units and their number. Compare it only between problems of the same
@@ -737,8 +829,8 @@ change.</p></li>
 </ul>
 </section>
 <section id="cost">
-<h2><a class="toc-backref" href="#id7" role="doc-backlink">Cost</a><a class="headerlink" href="#cost" title="Link to this heading">#</a></h2>
-<p>Each evaluation is one solve. L-BFGS-B with differences takes one more
+<h2><a class="toc-backref" href="#id8" role="doc-backlink">Cost</a><a class="headerlink" href="#cost" title="Link to this heading">#</a></h2>
+<p>Each evaluation is one solve, and so is each member of a grid. L-BFGS-B with differences takes one more
 solve per hyperparameter at each step, so a fit of <span class="math notranslate nohighlight">\(p\)</span> hyperparameters costs a few
 dozen times <span class="math notranslate nohighlight">\(p + 1\)</span> solves. The evidence itself costs one
 <span class="math notranslate nohighlight">\(\ln \lvert S_z \rvert\)</span> beyond the solve, and
@@ -746,7 +838,7 @@ dozen times <span class="math notranslate nohighlight">\(p + 1\)</span> solves. 
 eigendecomposition that every gamma shares.</p>
 </section>
 <section id="how-it-works">
-<span id="settings-evidence"></span><span id="hyperparameters-evidence"></span><h2><a class="toc-backref" href="#id8" role="doc-backlink">How it works</a><a class="headerlink" href="#how-it-works" title="Link to this heading">#</a></h2>
+<span id="settings-evidence"></span><span id="hyperparameters-evidence"></span><h2><a class="toc-backref" href="#id9" role="doc-backlink">How it works</a><a class="headerlink" href="#how-it-works" title="Link to this heading">#</a></h2>
 <p>With the state integrated out, the observations of a linear problem are
 Gaussian, <span class="math notranslate nohighlight">\(z \sim N(H x_0 + c, G)\)</span>, with <span class="math notranslate nohighlight">\(G = H S_0 H^T + S_z /
 \gamma\)</span> the covariance of the innovation
@@ -780,7 +872,7 @@ is 1; the other directions (how the variance splits between the prior and the
 observations, the correlation length) the reduced chi-squared does not see.</p>
 </section>
 <section id="references">
-<h2><a class="toc-backref" href="#id9" role="doc-backlink">References</a><a class="headerlink" href="#references" title="Link to this heading">#</a></h2>
+<h2><a class="toc-backref" href="#id10" role="doc-backlink">References</a><a class="headerlink" href="#references" title="Link to this heading">#</a></h2>
 <p>Michalak, A. M., Hirsch, A., Bruhwiler, L., Gurney, K. R., Peters, W., and
 Tans, P. P. (2005). Maximum likelihood estimation of covariance parameters for
 Bayesian atmospheric trace gas surface flux inversions. <em>Journal of
@@ -840,6 +932,7 @@ Geophysical Research</em>, 110, D24107. <a class="reference external" href="http
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-well-the-data-decide-a-hyperparameter">How well the data decide a hyperparameter</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#which-methods-give-the-evidence">Which methods give the evidence</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#against-a-reduced-chi-squared-of-1">Against a reduced chi-squared of 1</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-grid-of-hyperparameters">A grid of hyperparameters</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#warnings-and-checks">Warnings and checks</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#cost">Cost</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-it-works">How it works</a></li>

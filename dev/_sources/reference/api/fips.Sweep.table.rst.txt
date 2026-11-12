@@ -1,0 +1,6 @@
+fips.Sweep.table
+================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Sweep.table

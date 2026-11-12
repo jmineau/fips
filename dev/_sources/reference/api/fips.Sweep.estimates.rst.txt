@@ -1,0 +1,6 @@
+fips.Sweep.estimates
+====================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Sweep.estimates
