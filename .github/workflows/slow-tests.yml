@@ -1,0 +1,44 @@
+name: Slow tests
+
+# The tests marked `slow` (long statistical checks of the sampled methods), which
+# the Tests workflow skips: every Monday, by hand, and on a pull request that
+# changes this workflow.
+on:
+  schedule:
+    - cron: "23 7 * * 1"  # Mondays, 07:23 UTC
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths: [.github/workflows/slow-tests.yml]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  slow:
+    name: ubuntu-latest / Python 3.13
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      UV_NO_SYNC: "1"  # `just` recipes run in the environment synced below
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          fetch-depth: 0  # setuptools-scm reads the version from tags
+
+      - uses: astral-sh/setup-uv@v10.3.2
+        with:
+          version: "0.12.23"
+          python-version: "3.13"
+
+      - name: Install
+        run: uv sync --locked
+
+      - name: Slow tests
+        run: uv run just test-slow --durations=0

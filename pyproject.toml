@@ -65,6 +65,7 @@ dev = [
     "sphinx-autodoc-typehints>=3.0",
     "sphinx-copybutton>=0.5",
     "twine>=6.0",  # `just dist`
+    "emcee>=3.1",
 ]
 
 [tool.coverage.run]

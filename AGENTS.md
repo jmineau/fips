@@ -218,6 +218,7 @@ Driven by `just` and `uv`; CI runs the same recipes.
 | `just sync` | `uv sync`: fips, its `viz` extra, and the dev tools |
 | `just quality-check` | `lint` + `type-check` + `docstr` + `test`: what CI checks |
 | `just test` | pytest in parallel, skipping `network`/`slow` (`-n 0` for serial); also the docstring examples |
+| `just test-slow` | only the `slow` tests: the long statistical checks, among them `tests/test_outside_sampler.py` (the sampled methods against emcee) |
 | `just lint` / `just format` | ruff check and format check / fix and format |
 | `just type-check` | pyrefly (no baseline: every error fails) |
 | `just docstr` | docstr-coverage of the public API |
@@ -227,7 +228,7 @@ Driven by `just` and `uv`; CI runs the same recipes.
 `just test` also runs the `>>>` examples in docstrings under `src/`
 (`--doctest-modules`), so an example that stops matching the code fails the
 tests; one that needs data CI lacks gets `# doctest: +SKIP` on its `>>>` line.
-Workflows: `tests.yml`, `quality.yml`, `docs.yml` (versioned docs on gh-pages),
+Workflows: `tests.yml`, `quality.yml`, `slow-tests.yml` (weekly `just test-slow`), `docs.yml` (versioned docs on gh-pages),
 `lock-upgrade.yml` (monthly `uv lock --upgrade` pull request), `publish.yml` (a
 `vX.Y.Z` tag publishes). The version comes from git tags; the maintainer cuts
 releases. A pull request leaves `CHANGELOG.md` alone: at release `just
@@ -257,7 +258,7 @@ SciPy (`scipy.linalg`, `scipy.sparse`, `LinearOperator`, `eigsh`).
 pylops is read, not installed or copied (LGPL). GSTools only in an extra,
 if `covariance/kernels.py` outgrows its kernels. fips writes the samplers its
 methods need (HMC: exact for the bounded posterior, split at the Gaussian at the mode for a model) on NumPy and SciPy. The other inverse-problem libraries (pyOE, hippylib, pyemu, the
-Yadav and Michalak code) are test oracles, not dependencies. A new runtime
+Yadav and Michalak code) are test oracles, not dependencies. emcee, in the `dev` group only, is the outside sampler `tests/test_outside_sampler.py` holds the sampled methods to. A new runtime
 dependency needs a reason, proposed first.
 
 ## Gotchas
