@@ -24,8 +24,8 @@ emcee's, within their Monte Carlo standard errors:
   state from its Gaussian at each draw.
 
 **The Monte Carlo errors.** Each side is run as independent replicates (fips:
-chains of ``Posterior.sample`` with their own seeds, or ``hierarchical`` with
-its own seeds; emcee: ensembles with their own seeds and starts), each
+solves with their own seeds, each read through ``Posterior.sample``, or
+``hierarchical`` with its own seeds; emcee: ensembles with their own seeds and starts), each
 replicate gives every statistic, and a statistic's error is the spread of its
 replicates over the root of their number. That counts each chain's
 autocorrelation, whatever it is. A fips value agrees when it is within
@@ -151,12 +151,20 @@ def emcee_estimates(
     return Estimates.of(replicates)
 
 
-def fips_estimates(post: fips.Posterior, statistic, chains=16, draws=2000) -> Estimates:
-    """`statistic` of `chains` chains of the posterior's draws, each with its own seed, its first 50 draws left out."""
+def fips_estimates(solve, statistic, replicates=16, draws=2000) -> Estimates:
+    """
+    `statistic` of `draws` draws from each of `replicates` solves, ``solve(seed)``, each with its own seed.
+
+    Each replicate is a solve of its own, as a user would make it, so its
+    sampler is tuned and started apart from the others'. The draws of one
+    solve's ``sample`` calls continue from where its burn-in ended, so
+    replicates drawn from one solve would share their starts and not be
+    independent.
+    """
     return Estimates.of(
         [
-            statistic(post.sample(draws + 50, rng=100 + k).to_numpy()[:, 50:])
-            for k in range(chains)
+            statistic(solve(100 + k).sample(draws, rng=100 + k).to_numpy())
+            for k in range(replicates)
         ]
     )
 
@@ -426,12 +434,12 @@ measures it.
 
 PRECISION = 0.025
 """
-fips's errors, from 16 chains of 2000 draws, must be below this fraction of each statistic's scale: one chain of the default length within 10%.
+fips's errors, from 16 solves of 2000 draws each, must be below this fraction of each statistic's scale: one solve of the default length within 10%.
 
-A user reads a solve's spread from one such chain, so a chain that lands
+A user reads a solve's spread from one such solve, so a solve that lands
 somewhere else from seed to seed is a wrong answer for them even when many
-chains average to the right one. In the mild regimes the errors are 0.6% to
-1.4% of the scale.
+solves average to the right one. In the mild regimes the errors are under
+1% of the scale.
 """
 
 ISSUE_203 = pytest.mark.xfail(
@@ -444,16 +452,17 @@ ISSUE_203 = pytest.mark.xfail(
 The strongly nonlinear regimes: fips's chains of 2000 draws miss parts of the posterior.
 
 Measured against eight emcee runs of 120,000 steps (and, separately, eight
-of the stretch move's of 200,000, which agree with them): with 16 chains of
-2000 draws, fips's errors are up to 11% of the scale (lognormal, the mean of
-element 0) and 5% (softplus, element 8), so one chain is off by up to 45% and
-20%; its standard deviations are low in 18 of the 20 elements, up to 12% and
-8% where emcee measures them. With chains of 8000 the standard deviations are
-still low (all ten for the lognormal, z to -3.2; the softplus's element 9 by
-6%, z = -5.2). With chains of 64,000 they come within 1% to 4% of emcee's
-(|z| below 3.4): the posterior fips draws is the right one, and its chains
-mix too slowly for their default length, which is #203. When it is fixed
-these pass, and ``strict`` turns the suite red until the mark comes off.
+of the stretch move's of 200,000, which agree with them): with 16 solves of
+the default 2000 draws, fips's errors are up to 6% of the scale (lognormal,
+the std of element 0) and 22% (softplus, the mean of element 1), so one solve
+is off by up to 23% and 87%; its standard deviations are low in 17 of the 19
+elements compared, by up to 13% in each regime. Drawn from one solve, longer
+chains bring them in: at 8000 draws still low (all ten for the lognormal, z
+to -3.2; the softplus's element 9 by 6%, z = -5.2), at 64,000 within 1% to
+4% of emcee's (|z| below 3.4). So the posterior fips draws is the right one,
+and its chains mix too slowly for their default length, which is #203. When
+it is fixed these pass, and ``strict`` turns the suite red until the mark
+comes off.
 """
 
 
@@ -481,7 +490,10 @@ def test_gauss_newton_draws_are_emcee_draws(regime):
     statistic = state_statistic(case.value, most_correlated(laplace))
     steps = 120_000 if regime.endswith("strong") else 30_000
     theirs = emcee_estimates(case.log_prob, mode, 0.1 * spread, statistic, steps=steps)
-    ours = fips_estimates(post, statistic)
+    ours = fips_estimates(
+        lambda seed: fips.solve(case.problem(), "gauss_newton", tol=1e-10, seed=seed),
+        statistic,
+    )
     assert_agree(
         statistic_names(N),
         ours,
@@ -564,7 +576,10 @@ def test_bounded_draws_are_emcee_draws():
     start = np.maximum(mean, 0.0) + 0.5 * spread
     statistic = state_statistic(lambda x: x, most_correlated(cov))
     theirs = emcee_estimates(log_prob, start, 0.1 * spread, statistic)
-    ours = fips_estimates(post, statistic)
+    ours = fips_estimates(
+        lambda seed: fips.solve(case.problem(), "bounded", lower=0.0, seed=seed),
+        statistic,
+    )
     assert_agree(statistic_names(N), ours, theirs, state_scale(theirs.value))
 
 
