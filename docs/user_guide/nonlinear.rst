@@ -316,12 +316,12 @@ when:
   the aggregates the data constrain, which mix faster.
 
 **Chains that agree are not proof.** On a posterior that bends along a curve
-(an observation of a sum of elements, each with a wide prior), the sampler's
-step, tuned where the chains spend most of their time, is too long to enter
-the curve's far arms, so every chain can miss the same tail. In the guide's
-two-element examples the chains disagree at the default 2000 draws (every
-seed tried, 2026-11-11), but at 20,000 draws an element's standard deviation
-was still 16% to 40% low with no warning in half the seeds. The aggregates
+(an observation of a sum of elements, each with a wide prior), each draw
+moves about one width of the Gaussian at the mode, and the curve's far arms
+lie several widths along it, so every chain can miss the same tail. In the
+guide's two-element examples the chains disagree at the default 2000 draws
+(every seed tried, 2026-11-11), but at 20,000 draws an element's standard
+deviation was still 28% to 40% low with no warning in half the seeds. The aggregates
 the observations constrain stay right. When an element's own spread along
 such a curve matters, compare it with another estimate (a grid, for a few
 elements). Calls to :meth:`~fips.Posterior.sample` continue the chains from

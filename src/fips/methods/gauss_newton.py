@@ -152,9 +152,10 @@ class GaussNewtonOptions:
         draws' autocorrelation time). An element the observations see only
         through a sum with others, on a posterior that bends, mixes slowly:
         the chains then disagree on its spread, and the solve warns; raise
-        `draws`. Chains that agree are not proof: a step tuned in the bulk of
-        a curved posterior can be too long for every chain to enter a far
-        arm. The draws are made at
+        `draws`. Chains that agree are not proof: each draw moves about one
+        width of the Gaussian at the mode, and every chain can miss an arm
+        of a curved posterior that lies several widths along it. The draws
+        are made at
         the first use of the variances or covariances, and each trial of
         :meth:`Posterior.trials <fips.Posterior.trials>` makes its own, so
         fewer make trials quicker. There is no setting without draws: the
