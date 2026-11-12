@@ -24,7 +24,7 @@ observations are labeled by pandas indexes in named blocks: exact for a linear
 problem; with bounds on the state, its mode and draws of the Gaussian truncated
 to the bounds; with a forward model, its mode by Gauss-Newton and draws of its
 posterior; with priors on the covariance hyperparameters, draws of the hyperparameters and
-of the state at each (`fips.hierarchical`); for a model that can only be run,
+of the state at each (`fips.hierarchical`), or a grid of them solved (`fips.sweep`); for a model that can only be run,
 an ensemble square-root update of members drawn from the prior (`"ensemble"`); too large to factor, CG and a
 low-rank posterior from products alone (`"variational"`). fips samples the posteriors it
 cannot give in closed form. Labels
@@ -57,7 +57,7 @@ src/fips/
   distributions.py  LogNormal, HalfNormal, Uniform: the priors of a hyperparameter, on `_Distribution`
   hyperparameters.py  hierarchical, Hierarchical: the hyperparameters by Metropolis on the exact evidence,
                     the state drawn at each kept step; `_Built` (the caller's function) or
-                    `_Scales` (a Problem: the fast path)
+                    `_Scales` (a Problem: the fast path). sweep, Sweep: a grid solved member by member
   visualization.py  plot_comparison, the one plot (the `viz` extra: matplotlib)
   covariance/       Covariance and the models that write one down (public)
     covariance.py   Covariance: diagonal, block_diag, variances, solve, logdet, sqrt, sample,
