@@ -1349,9 +1349,11 @@ def test_the_draws_are_gauss_newtons_given_the_same_mode(monkeypatch, kind):
     )
     np.testing.assert_allclose(newton._solution.analytic.variances(), std**2, rtol=1e-9)
     a, b = newton.sample(200, rng=3).to_numpy(), alone.sample(200, rng=3).to_numpy()
-    assert np.abs((a - b) / std[:, None]).max() < 1e-7  # the paths amplify 1e-9
+    # the paths amplify 1e-9: four chains, each tuned from its own start, to
+    # 7e-7 here (2026-11-11); a different mass would differ by order 1
+    assert np.abs((a - b) / std[:, None]).max() < 1e-5
     np.testing.assert_allclose(
-        newton.variances.values, alone.variances.values, rtol=1e-8
+        newton.variances.values, alone.variances.values, rtol=1e-5
     )
 
 

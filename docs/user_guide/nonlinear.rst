@@ -264,15 +264,21 @@ Each is a keyword of ``fips.solve(problem, "gauss_newton", ...)``
    * - ``draws``
      - 2000
      - The number of draws of the posterior kept for the variances, the
-       covariances, the mean and the intervals. Fewer make each trial of
-       :meth:`~fips.Posterior.trials` quicker.
+       covariances, the mean and the intervals, from all the chains together.
+       Fewer make each trial of :meth:`~fips.Posterior.trials` quicker.
    * - ``burn_in``
      - 200
-     - The draws made from the mode and left out before those kept, while the
-       sampler tunes its step.
+     - The draws each chain makes from its start and leaves out before those
+       it keeps, while it tunes its step.
    * - ``seed``
      - 0
-     - The seed of the tuning and of the kept draws.
+     - The seed of the starts, the tuning and the kept draws.
+   * - ``chains``
+     - 4
+     - The number of chains the draws are split among, each from its own
+       draw of the Gaussian at the mode. The solve warns when they disagree.
+       ``chains=1`` is the sampler of 0.2.0b2, one chain from the mode, which
+       cannot be checked this way.
    * - ``gamma``
      - 1.0
      - The regularization factor: the observation covariance is divided by
@@ -299,20 +305,31 @@ when:
   A wrong Jacobian leaves the draws exact (the sampler's acceptance test
   corrects for it) but makes each draw cost hundreds of steps. Check it with
   ``fips.taylortest(problem.forward, post.estimate)``.
+- **the chains disagree**: the split R-hat, which compares the spread
+  between the chains with the spread within each, is above 1.05 for at
+  least 5% of the elements (for any one, with 20 elements or fewer). One
+  chain stayed out of a part of the posterior that another reached, so the
+  variances are not yet the posterior's. It names the worst element and its
+  standard deviation in two chains; raise ``draws``, or read the aggregates
+  the data constrain, which mix faster. Fewer elements are logged at the
+  INFO level: with hundreds of elements a few mix slowly at the default
+  draws in nearly every solve, while totals of them are right (400
+  elements, 2026-11-12).
 - **the kept draws mix slowly**: a standard deviation from them is uncertain
   by more than 10%. It says how many draws would do; raise ``draws``, or read
   the aggregates the data constrain, which mix faster.
 
-**The slow-mixing warning reads one chain, so it cannot see what that chain
-missed.** On a posterior that bends along a curve (an observation of a sum of
-elements, each with a wide prior), the chain can stay out of a tail for
-hundreds of draws: an element's standard deviation from the default 2000
-draws can then be off by a third or more, with a warning that understates it
-or no warning at all, while the aggregates the observations constrain stay
-right. When an element's spread matters, solve again with two or three other
-``seed`` values and compare, and raise ``draws`` until they agree. Calls to
-:meth:`~fips.Posterior.sample` each start a new chain from the same point, so
-draws from several calls are not a check either.
+**Chains that agree are not proof.** On a posterior that bends along a curve
+(an observation of a sum of elements, each with a wide prior), each draw
+moves about one width of the Gaussian at the mode, and the curve's far arms
+lie several widths along it, so every chain can miss the same tail. In the
+guide's two-element examples the chains disagree at the default 2000 draws
+(every seed tried, 2026-11-11), but at 20,000 draws an element's standard
+deviation was still 28% to 40% low with no warning in half the seeds. The aggregates
+the observations constrain stay right. When an element's own spread along
+such a curve matters, compare it with another estimate (a grid, for a few
+elements). Calls to :meth:`~fips.Posterior.sample` continue the chains from
+where their burn-ins ended, so draws from several calls are not a check.
 
 At the INFO level it logs the number of steps it took, and the sampler's
 tuned step and acceptance rate.
@@ -344,7 +361,7 @@ few steps; a strongly nonlinear one (a wide prior on a model that bends) can
 take tens.
 
 **The draws cost more**, and are made only when a spread is first asked for:
-``burn_in`` plus ``draws`` of them. Each draw follows a path of steps (one for
+``draws`` of them, plus ``burn_in`` for each of the ``chains``. Each draw follows a path of steps (one for
 a linear model, more the more it bends), and each step runs the model, a
 product with its Jacobian's transpose and one with the covariance of the
 Gaussian at the mode: thousands to tens of thousands of model runs in all.

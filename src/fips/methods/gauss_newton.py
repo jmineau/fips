@@ -68,7 +68,10 @@ variances, the covariance of aggregates, the mean, the intervals and its draws
 are those of the posterior itself, :math:`p(x \mid z) \propto e^{-\chi^2(x)/2}`, drawn by
 Hamiltonian Monte Carlo (``_Sampler``): the Gaussian at the mode is its mass
 and its exactly solved part, the rest of the cost its kicks, and a Metropolis
-test keeps the chain exact. Where the model bends over the posterior's
+test keeps the chain exact. Several chains run from spread starts, and the
+solve warns when they disagree (a split R-hat): one chain that never enters
+a tail of a curved posterior reports too small a spread, and cannot tell.
+Where the model bends over the posterior's
 spread, the Gaussian at the mode is not the posterior (a sum of lognormal
 values from its draws runs high and covers the truth too rarely); the draws
 are. The misfits and the chi-squared are the cost's terms at the mode, from
@@ -87,6 +90,11 @@ https://doi.org/10.1007/s11222-012-9373-1
 Hoffman, M. D., and Gelman, A. (2014). The No-U-Turn sampler: adaptively
 setting path lengths in Hamiltonian Monte Carlo. *Journal of Machine Learning
 Research*, 15, 1593-1623.
+
+Vehtari, A., Gelman, A., Simpson, D., Carpenter, B., and Bürkner, P.-C.
+(2021). Rank-normalization, folding, and localization: an improved R-hat for
+assessing convergence of MCMC. *Bayesian Analysis*, 16(2), 667-718.
+https://doi.org/10.1214/20-BA1221
 """
 
 import logging
@@ -102,7 +110,7 @@ from numpy.linalg import LinAlgError
 from fips._errors import ConvergenceError, warn
 from fips.linalg import LinearOperator
 from fips.linalg.forms import _read_only
-from fips.methods._draws import _warn_if_imprecise
+from fips.methods._draws import _warn_if_imprecise, _warn_if_unmixed
 from fips.methods.analytic import AnalyticOptions, Information, Whitened, _factor
 from fips.operator import Operator
 from fips.posterior import Posterior
@@ -138,31 +146,45 @@ class GaussNewtonOptions:
         of the problem linearized at the last estimate.
     draws : int, default 2000
         The number of draws of the posterior kept for its variances and the
-        covariance of aggregates (Monte Carlo estimates: the relative error of
-        a standard deviation is about :math:`\sqrt{\tau / (2\,
-        \text{draws}})`, with :math:`\tau` the draws' autocorrelation time).
-        An element the observations see only through a sum with others, on
-        a posterior that bends, mixes slowly: its spread can be far off with
-        no warning, so compare a few seeds. The draws are made at
+        covariance of aggregates, from all the chains together (Monte Carlo
+        estimates: the relative error of a standard deviation is about
+        :math:`\sqrt{\tau / (2\, \text{draws}})`, with :math:`\tau` the
+        draws' autocorrelation time). An element the observations see only
+        through a sum with others, on a posterior that bends, mixes slowly:
+        the chains then disagree on its spread, and the solve warns; raise
+        `draws`. Chains that agree are not proof: each draw moves about one
+        width of the Gaussian at the mode, and every chain can miss an arm
+        of a curved posterior that lies several widths along it. The draws
+        are made at
         the first use of the variances or covariances, and each trial of
         :meth:`Posterior.trials <fips.Posterior.trials>` makes its own, so
         fewer make trials quicker. There is no setting without draws: the
         Gaussian at the mode, which is not the posterior where the model
         bends, is ``fips.solve(problem.linearized(post.estimate))``.
     burn_in : int, default 200
-        The draws made and left out before those kept, from the mode, while
-        the sampler tunes its step to an acceptance rate of 0.9.
+        The draws each chain makes and leaves out before those it keeps, from
+        its start, while it tunes its step to an acceptance rate of 0.9.
     seed : int, default 0
-        The seed of the tuning and the kept draws, so that a solve is
-        reproducible.
+        The seed of the starts, the tuning and the kept draws, so that a
+        solve is reproducible.
+    chains : int, default 4
+        The number of chains the draws are split among. Each starts from a
+        draw of the Gaussian at the mode and tunes its own step over its own
+        burn-in. Chains that disagree, by a split R-hat
+        above 1.05 on at least 5% of the elements (any one, at 20 or fewer;
+        fewer are logged at INFO), are a warning that one chain cannot give: a chain that
+        never enters a tail of a curved posterior reports a small spread and
+        a small error together. Each chain costs a burn-in more; one chain is
+        the sampler of fips 0.2.0b2, from the mode.
 
     Raises
     ------
     ValueError
         If `gamma` is not a positive, finite number, `max_iterations` is not a
         positive integer, `tol` is not a positive, finite number, `draws` is
-        not an integer of at least 2, or `burn_in` or `seed` is not a
-        nonnegative one.
+        not an integer of at least 2, `burn_in` or `seed` is not a
+        nonnegative one, `chains` is not a positive one, or `draws` is fewer
+        than two for each chain.
     """
 
     gamma: float = 1.0
@@ -176,7 +198,9 @@ class GaussNewtonOptions:
     burn_in: int = 200
     """The draws left out before those kept, while the sampler tunes its step."""
     seed: int = 0
-    """The seed of the tuning and of the kept draws."""
+    """The seed of the starts, the tuning and the kept draws."""
+    chains: int = 4
+    """The number of chains the draws are split among, each from its own start."""
 
     def __post_init__(self):
         object.__setattr__(self, "gamma", AnalyticOptions(self.gamma).gamma)
@@ -197,21 +221,26 @@ class GaussNewtonOptions:
         if not (math.isfinite(tol) and tol > 0):
             raise ValueError(f"tol must be positive and finite, got {tol}.")
         object.__setattr__(self, "tol", tol)
-        for name, least in (("draws", 2), ("burn_in", 0), ("seed", 0)):
+        for name, least in (("draws", 2), ("burn_in", 0), ("seed", 0), ("chains", 1)):
             value = getattr(self, name)
             if (
                 not isinstance(value, numbers.Integral)
                 or isinstance(value, bool)
                 or value < least
             ):
-                kind = {2: "an", 0: "a nonnegative"}[least]
+                kind = {2: "an", 1: "a positive", 0: "a nonnegative"}[least]
                 at_least = (
-                    " of at least 2 (a variance needs two draws)" if least else ""
+                    " of at least 2 (a variance needs two draws)" if least == 2 else ""
                 )
                 raise ValueError(
                     f"{name} must be {kind} integer{at_least}, got {value!r}."
                 )
             object.__setattr__(self, name, int(value))
+        if self.draws < 2 * self.chains:
+            raise ValueError(
+                f"draws must be at least 2 for each of the {self.chains} chains, "
+                f"got {self.draws}."
+            )
 
 
 @dataclass(frozen=True, eq=False)
@@ -231,8 +260,9 @@ class GaussNewton:
     - the estimate is the mode, not the mean, and is not linear in the
       observations (no ``estimate_is_mean``, no ``estimate_is_linear``);
     - the variances and the covariance of aggregates are those of the kept
-      draws of the posterior (:meth:`kept`: ``draws`` of them, after a
-      ``burn_in`` that tunes the sampler, from ``seed``), about their mean,
+      draws of the posterior (:meth:`kept`: ``draws`` of them, split among
+      ``chains`` chains, each after a ``burn_in`` that tunes its step, from
+      ``seed``), about their mean,
       and so are the posterior's mean and intervals (the draws' quantiles);
       :meth:`sample` draws more;
     - the gain, DOFS and the information content are those of the Gaussian
@@ -285,24 +315,29 @@ class GaussNewton:
             sampler = self.__dict__["_sampler_"] = _Sampler(self)
         return sampler
 
-    def _tuning(self) -> "_Tuning":
-        """Return the sampler's step, tuned over the burn-in from the mode at the first call (its generator a child of the seed's, apart from the kept draws')."""
-        tuning = self.__dict__.get("_tuning_")
-        if tuning is None:
-            (child,) = np.random.SeedSequence(self.options.seed).spawn(1)
-            tuning = self._sampler().tune(
-                self.options.burn_in, np.random.default_rng(child)
-            )
-            self.__dict__["_tuning_"] = tuning
-            steps = _steps(tuning.step)
-            logger.info(
-                "The posterior sampler's step is %.3g, %d steps a draw, after a "
-                "burn-in of %d draws accepted at %.2f.",
-                tuning.step,
-                steps,
-                self.options.burn_in,
-                tuning.acceptance,
-            )
+    def _tunings(self) -> "tuple[_Tuning, ...]":
+        """Return each chain's step, tuned over its burn-in from its start at the first call (each chain's generator a child of the seed's, apart from the kept draws'); with one chain, from the mode."""
+        tunings = self.__dict__.get("_tuning_")
+        if tunings is None:
+            sampler, options = self._sampler(), self.options
+            children = np.random.SeedSequence(options.seed).spawn(options.chains)
+            tunings = []
+            for k, child in enumerate(children):
+                rng = np.random.default_rng(child)
+                start = sampler.start(rng) if options.chains > 1 else None
+                tuning = sampler.tune(options.burn_in, rng, start)
+                tunings.append(tuning)
+                logger.info(
+                    "The posterior sampler's chain %d: a step of %.3g, %d steps a "
+                    "draw, after a burn-in of %d draws accepted at %.2f.",
+                    k,
+                    tuning.step,
+                    _steps(tuning.step),
+                    options.burn_in,
+                    tuning.acceptance,
+                )
+            tunings = self.__dict__["_tuning_"] = tuple(tunings)
+            steps = max(_steps(tuning.step) for tuning in tunings)
             if steps >= _MANY_STEPS:
                 warn(
                     logger,
@@ -313,16 +348,18 @@ class GaussNewton:
                     "fips.taylortest(problem.forward, post.estimate)).",
                     steps,
                 )
-        return tuning
+        return tunings
 
     def kept(self) -> np.ndarray:
-        """Return the kept draws (``n x draws``), which the variances, the covariances, the mean and the intervals are read from: drawn from the seed at the first call, with a warning if they mix too slowly for their variances."""
+        """Return the kept draws (``n x draws``, the chains side by side), which the variances, the covariances, the mean and the intervals are read from: drawn from the seed at the first call, with a warning if the chains disagree or mix too slowly for their variances."""
         kept = self.__dict__.get("_draws")
         if kept is None:
-            draws = self.options.draws
+            draws, chains = self.options.draws, self.options.chains
             kept = self.sample(draws, np.random.default_rng(self.options.seed))
             kept = self.__dict__["_draws"] = _read_only(kept)
-            _warn_if_imprecise(kept, logger, _SLOW_DRAWS)
+            lengths = _split(draws, chains)
+            _warn_if_unmixed(kept, lengths, logger, _UNMIXED_DRAWS)
+            _warn_if_imprecise(kept, logger, _SLOW_DRAWS, lengths=lengths)
         return kept
 
     def __getstate__(self) -> dict:
@@ -347,11 +384,19 @@ class GaussNewton:
         return self.mode
 
     def sample(self, N: int, rng: np.random.Generator) -> np.ndarray:
-        """Return `N` new draws of the posterior (``n x N``): the chain from where the burn-in ended, at its tuned step."""
-        tuning = self._tuning()
-        draws, _, acceptance = self._sampler().run(tuning.point, N, rng, tuning.step)
-        logger.debug("%d draws of the posterior, accepted at %.2f.", N, acceptance)
-        return draws
+        """Return `N` new draws of the posterior (``n x N``): split among the chains as evenly as they go (the first ones a draw more), each from where its burn-in ended, at its tuned step, side by side in the chains' order."""
+        sampler, parts = self._sampler(), []
+        for tuning, count in zip(
+            self._tunings(), _split(N, self.options.chains), strict=True
+        ):
+            if not count:  # fewer draws asked for than there are chains
+                continue
+            draws, _, acceptance = sampler.run(tuning.point, count, rng, tuning.step)
+            logger.debug(
+                "%d draws of the posterior, accepted at %.2f.", count, acceptance
+            )
+            parts.append(draws)
+        return np.concatenate(parts, axis=1)
 
     def variances(self) -> np.ndarray:
         """Return the variances of the kept draws."""
@@ -536,7 +581,8 @@ class _Sampler:
 
     Each draw starts from the last with a new velocity and travels a quarter
     period, :data:`_QUARTER`, in steps of the tuned :math:`h` (jittered by
-    :data:`_JITTER`). The burn-in, from the mode, tunes :math:`h` to an
+    :data:`_JITTER`). Each chain starts from a draw of the Gaussian at the
+    mode (:meth:`start`; one chain alone, from the mode), and its burn-in tunes its own :math:`h` to an
     acceptance rate of :data:`_TARGET` by dual averaging (Hoffman and
     Gelman, 2014), starting from one step a draw; its draws are left out.
     A path the model cannot follow (it overflows) is rejected.
@@ -635,15 +681,36 @@ class _Sampler:
                 yield V[:, j], float(tests[j]), float(jitters[j])
             done += block
 
-    def tune(self, burn_in: int, rng: np.random.Generator) -> _Tuning:
+    def start(self, rng: np.random.Generator) -> _Point:
         """
-        Return the step tuned over `burn_in` draws from the mode, by dual averaging (Hoffman and Gelman, 2014, algorithm 5) of its logarithm, and where they ended.
+        Return a chain's start: a draw of the Gaussian at the mode, from `rng`.
+
+        A start the model cannot model is moved halfway to the mode until it
+        can (the mode itself last). Starts further out, which a check of
+        chains usually asks for, are worse here: where the posterior has
+        turned away from the Gaussian at the mode, this sampler takes
+        hundreds of steps a draw and barely moves, and a chain started there
+        stays (seen on a curved two-element posterior, 2026-11-11).
+        """
+        offset = self.analytic.sample(1, rng)[:, 0] - self.mean
+        for _ in range(_HALVINGS):
+            try:
+                return self.point(self.mode + offset)
+            except _FAILED:
+                offset = offset / 2
+        return self.point(np.array(self.mode))
+
+    def tune(
+        self, burn_in: int, rng: np.random.Generator, start: _Point | None = None
+    ) -> _Tuning:
+        """
+        Return the step tuned over `burn_in` draws from `start` (the mode if None), by dual averaging (Hoffman and Gelman, 2014, algorithm 5) of its logarithm, and where they ended.
 
         It starts from one step a draw, and the step stays between
         :data:`_QUARTER` over :data:`_MOST_STEPS` and :data:`_QUARTER`. With
         no burn-in, the step is a whole quarter period.
         """
-        here = self.point(np.array(self.mode))
+        here = self.point(np.array(self.mode)) if start is None else start
         longest, shortest = math.log(_QUARTER), math.log(_QUARTER / _MOST_STEPS)
         target = math.log(10.0 * _QUARTER)
         log_h, log_mean, error, accepted = longest, longest, 0.0, 0.0
@@ -678,6 +745,20 @@ _SLOW_DRAWS = (
     "read the aggregates the data constrain, which mix faster."
 )
 """What the slow-mixing warning of the kept draws says of the cause and the remedy."""
+
+_UNMIXED_DRAWS = (
+    "The posterior bends much over its spread, and a chain stayed out of a "
+    "part of it that another reached; raise draws=, or read the aggregates "
+    "the data constrain, which mix faster. Chains that agree can still all "
+    "miss a far arm of a curved posterior."
+)
+"""What the warning that the chains disagree says of the cause and the remedy."""
+
+
+def _split(N: int, chains: int) -> tuple[int, ...]:
+    """Return the number of draws each of `chains` chains makes of `N`, as even as they go, the first ones a draw more."""
+    each, more = divmod(N, chains)
+    return tuple(each + (k < more) for k in range(chains))
 
 
 def _steps(step: float) -> int:

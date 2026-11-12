@@ -226,8 +226,9 @@ The posterior is that of ``"gauss_newton"``, a *sampled* one, in the units of
 
 The draws are of the posterior itself, not of the Gaussian at the mode, so in
 the problem's own world a total's interval holds the truth about as often as
-it claims. An element's own spread is harder for the chain: where the
-observations see only a sum, compare a few ``seed`` values before trusting it
+it claims. An element's own spread is harder for the chains: where the
+observations see only a sum, the solve warns when its chains disagree, and
+chains that agree can still all miss a far arm of the curve
 (:doc:`nonlinear`, "Warnings and checks"). The Gaussian at the mode can be far from the posterior for a
 total of many elements (How it works, below).
 
@@ -236,7 +237,7 @@ Options
 -------
 
 The options are the models' arguments. The solve's options (``tol``,
-``max_iterations``, ``draws``, ``burn_in``, ``seed``, ``gamma``) are those of
+``max_iterations``, ``draws``, ``burn_in``, ``seed``, ``chains``, ``gamma``) are those of
 ``"gauss_newton"`` (:doc:`nonlinear`).
 
 .. list-table::
