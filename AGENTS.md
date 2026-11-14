@@ -228,7 +228,7 @@ Driven by `just` and `uv`; CI runs the same recipes.
 `just test` also runs the `>>>` examples in docstrings under `src/`
 (`--doctest-modules`), so an example that stops matching the code fails the
 tests; one that needs data CI lacks gets `# doctest: +SKIP` on its `>>>` line.
-Workflows: `tests.yml`, `quality.yml`, `slow-tests.yml` (weekly `just test-slow`), `docs.yml` (versioned docs on gh-pages),
+Workflows: `tests.yml`, `quality.yml`, `slow-tests.yml` (`just test-slow`, on a pull request that touches the methods or `uv.lock`, and by the lock upgrade), `docs.yml` (versioned docs on gh-pages),
 `lock-upgrade.yml` (monthly `uv lock --upgrade` pull request), `publish.yml` (a
 `vX.Y.Z` tag publishes). The version comes from git tags; the maintainer cuts
 releases. A pull request leaves `CHANGELOG.md` alone: at release `just

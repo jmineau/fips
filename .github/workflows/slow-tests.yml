@@ -1,15 +1,30 @@
 name: Slow tests
 
 # The tests marked `slow` (long statistical checks of the sampled methods), which
-# the Tests workflow skips: every Monday, by hand, and on a pull request that
-# changes this workflow.
+# the Tests workflow skips. They run when something they check changes: a pull
+# request that touches the methods, the samplers' inputs, uv.lock or the slow
+# tests; the monthly lock upgrade (which starts this workflow by hand); and by
+# hand. Not on a schedule: dependencies are locked and the tests are seeded, so
+# a run on an unchanged main repeats the last one.
 on:
-  schedule:
-    - cron: "23 7 * * 1"  # Mondays, 07:23 UTC
   workflow_dispatch:
   pull_request:
     branches: [main]
-    paths: [.github/workflows/slow-tests.yml]
+    paths:
+      - src/fips/methods/**
+      - src/fips/hyperparameters.py
+      - src/fips/transforms.py
+      - src/fips/forward.py
+      - src/fips/posterior.py
+      - src/fips/distributions.py
+      - tests/test_bounded.py
+      - tests/test_evidence.py
+      - tests/test_gauss_newton.py
+      - tests/test_hierarchical.py
+      - tests/test_outside_sampler.py
+      - tests/test_variational.py
+      - uv.lock
+      - .github/workflows/slow-tests.yml
 
 permissions:
   contents: read
