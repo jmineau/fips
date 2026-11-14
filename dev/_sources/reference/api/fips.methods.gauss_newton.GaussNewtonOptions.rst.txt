@@ -15,6 +15,7 @@
    :toctree:
 
    ~GaussNewtonOptions.burn_in
+   ~GaussNewtonOptions.chains
    ~GaussNewtonOptions.draws
    ~GaussNewtonOptions.gamma
    ~GaussNewtonOptions.max_iterations
