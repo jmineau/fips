@@ -227,7 +227,8 @@ The posterior is that of ``"gauss_newton"``, a *sampled* one, in the units of
 The draws are of the posterior itself, not of the Gaussian at the mode, so in
 the problem's own world a total's interval holds the truth about as often as
 it claims. An element's own spread is harder for the chains: where the
-observations see only a sum, the solve warns when its chains disagree, and
+observations see only a sum, the solve warns when its chains disagree
+(and reading an aggregate, when they disagree on it), and
 chains that agree can still all miss a far arm of the curve
 (:doc:`nonlinear`, "Warnings and checks"). The Gaussian at the mode can be far from the posterior for a
 total of many elements (How it works, below).
