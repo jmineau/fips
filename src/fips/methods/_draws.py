@@ -15,6 +15,12 @@ estimate is as wrong as its variance. Several chains from spread starts can
 between them with the spread within each, and :func:`_warn_if_unmixed` warns
 when they disagree by more than :data:`_UNMIXED` on at least
 :data:`_UNMIXED_SHARE` of the elements.
+
+An aggregate of the elements, :math:`W x`, depends on how they vary
+together, so its chains can disagree where few elements' do, and agree where
+many do. :func:`_warn_if_aggregates_unmixed` compares the chains on the
+aggregates that are read, and warns when they disagree by more than
+:data:`_UNMIXED_AGGREGATE` on any of them.
 """
 
 import logging
@@ -41,6 +47,25 @@ while totals of the elements covered as claimed). Warning of them would warn
 of nearly every solve. A sampler that missed part of the posterior leaves
 many more: 2 of 2 elements, and up to 6 of 10.
 """
+
+_UNMIXED_AGGREGATE = 1.1
+"""
+The split R-hat of an aggregate that is read above which its chains disagree, and the read warns.
+
+With four chains it is a standard deviation known to about 8% or worse.
+Measured over 736 default solves (2000 draws) of 23 problems of 100 to 900
+elements, each read through eight aggregates against two long solves
+(2026-11-14): every aggregate whose standard deviation was more than 20% off
+was above it (38 of 38), a third of those above it were more than 10% off,
+and 3% of those within 10% were above it. At :data:`_UNMIXED`, the elements'
+cutoff, 11% of those within 10% were, and two solves in five warned. An
+aggregate 10% to 20% off is not told from one that is right at any cutoff:
+that is the scatter of a standard deviation from 2000 draws, which more
+draws lower and no comparison of chains sees.
+"""
+
+_NAMED = 8
+"""The rows of an aggregation a warning names at most; it counts the rest."""
 
 _ROWS = 256
 """The rows whose autocorrelation is computed at once."""
@@ -273,5 +298,50 @@ def _warn_if_unmixed(
         logger,
         message + " Their variances are not yet the posterior's. %s",
         *found,
+        why,
+    )
+
+
+def _warn_if_aggregates_unmixed(
+    draws: np.ndarray, lengths: tuple[int, ...], logger: logging.Logger, why: str
+) -> None:
+    """
+    Warn (`logger`, and a :class:`~fips.FipsWarning`) when the chains disagree on an aggregate that is read: `draws` are the chains' draws of :math:`W x` side by side (one row per row of :math:`W`), of the `lengths` given, and a row warns with a split R-hat above :data:`_UNMIXED_AGGREGATE` (:func:`_split_rhat`).
+
+    It names the rows (their positions in :math:`W`, from 0; the first
+    :data:`_NAMED` of them), the worst one and the least and the most of its
+    chains' standard deviations; `why` is the method's sentence on the cause
+    and the remedy. Any one row warns, however many rows there are: each is
+    an aggregate the caller asked for. One chain cannot give this warning.
+    """
+    if len(lengths) < 2:
+        return
+    rhat = _split_rhat(draws, lengths)
+    unmixed = np.flatnonzero(rhat > _UNMIXED_AGGREGATE)
+    if not len(unmixed):
+        return
+    worst = int(np.argmax(rhat))
+    stds = [float(chain[worst].std(ddof=1)) for chain in _chains(draws, lengths)]
+    named = ("rows " if len(unmixed) > 1 else "row ") + ", ".join(
+        str(int(row)) for row in unmixed[:_NAMED]
+    )
+    if len(unmixed) > _NAMED:
+        named += f" and {len(unmixed) - _NAMED} more"
+    warn(
+        logger,
+        "The posterior's %d chains disagree on %d of the %d aggregates read "
+        "(%s of the aggregation, counted from 0): a split R-hat above %.2f, "
+        "the worst (row %d) %.2f, its standard deviation %.3g in one chain and "
+        "%.3g in another. Their variances and intervals are not yet the "
+        "posterior's. %s",
+        len(lengths),
+        len(unmixed),
+        len(rhat),
+        named,
+        _UNMIXED_AGGREGATE,
+        worst,
+        float(rhat[worst]),
+        min(stds),
+        max(stds),
         why,
     )

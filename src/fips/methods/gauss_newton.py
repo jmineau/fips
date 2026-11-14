@@ -71,6 +71,8 @@ and its exactly solved part, the rest of the cost its kicks, and a Metropolis
 test keeps the chain exact. Several chains run from spread starts, and the
 solve warns when they disagree (a split R-hat): one chain that never enters
 a tail of a curved posterior reports too small a spread, and cannot tell.
+The covariance of aggregates warns when they disagree on an aggregate that
+is read, which depends on how the elements vary together.
 Where the model bends over the posterior's
 spread, the Gaussian at the mode is not the posterior (a sum of lognormal
 values from its draws runs high and covers the truth too rarely); the draws
@@ -110,7 +112,11 @@ from numpy.linalg import LinAlgError
 from fips._errors import ConvergenceError, warn
 from fips.linalg import LinearOperator
 from fips.linalg.forms import _read_only
-from fips.methods._draws import _warn_if_imprecise, _warn_if_unmixed
+from fips.methods._draws import (
+    _warn_if_aggregates_unmixed,
+    _warn_if_imprecise,
+    _warn_if_unmixed,
+)
 from fips.methods.analytic import AnalyticOptions, Information, Whitened, _factor
 from fips.operator import Operator
 from fips.posterior import Posterior
@@ -405,9 +411,14 @@ class GaussNewton:
         return np.einsum("ij,ij->i", centered, centered) / (kept.shape[1] - 1)
 
     def cov(self, W: LinearOperator | None = None) -> np.ndarray:
-        """Return the covariance of the kept draws, ``n x n``, or of their aggregates ``W x``, ``k x k``."""
+        """Return the covariance of the kept draws, ``n x n``, or of their aggregates ``W x``, ``k x k``, with a warning if the chains disagree on an aggregate (the elements' check, at the solve, does not see how they vary together)."""
         kept = self.kept()
-        Y = kept if W is None else np.asarray(W @ kept, dtype=float)
+        if W is None:
+            Y = kept
+        else:
+            Y = np.asarray(W @ kept, dtype=float)
+            lengths = _split(self.options.draws, self.options.chains)
+            _warn_if_aggregates_unmixed(Y, lengths, logger, _UNMIXED_AGGREGATES)
         centered = Y - Y.mean(axis=1, keepdims=True)
         S = centered @ centered.T / (Y.shape[1] - 1)
         return 0.5 * (S + S.T)
@@ -753,6 +764,14 @@ _UNMIXED_DRAWS = (
     "miss a far arm of a curved posterior."
 )
 """What the warning that the chains disagree says of the cause and the remedy."""
+
+_UNMIXED_AGGREGATES = (
+    "The posterior bends much over its spread along a direction they read, "
+    "and a chain stayed out of a part of it that another reached; raise "
+    "draws=. Chains that agree can still all miss a far arm of a curved "
+    "posterior."
+)
+"""What the warning that the chains disagree on an aggregate says of the cause and the remedy."""
 
 
 def _split(N: int, chains: int) -> tuple[int, ...]:

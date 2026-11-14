@@ -331,7 +331,8 @@ dependency needs a reason, proposed first.
   misfits: the model's at the mode; `with_data` solves again from the last linearization), and the
   Gaussian at the mode, the analytic solution linearized at the last iterate (gain, DOFS, the `H` of `A`
   and `innovation_cov`: `Posterior._linear`). `variances`, `cov(W)`, `sample`: draws (`_Sampler`, HMC
-  split at that Gaussian, a Metropolis test), kept as `"bounded"`'s. Iterates and draws are `x_0 + S_0 y`:
+  split at that Gaussian, a Metropolis test), kept as `"bounded"`'s. `cov(W)` checks the chains on `W x`
+  (`_draws._warn_if_aggregates_unmixed`: any row's split R-hat above 1.1 warns); `uncertainty(W)` and `trials` read it first. Iterates and draws are `x_0 + S_0 y`:
   no `S_0^-1`. A draw is a few `F`, `J^T v` (`ForwardModel._gradient`), `S_hat v`. A step that raises the
   cost is halved. A transform's `_curvature` (diagonal; None for other models) adds Newton's step (CG
   preconditioned by `S_hat`), the lower cost taken; only a whole Gauss-Newton step (and Newton's) stops.

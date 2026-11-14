@@ -68,6 +68,7 @@ from fips.methods._draws import (
     _autocorrelation_times,
     _split_rhat,
     _std_errors,
+    _warn_if_aggregates_unmixed,
     _warn_if_unmixed,
 )
 from fips.methods.analytic import Information, Whitened
@@ -1453,6 +1454,136 @@ def test_a_few_unmixed_elements_of_many_are_logged_and_a_share_of_them_warns(cap
     assert check(100, 5) == {"WARNING"}
     assert check(20, 1) == {"WARNING"}
     assert check(100, 0) == set()
+
+
+def aggregate_warnings(draws, lengths, caplog) -> list[str]:
+    """The messages `_warn_if_aggregates_unmixed` logs at WARNING for the chains' `draws` of an aggregation's rows."""
+    logger = logging.getLogger("fips.test.aggregates")
+    caplog.clear()
+    with caplog.at_level("INFO", logger="fips.test.aggregates"):
+        _warn_if_aggregates_unmixed(draws, lengths, logger, "why")
+    assert all(r.levelname == "WARNING" for r in caplog.records)
+    return [r.getMessage() for r in caplog.records]
+
+
+def test_an_aggregate_warns_above_a_split_rhat_of_1_1_which_one_shifted_chain_gives_exactly(
+    caplog,
+):
+    r"""
+    One chain of four shifted by :math:`s` standard deviations has a split R-hat of :math:`\sqrt{1 + 3 s^2 / 14}` (two of the eight halves' means at :math:`s`, six at 0); at :math:`s = 0.7` that is 1.051, above the elements' 1.05 and silent for an aggregate, and at 1.5 it is 1.217 and warns, naming the row and the chains' standard deviations.
+    """
+    rng = np.random.default_rng(3)
+    lengths = (5000,) * 4
+
+    def shifted(s):
+        draws = rng.standard_normal((1, 20000))
+        draws[0, :5000] += s
+        return draws
+
+    for s in (0.7, 1.5):
+        rhat = _split_rhat(shifted(s), lengths)[0]
+        assert rhat == pytest.approx(math.sqrt(1 + 3 * s**2 / 14), rel=0.01)
+    assert aggregate_warnings(shifted(0.7), lengths, caplog) == []
+    (message,) = aggregate_warnings(shifted(1.5), lengths, caplog)
+    assert "disagree on 1 of the 1 aggregates read (row 0 of" in message
+    assert "above 1.10, the worst (row 0) 1.2" in message
+    assert message.endswith("why")
+    assert aggregate_warnings(shifted(1.5), (20000,), caplog) == []  # one chain
+
+
+def test_chains_can_agree_on_every_element_and_not_on_their_total_and_the_reverse(
+    caplog,
+):
+    """
+    An aggregate depends on how the elements vary together: 100 elements each shifted by 0.15 of a standard deviation in one chain agree (no element above 1.05) while their total, shifted by 1.5 of its own, has a split R-hat of 1.217 and warns; two elements shifted together by 2 disagree, and so does their sum, while their difference agrees and is not named.
+
+    A check that read the elements the aggregate uses (the wrong variant
+    here: the largest split R-hat among the elements with a weight) gets
+    both wrong: silent on the total, loud on the difference.
+    """
+    rng = np.random.default_rng(4)
+    lengths = (500,) * 4
+
+    def by_elements(draws, W):
+        """Whether each row of `W` is flagged from its elements' own split R-hat: the wrong variant."""
+        rhat = _split_rhat(draws, lengths)
+        return [bool(rhat[row != 0].max() > 1.1) for row in W]
+
+    many = rng.standard_normal((100, 2000))
+    many[:, :500] += 0.15
+    total = np.ones((1, 100))
+    assert _split_rhat(many, lengths).max() < 1.05
+    assert _split_rhat(total @ many, lengths)[0] == pytest.approx(1.217, rel=0.03)
+    (message,) = aggregate_warnings(total @ many, lengths, caplog)
+    assert "disagree on 1 of the 1 aggregates read (row 0 of" in message
+    assert by_elements(many, total) == [False]
+
+    two = rng.standard_normal((2, 2000))
+    two[:, :500] += 2.0
+    W = np.array([[1.0, -1.0], [1.0, 1.0]])
+    assert _split_rhat(two, lengths).min() > 1.1
+    rhat = _split_rhat(W @ two, lengths)
+    assert rhat[0] < 1.02 < 1.1 < rhat[1]
+    (message,) = aggregate_warnings(W @ two, lengths, caplog)
+    assert "disagree on 1 of the 2 aggregates read (row 1 of" in message
+    assert by_elements(two, W) == [True, True]
+
+
+def test_an_aggregation_of_many_rows_warns_of_any_one_and_names_the_first_eight(caplog):
+    """Any one row of 100 whose chains disagree warns (each is an aggregate the caller asked for; no share of the rows as for the elements), and of 12 that disagree the first 8 are named and the rest counted."""
+    rng = np.random.default_rng(5)
+    lengths = (500,) * 4
+    draws = rng.standard_normal((100, 2000))
+    assert aggregate_warnings(draws, lengths, caplog) == []
+    draws[41, :500] += 2.0
+    (message,) = aggregate_warnings(draws, lengths, caplog)
+    assert "disagree on 1 of the 100 aggregates read (row 41 of" in message
+    draws[50:61, :500] += 2.0
+    (message,) = aggregate_warnings(draws, lengths, caplog)
+    assert "disagree on 12 of the 100 aggregates read" in message
+    assert "(rows 41, 50, 51, 52, 53, 54, 55, 56 and 4 more of" in message
+
+
+def test_reading_an_aggregate_warns_when_its_chains_disagree_and_runs_no_model(
+    caplog, monkeypatch
+):
+    """
+    The guide's two cells with their total pinned to 2.5%: reading the covariance or the uncertainty of the cells' difference and sum warns that the chains disagree on both (a FipsWarning, and a log line), at no run of the model past those of the draws; the full covariance, with no aggregation, does not; with the total observed loosely, or with one chain, nothing is said.
+
+    Measured (2026-11-14) over 4 seeds at these draws: the aggregates' split
+    R-hat at least 1.6 pinned, against the warning's 1.1, and at most 1.04
+    with the total observed loosely (error 0.5).
+    """
+    problem = two_cells()
+    rows = Space({"cells": pd.Index(["a - b", "a + b"], name="aggregate")})
+    W = Operator(np.array([[1.0, -1.0], [1.0, 1.0]]), rows, problem.prior.space)
+    calls = []
+    point = gauss_newton._Sampler.point
+    monkeypatch.setattr(
+        gauss_newton._Sampler,
+        "point",
+        lambda self, x: (calls.append(1), point(self, x))[1],
+    )
+    post = fips.solve(problem, "gauss_newton", draws=400, burn_in=100)
+    with caplog.at_level("WARNING", logger="fips.methods.gauss_newton"):
+        post.cov()
+        assert "aggregates read" not in caplog.text
+        made = len(calls)
+        with pytest.warns(fips.FipsWarning, match="disagree on 2 of the 2 aggregates"):
+            post.cov(W)
+        assert "disagree on 2 of the 2 aggregates read (rows 0, 1 of" in caplog.text
+        assert "raise draws=" in caplog.text
+        caplog.clear()
+        with pytest.warns(fips.FipsWarning, match="aggregates read"):
+            post.uncertainty(W)
+        assert caplog.text.count("aggregates read") == 1
+        assert len(calls) == made
+        caplog.clear()
+        loose = fips.solve(two_cells(0.5), "gauss_newton", draws=400, burn_in=100)
+        loose.uncertainty(W)
+        one = fips.solve(problem, "gauss_newton", draws=400, burn_in=100, chains=1)
+        one.uncertainty(W)
+    assert "disagree" not in caplog.text
 
 
 def test_std_errors_of_chains_count_each_chains_own_autocorrelation():

@@ -1105,6 +1105,10 @@ class Posterior:
             covariance. For the ``"bounded"`` and ``"gauss_newton"``
             methods, the covariance of their kept draws of the posterior (or
             of the draws aggregated, :math:`W x`): a Monte Carlo estimate.
+            ``"gauss_newton"`` with a forward model warns when its chains
+            disagree on a row of `W` (a split R-hat above 1.1): that
+            aggregate's variance is not yet the posterior's, and more
+            ``draws`` settle it.
 
         Raises
         ------

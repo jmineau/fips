@@ -319,6 +319,19 @@ when:
   by more than 10%. It says how many draws would do; raise ``draws``, or read
   the aggregates the data constrain, which mix faster.
 
+**Reading an aggregate checks the chains on it.** A total depends on how the
+elements vary together, so its chains can disagree where few elements' do,
+and agree where many do. :meth:`~fips.Posterior.cov` and
+:meth:`~fips.Posterior.uncertainty` with an aggregation ``W`` warn when a
+row of ``W`` has a split R-hat above 1.1, naming the rows (counted from 0)
+and the worst one's standard deviation in two chains; raise ``draws``. The
+check reads the kept draws and runs no model. In 736 default solves of 23
+problems of 100 to 900 elements (2026-11-14), every aggregate whose standard
+deviation was more than 20% off had a split R-hat above 1.1. One that is 10%
+to 20% off usually has not: at the default 2000 draws an aggregate's
+standard deviation was known to 2% to 8% there, and that scatter is not a
+disagreement of the chains. More draws lower it.
+
 **Chains that agree are not proof.** On a posterior that bends along a curve
 (an observation of a sum of elements, each with a wide prior), each draw
 moves about one width of the Gaussian at the mode, and the curve's far arms
