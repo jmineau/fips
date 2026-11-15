@@ -66,9 +66,13 @@ problem linearized at the last iterate, one step of :math:`d^2 <
 DOFS and information content are those of the Gaussian at the mode. Its
 variances, the covariance of aggregates, the mean, the intervals and its draws
 are those of the posterior itself, :math:`p(x \mid z) \propto e^{-\chi^2(x)/2}`, drawn by
-Hamiltonian Monte Carlo (``_Sampler``): the Gaussian at the mode is its mass
+Hamiltonian Monte Carlo (``_Sampler``): a Gaussian about the mode is its mass
 and its exactly solved part, the rest of the cost its kicks, and a Metropolis
-test keeps the chain exact. Several chains run from spread starts, and the
+test keeps the chain exact. That Gaussian is the Gaussian at the mode where
+the posterior is that Gaussian (a linear model), and otherwise the one of the
+same linearized problem solved at a thirtieth of :math:`\gamma`, wider where
+the data pin the state down, so that the paths reach the far ends of a
+posterior that bends along a curve. Several chains run from spread starts, and the
 solve warns when they disagree (a split R-hat): one chain that never enters
 a tail of a curved posterior reports too small a spread, and cannot tell.
 The covariance of aggregates warns when they disagree on an aggregate that
@@ -522,10 +526,19 @@ _BLOCK = 512
 _FAILED = (ValueError, FloatingPointError, OverflowError, LinAlgError)
 """What a model (or a transform) raises at a state it cannot model: a path that reaches one is rejected."""
 
+_WIDER = 0.03
+"""The fraction of gamma the sampler's Gaussian is solved at where the posterior is not the Gaussian at the mode: the Gaussian at the mode of the problem linearized there, with a thirtieth of the data's weight (chosen on plan 010's measurements, 2026-11-15)."""
+
+_FLAT = 0.1
+"""The spread of the remainder (log density) over :data:`_PROBES` draws of the Gaussian at the mode below which the posterior is taken as that Gaussian, and the sampler is split there."""
+
+_PROBES = 16
+"""The draws of the Gaussian at the mode the remainder is read at, to choose the Gaussian the sampler is split at."""
+
 
 @dataclass(frozen=True)
 class _Point:
-    r"""A state of the chain with what the next path needs there: the remainder :math:`R(x)`, its gradient :math:`\rho(x)` and :math:`\hat{S} \rho(x)`."""
+    r"""A state of the chain with what the next path needs there: the remainder :math:`R(x)`, its gradient :math:`\rho(x)` and :math:`S' \rho(x)`."""
 
     x: np.ndarray
     R: float
@@ -544,16 +557,17 @@ class _Tuning:
 
 class _Sampler:
     r"""
-    Hamiltonian Monte Carlo for the posterior of a problem with a forward model, split at the Gaussian at the mode.
+    Hamiltonian Monte Carlo for the posterior of a problem with a forward model, split at a Gaussian about the mode.
 
     The posterior is :math:`p(x \mid z) \propto e^{-U(x)}`, :math:`U` half
-    the cost. Write it as the Gaussian at the mode times the rest,
+    the cost. Write it as a Gaussian about the mode times the rest,
     :math:`U = U_G + R`, with :math:`U_G(x) = \tfrac{1}{2} (x - \hat{x})^T
-    \hat{S}^{-1} (x - \hat{x})` (:math:`\hat{S}` the covariance of the
-    problem linearized at the last iterate, ``analytic``). The momentum's
-    mass is :math:`\hat{S}^{-1}`, so a velocity is a draw of :math:`N(0,
-    \hat{S})`: the analytic method's exact draws less their mean
-    (``analytic.sample``). The dynamics of :math:`U_G` with that mass are a
+    S'^{-1} (x - \hat{x})`, where :math:`S'^{-1} = S_0^{-1} + \gamma' J_*^T
+    S_z^{-1} J_*` is the covariance of the problem linearized at the last
+    iterate (:math:`J_*` its Jacobian) solved at :math:`\gamma'`
+    (``split``). The momentum's mass is :math:`S'^{-1}`, so a velocity is a
+    draw of :math:`N(0, S')`: the analytic method's exact draws less their
+    mean (``split.sample``). The dynamics of :math:`U_G` with that mass are a
     rotation, solved exactly, as for the bounded method's sampler:
 
     .. math::
@@ -561,15 +575,33 @@ class _Sampler:
         x(t) = \hat{x} + (x - \hat{x}) \cos t + v \sin t, \qquad
         v(t) = v \cos t - (x - \hat{x}) \sin t,
 
-    and :math:`R` acts as kicks, :math:`v \leftarrow v - h \hat{S} \nabla R`,
+    and :math:`R` acts as kicks, :math:`v \leftarrow v - h S' \nabla R`,
     half a step before and after each rotation by :math:`h` (Strang
     splitting: Shahbaba et al., 2014). The path is symplectic and reversible,
     so a Metropolis test on the change of :math:`H = U + \tfrac{1}{2} v^T
-    \hat{S}^{-1} v` makes the chain exact whatever :math:`\hat{S}` and
-    :math:`h` are; they set only how fast it mixes. Where the posterior is
-    the Gaussian at the mode (a linear model), :math:`\nabla R = 0`, every
-    path is accepted, and one step of a quarter period is an exact,
-    independent draw.
+    S'^{-1} v` makes the chain exact whatever :math:`S'` and :math:`h` are;
+    they set only how fast it mixes.
+
+    **Which Gaussian.** At :math:`\gamma' = \gamma` it is the Gaussian at the
+    mode, :math:`\hat{S}` (``analytic``). Where that is the posterior (a
+    linear model), :math:`\nabla R = 0`, every path is accepted, and one step
+    of a quarter period is an exact, independent draw. Where the posterior
+    bends along a curve, it is the wrong one: to reach a far end of the curve
+    a path must move far in the directions the data pin down at the mode,
+    where :math:`\hat{S}` is narrowest, and its velocities, drawn from
+    :math:`\hat{S}`, are smallest there; the chain creeps along the curve and
+    can miss an end altogether (issue #203). So the sampler first reads
+    :math:`R` at :data:`_PROBES` draws of the Gaussian at the mode: where it
+    varies by less than :data:`_FLAT` (the posterior is that Gaussian within a
+    tenth in log density), :math:`\gamma' = \gamma`; otherwise :math:`\gamma'
+    = ` :data:`_WIDER` :math:`\gamma`, a Gaussian as wide as the prior where
+    the data are weak and wider than :math:`\hat{S}` where they pin the state
+    down, whose velocities carry the paths along the curve while the kicks of
+    the data's term keep them on it. Measured on plan 010's problems (two
+    curved pairs against their grids, #223's two strong cases against emcee,
+    23 settings of 100 to 900 elements against long solves): the share of
+    elements whose spread is more than 10% off fell from a median of 1.6% to
+    0.1%, at 1.6 times the model runs in the median (at most 2.8).
 
     :math:`S_0^{-1}` is never needed. With :math:`\hat{x} = x_0 + S_0
     \hat{y}` (``mode_y``) and every state in :math:`x_0` plus the range of
@@ -578,17 +610,16 @@ class _Sampler:
 
     .. math::
 
-        R(x) = \hat{y}^T (x - \hat{x}) + \tfrac{\gamma}{2} \big(r^T S_z^{-1} r
-            - d^T S_z^{-1} d\big), \qquad r = z - F(x) - c, \quad
+        R(x) = \hat{y}^T (x - \hat{x}) + \tfrac{1}{2} \big(\gamma r^T S_z^{-1} r
+            - \gamma' d^T S_z^{-1} d\big), \qquad r = z - F(x) - c, \quad
             d = J_* (x - \hat{x}),
 
-    up to a constant, with :math:`J_*` the Jacobian of the last
-    linearization; its gradient is :math:`\rho = \hat{y} - \gamma J(x)^T
-    S_z^{-1} r - \gamma J_*^T S_z^{-1} d`, so a kick is :math:`\hat{S} \rho`
-    (``_cov_times``). The kinetic energy is never formed either: a kick of
-    :math:`h` changes it by :math:`-h \rho^T v + \tfrac{1}{2} h^2 \rho^T
-    \hat{S} \rho`, and a rotation not at all. A singular :math:`S_0` (elements
-    with no prior spread) leaves those elements at the mode.
+    up to a constant; its gradient is :math:`\rho = \hat{y} - \gamma J(x)^T
+    S_z^{-1} r - \gamma' J_*^T S_z^{-1} d`, so a kick is :math:`S' \rho`
+    (``split._cov_times``). The kinetic energy is never formed either: a kick
+    of :math:`h` changes it by :math:`-h \rho^T v + \tfrac{1}{2} h^2 \rho^T S'
+    \rho`, and a rotation not at all. A singular :math:`S_0` (elements with
+    no prior spread) leaves those elements at the mode.
 
     Each draw starts from the last with a new velocity and travels a quarter
     period, :data:`_QUARTER`, in steps of the tuned :math:`h` (jittered by
@@ -612,30 +643,60 @@ class _Sampler:
         self.solve_S_z = problem.obs_cov.data._solver()
         self.z = problem.obs.values
         self.c = problem._offset_values()
+        self.split_gamma, self.split = self.gamma, analytic
+        options = solution.options
+        # The probes' stream is the seed's child after the chains', so the chains' own are unchanged
+        probe_rng = np.random.default_rng(
+            np.random.SeedSequence(options.seed).spawn(options.chains + 1)[-1]
+        )
+        spread = self._spread(probe_rng)
+        if spread >= _FLAT:
+            self.split_gamma = _WIDER * self.gamma
+            self.split = type(analytic).factor(analytic.problem, self.split_gamma)
+        self.split_mean = self.split.estimate()
+        logger.info(
+            "The posterior sampler is split at the Gaussian at the mode solved at "
+            "%.3g times gamma: the remainder varies by %.3g over %d of its draws.",
+            self.split_gamma / self.gamma,
+            spread,
+            _PROBES,
+        )
+
+    def _spread(self, rng: np.random.Generator) -> float:
+        """Return the standard deviation of the remainder over :data:`_PROBES` draws of the Gaussian at the mode (infinite if the model cannot model one), read while the sampler is split there."""
+        draws = self.analytic.sample(_PROBES, rng)
+        values = []
+        for j in range(_PROBES):
+            try:
+                values.append(self.point(draws[:, j]).R)
+            except _FAILED:
+                return math.inf
+        return float(np.std(values))
 
     def point(self, x: np.ndarray) -> _Point:
         r"""
-        Return the state `x` with :math:`R`, :math:`\rho` and :math:`\hat{S} \rho` there.
+        Return the state `x` with :math:`R`, :math:`\rho` and :math:`S' \rho` there.
 
         Raises
         ------
         ValueError, FloatingPointError, OverflowError, numpy.linalg.LinAlgError
             If the model cannot model `x`, or the result is not finite.
         """
-        problem, gamma = self.problem, self.gamma
+        problem, gamma, wide = self.problem, self.gamma, self.split_gamma
         with np.errstate(over="raise", invalid="raise"):
             r = self.z - problem._apply(x) - self.c
             dx = x - self.mode
             d = np.asarray(self.J @ dx, dtype=float)
             weighted = np.asarray(self.solve_S_z(np.column_stack([r, d])))
-            R = float(self.mode_y @ dx) + 0.5 * gamma * (
-                float(r @ weighted[:, 0]) - float(d @ weighted[:, 1])
+            R = float(self.mode_y @ dx) + 0.5 * (
+                gamma * float(r @ weighted[:, 0]) - wide * float(d @ weighted[:, 1])
             )
-            rho = self.mode_y - gamma * (
-                problem._gradient(x, weighted[:, 0])
-                + np.asarray(self.J_T @ weighted[:, 1], dtype=float)
+            rho = (
+                self.mode_y
+                - gamma * problem._gradient(x, weighted[:, 0])
+                - wide * np.asarray(self.J_T @ weighted[:, 1], dtype=float)
             )
-            S_rho = self.analytic._cov_times(rho[:, None])[:, 0]
+            S_rho = self.split._cov_times(rho[:, None])[:, 0]
         if not (math.isfinite(R) and np.isfinite(S_rho).all()):
             raise FloatingPointError("The remainder is not finite.")
         return _Point(x, R, rho, S_rho)
@@ -685,7 +746,7 @@ class _Sampler:
         done = 0
         while done < count:
             block = min(_BLOCK, count - done)
-            V = self.analytic.sample(block, rng) - self.mean[:, None]
+            V = self.split.sample(block, rng) - self.split_mean[:, None]
             tests = rng.random(block)
             jitters = rng.uniform(1.0 - _JITTER, 1.0 + _JITTER, block)
             for j in range(block):

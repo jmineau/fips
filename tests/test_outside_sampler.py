@@ -34,10 +34,10 @@ emcee run is longer than 50 of its integrated autocorrelation times (emcee's
 own guidance) and that both sides' errors are small against the posterior's
 spread, so that agreement is not bought with noise.
 
-In the two strongly nonlinear regimes, fips's ``"gauss_newton"`` chains of
-the default length do not yet agree (issue #203): those cases are expected to
-fail (:data:`ISSUE_203`), and strictly, so that they turn the suite red once
-they pass.
+In the strongly nonlinear lognormal regime, one statistic of fips's
+``"gauss_newton"`` draws is just less precise than the test asks: that case
+is expected to fail (:data:`IMPRECISE`), and strictly, so that it turns the
+suite red once it passes.
 
 These tests are ``slow``; ``just test-slow`` runs them, and so does the
 weekly Slow tests workflow.
@@ -442,34 +442,31 @@ solves average to the right one. In the mild regimes the errors are under
 1% of the scale.
 """
 
-ISSUE_203 = pytest.mark.xfail(
+IMPRECISE = pytest.mark.xfail(
     strict=True,
     raises=Disagrees,
-    reason="issue #203: a chain of gauss_newton's draws can miss part of a curved "
-    "posterior, so its standard deviations are low and differ from seed to seed",
+    reason="the standard deviation of element 0 from 16 default solves is known "
+    "to 2.6% of its scale, just above the test's 2.5%",
 )
 """
-The strongly nonlinear regimes: fips's chains of 2000 draws miss parts of the posterior.
+The strongly nonlinear lognormal regime: fips's draws agree with emcee's, and one statistic of 16 default solves is just less precise than :data:`PRECISION`.
 
-Measured against eight emcee runs of 120,000 steps (and, separately, eight
-of the stretch move's of 200,000, which agree with them): with 16 solves of
-the default 2000 draws, fips's errors are up to 6% of the scale (lognormal,
-the std of element 0) and 22% (softplus, the mean of element 1), so one solve
-is off by up to 23% and 87%; its standard deviations are low in 17 of the 19
-elements compared, by up to 13% in each regime. Drawn from one solve, longer
-chains bring them in: at 8000 draws still low (all ten for the lognormal, z
-to -3.2; the softplus's element 9 by 6%, z = -5.2), at 64,000 within 1% to
-4% of emcee's (|z| below 3.4). So the posterior fips draws is the right one,
-and its chains mix too slowly for their default length, which is #203. When
-it is fixed these pass, and ``strict`` turns the suite red until the mark
-comes off.
+Measured (2026-11-15) against eight emcee runs of 120,000 steps: every
+statistic within 2 combined errors of emcee's, fips's errors under 2.5% of
+the scale except the standard deviation of element 0, 2.6% (its value 1.4%
+above emcee's). In the softplus regime, which passes, the errors are under
+1.5%. Before the sampler was split at a wider Gaussian where the model bends
+(issue #203), both regimes failed: errors up to 6% of the scale (lognormal,
+the std of element 0) and 22% (softplus, the mean of element 1), and the
+standard deviations low in 17 of the 19 elements compared, by up to 13%,
+because a chain of the default length missed part of the curved posterior.
 """
 
 
 @pytest.mark.parametrize(
     "regime",
     [
-        pytest.param(name, marks=ISSUE_203) if name.endswith("strong") else name
+        pytest.param(name, marks=IMPRECISE) if name == "lognormal-strong" else name
         for name in REGIMES
     ],
 )

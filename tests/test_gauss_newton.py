@@ -33,9 +33,13 @@ wrong distribution still gives with the right shape, are held to:
 8. **Exact answers**: one skewed cell (lognormal and softplus) against the
    posterior on a fine grid (mean, variance, 5% and 95% quantiles); the two
    cells of the guide (the total's mean and standard deviation, and with a
-   looser observation the cells' correlation) against a 2-D grid; a linear model
+   looser observation the cells' correlation) against a 2-D grid; on the two
+   curves of issue #203, pinned closely, each element's mean and standard
+   deviation from one default solve against a 2-D grid (slow); a linear model
    against the analytic posterior; within Monte Carlo errors from the spread
-   of independent chains, which counts their autocorrelation.
+   of independent chains, which counts their autocorrelation. The sampler is
+   split at the Gaussian at the mode only for the linear model, and at a
+   wider Gaussian for the others.
 9. **Its own world**: the truth's rank among the draws is uniform, for each
    element, the total flux and a difference.
 10. **Wrong variants** of the sampler (no Metropolis test; velocities from
@@ -44,7 +48,7 @@ wrong distribution still gives with the right shape, are held to:
     ``with_data`` draws the new data's posterior.
 12. **Chains**: the split R-hat is near 1 for chains of one distribution and
     above it when one chain is shifted or narrower; on the guide's two cells,
-    pinned closely, the chains disagree and the solve says so (issue #203).
+    pinned closely, chains that disagree make the solve say so (issue #203).
 """
 
 import dataclasses
@@ -1127,16 +1131,16 @@ def test_two_cells_draws_give_the_observed_total():
     """
     The two cells of the guide: the draws' total has the posterior's mean and standard deviation, within their Monte Carlo errors; with a total observed less closely, the cells have the posterior's correlation too.
 
-    Measured (12 chains of 400 draws): the total 1.998 +- 0.051 against
-    1.998 +- 0.050 on the grid, where the Gaussian at the mode's draws give
-    2.6 +- 0.9. The total, which the data constrain, mixes in a few draws.
-    The cells along the curve mix slowly when it is pinned this closely (an
-    autocorrelation time of 50 draws by Sokal's window, hundreds by batch
-    means: the Gaussian at the mode is the sampler's mass, narrow across the
-    curve where the curve has turned), so chains this short give their
-    correlation as -0.92 against -0.79, and it is not tested here. With the
-    total's error 0.5 (the cells' autocorrelation time 3) the correlation
-    is -0.61 +- 0.01 against -0.60.
+    Measured (2026-11-15, 12 chains of 400 draws): the total 2.000 +- 0.051
+    against 1.998 +- 0.050 on the grid, where the Gaussian at the mode's draws
+    give 2.6 +- 0.9. The total, which the data constrain, mixes in a few
+    draws, and the cells along the curve in about 13; chains this short give
+    their correlation as -0.80 to -0.82 against -0.79 (two runs on two
+    processors), closer than their error says, so it is not tested here.
+    Split at the Gaussian at the mode instead (before issue #203's fix), the
+    cells mixed in 50 draws by Sokal's window, hundreds by batch means, and
+    the correlation came out -0.92. With the total's error 0.5 the
+    correlation is -0.59 +- 0.01 against -0.60.
     """
     problem = two_cells()
     post = fips.solve(problem, "gauss_newton", burn_in=300)
@@ -1152,6 +1156,93 @@ def test_two_cells_draws_give_the_observed_total():
     post = fips.solve(loose, "gauss_newton")
     estimate, error = chain_estimates(post, two_cell_statistic, chains=12, draws=400)
     assert_within(estimate, error, two_cell_moments(loose))
+
+
+def two_exp() -> Problem:
+    """
+    Issue #203's curve: ``F(x) = e^a + 2 e^b`` observed as 4 with error 0.15, each element's prior ``N(0, 1)``.
+
+    The states that give 4 lie on a curve that bends over the prior's spread.
+    Split at the Gaussian at the mode, the sampler's spread of ``b`` from
+    20,000 draws was 28% to 40% low in three seeds of six, with no warning.
+    """
+    state = Space({"x": pd.Index(["a", "b"], name="element")})
+    obs = Space({"z": pd.RangeIndex(1, name="obs_id")})
+    return Problem(
+        prior=Vector(np.zeros(2), state),
+        prior_cov=Covariance(np.eye(2), state),
+        obs=Vector([4.0], obs),
+        obs_cov=Covariance(np.array([[0.15**2]]), obs),
+        forward=ExpModel(Operator(np.array([[1.0, 2.0]]), obs, state)),
+    )
+
+
+def pair_moments(problem: Problem, weights) -> np.ndarray:
+    """Each element's mean and standard deviation (rows), for one observation of ``weights @ exp(x)``, on a fine grid (the trapezoidal rule)."""
+    x_0 = problem.prior.values
+    s_0 = np.sqrt(np.diag(problem.prior_cov.dense()))
+    s_z = math.sqrt(problem.obs_cov.dense()[0, 0])
+    grid = np.linspace(-8.0, 4.0, 2401)
+    a, b = np.meshgrid(grid, grid, indexing="ij")
+    total = weights[0] * np.exp(a) + weights[1] * np.exp(b)
+    log_p = (
+        -0.5 * ((a - x_0[0]) / s_0[0]) ** 2
+        - 0.5 * ((b - x_0[1]) / s_0[1]) ** 2
+        - 0.5 * ((problem.obs.values[0] - total) / s_z) ** 2
+    )
+    w = np.exp(log_p - log_p.max())
+    w /= w.sum()
+    rows = []
+    for values in (a, b):
+        mean = float((w * values).sum())
+        rows.append([mean, math.sqrt(float((w * (values - mean) ** 2).sum()))])
+    return np.array(rows)
+
+
+def test_the_sampler_is_split_at_the_gaussian_at_the_mode_only_where_that_is_the_posterior():
+    """
+    A linear model is split at the Gaussian at the mode (its remainder is flat), a curved posterior at the Gaussian of the same linearized problem at a thirtieth of gamma: wider than the Gaussian at the mode in every direction, and no wider than the prior.
+
+    Measured (2026-11-15), the remainder's standard deviation over 16 draws
+    of the Gaussian at the mode: 1e-14 for a linear model of 50 or 400
+    elements, 0.01 to 83 for #223's four cases, 6 to 30,000 for plan 010's
+    23 settings of 100 to 900 elements.
+    """
+    arrays = Arrays.random(1, 3, 5)
+    linear = fips.solve(linear_problem(arrays, model=True), "gauss_newton")
+    sampler = linear._solution._sampler()
+    assert sampler.split is sampler.analytic and sampler.split_gamma == sampler.gamma
+    for problem in (two_cells(), two_exp()):
+        sampler = fips.solve(problem, "gauss_newton")._solution._sampler()
+        assert sampler.split_gamma == pytest.approx(gauss_newton._WIDER * sampler.gamma)
+        eye = np.eye(len(sampler.mode))
+        wide, narrow = sampler.split._cov_times(eye), sampler.analytic._cov_times(eye)
+        assert np.linalg.eigvalsh(wide - narrow).min() > -1e-12
+        assert np.linalg.eigvalsh(problem.prior_cov.dense() - wide).min() > -1e-12
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize("name", ["two_exp", "two_cells"])
+def test_on_a_closely_pinned_curve_each_elements_spread_is_the_grids(name):
+    """
+    Issue #203: on a curve pinned closely, a default solve of 20,000 draws gives each element's standard deviation within 10% of the grid's and its mean within a tenth of a standard deviation, in each of two seeds.
+
+    Split at the Gaussian at the mode, as before, the spread of ``b`` was 28%
+    to 40% low in three seeds of six of :func:`two_exp`, with no warning, and
+    a cell's 14% to 47% off on :func:`two_cells`: the paths' velocities were
+    smallest across the curve, where a far end of it lies. Measured with the
+    wider split (2026-11-15, 6 seeds of each): within 7% and 0.06.
+    """
+    if name == "two_exp":
+        problem, weights = two_exp(), [1.0, 2.0]
+    else:
+        problem, weights = two_cells(), [1.0, 1.0]
+    exact = pair_moments(problem, weights)
+    for seed in (0, 1):
+        post = fips.solve(problem, "gauss_newton", draws=20_000, seed=seed)
+        std = np.sqrt(post.variances.values)
+        np.testing.assert_allclose(std, exact[:, 1], rtol=0.10)
+        assert np.all(np.abs(post.mean.values - exact[:, 0]) < 0.1 * exact[:, 1])
 
 
 @pytest.mark.slow
@@ -1182,6 +1273,8 @@ def test_a_linear_model_draws_the_analytic_posterior(n, m):
     arrays = Arrays.random(1, n, m)
     post = fips.solve(linear_problem(arrays, model=True), "gauss_newton")
     ref = fips.solve(linear_problem(arrays, model=False))
+    sampler = post._solution._sampler()
+    assert sampler.split is sampler.analytic  # split at the Gaussian at the mode
     for tuning in post._solution._tunings():
         assert tuning.step == pytest.approx(gauss_newton._QUARTER)
         assert tuning.acceptance > 1 - 1e-9
@@ -1251,8 +1344,8 @@ def test_draws_are_calibrated_in_their_own_world():
     """
     In the world the posterior assumes, the truth is a draw like the others: its rank among the draws is uniform, for each element, the total flux and a difference.
 
-    Measured (seed 0, 80 trials of 100 kept draws): the smallest p-value of
-    the seven 0.12, and the 90% intervals' coverage 0.88.
+    Measured (2026-11-15, seed 0, 80 trials of 100 kept draws): the smallest
+    p-value of the seven 0.038, and the 90% intervals' coverage 0.88.
     """
     p_values, coverage = _calibration(trials=80, draws=100, seed=0)
     assert p_values.min() > 1e-4, p_values
@@ -1283,7 +1376,7 @@ def without_the_metropolis_test(self, here, v, test, h, steps):
 
 
 def velocities_from_the_prior(self, count, rng):
-    """Velocities drawn from the prior, ``N(0, S_0)``, while the energy counts them as ``N(0, S_hat)``."""
+    """Velocities drawn from the prior, ``N(0, S_0)``, while the energy counts them as ``N(0, S')``, the sampler's own Gaussian."""
     root = self.problem.prior_cov.data._root
     done = 0
     while done < count:
@@ -1307,11 +1400,10 @@ def test_a_wrong_sampler_fails(monkeypatch, name, wrong, chains):
     """
     Each wrong variant of the sampler draws another distribution, and the one-cell check against the grid fails (with a quarter of its chains for the second, which fails by far more).
 
-    Measured with 8 chains of 1500 draws, in Monte Carlo
-    errors: without the Metropolis test, the lognormal cell's mean off by
-    +7.4 and its quantiles by +7.5 and +8.1 (the softplus cell's 95% quantile
-    by +20); with velocities from the prior, the mean by -15 and the 5%
-    quantile by -26.
+    Measured (2026-11-15) with 8 chains of 1500 draws, in Monte Carlo
+    errors: without the Metropolis test, the lognormal cell's 5% quantile off
+    by -8.7 and its 95% by +46 (the softplus cell's 95% by +3.3); with
+    velocities from the prior, the mean by -12 and the 5% quantile by -14.
     """
     monkeypatch.setattr(gauss_newton._Sampler, name, wrong)
     with pytest.raises(AssertionError):
@@ -1324,16 +1416,16 @@ def test_a_wrong_jacobian_leaves_the_draws_exact_but_slow_and_warns(
     """
     A Jacobian off by a factor steers the paths wrong, which the Metropolis test corrects: the draws stay exact, and the tuned step falls until a draw takes hundreds of steps, which the solve warns of.
 
-    Measured on the one-cell lognormal problem with the Jacobian's transpose
-    1.5 times too large: a step of 0.002 (905 steps a draw, against 2), and
-    the one-cell check passes.
+    Measured (2026-11-15) on the one-cell lognormal problem: with the
+    Jacobian's transpose twice too large, a step of 0.0016 (997 steps a draw,
+    against 10 with the right one); 1.5 times too large, 125 steps.
     """
     problem, _ = one_cell("lognormal")
     model = problem.forward
     real = type(model)._gradient
 
     def wrong(self, x, v):
-        return 1.5 * real(self, x, v)
+        return 2.0 * real(self, x, v)
 
     monkeypatch.setattr(type(model), "_gradient", wrong)
     with caplog.at_level("WARNING", logger="fips.methods.gauss_newton"):
@@ -1550,10 +1642,15 @@ def test_reading_an_aggregate_warns_when_its_chains_disagree_and_runs_no_model(
     """
     The guide's two cells with their total pinned to 2.5%: reading the covariance or the uncertainty of the cells' difference and sum warns that the chains disagree on both (a FipsWarning, and a log line), at no run of the model past those of the draws; the full covariance, with no aggregation, does not; with the total observed loosely, or with one chain, nothing is said.
 
-    Measured (2026-11-14) over 4 seeds at these draws: the aggregates' split
-    R-hat at least 1.6 pinned, against the warning's 1.1, and at most 1.04
-    with the total observed loosely (error 0.5).
+    The sampler is split at the Gaussian at the mode here (``_WIDER`` 1, the
+    split before issue #203's fix), whose chains disagree on these cells:
+    the warning is for a sampler that has not reached part of the posterior,
+    which the wider split makes rarer. Measured (2026-11-15) over 4 seeds at
+    these draws, so split: the aggregates' split R-hat 1.2 to 4.9 pinned,
+    against the warning's 1.1, and at most 1.04 with the total observed
+    loosely (error 0.5); with the wider split, 1.04 to 1.28 pinned.
     """
+    monkeypatch.setattr(gauss_newton, "_WIDER", 1.0)
     problem = two_cells()
     rows = Space({"cells": pd.Index(["a - b", "a + b"], name="aggregate")})
     W = Operator(np.array([[1.0, -1.0], [1.0, 1.0]]), rows, problem.prior.space)
@@ -1611,9 +1708,11 @@ def test_the_chains_disagree_on_a_closely_pinned_curve_and_the_solve_warns(caplo
 
     One chain cannot give this warning: on main before it, with 2000 draws
     in one chain, the standard deviation of a cell was 14% to 47% off in
-    seeds whose solve logged nothing. Measured (2026-11-11) over 20 seeds
-    at 400 draws: the largest split R-hat at least 1.30, against the warning's
-    1.05; with the total observed loosely (error 0.5) at most 1.06.
+    seeds whose solve logged nothing. Measured (2026-11-15) over 20 seeds at
+    400 draws: the largest split R-hat 1.05 to 1.46 (above the warning's 1.05
+    in 19), where the split at the Gaussian at the mode, before issue #203's
+    fix, gives 1.23 to 8.6; with the total observed loosely (error 0.5) at
+    most 1.03.
     """
     with caplog.at_level("WARNING", logger="fips.methods.gauss_newton"):
         post = fips.solve(two_cells(), "gauss_newton", draws=400, burn_in=100)
