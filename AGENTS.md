@@ -257,7 +257,7 @@ an outside solver loses the labels) and delegates factorizations and storage to
 SciPy (`scipy.linalg`, `scipy.sparse`, `LinearOperator`, `eigsh`).
 pylops is read, not installed or copied (LGPL). GSTools only in an extra,
 if `covariance/kernels.py` outgrows its kernels. fips writes the samplers its
-methods need (HMC: exact for the bounded posterior, split at the Gaussian at the mode for a model) on NumPy and SciPy. The other inverse-problem libraries (pyOE, hippylib, pyemu, the
+methods need (HMC: exact for the bounded posterior, split at a Gaussian about the mode for a model) on NumPy and SciPy. The other inverse-problem libraries (pyOE, hippylib, pyemu, the
 Yadav and Michalak code) are test oracles, not dependencies. emcee, in the `dev` group only, is the outside sampler `tests/test_outside_sampler.py` holds the sampled methods to. A new runtime
 dependency needs a reason, proposed first.
 
@@ -331,10 +331,10 @@ dependency needs a reason, proposed first.
 - **A Gauss-Newton posterior holds the user's problem, with the model** (`modeled_obs`, `chi2`, the
   misfits: the model's at the mode; `with_data` solves again from the last linearization), and the
   Gaussian at the mode, the analytic solution linearized at the last iterate (gain, DOFS, the `H` of `A`
-  and `innovation_cov`: `Posterior._linear`). `variances`, `cov(W)`, `sample`: draws (`_Sampler`, HMC
-  split at that Gaussian, a Metropolis test), kept as `"bounded"`'s. `cov(W)` checks the chains on `W x`
+  and `innovation_cov`: `Posterior._linear`). `variances`, `cov(W)`, `sample`: draws (`_Sampler`, HMC split
+  at that Gaussian only where it is the posterior, else at it solved at `gamma / 30`: #203), kept as `"bounded"`'s. `cov(W)` checks the chains on `W x`
   (`_draws._warn_if_aggregates_unmixed`: any row's split R-hat above 1.1 warns); `uncertainty(W)` and `trials` read it first. Iterates and draws are `x_0 + S_0 y`:
-  no `S_0^-1`. A draw is a few `F`, `J^T v` (`ForwardModel._gradient`), `S_hat v`. A step that raises the
+  no `S_0^-1`. A draw is a few `F`, `J^T v` (`ForwardModel._gradient`), `S' v`. A step that raises the
   cost is halved. A transform's `_curvature` (diagonal; None for other models) adds Newton's step (CG
   preconditioned by `S_hat`), the lower cost taken; only a whole Gauss-Newton step (and Newton's) stops.
 - **`hierarchical`'s fast path reads every step from one eigendecomposition** (`_Factors._evidence_terms`,
