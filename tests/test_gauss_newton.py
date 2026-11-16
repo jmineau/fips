@@ -66,15 +66,15 @@ from scipy.stats import chi2 as chi2_distribution
 
 import fips
 from fips import Covariance, ForwardModel, Operator, Problem, Space, Vector
-from fips.linalg import DiagonalOperator, KroneckerOperator
-from fips.methods import gauss_newton
-from fips.methods._draws import (
+from fips._draws import (
     _autocorrelation_times,
     _split_rhat,
     _std_errors,
     _warn_if_aggregates_unmixed,
     _warn_if_unmixed,
 )
+from fips.linalg import DiagonalOperator, KroneckerOperator
+from fips.methods import gauss_newton
 from fips.methods.analytic import Information, Whitened
 from fips.methods.gauss_newton import GaussNewton, GaussNewtonOptions
 from fips.problem import Problem as _Problem
@@ -1371,8 +1371,8 @@ def without_the_metropolis_test(self, here, v, test, h, steps):
         with np.errstate(over="raise", invalid="raise"):
             end, _ = self.travel(here, v, h, steps)
     except gauss_newton._FAILED:
-        return here, 0.0
-    return end, 1.0
+        return here, 0.0, True
+    return end, 1.0, False
 
 
 def velocities_from_the_prior(self, count, rng):

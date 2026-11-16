@@ -113,14 +113,16 @@ from typing import ClassVar
 import numpy as np
 from numpy.linalg import LinAlgError
 
-from fips._errors import ConvergenceError, warn
-from fips.linalg import LinearOperator
-from fips.linalg.forms import _read_only
-from fips.methods._draws import (
+from fips._draws import (
+    _DIVERGENT,
+    _log_divergent,
     _warn_if_aggregates_unmixed,
     _warn_if_imprecise,
     _warn_if_unmixed,
 )
+from fips._errors import ConvergenceError, warn
+from fips.linalg import LinearOperator
+from fips.linalg.forms import _read_only
 from fips.methods.analytic import AnalyticOptions, Information, Whitened, _factor
 from fips.operator import Operator
 from fips.posterior import Posterior
@@ -364,10 +366,12 @@ class GaussNewton:
         """Return the kept draws (``n x draws``, the chains side by side), which the variances, the covariances, the mean and the intervals are read from: drawn from the seed at the first call, with a warning if the chains disagree or mix too slowly for their variances."""
         kept = self.__dict__.get("_draws")
         if kept is None:
-            draws, chains = self.options.draws, self.options.chains
-            kept = self.sample(draws, np.random.default_rng(self.options.seed))
+            kept, divergent = self._run(
+                self.options.draws, np.random.default_rng(self.options.seed)
+            )
             kept = self.__dict__["_draws"] = _read_only(kept)
-            lengths = _split(draws, chains)
+            lengths = self.lengths()
+            _log_divergent(divergent, logger)
             _warn_if_unmixed(kept, lengths, logger, _UNMIXED_DRAWS)
             _warn_if_imprecise(kept, logger, _SLOW_DRAWS, lengths=lengths)
         return kept
@@ -395,18 +399,29 @@ class GaussNewton:
 
     def sample(self, N: int, rng: np.random.Generator) -> np.ndarray:
         """Return `N` new draws of the posterior (``n x N``): split among the chains as evenly as they go (the first ones a draw more), each from where its burn-in ended, at its tuned step, side by side in the chains' order."""
-        sampler, parts = self._sampler(), []
+        return self._run(N, rng)[0]
+
+    def _run(self, N: int, rng: np.random.Generator) -> tuple[np.ndarray, np.ndarray]:
+        """Return :meth:`sample`'s `N` draws and whether each one's path diverged (``N`` booleans, in the same order)."""
+        sampler, parts, divergent = self._sampler(), [], []
         for tuning, count in zip(
             self._tunings(), _split(N, self.options.chains), strict=True
         ):
             if not count:  # fewer draws asked for than there are chains
                 continue
-            draws, _, acceptance = sampler.run(tuning.point, count, rng, tuning.step)
+            draws, diverged, acceptance = sampler.run(
+                tuning.point, count, rng, tuning.step
+            )
             logger.debug(
                 "%d draws of the posterior, accepted at %.2f.", count, acceptance
             )
             parts.append(draws)
-        return np.concatenate(parts, axis=1)
+            divergent.append(diverged)
+        return np.concatenate(parts, axis=1), np.concatenate(divergent)
+
+    def lengths(self) -> tuple[int, ...]:
+        """Return the number of kept draws of each chain, in the order :meth:`kept` holds them side by side."""
+        return _split(self.options.draws, self.options.chains)
 
     def variances(self) -> np.ndarray:
         """Return the variances of the kept draws."""
@@ -421,8 +436,7 @@ class GaussNewton:
             Y = kept
         else:
             Y = np.asarray(W @ kept, dtype=float)
-            lengths = _split(self.options.draws, self.options.chains)
-            _warn_if_aggregates_unmixed(Y, lengths, logger, _UNMIXED_AGGREGATES)
+            _warn_if_aggregates_unmixed(Y, self.lengths(), logger, _UNMIXED_AGGREGATES)
         centered = Y - Y.mean(axis=1, keepdims=True)
         S = centered @ centered.T / (Y.shape[1] - 1)
         return 0.5 * (S + S.T)
@@ -627,7 +641,10 @@ class _Sampler:
     mode (:meth:`start`; one chain alone, from the mode), and its burn-in tunes its own :math:`h` to an
     acceptance rate of :data:`_TARGET` by dual averaging (Hoffman and
     Gelman, 2014), starting from one step a draw; its draws are left out.
-    A path the model cannot follow (it overflows) is rejected.
+    A path the model cannot follow (it overflows) is rejected. A path whose
+    energy rose by more than :data:`~fips._draws._DIVERGENT`, or that the
+    model could not follow, diverged: the kept draws from one are counted and
+    logged at INFO (:func:`~fips._draws._log_divergent`).
     """
 
     def __init__(self, solution: "GaussNewton"):
@@ -726,18 +743,19 @@ class _Sampler:
 
     def move(
         self, here: _Point, v: np.ndarray, test: float, h: float, steps: int
-    ) -> tuple[_Point, float]:
-        """Return the chain's next state from `here` (the path's end if the Metropolis test `test` passes, else `here`) and the path's acceptance probability."""
+    ) -> tuple[_Point, float, bool]:
+        """Return the chain's next state from `here` (the path's end if the Metropolis test `test` passes, else `here`), the path's acceptance probability, and whether it diverged: its energy rose by more than :data:`~fips._draws._DIVERGENT`, or the model could not follow it."""
         try:
             with np.errstate(over="raise", invalid="raise"):
                 end, change = self.travel(here, v, h, steps)
         except _FAILED:
-            return here, 0.0
+            return here, 0.0, True
         if change <= 0.0:
             alpha = 1.0
         else:  # a NaN change is rejected
             alpha = math.exp(-change) if change < math.inf else 0.0
-        return (end if test < alpha else here), alpha
+        divergent = not change <= _DIVERGENT  # a NaN change diverged too
+        return (end if test < alpha else here), alpha, divergent
 
     def moves(
         self, count: int, rng: np.random.Generator
@@ -788,7 +806,7 @@ class _Sampler:
         log_h, log_mean, error, accepted = longest, longest, 0.0, 0.0
         for m, (v, test, jitter) in enumerate(self.moves(burn_in, rng), start=1):
             steps = _steps(math.exp(log_h))
-            here, alpha = self.move(here, v, test, _QUARTER / steps * jitter, steps)
+            here, alpha, _ = self.move(here, v, test, _QUARTER / steps * jitter, steps)
             accepted += alpha
             error += ((_TARGET - alpha) - error) / (m + 10)
             log_h = min(max(target - math.sqrt(m) / 0.05 * error, shortest), longest)
@@ -799,16 +817,19 @@ class _Sampler:
 
     def run(
         self, start: _Point, N: int, rng: np.random.Generator, step: float
-    ) -> tuple[np.ndarray, _Point, float]:
-        """Return `N` draws (``n x N``) of the chain from `start` at the step `step`, with velocities and tests drawn from `rng`, where it ended, and its acceptance rate."""
+    ) -> tuple[np.ndarray, np.ndarray, float]:
+        """Return `N` draws (``n x N``) of the chain from `start` at the step `step`, with velocities and tests drawn from `rng`, whether each one's path diverged (``N`` booleans), and its acceptance rate."""
         steps = _steps(step)
         draws = np.empty((len(start.x), N))
+        divergent = np.zeros(N, dtype=bool)
         here, accepted = start, 0.0
         for j, (v, test, jitter) in enumerate(self.moves(N, rng)):
-            here, alpha = self.move(here, v, test, _QUARTER / steps * jitter, steps)
+            here, alpha, divergent[j] = self.move(
+                here, v, test, _QUARTER / steps * jitter, steps
+            )
             accepted += alpha
             draws[:, j] = here.x
-        return draws, here, accepted / N
+        return draws, divergent, accepted / N
 
 
 _SLOW_DRAWS = (

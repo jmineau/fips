@@ -48,9 +48,9 @@ from scipy.stats import chi2 as chi2_distribution
 from scipy.stats import norm, truncnorm
 
 import fips
-from fips import Covariance, Operator, Problem, Space, Vector
+from fips import Covariance, Operator, Problem, Space, Vector, _draws
 from fips.linalg import KroneckerOperator
-from fips.methods import _draws, bounded
+from fips.methods import bounded
 from fips.methods.analytic import Information, Whitened
 from fips.methods.bounded import Bounded, BoundedOptions
 

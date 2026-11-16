@@ -109,6 +109,7 @@ State estimate
    Posterior.variances
    Posterior.cov
    Posterior.uncertainty
+   Posterior.diagnostics
    Posterior.sample
    Posterior.at_bound
 

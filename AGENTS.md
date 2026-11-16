@@ -54,6 +54,8 @@ src/fips/
   problem.py        Problem: the inputs, checked once; predict, linearized, aggregate, restrict
   posterior.py      Posterior (labels a method's answer); the Solution and Options protocols
   aggregate.py      sum, mean (an aggregation W), offset_block
+  _draws.py         the checks of a sampler's chains: autocorrelation, split R-hat, ArviZ's rank-normalized
+                    R-hat, bulk and tail ESS, MCSE (`Posterior.diagnostics`); the warnings (divergent paths, thin tails)
   distributions.py  LogNormal, HalfNormal, Uniform: the priors of a hyperparameter, on `_Distribution`
   hyperparameters.py  hierarchical, Hierarchical: the hyperparameters by Metropolis on the exact evidence,
                     the state drawn at each kept step; `_Built` (the caller's function) or
@@ -74,7 +76,6 @@ src/fips/
     gauss_newton.py GaussNewtonOptions; GaussNewton: the mode by linearizations (Newton for a transform), draws by HMC
     ensemble.py     EnsembleOptions; Ensemble: batch EnSRF of the members and their runs (no Jacobian)
     variational.py  VariationalOptions; Variational: CG on the whitened system, Lanczos pairs (rank)
-    _draws.py       a chain's autocorrelation and the error of its standard deviations; the warning past 10%
   linalg/           the unlabeled forms (public as fips.linalg)
     forms.py        LinearOperator and the Dense-, Sparse-, Diagonal- and MatrixFreeOperator it builds
     block.py        BlockDiagonalOperator
@@ -85,7 +86,7 @@ docs/               Sphinx: guides, reference/ (by topic), examples/ (notebooks)
 
 Imports run one way: `space` < `vector`, `linalg` < `operator` < `forward` < `transforms`, `covariance` <
 `problem` < `posterior` < `methods` < `hyperparameters`, with `aggregate` and `visualization` on top; `distributions`
-and `_errors` import nothing of fips's. No import inside a function to dodge a cycle, none under `TYPE_CHECKING`.
+and `_errors` import nothing of fips's, `_draws` only `_errors` (so `posterior` and the methods share it). No import inside a function to dodge a cycle, none under `TYPE_CHECKING`.
 `Covariance` does not import the models: `models.py` sets
 `Covariance._block_diag_models`, so `Covariance.block_diag` takes model parts.
 `posterior.py` imports no method: a method imports `posterior` and returns
@@ -188,7 +189,7 @@ inversion is a function that builds the `Problem`.
 
 A module `methods/<name>.py` with three things: its options (a frozen dataclass
 with a `gamma` field, values checked in `__post_init__`), its solution (answers
-`posterior.Solution`; `with_gamma`, `with_data`, `sample`, `kept` (a sampler's kept draws), `at_bound`, `estimate_is_mean`,
+`posterior.Solution`; `with_gamma`, `with_data`, `sample`, `kept` (a sampler's kept draws), `lengths` (its chains'), `at_bound`, `estimate_is_mean`,
 `estimate_is_linear`, `evidence_is_laplace` (`no_evidence`, why not), and `innovation_precision` with `self_sensitivity` (for
 `Posterior.data_worth`) only if it can; a member it lacks raises `fips.UnavailableError`), and a function `(problem, options) -> Posterior`. Add a line to
 `_METHODS` in `methods/__init__.py`; its docstring says how a lognormal or an

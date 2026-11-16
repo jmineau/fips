@@ -33,6 +33,7 @@ from numpy.linalg import LinAlgError
 from scipy.linalg import inv, solve
 from scipy.special import chdtrc, ndtr, ndtri  # chi-squared sf, normal CDF, inverse
 
+from fips._draws import _diagnostics, _warn_if_tails_thin
 from fips._errors import warn
 from fips.covariance import Covariance, CovarianceModel
 from fips.linalg import LinearOperator
@@ -97,7 +98,7 @@ class Solution(Protocol):
     observations (``problem.obs``). The posterior labels them, and computes
     each one once.
 
-    Eleven members are optional, and a posterior whose solution lacks one says
+    Twelve members are optional, and a posterior whose solution lacks one says
     so when it is asked for the feature (or, for ``linearized`` and
     ``used_prior_variances``, uses its own problem):
 
@@ -119,6 +120,11 @@ class Solution(Protocol):
       reads its :attr:`~Posterior.mean` and its intervals (the ``lower`` and
       ``upper`` of :meth:`Posterior.uncertainty` and :meth:`Posterior.trials`)
       from them too: their mean and their quantiles.
+    - ``lengths() -> tuple[int, ...]``: for a sampled posterior run as several
+      chains, the number of draws of each, in the order ``kept`` holds them
+      side by side; without it, the kept draws are one chain. The chain
+      checks of :meth:`Posterior.diagnostics` and of an interval read from
+      the draws compare the chains.
     - ``at_bound() -> np.ndarray``: which state elements sit on a bound at the
       estimate, booleans (``n``; :attr:`Posterior.at_bound`).
     - ``iterations() -> tuple[np.ndarray, ...]``: for each iteration of
@@ -812,13 +818,18 @@ class Posterior:
         interval, wherever it is skewed or piled against a bound. Any other's
         is the estimate plus or minus :math:`z` times `std`, its standard
         deviations, with :math:`z` the normal's ``(1 + level) / 2`` quantile
-        (1.96 for 0.95): the Gaussian's interval.
+        (1.96 for 0.95): the Gaussian's interval. A sampled one warns when its
+        draws have fewer than 100 effective draws in the tails for each chain
+        (any aggregate, or 5% of the elements: ``_draws._warn_if_tails_thin``).
         """
         kept = getattr(self._solution, "kept", None)
         if kept is not None:
             draws = kept()
             if W_form is not None:
                 draws = np.asarray(W_form @ draws, dtype=float)
+            _warn_if_tails_thin(
+                draws, self._lengths(draws), logger, aggregates=W_form is not None
+            )
             lower, upper = np.quantile(
                 draws, [(1.0 - level) / 2.0, (1.0 + level) / 2.0], axis=1
             )
@@ -1329,6 +1340,88 @@ class Posterior:
             },
             index=index,
         )
+
+    def _lengths(self, draws: np.ndarray) -> tuple[int, ...]:
+        """Return the number of each chain's draws among a sampled posterior's kept `draws` (its solution's ``lengths``; without it, one chain of them all)."""
+        lengths = getattr(self._solution, "lengths", None)
+        if lengths is not None:
+            return tuple(lengths())
+        return (draws.shape[1],)
+
+    def diagnostics(self, W: Operator | None = None) -> pd.DataFrame:
+        r"""
+        Return the checks of a sampled posterior's draws, one row per state element or per aggregate: the numbers PyMC and Stan users read after a run.
+
+        A sampled answer (``"bounded"`` with a finite bound, ``"gauss_newton"``
+        with a forward model) reads its mean, variances and intervals from a
+        chain of draws, and each draw starts from the last. These numbers say
+        how far to trust what is read, as ArviZ's ``summary`` computes them
+        (Vehtari et al., 2021):
+
+        - ``mean``, ``sd``: of the draws (the :attr:`mean` and the
+          posterior standard deviation the posterior reports);
+        - ``mcse_mean``, ``mcse_sd``: their Monte Carlo errors, which shrink
+          as one over the root of the draws;
+        - ``ess_bulk``: the effective number of independent draws for the
+          bulk of the distribution (the mean, the standard deviation);
+        - ``ess_tail``: the effective number for its 5% and 95% quantiles,
+          which an interval's ends depend on; under about 100 for each chain
+          an interval read from the draws warns;
+        - ``r_hat``: the rank-normalized split R-hat, comparing the chains
+          (and each chain's halves) in location and spread; near 1 when they
+          draw the same distribution, NaN with one chain. Stan and ArviZ ask
+          for under 1.01; fips's own warnings read the split R-hat of the
+          draws themselves at their measured cutoffs (``GaussNewtonOptions``'s
+          ``chains``).
+
+        Effective numbers well below the number of draws mean the chain
+        mixes slowly there: raise ``draws``. Chains that agree are not proof
+        that every part of the posterior was reached; a path that diverged
+        (which the solve logs at INFO) marks a part the sampler could not
+        follow.
+
+        Parameters
+        ----------
+        W : Operator, optional
+            An aggregation, as :meth:`cov` takes it: the rows are then the
+            aggregates :math:`W x` of the draws, which often mix faster than
+            the elements.
+
+        Returns
+        -------
+        pandas.DataFrame
+            On the state's labels (or `W`'s rows), the columns ``mean``,
+            ``sd``, ``mcse_mean``, ``mcse_sd``, ``ess_bulk``, ``ess_tail``
+            and ``r_hat``. A statistic that needs more draws than a chain has
+            (four) is NaN.
+
+        Raises
+        ------
+        UnavailableError
+            If the posterior is not sampled (its solution keeps no draws):
+            an analytic posterior is exact and has nothing to check.
+        ValueError
+            If the columns of `W` do not have exactly the state's labels.
+
+        See Also
+        --------
+        uncertainty : The standard deviations and intervals read from the draws.
+        sample : More draws of the posterior.
+
+        References
+        ----------
+        Vehtari, A., Gelman, A., Simpson, D., Carpenter, B., and Bürkner,
+        P.-C. (2021). Rank-normalization, folding, and localization: an
+        improved R-hat for assessing convergence of MCMC. *Bayesian
+        Analysis*, 16(2), 667-718. https://doi.org/10.1214/20-BA1221
+        """
+        kept = self._optional("kept", "the checks of its draws (it is not sampled)")
+        draws = kept()
+        index = self._problem.prior.index
+        if W is not None:
+            draws = np.asarray(self._aggregation(W) @ draws, dtype=float)
+            index = W.rows.index
+        return pd.DataFrame(_diagnostics(draws, self._lengths(draws)), index=index)
 
     def sample(
         self,

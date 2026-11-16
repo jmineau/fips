@@ -72,10 +72,10 @@ from numpy.linalg import LinAlgError
 from scipy.linalg import cho_factor, cho_solve
 from scipy.stats import norm, truncnorm
 
+from fips._draws import _warn_if_imprecise
 from fips._errors import warn
 from fips.linalg import DenseOperator, LinearOperator
 from fips.linalg.forms import _read_only
-from fips.methods._draws import _warn_if_imprecise
 from fips.methods.analytic import AnalyticOptions, Information, Whitened, _factor
 from fips.operator import Operator
 from fips.posterior import Posterior
