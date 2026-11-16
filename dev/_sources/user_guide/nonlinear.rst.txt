@@ -10,8 +10,8 @@ Write the model and its Jacobian as a :class:`~fips.ForwardModel`, and
 last estimate, again and again, until the estimate stops moving. **The
 estimate is the mode** of the posterior. **The spread comes from draws** of
 the posterior itself, which the solve keeps: Hamiltonian Monte Carlo, started
-at the mode and steered by the Gaussian at the mode (the analytic posterior of
-the problem linearized there).
+near the mode and steered by a Gaussian about it (the analytic posterior of the
+problem linearized there, widened where the model bends).
 
 .. contents:: On this page
    :local:
@@ -333,14 +333,17 @@ standard deviation was known to 2% to 8% there, and that scatter is not a
 disagreement of the chains. More draws lower it.
 
 **Chains that agree are not proof.** On a posterior that bends along a curve
-(an observation of a sum of elements, each with a wide prior), each draw
-moves about one width of the Gaussian at the mode, and the curve's far arms
-lie several widths along it, so every chain can miss the same tail. In the
-guide's two-element examples the chains disagree at the default 2000 draws
-(every seed tried, 2026-11-11), but at 20,000 draws an element's standard
-deviation was still 28% to 40% low with no warning in half the seeds. The aggregates
-the observations constrain stay right. When an element's own spread along
-such a curve matters, compare it with another estimate (a grid, for a few
+(an observation of a sum of elements, each with a wide prior), the curve's
+far ends lie several widths of the Gaussian at the mode along it, and every
+chain can miss the same one. The sampler is steered by a wider Gaussian there
+(`How it works`_), which carries the paths along the curve: in two
+two-element examples, each element's standard deviation from 20,000 draws
+was within 7% of a grid's in every seed (6 of each, 2026-11-15), where the
+Gaussian at the mode had left it 28% to 40% low, with no warning, in half
+the seeds. At the default 2000 draws it was still up to 27% off in a seed,
+mostly with no warning. The aggregates the observations constrain are
+right sooner. When an element's own spread along such a curve matters,
+raise ``draws``, or compare it with another estimate (a grid, for a few
 elements). Calls to :meth:`~fips.Posterior.sample` continue the chains from
 where their burn-ins ended, so draws from several calls are not a check.
 
@@ -377,7 +380,11 @@ take tens.
 ``draws`` of them, plus ``burn_in`` for each of the ``chains``. Each draw follows a path of steps (one for
 a linear model, more the more it bends), and each step runs the model, a
 product with its Jacobian's transpose and one with the covariance of the
-Gaussian at the mode: thousands to tens of thousands of model runs in all.
+sampler's Gaussian: thousands to tens of thousands of model runs in all.
+Choosing that Gaussian costs 16 runs and, where the model bends, one more
+factorization of the size of a step's; over 23 problems of 100 to 900
+elements (2026-11-15) the wider Gaussian took 1.2 to 2.8 times the model runs
+the Gaussian at the mode did, 1.6 times in the median.
 :meth:`~fips.Posterior.trials` draws in every trial: keep ``draws`` small
 there.
 
@@ -427,17 +434,16 @@ crawl, Newton's converge much faster near the mode. The mode is the same, and
 the Gaussian at the mode is still that of the problem linearized there. A
 model you write gives only its Jacobian, so its steps are Gauss-Newton's.
 
-**The draws** are Hamiltonian Monte Carlo, split at the Gaussian at the mode
-(Shahbaba et al., 2014). Each draw starts from the last with a random
+**The draws** are Hamiltonian Monte Carlo, split at a Gaussian about the
+mode (Shahbaba et al., 2014). Each draw starts from the last with a random
 velocity and follows a path on which half the cost is a potential energy; a
 Metropolis test accepts the path's end or keeps the start, which makes the
 posterior, :math:`p(x \mid z) \propto e^{-\chi^2(x)/2}`, the chain's
 distribution exactly, whatever the paths are. Each draw is then exact; how
 well a finite chain covers the posterior depends on how well it mixes
-(`Warnings and checks`_). The Gaussian at the mode
-steers the paths in two ways. The velocities are its draws less its mean. The
-part of the cost that it accounts for is followed exactly, as a rotation
-about the mode,
+(`Warnings and checks`_). The Gaussian steers the paths in two ways. The
+velocities are its draws less its mean. The part of the cost that it
+accounts for is followed exactly, as a rotation about the mode,
 
 .. math::
 
@@ -446,9 +452,25 @@ about the mode,
 for a quarter period (after which a draw of that Gaussian is independent of
 its start), and only the rest of the cost is followed in steps. The burn-in
 tunes the step's length to accept 90% of the paths (Hoffman and Gelman,
-2014). A linear model has no rest: each path is a quarter turn of one step,
-always accepted, and the draws are exact and independent. A path the model
-cannot follow (it overflows) is rejected.
+2014). A path the model cannot follow (it overflows) is rejected.
+
+**Which Gaussian.** For a linear model it is the Gaussian at the mode, which
+is then the posterior: there is no rest, each path is a quarter turn of one
+step, always accepted, and the draws are exact and independent. Where the
+model bends, the Gaussian at the mode steers badly: to reach a far end of a
+curve a path has to move far in the directions the data pin down at the
+mode, where that Gaussian is narrowest and its velocities smallest, so the
+chain creeps along the curve (issue #203). There the sampler is split at the
+Gaussian of the same linearized problem with a thirtieth of the data's weight
+(the problem at ``gamma / 30``): as wide as the prior where the data are weak
+and wider than the Gaussian at the mode where they pin the state down. Its
+velocities carry the paths along the curve, and the data's part of the cost,
+followed in steps, keeps them on it. The solve tells the two apart by the
+rest of the cost at 16 draws of the Gaussian at the mode: it varies by less
+than 0.1 only where that Gaussian is the posterior. Over the 23 problems
+above, the share of elements whose standard deviation from a default solve
+was more than 10% off fell from a median of 1.6% to 0.1% with the wider
+Gaussian (2026-11-15).
 
 
 References

@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.methods.gauss_newton &#8212; fips 0.2.0b3.dev55+g9e455f8c8 documentation</title>
+    <title>fips.methods.gauss_newton &#8212; fips 0.2.0b3.dev57+g3ba9fa573 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../../_static/documentation_options.js?v=442c2770"></script>
+    <script src="../../../_static/documentation_options.js?v=b741e413"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev55+g9e455f8c8 documentation - Home"/>
-    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev55+g9e455f8c8 documentation - Home"/>
+    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev57+g3ba9fa573 documentation - Home"/>
+    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev57+g3ba9fa573 documentation - Home"/>
   
   
 </a></div>
@@ -492,9 +492,13 @@
 <span class="sd">DOFS and information content are those of the Gaussian at the mode. Its</span>
 <span class="sd">variances, the covariance of aggregates, the mean, the intervals and its draws</span>
 <span class="sd">are those of the posterior itself, :math:`p(x \mid z) \propto e^{-\chi^2(x)/2}`, drawn by</span>
-<span class="sd">Hamiltonian Monte Carlo (``_Sampler``): the Gaussian at the mode is its mass</span>
+<span class="sd">Hamiltonian Monte Carlo (``_Sampler``): a Gaussian about the mode is its mass</span>
 <span class="sd">and its exactly solved part, the rest of the cost its kicks, and a Metropolis</span>
-<span class="sd">test keeps the chain exact. Several chains run from spread starts, and the</span>
+<span class="sd">test keeps the chain exact. That Gaussian is the Gaussian at the mode where</span>
+<span class="sd">the posterior is that Gaussian (a linear model), and otherwise the one of the</span>
+<span class="sd">same linearized problem solved at a thirtieth of :math:`\gamma`, wider where</span>
+<span class="sd">the data pin the state down, so that the paths reach the far ends of a</span>
+<span class="sd">posterior that bends along a curve. Several chains run from spread starts, and the</span>
 <span class="sd">solve warns when they disagree (a split R-hat): one chain that never enters</span>
 <span class="sd">a tail of a curved posterior reports too small a spread, and cannot tell.</span>
 <span class="sd">The covariance of aggregates warns when they disagree on an aggregate that</span>
@@ -951,10 +955,19 @@
 <span class="n">_FAILED</span> <span class="o">=</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">FloatingPointError</span><span class="p">,</span> <span class="ne">OverflowError</span><span class="p">,</span> <span class="n">LinAlgError</span><span class="p">)</span>
 <span class="sd">"""What a model (or a transform) raises at a state it cannot model: a path that reaches one is rejected."""</span>
 
+<span class="n">_WIDER</span> <span class="o">=</span> <span class="mf">0.03</span>
+<span class="sd">"""The fraction of gamma the sampler's Gaussian is solved at where the posterior is not the Gaussian at the mode: the Gaussian at the mode of the problem linearized there, with a thirtieth of the data's weight (chosen on plan 010's measurements, 2026-11-15)."""</span>
+
+<span class="n">_FLAT</span> <span class="o">=</span> <span class="mf">0.1</span>
+<span class="sd">"""The spread of the remainder (log density) over :data:`_PROBES` draws of the Gaussian at the mode below which the posterior is taken as that Gaussian, and the sampler is split there."""</span>
+
+<span class="n">_PROBES</span> <span class="o">=</span> <span class="mi">16</span>
+<span class="sd">"""The draws of the Gaussian at the mode the remainder is read at, to choose the Gaussian the sampler is split at."""</span>
+
 
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">_Point</span><span class="p">:</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">"""A state of the chain with what the next path needs there: the remainder :math:`R(x)`, its gradient :math:`\rho(x)` and :math:`\hat{S} \rho(x)`."""</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""A state of the chain with what the next path needs there: the remainder :math:`R(x)`, its gradient :math:`\rho(x)` and :math:`S' \rho(x)`."""</span>
 
     <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
     <span class="n">R</span><span class="p">:</span> <span class="nb">float</span>
@@ -973,16 +986,17 @@
 
 <span class="k">class</span><span class="w"> </span><span class="nc">_Sampler</span><span class="p">:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">    Hamiltonian Monte Carlo for the posterior of a problem with a forward model, split at the Gaussian at the mode.</span>
+<span class="sd">    Hamiltonian Monte Carlo for the posterior of a problem with a forward model, split at a Gaussian about the mode.</span>
 
 <span class="sd">    The posterior is :math:`p(x \mid z) \propto e^{-U(x)}`, :math:`U` half</span>
-<span class="sd">    the cost. Write it as the Gaussian at the mode times the rest,</span>
+<span class="sd">    the cost. Write it as a Gaussian about the mode times the rest,</span>
 <span class="sd">    :math:`U = U_G + R`, with :math:`U_G(x) = \tfrac{1}{2} (x - \hat{x})^T</span>
-<span class="sd">    \hat{S}^{-1} (x - \hat{x})` (:math:`\hat{S}` the covariance of the</span>
-<span class="sd">    problem linearized at the last iterate, ``analytic``). The momentum's</span>
-<span class="sd">    mass is :math:`\hat{S}^{-1}`, so a velocity is a draw of :math:`N(0,</span>
-<span class="sd">    \hat{S})`: the analytic method's exact draws less their mean</span>
-<span class="sd">    (``analytic.sample``). The dynamics of :math:`U_G` with that mass are a</span>
+<span class="sd">    S'^{-1} (x - \hat{x})`, where :math:`S'^{-1} = S_0^{-1} + \gamma' J_*^T</span>
+<span class="sd">    S_z^{-1} J_*` is the covariance of the problem linearized at the last</span>
+<span class="sd">    iterate (:math:`J_*` its Jacobian) solved at :math:`\gamma'`</span>
+<span class="sd">    (``split``). The momentum's mass is :math:`S'^{-1}`, so a velocity is a</span>
+<span class="sd">    draw of :math:`N(0, S')`: the analytic method's exact draws less their</span>
+<span class="sd">    mean (``split.sample``). The dynamics of :math:`U_G` with that mass are a</span>
 <span class="sd">    rotation, solved exactly, as for the bounded method's sampler:</span>
 
 <span class="sd">    .. math::</span>
@@ -990,15 +1004,33 @@
 <span class="sd">        x(t) = \hat{x} + (x - \hat{x}) \cos t + v \sin t, \qquad</span>
 <span class="sd">        v(t) = v \cos t - (x - \hat{x}) \sin t,</span>
 
-<span class="sd">    and :math:`R` acts as kicks, :math:`v \leftarrow v - h \hat{S} \nabla R`,</span>
+<span class="sd">    and :math:`R` acts as kicks, :math:`v \leftarrow v - h S' \nabla R`,</span>
 <span class="sd">    half a step before and after each rotation by :math:`h` (Strang</span>
 <span class="sd">    splitting: Shahbaba et al., 2014). The path is symplectic and reversible,</span>
 <span class="sd">    so a Metropolis test on the change of :math:`H = U + \tfrac{1}{2} v^T</span>
-<span class="sd">    \hat{S}^{-1} v` makes the chain exact whatever :math:`\hat{S}` and</span>
-<span class="sd">    :math:`h` are; they set only how fast it mixes. Where the posterior is</span>
-<span class="sd">    the Gaussian at the mode (a linear model), :math:`\nabla R = 0`, every</span>
-<span class="sd">    path is accepted, and one step of a quarter period is an exact,</span>
-<span class="sd">    independent draw.</span>
+<span class="sd">    S'^{-1} v` makes the chain exact whatever :math:`S'` and :math:`h` are;</span>
+<span class="sd">    they set only how fast it mixes.</span>
+
+<span class="sd">    **Which Gaussian.** At :math:`\gamma' = \gamma` it is the Gaussian at the</span>
+<span class="sd">    mode, :math:`\hat{S}` (``analytic``). Where that is the posterior (a</span>
+<span class="sd">    linear model), :math:`\nabla R = 0`, every path is accepted, and one step</span>
+<span class="sd">    of a quarter period is an exact, independent draw. Where the posterior</span>
+<span class="sd">    bends along a curve, it is the wrong one: to reach a far end of the curve</span>
+<span class="sd">    a path must move far in the directions the data pin down at the mode,</span>
+<span class="sd">    where :math:`\hat{S}` is narrowest, and its velocities, drawn from</span>
+<span class="sd">    :math:`\hat{S}`, are smallest there; the chain creeps along the curve and</span>
+<span class="sd">    can miss an end altogether (issue #203). So the sampler first reads</span>
+<span class="sd">    :math:`R` at :data:`_PROBES` draws of the Gaussian at the mode: where it</span>
+<span class="sd">    varies by less than :data:`_FLAT` (the posterior is that Gaussian within a</span>
+<span class="sd">    tenth in log density), :math:`\gamma' = \gamma`; otherwise :math:`\gamma'</span>
+<span class="sd">    = ` :data:`_WIDER` :math:`\gamma`, a Gaussian as wide as the prior where</span>
+<span class="sd">    the data are weak and wider than :math:`\hat{S}` where they pin the state</span>
+<span class="sd">    down, whose velocities carry the paths along the curve while the kicks of</span>
+<span class="sd">    the data's term keep them on it. Measured on plan 010's problems (two</span>
+<span class="sd">    curved pairs against their grids, #223's two strong cases against emcee,</span>
+<span class="sd">    23 settings of 100 to 900 elements against long solves): the share of</span>
+<span class="sd">    elements whose spread is more than 10% off fell from a median of 1.6% to</span>
+<span class="sd">    0.1%, at 1.6 times the model runs in the median (at most 2.8).</span>
 
 <span class="sd">    :math:`S_0^{-1}` is never needed. With :math:`\hat{x} = x_0 + S_0</span>
 <span class="sd">    \hat{y}` (``mode_y``) and every state in :math:`x_0` plus the range of</span>
@@ -1007,17 +1039,16 @@
 
 <span class="sd">    .. math::</span>
 
-<span class="sd">        R(x) = \hat{y}^T (x - \hat{x}) + \tfrac{\gamma}{2} \big(r^T S_z^{-1} r</span>
-<span class="sd">            - d^T S_z^{-1} d\big), \qquad r = z - F(x) - c, \quad</span>
+<span class="sd">        R(x) = \hat{y}^T (x - \hat{x}) + \tfrac{1}{2} \big(\gamma r^T S_z^{-1} r</span>
+<span class="sd">            - \gamma' d^T S_z^{-1} d\big), \qquad r = z - F(x) - c, \quad</span>
 <span class="sd">            d = J_* (x - \hat{x}),</span>
 
-<span class="sd">    up to a constant, with :math:`J_*` the Jacobian of the last</span>
-<span class="sd">    linearization; its gradient is :math:`\rho = \hat{y} - \gamma J(x)^T</span>
-<span class="sd">    S_z^{-1} r - \gamma J_*^T S_z^{-1} d`, so a kick is :math:`\hat{S} \rho`</span>
-<span class="sd">    (``_cov_times``). The kinetic energy is never formed either: a kick of</span>
-<span class="sd">    :math:`h` changes it by :math:`-h \rho^T v + \tfrac{1}{2} h^2 \rho^T</span>
-<span class="sd">    \hat{S} \rho`, and a rotation not at all. A singular :math:`S_0` (elements</span>
-<span class="sd">    with no prior spread) leaves those elements at the mode.</span>
+<span class="sd">    up to a constant; its gradient is :math:`\rho = \hat{y} - \gamma J(x)^T</span>
+<span class="sd">    S_z^{-1} r - \gamma' J_*^T S_z^{-1} d`, so a kick is :math:`S' \rho`</span>
+<span class="sd">    (``split._cov_times``). The kinetic energy is never formed either: a kick</span>
+<span class="sd">    of :math:`h` changes it by :math:`-h \rho^T v + \tfrac{1}{2} h^2 \rho^T S'</span>
+<span class="sd">    \rho`, and a rotation not at all. A singular :math:`S_0` (elements with</span>
+<span class="sd">    no prior spread) leaves those elements at the mode.</span>
 
 <span class="sd">    Each draw starts from the last with a new velocity and travels a quarter</span>
 <span class="sd">    period, :data:`_QUARTER`, in steps of the tuned :math:`h` (jittered by</span>
@@ -1041,30 +1072,60 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">solve_S_z</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">obs_cov</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">_solver</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">values</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">_offset_values</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">split_gamma</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">split</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="p">,</span> <span class="n">analytic</span>
+        <span class="n">options</span> <span class="o">=</span> <span class="n">solution</span><span class="o">.</span><span class="n">options</span>
+        <span class="c1"># The probes' stream is the seed's child after the chains', so the chains' own are unchanged</span>
+        <span class="n">probe_rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">SeedSequence</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span><span class="o">.</span><span class="n">spawn</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">chains</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">spread</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spread</span><span class="p">(</span><span class="n">probe_rng</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">spread</span> <span class="o">&gt;=</span> <span class="n">_FLAT</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">split_gamma</span> <span class="o">=</span> <span class="n">_WIDER</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">split</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">analytic</span><span class="p">)</span><span class="o">.</span><span class="n">factor</span><span class="p">(</span><span class="n">analytic</span><span class="o">.</span><span class="n">problem</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">split_gamma</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">split_mean</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">split</span><span class="o">.</span><span class="n">estimate</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">"The posterior sampler is split at the Gaussian at the mode solved at "</span>
+            <span class="s2">"</span><span class="si">%.3g</span><span class="s2"> times gamma: the remainder varies by </span><span class="si">%.3g</span><span class="s2"> over </span><span class="si">%d</span><span class="s2"> of its draws."</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">split_gamma</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="p">,</span>
+            <span class="n">spread</span><span class="p">,</span>
+            <span class="n">_PROBES</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_spread</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the standard deviation of the remainder over :data:`_PROBES` draws of the Gaussian at the mode (infinite if the model cannot model one), read while the sampler is split there."""</span>
+        <span class="n">draws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">_PROBES</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">_PROBES</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">point</span><span class="p">(</span><span class="n">draws</span><span class="p">[:,</span> <span class="n">j</span><span class="p">])</span><span class="o">.</span><span class="n">R</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">_FAILED</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">inf</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">values</span><span class="p">))</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">point</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Point</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">        Return the state `x` with :math:`R`, :math:`\rho` and :math:`\hat{S} \rho` there.</span>
+<span class="sd">        Return the state `x` with :math:`R`, :math:`\rho` and :math:`S' \rho` there.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        ValueError, FloatingPointError, OverflowError, numpy.linalg.LinAlgError</span>
 <span class="sd">            If the model cannot model `x`, or the result is not finite.</span>
 <span class="sd">        """</span>
-        <span class="n">problem</span><span class="p">,</span> <span class="n">gamma</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span>
+        <span class="n">problem</span><span class="p">,</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">wide</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">split_gamma</span>
         <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">over</span><span class="o">=</span><span class="s2">"raise"</span><span class="p">,</span> <span class="n">invalid</span><span class="o">=</span><span class="s2">"raise"</span><span class="p">):</span>
             <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">z</span> <span class="o">-</span> <span class="n">problem</span><span class="o">.</span><span class="n">_apply</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">c</span>
             <span class="n">dx</span> <span class="o">=</span> <span class="n">x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span>
             <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">J</span> <span class="o">@</span> <span class="n">dx</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
             <span class="n">weighted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">solve_S_z</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span><span class="n">r</span><span class="p">,</span> <span class="n">d</span><span class="p">])))</span>
-            <span class="n">R</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mode_y</span> <span class="o">@</span> <span class="n">dx</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">gamma</span> <span class="o">*</span> <span class="p">(</span>
-                <span class="nb">float</span><span class="p">(</span><span class="n">r</span> <span class="o">@</span> <span class="n">weighted</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span> <span class="o">-</span> <span class="nb">float</span><span class="p">(</span><span class="n">d</span> <span class="o">@</span> <span class="n">weighted</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
+            <span class="n">R</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mode_y</span> <span class="o">@</span> <span class="n">dx</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span>
+                <span class="n">gamma</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">r</span> <span class="o">@</span> <span class="n">weighted</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span> <span class="o">-</span> <span class="n">wide</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">d</span> <span class="o">@</span> <span class="n">weighted</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
             <span class="p">)</span>
-            <span class="n">rho</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode_y</span> <span class="o">-</span> <span class="n">gamma</span> <span class="o">*</span> <span class="p">(</span>
-                <span class="n">problem</span><span class="o">.</span><span class="n">_gradient</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">weighted</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>
-                <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">J_T</span> <span class="o">@</span> <span class="n">weighted</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+            <span class="n">rho</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">mode_y</span>
+                <span class="o">-</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">problem</span><span class="o">.</span><span class="n">_gradient</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">weighted</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>
+                <span class="o">-</span> <span class="n">wide</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">J_T</span> <span class="o">@</span> <span class="n">weighted</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
             <span class="p">)</span>
-            <span class="n">S_rho</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">_cov_times</span><span class="p">(</span><span class="n">rho</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">])[:,</span> <span class="mi">0</span><span class="p">]</span>
+            <span class="n">S_rho</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">split</span><span class="o">.</span><span class="n">_cov_times</span><span class="p">(</span><span class="n">rho</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">])[:,</span> <span class="mi">0</span><span class="p">]</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">R</span><span class="p">)</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">S_rho</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()):</span>
             <span class="k">raise</span> <span class="ne">FloatingPointError</span><span class="p">(</span><span class="s2">"The remainder is not finite."</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">_Point</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="n">S_rho</span><span class="p">)</span>
@@ -1114,7 +1175,7 @@
         <span class="n">done</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">while</span> <span class="n">done</span> <span class="o">&lt;</span> <span class="n">count</span><span class="p">:</span>
             <span class="n">block</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">_BLOCK</span><span class="p">,</span> <span class="n">count</span> <span class="o">-</span> <span class="n">done</span><span class="p">)</span>
-            <span class="n">V</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
+            <span class="n">V</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">split</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">split_mean</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
             <span class="n">tests</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
             <span class="n">jitters</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">_JITTER</span><span class="p">,</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="n">_JITTER</span><span class="p">,</span> <span class="n">block</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">block</span><span class="p">):</span>
