@@ -1,0 +1,6 @@
+fips.Posterior.diagnostics
+==========================
+
+.. currentmodule:: fips
+
+.. automethod:: Posterior.diagnostics

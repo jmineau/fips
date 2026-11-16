@@ -50,6 +50,7 @@
    ~Posterior.cov
    ~Posterior.data_worth
    ~Posterior.desroziers
+   ~Posterior.diagnostics
    ~Posterior.leverage
    ~Posterior.recovery
    ~Posterior.sample

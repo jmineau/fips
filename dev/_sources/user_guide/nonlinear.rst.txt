@@ -319,6 +319,35 @@ when:
   by more than 10%. It says how many draws would do; raise ``draws``, or read
   the aggregates the data constrain, which mix faster.
 
+A path among the kept draws whose energy rose by more than 1000 (Stan's
+rule), or along which the model failed, *diverged*: it is rejected, so the
+draws stay exact, but the sampler could not follow the posterior there. The
+solve logs how many at the INFO level. Stan warns of any; for this sampler
+they do not mark the solves that are off (over 90 default solves of 23
+problems, 2026-11-16, a fifth had one, none of them off), so they are a
+hint of where the model bends most, not a warning.
+
+Reading an interval (the ``lower`` and ``upper`` of
+:meth:`~fips.Posterior.uncertainty` and :meth:`~fips.Posterior.trials`)
+warns when the draws have fewer than 100 effective draws in the tails for
+each chain (400 for the default four chains), for any aggregate read or for
+at least 5% of the elements: an interval's ends are quantiles of the draws
+out there, which are fewer than the draws overall. Raise ``draws``.
+
+**The checks as a table.** :meth:`~fips.Posterior.diagnostics` gives, for
+each element (or each row of an aggregation ``W``), the numbers a PyMC or
+Stan user reads after a run, as ArviZ computes them: the mean and standard
+deviation of the draws with their Monte Carlo errors, the effective number of
+independent draws in the bulk and in the tails, and the rank-normalized split
+R-hat (Vehtari et al., 2021). Stan asks for an R-hat under 1.01 and 100
+effective draws per chain; the warnings above use the cutoffs measured for
+fips's sampler.
+
+.. ipython:: python
+   :okwarning:
+
+   post.diagnostics().round(3)
+
 **Reading an aggregate checks the chains on it.** A total depends on how the
 elements vary together, so its chains can disagree where few elements' do,
 and agree where many do. :meth:`~fips.Posterior.cov` and
@@ -486,3 +515,8 @@ Practice*, chapter 5. World Scientific. https://doi.org/10.1142/3171
 Shahbaba, B., Lan, S., Johnson, W. O., and Neal, R. M. (2014). Split
 Hamiltonian Monte Carlo. *Statistics and Computing*, 24(3), 339-349.
 https://doi.org/10.1007/s11222-012-9373-1
+
+Vehtari, A., Gelman, A., Simpson, D., Carpenter, B., and Bürkner, P.-C.
+(2021). Rank-normalization, folding, and localization: an improved R-hat for
+assessing convergence of MCMC. *Bayesian Analysis*, 16(2), 667-718.
+https://doi.org/10.1214/20-BA1221

@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>A nonlinear forward model &#8212; fips 0.2.0b3.dev57+g3ba9fa573 documentation</title>
+    <title>A nonlinear forward model &#8212; fips 0.2.0b3.dev58+ge643ded15 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=b741e413"></script>
+    <script src="../_static/documentation_options.js?v=f39a4c6b"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev57+g3ba9fa573 documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev57+g3ba9fa573 documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev58+ge643ded15 documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev58+ge643ded15 documentation - Home"/>
   
   
 </a></div>
@@ -829,6 +829,43 @@ elements, 2026-11-12).</p></li>
 by more than 10%. It says how many draws would do; raise <code class="docutils literal notranslate"><span class="pre">draws</span></code>, or read
 the aggregates the data constrain, which mix faster.</p></li>
 </ul>
+<p>A path among the kept draws whose energy rose by more than 1000 (Stan’s
+rule), or along which the model failed, <em>diverged</em>: it is rejected, so the
+draws stay exact, but the sampler could not follow the posterior there. The
+solve logs how many at the INFO level. Stan warns of any; for this sampler
+they do not mark the solves that are off (over 90 default solves of 23
+problems, 2026-11-16, a fifth had one, none of them off), so they are a
+hint of where the model bends most, not a warning.</p>
+<p>Reading an interval (the <code class="docutils literal notranslate"><span class="pre">lower</span></code> and <code class="docutils literal notranslate"><span class="pre">upper</span></code> of
+<a class="reference internal" href="../reference/api/fips.Posterior.uncertainty.html#fips.Posterior.uncertainty" title="fips.Posterior.uncertainty"><code class="xref py py-meth docutils literal notranslate"><span class="pre">uncertainty()</span></code></a> and <a class="reference internal" href="../reference/api/fips.Posterior.trials.html#fips.Posterior.trials" title="fips.Posterior.trials"><code class="xref py py-meth docutils literal notranslate"><span class="pre">trials()</span></code></a>)
+warns when the draws have fewer than 100 effective draws in the tails for
+each chain (400 for the default four chains), for any aggregate read or for
+at least 5% of the elements: an interval’s ends are quantiles of the draws
+out there, which are fewer than the draws overall. Raise <code class="docutils literal notranslate"><span class="pre">draws</span></code>.</p>
+<p><strong>The checks as a table.</strong> <a class="reference internal" href="../reference/api/fips.Posterior.diagnostics.html#fips.Posterior.diagnostics" title="fips.Posterior.diagnostics"><code class="xref py py-meth docutils literal notranslate"><span class="pre">diagnostics()</span></code></a> gives, for
+each element (or each row of an aggregation <code class="docutils literal notranslate"><span class="pre">W</span></code>), the numbers a PyMC or
+Stan user reads after a run, as ArviZ computes them: the mean and standard
+deviation of the draws with their Monte Carlo errors, the effective number of
+independent draws in the bulk and in the tails, and the rank-normalized split
+R-hat (Vehtari et al., 2021). Stan asks for an R-hat under 1.01 and 100
+effective draws per chain; the warnings above use the cutoffs measured for
+fips’s sampler.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [30]: </span><span class="n">post</span><span class="o">.</span><span class="n">diagnostics</span><span class="p">()</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gh">Out[30]: </span>
+<span class="go">             mean     sd  mcse_mean  mcse_sd  ess_bulk  ess_tail  r_hat</span>
+<span class="go">block cell                                                             </span>
+<span class="go">flux  0     0.337  0.147      0.002    0.004  5344.606  1316.371  1.001</span>
+<span class="go">      1     0.444  0.044      0.001    0.001   987.185  1445.267  1.004</span>
+<span class="go">      2     0.432  0.052      0.002    0.001   907.798   969.584  1.003</span>
+<span class="go">      3    -0.104  0.157      0.003    0.005  3985.749   986.083  1.004</span>
+<span class="go">      4     0.005  0.215      0.003    0.006  4254.047  1427.116  1.007</span>
+<span class="go">      5     0.172  0.092      0.004    0.002   565.859   922.933  1.004</span>
+<span class="go">      6    -0.193  0.166      0.002    0.007  6602.060   904.195  1.007</span>
+<span class="go">      7     0.210  0.048      0.002    0.001   840.577  1250.435  1.007</span>
+<span class="go">      8     0.251  0.045      0.002    0.001   529.922   762.861  1.006</span>
+<span class="go">      9     0.248  0.063      0.003    0.001   554.479  1124.039  1.005</span>
+</pre></div>
+</div>
 <p><strong>Reading an aggregate checks the chains on it.</strong> A total depends on how the
 elements vary together, so its chains can disagree where few elements’ do,
 and agree where many do. <a class="reference internal" href="../reference/api/fips.Posterior.cov.html#fips.Posterior.cov" title="fips.Posterior.cov"><code class="xref py py-meth docutils literal notranslate"><span class="pre">cov()</span></code></a> and
@@ -969,6 +1006,10 @@ Practice</em>, chapter 5. World Scientific. <a class="reference external" href="
 <p>Shahbaba, B., Lan, S., Johnson, W. O., and Neal, R. M. (2014). Split
 Hamiltonian Monte Carlo. <em>Statistics and Computing</em>, 24(3), 339-349.
 <a class="reference external" href="https://doi.org/10.1007/s11222-012-9373-1">https://doi.org/10.1007/s11222-012-9373-1</a></p>
+<p>Vehtari, A., Gelman, A., Simpson, D., Carpenter, B., and Bürkner, P.-C.
+(2021). Rank-normalization, folding, and localization: an improved R-hat for
+assessing convergence of MCMC. <em>Bayesian Analysis</em>, 16(2), 667-718.
+<a class="reference external" href="https://doi.org/10.1214/20-BA1221">https://doi.org/10.1214/20-BA1221</a></p>
 </section>
 </section>
 
