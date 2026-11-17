@@ -1,0 +1,6 @@
+fips.Posterior.to\_inference\_data
+==================================
+
+.. currentmodule:: fips
+
+.. automethod:: Posterior.to_inference_data

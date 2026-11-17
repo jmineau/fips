@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>A nonlinear forward model &#8212; fips 0.2.0b3.dev58+ge643ded15 documentation</title>
+    <title>A nonlinear forward model &#8212; fips 0.2.0b3.dev59+g3eaf3cf16 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=f39a4c6b"></script>
+    <script src="../_static/documentation_options.js?v=cbba9788"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev58+ge643ded15 documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev58+ge643ded15 documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev59+g3eaf3cf16 documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev59+g3eaf3cf16 documentation - Home"/>
   
   
 </a></div>
@@ -864,6 +864,87 @@ fips’s sampler.</p>
 <span class="go">      7     0.210  0.048      0.002    0.001   840.577  1250.435  1.007</span>
 <span class="go">      8     0.251  0.045      0.002    0.001   529.922   762.861  1.006</span>
 <span class="go">      9     0.248  0.063      0.003    0.001   554.479  1124.039  1.005</span>
+</pre></div>
+</div>
+<p><strong>The chains themselves.</strong> <a class="reference internal" href="../reference/api/fips.Posterior.chains.html#fips.Posterior.chains" title="fips.Posterior.chains"><code class="xref py py-meth docutils literal notranslate"><span class="pre">chains()</span></code></a> gives the kept
+draws, one column each labeled <code class="docutils literal notranslate"><span class="pre">(chain,</span> <span class="pre">draw)</span></code>, and
+<a class="reference internal" href="../reference/api/fips.Posterior.sample_stats.html#fips.Posterior.sample_stats" title="fips.Posterior.sample_stats"><code class="xref py py-attr docutils literal notranslate"><span class="pre">sample_stats</span></code></a> the sampler’s record of the path that
+made each: whether it diverged, its acceptance probability, its energy
+error, its steps and their length, by ArviZ’s names.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [31]: </span><span class="n">post</span><span class="o">.</span><span class="n">chains</span><span class="p">()</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span>
+<span class="gh">Out[31]: </span>
+<span class="go">chain              0                    </span>
+<span class="go">draw               0         1         2</span>
+<span class="go">block cell                              </span>
+<span class="go">flux  0     0.542480  0.542480  0.026024</span>
+<span class="go">      1     0.366831  0.366831  0.441083</span>
+<span class="go">      2     0.416906  0.416906  0.477351</span>
+<span class="go">      3    -0.288121 -0.288121  0.124741</span>
+<span class="go">      4    -0.124085 -0.124085  0.175432</span>
+<span class="go">      5     0.192491  0.192491  0.217286</span>
+<span class="go">      6    -0.125835 -0.125835 -0.193976</span>
+<span class="go">      7     0.182399  0.182399  0.185678</span>
+<span class="go">      8     0.278094  0.278094  0.257202</span>
+<span class="go">      9     0.275519  0.275519  0.197235</span>
+
+<span class="gp">In [32]: </span><span class="n">post</span><span class="o">.</span><span class="n">sample_stats</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="s2">"chain"</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+<span class="gh">Out[32]: </span>
+<span class="go">       diverging  acceptance_rate  energy_error  n_steps  step_size</span>
+<span class="go">chain                                                              </span>
+<span class="go">0            0.0         0.906253      0.038125     11.0   0.143969</span>
+<span class="go">1            0.0         0.917167      0.019042     11.0   0.143177</span>
+<span class="go">2            0.0         0.921378      0.015701     11.0   0.143394</span>
+<span class="go">3            0.0         0.906218      0.025602     11.0   0.143409</span>
+</pre></div>
+</div>
+<p><strong>ArviZ.</strong> <a class="reference internal" href="../reference/api/fips.Posterior.to_inference_data.html#fips.Posterior.to_inference_data" title="fips.Posterior.to_inference_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">to_inference_data()</span></code></a> hands the same draws
+and record to ArviZ (1.1 or later, which needs Python 3.12:
+<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;fips[arviz]&quot;</span></code>) as it reads a PyMC or Stan run: one variable
+per block of the state, over the block’s labels, so its trace and rank plots
+(<code class="docutils literal notranslate"><span class="pre">arviz.plot_trace</span></code>, <code class="docutils literal notranslate"><span class="pre">arviz.plot_rank</span></code>) and its <code class="docutils literal notranslate"><span class="pre">summary</span></code> work as they
+do there. ArviZ’s <code class="docutils literal notranslate"><span class="pre">summary</span></code> gives the numbers
+<a class="reference internal" href="../reference/api/fips.Posterior.diagnostics.html#fips.Posterior.diagnostics" title="fips.Posterior.diagnostics"><code class="xref py py-meth docutils literal notranslate"><span class="pre">diagnostics()</span></code></a> computes, but for <code class="docutils literal notranslate"><span class="pre">ess_tail</span></code>: ArviZ 1
+reads the tail at the quantiles <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">-</span> <span class="pre">ci_prob</span></code> and <code class="docutils literal notranslate"><span class="pre">ci_prob</span></code> of its
+<code class="docutils literal notranslate"><span class="pre">stats.ci_prob</span></code> setting (0.89, so 11% and 89%), fips at 5% and 95%, as
+Vehtari et al. (2021) and Stan do. Set it to 0.95 for the same numbers.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [33]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">arviz_base</span>
+
+<span class="gp">In [34]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">arviz_stats</span>
+
+<span class="gp">In [35]: </span><span class="n">data</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">to_inference_data</span><span class="p">()</span>
+
+<span class="gp">In [36]: </span><span class="n">data</span><span class="o">.</span><span class="n">posterior</span>
+<span class="gh">Out[36]: </span>
+<span class="go">&lt;xarray.DataTree 'posterior'&gt;</span>
+<span class="go">Group: /posterior</span>
+<span class="go">    Dimensions:  (chain: 4, draw: 500, cell: 10)</span>
+<span class="go">    Coordinates:</span>
+<span class="go">      * chain    (chain) int64 32B 0 1 2 3</span>
+<span class="go">      * draw     (draw) int64 4kB 0 1 2 3 4 5 6 7 ... 493 494 495 496 497 498 499</span>
+<span class="go">      * cell     (cell) int64 80B 0 1 2 3 4 5 6 7 8 9</span>
+<span class="go">    Data variables:</span>
+<span class="go">        flux     (chain, draw, cell) float64 160kB 0.5425 0.3668 ... 0.2786 0.1602</span>
+<span class="go">    Attributes:</span>
+<span class="go">        created_at:                 2026-11-17T04:49:36.072867+00:00</span>
+<span class="go">        creation_library:           ArviZ</span>
+<span class="go">        creation_library_version:   1.3.1</span>
+<span class="go">        creation_library_language:  Python</span>
+<span class="go">        sample_dims:                ['chain', 'draw']</span>
+
+<span class="gp">In [37]: </span><span class="k">with</span> <span class="n">arviz_base</span><span class="o">.</span><span class="n">rc_context</span><span class="p">({</span><span class="s2">"stats.ci_prob"</span><span class="p">:</span> <span class="mf">0.95</span><span class="p">}):</span>
+<span class="gp">   ....: </span>    <span class="nb">print</span><span class="p">(</span><span class="n">arviz_stats</span><span class="o">.</span><span class="n">summary</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">"diagnostics"</span><span class="p">))</span>
+<span class="gp">   ....: </span>
+<span class="go">        ess_bulk ess_tail r_hat mcse_mean  mcse_sd</span>
+<span class="go">flux[0]     5344     1316  1.00    0.0021   0.0041</span>
+<span class="go">flux[1]      987     1445  1.00    0.0014  0.00088</span>
+<span class="go">flux[2]      907      969  1.00    0.0017   0.0013</span>
+<span class="go">flux[3]     3985      986  1.00    0.0026   0.0049</span>
+<span class="go">flux[4]     4254     1427  1.01    0.0033   0.0058</span>
+<span class="go">flux[5]      565      922  1.00    0.0038   0.0022</span>
+<span class="go">flux[6]     6602      904  1.01     0.002   0.0069</span>
+<span class="go">flux[7]      840     1250  1.01    0.0017   0.0011</span>
+<span class="go">flux[8]      529      762  1.01    0.0019    0.001</span>
+<span class="go">flux[9]      554     1124  1.00    0.0027   0.0014</span>
 </pre></div>
 </div>
 <p><strong>Reading an aggregate checks the chains on it.</strong> A total depends on how the

@@ -33,6 +33,7 @@
    ~Posterior.r2
    ~Posterior.reduced_chi2
    ~Posterior.rmse
+   ~Posterior.sample_stats
    ~Posterior.state_misfit
    ~Posterior.uncertainty_reduction
    ~Posterior.variances
@@ -46,6 +47,7 @@
 
    ~Posterior.averaging_kernel
    ~Posterior.candidate_worth
+   ~Posterior.chains
    ~Posterior.chi2_tests
    ~Posterior.cov
    ~Posterior.data_worth
@@ -55,6 +57,7 @@
    ~Posterior.recovery
    ~Posterior.sample
    ~Posterior.summary
+   ~Posterior.to_inference_data
    ~Posterior.trials
    ~Posterior.uncertainty
    ~Posterior.with_data

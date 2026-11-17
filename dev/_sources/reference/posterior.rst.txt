@@ -110,6 +110,9 @@ State estimate
    Posterior.cov
    Posterior.uncertainty
    Posterior.diagnostics
+   Posterior.chains
+   Posterior.sample_stats
+   Posterior.to_inference_data
    Posterior.sample
    Posterior.at_bound
 
@@ -252,6 +255,10 @@ raise.
    * - ``recovery``, ``data_worth``, ``candidate_worth``
      - ``"analytic"`` only: they need an estimate linear in the observations
      - raises
+     - raises
+   * - ``chains``, ``diagnostics``, ``to_inference_data``
+     - raises
+     - the kept draws; ``sample_stats``: ``"gauss_newton"`` only
      - raises
    * - ``at_bound``
      - raises

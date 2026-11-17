@@ -1,0 +1,6 @@
+fips.Posterior.sample\_stats
+============================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Posterior.sample_stats

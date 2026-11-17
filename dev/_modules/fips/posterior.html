@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.posterior &#8212; fips 0.2.0b3.dev58+ge643ded15 documentation</title>
+    <title>fips.posterior &#8212; fips 0.2.0b3.dev59+g3eaf3cf16 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=f39a4c6b"></script>
+    <script src="../../_static/documentation_options.js?v=cbba9788"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev58+ge643ded15 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev58+ge643ded15 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev59+g3eaf3cf16 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev59+g3eaf3cf16 documentation - Home"/>
   
   
 </a></div>
@@ -456,13 +456,14 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">inv</span><span class="p">,</span> <span class="n">solve</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.special</span><span class="w"> </span><span class="kn">import</span> <span class="n">chdtrc</span><span class="p">,</span> <span class="n">ndtr</span><span class="p">,</span> <span class="n">ndtri</span>  <span class="c1"># chi-squared sf, normal CDF, inverse</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">fips._draws</span><span class="w"> </span><span class="kn">import</span> <span class="n">_diagnostics</span><span class="p">,</span> <span class="n">_warn_if_tails_thin</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips._draws</span><span class="w"> </span><span class="kn">import</span> <span class="n">_diagnostics</span><span class="p">,</span> <span class="n">_equal_chains</span><span class="p">,</span> <span class="n">_warn_if_tails_thin</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips._errors</span><span class="w"> </span><span class="kn">import</span> <span class="n">warn</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.covariance</span><span class="w"> </span><span class="kn">import</span> <span class="n">Covariance</span><span class="p">,</span> <span class="n">CovarianceModel</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearOperator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg.forms</span><span class="w"> </span><span class="kn">import</span> <span class="n">_adopt</span><span class="p">,</span> <span class="n">_solve_psd</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.operator</span><span class="w"> </span><span class="kn">import</span> <span class="n">Operator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.problem</span><span class="w"> </span><span class="kn">import</span> <span class="n">Problem</span><span class="p">,</span> <span class="n">_covariance</span><span class="p">,</span> <span class="n">_vector</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.space</span><span class="w"> </span><span class="kn">import</span> <span class="n">Space</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.vector</span><span class="w"> </span><span class="kn">import</span> <span class="n">Vector</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -526,7 +527,7 @@
 <span class="sd">    observations (``problem.obs``). The posterior labels them, and computes</span>
 <span class="sd">    each one once.</span>
 
-<span class="sd">    Twelve members are optional, and a posterior whose solution lacks one says</span>
+<span class="sd">    Thirteen members are optional, and a posterior whose solution lacks one says</span>
 <span class="sd">    so when it is asked for the feature (or, for ``linearized`` and</span>
 <span class="sd">    ``used_prior_variances``, uses its own problem):</span>
 
@@ -553,6 +554,10 @@
 <span class="sd">      side by side; without it, the kept draws are one chain. The chain</span>
 <span class="sd">      checks of :meth:`Posterior.diagnostics` and of an interval read from</span>
 <span class="sd">      the draws compare the chains.</span>
+<span class="sd">    - ``stats() -&gt; dict[str, np.ndarray]``: for a sampled posterior, the</span>
+<span class="sd">      sampler's record of each kept draw (``N`` values a name, in the order</span>
+<span class="sd">      ``kept`` holds them), named as ArviZ names them (``diverging``,</span>
+<span class="sd">      ``acceptance_rate``, ...; :attr:`Posterior.sample_stats`).</span>
 <span class="sd">    - ``at_bound() -&gt; np.ndarray``: which state elements sit on a bound at the</span>
 <span class="sd">      estimate, booleans (``n``; :attr:`Posterior.at_bound`).</span>
 <span class="sd">    - ``iterations() -&gt; tuple[np.ndarray, ...]``: for each iteration of</span>
@@ -945,6 +950,65 @@
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">negative</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">variance</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)))</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_chain_draw_index</span><span class="p">(</span><span class="n">lengths</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return the labels ``(chain, draw)`` of chains of the `lengths` held side by side, each counted from 0."""</span>
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_arrays</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">lengths</span><span class="p">)),</span> <span class="n">lengths</span><span class="p">),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">length</span><span class="p">)</span> <span class="k">for</span> <span class="n">length</span> <span class="ow">in</span> <span class="n">lengths</span><span class="p">]),</span>
+        <span class="p">],</span>
+        <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">"chain"</span><span class="p">,</span> <span class="s2">"draw"</span><span class="p">],</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_arviz_dims</span><span class="p">(</span><span class="n">space</span><span class="p">:</span> <span class="n">Space</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return each block's dimension in ArviZ and its labels, as given.</span>
+
+<span class="sd">    A block with one level of labels is over a dimension of that level's</span>
+<span class="sd">    name; one with several, over ``&lt;block&gt;_dim``, whose labels' levels become</span>
+<span class="sd">    coordinates of their own names. A block any of whose names (its</span>
+<span class="sd">    dimension, its levels) is another block's name or one of another block's,</span>
+<span class="sd">    or ``chain`` or ``draw``, has each of them start with its own name and an</span>
+<span class="sd">    underscore, so that xarray reads every name once.</span>
+<span class="sd">    """</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="p">{</span><span class="n">block</span><span class="p">:</span> <span class="n">space</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">block</span><span class="p">)</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">space</span><span class="o">.</span><span class="n">names</span><span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">names</span><span class="p">(</span><span class="n">block</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Return the names `block` takes in ArviZ: its dimension, and its levels where it has several."""</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">block</span><span class="si">}</span><span class="s2">_dim"</span><span class="p">,</span> <span class="o">*</span><span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">index</span><span class="o">.</span><span class="n">names</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">index</span><span class="o">.</span><span class="n">name</span><span class="p">)]</span>
+
+    <span class="n">taken</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"chain"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">"draw"</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
+    <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">space</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
+        <span class="n">taken</span><span class="p">[</span><span class="n">block</span><span class="p">]</span> <span class="o">=</span> <span class="n">taken</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">names</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">labels</span><span class="p">[</span><span class="n">block</span><span class="p">])):</span>
+            <span class="n">taken</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">taken</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">dims</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">labels</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">taken</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">index</span><span class="p">)):</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="n">index</span><span class="o">.</span><span class="n">set_names</span><span class="p">([</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">block</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">index</span><span class="o">.</span><span class="n">names</span><span class="p">])</span>
+        <span class="n">dim</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">block</span><span class="si">}</span><span class="s2">_dim"</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="p">)</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">index</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">dims</span><span class="p">[</span><span class="n">block</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">dims</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_require_arviz</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return ArviZ's ``from_dict``, with an install hint when ArviZ is missing."""</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># ArviZ 1 needs Python 3.12, so the extra installs nothing on 3.11,</span>
+        <span class="c1"># where pyrefly checks: the module is missing there by design</span>
+        <span class="c1"># pyrefly: ignore[missing-import]</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">arviz_base</span><span class="w"> </span><span class="kn">import</span> <span class="n">from_dict</span>
+    <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+            <span class="s2">"ArviZ is required for to_inference_data; install it with "</span>
+            <span class="s1">'`pip install "fips[arviz]"` (Python 3.12 or later).'</span>
+        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
+    <span class="k">return</span> <span class="n">from_dict</span>
+
+
 <div class="viewcode-block" id="Posterior">
 <a class="viewcode-back" href="../../reference/api/fips.Posterior.html#fips.Posterior">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Posterior</span><span class="p">:</span>
@@ -1022,6 +1086,10 @@
 <span class="sd">       * - ``recovery``, ``data_worth``, ``candidate_worth``</span>
 <span class="sd">         - ``"analytic"`` only: they need an estimate linear in the observations</span>
 <span class="sd">         - raises</span>
+<span class="sd">         - raises</span>
+<span class="sd">       * - ``chains``, ``diagnostics``, ``to_inference_data``</span>
+<span class="sd">         - raises</span>
+<span class="sd">         - the kept draws; ``sample_stats``: ``"gauss_newton"`` only</span>
 <span class="sd">         - raises</span>
 <span class="sd">       * - ``at_bound``</span>
 <span class="sd">         - raises</span>
@@ -1912,6 +1980,173 @@
             <span class="n">draws</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_aggregation</span><span class="p">(</span><span class="n">W</span><span class="p">)</span> <span class="o">@</span> <span class="n">draws</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
             <span class="n">index</span> <span class="o">=</span> <span class="n">W</span><span class="o">.</span><span class="n">rows</span><span class="o">.</span><span class="n">index</span>
         <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">_diagnostics</span><span class="p">(</span><span class="n">draws</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lengths</span><span class="p">(</span><span class="n">draws</span><span class="p">)),</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Posterior.chains">
+<a class="viewcode-back" href="../../reference/api/fips.Posterior.chains.html#fips.Posterior.chains">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">chains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">Operator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return a sampled posterior's kept draws, one column each, labeled by chain and draw.</span>
+
+<span class="sd">        These are the draws its :attr:`mean`, :attr:`variances`, :meth:`cov`</span>
+<span class="sd">        and intervals are read from, and its :meth:`diagnostics` check:</span>
+<span class="sd">        ``"gauss_newton"``'s ``chains`` chains side by side, each after its</span>
+<span class="sd">        burn-in; ``"bounded"``'s one chain (or its independent rectified</span>
+<span class="sd">        draws). Plot a row against the draw to see a chain wander, or compare</span>
+<span class="sd">        the chains' histograms. :meth:`sample` draws more; these are the ones</span>
+<span class="sd">        the posterior has.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        W : Operator, optional</span>
+<span class="sd">            An aggregation, as :meth:`cov` takes it: the rows are then the</span>
+<span class="sd">            aggregates :math:`W x` of the draws.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas.DataFrame</span>
+<span class="sd">            One row per state element, labeled as the :attr:`estimate` is (or</span>
+<span class="sd">            one per row of `W`), and one column per kept draw, a MultiIndex</span>
+<span class="sd">            ``(chain, draw)`` counting each from 0. Chains may differ in</span>
+<span class="sd">            length by one draw (``draws`` not a multiple of ``chains``).</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        UnavailableError</span>
+<span class="sd">            If the posterior is not sampled (its solution keeps no draws).</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If the columns of `W` do not have exactly the state's labels.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        sample_stats : The sampler's record of each of these draws.</span>
+<span class="sd">        to_inference_data : The same draws, for ArviZ.</span>
+<span class="sd">        diagnostics : The checks of these draws.</span>
+<span class="sd">        """</span>
+        <span class="n">kept</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optional</span><span class="p">(</span><span class="s2">"kept"</span><span class="p">,</span> <span class="s2">"chains of draws (it is not sampled)"</span><span class="p">)</span>
+        <span class="n">draws</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="n">kept</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">index</span>
+        <span class="k">if</span> <span class="n">W</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">draws</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_aggregation</span><span class="p">(</span><span class="n">W</span><span class="p">)</span> <span class="o">@</span> <span class="n">draws</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="n">W</span><span class="o">.</span><span class="n">rows</span><span class="o">.</span><span class="n">index</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+            <span class="n">draws</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">_chain_draw_index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_lengths</span><span class="p">(</span><span class="n">draws</span><span class="p">))</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Posterior.sample_stats">
+<a class="viewcode-back" href="../../reference/api/fips.Posterior.sample_stats.html#fips.Posterior.sample_stats">[docs]</a>
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        The sampler's record of each kept draw of a sampled posterior, one row each, by ArviZ's names.</span>
+
+<span class="sd">        A ``"gauss_newton"`` posterior with a forward model records, for the</span>
+<span class="sd">        Hamiltonian path that made each draw:</span>
+
+<span class="sd">        - ``diverging``: whether the path diverged, its energy rising by more</span>
+<span class="sd">          than 1000 (Stan's rule) or the model failing along it; it is</span>
+<span class="sd">          rejected, so the draws stay exact, but it marks a part of the</span>
+<span class="sd">          posterior the sampler could not follow (the solve logs how many);</span>
+<span class="sd">        - ``acceptance_rate``: the path's probability of acceptance by the</span>
+<span class="sd">          Metropolis test; the burn-in tunes the step to 0.9 on average;</span>
+<span class="sd">        - ``energy_error``: the change of the energy along the path (infinite</span>
+<span class="sd">          where the model failed);</span>
+<span class="sd">        - ``n_steps``, ``step_size``: the steps of the path, and the length</span>
+<span class="sd">          of each (the chain's tuned step, jittered).</span>
+
+<span class="sd">        ``"bounded"``'s sampler is exact, with no test and no step to tune,</span>
+<span class="sd">        and records nothing: it raises.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        UnavailableError</span>
+<span class="sd">            If the method records nothing of its draws (an analytic or a</span>
+<span class="sd">            bounded posterior).</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        chains : The draws these are of.</span>
+<span class="sd">        to_inference_data : These and the draws, for ArviZ.</span>
+<span class="sd">        """</span>
+        <span class="n">stats</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optional</span><span class="p">(</span><span class="s2">"stats"</span><span class="p">,</span> <span class="s2">"the sampler's record of its draws"</span><span class="p">)()</span>
+        <span class="n">draws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optional</span><span class="p">(</span><span class="s2">"kept"</span><span class="p">,</span> <span class="s2">"chains of draws (it is not sampled)"</span><span class="p">)()</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">stats</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">_chain_draw_index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_lengths</span><span class="p">(</span><span class="n">draws</span><span class="p">)))</span></div>
+
+
+<div class="viewcode-block" id="Posterior.to_inference_data">
+<a class="viewcode-back" href="../../reference/api/fips.Posterior.to_inference_data.html#fips.Posterior.to_inference_data">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_inference_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">Operator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return a sampled posterior's kept draws as ArviZ's ``DataTree``, for its plots and checks.</span>
+
+<span class="sd">        ArviZ (1.1 or later, on Python 3.12 or later: ``pip install</span>
+<span class="sd">        "fips[arviz]"``) reads it as it reads a PyMC or Stan run: trace and</span>
+<span class="sd">        rank plots (``arviz.plot_trace``, ``arviz.plot_rank``), its</span>
+<span class="sd">        ``summary``, which :meth:`diagnostics` computes the same way (its</span>
+<span class="sd">        ``ess_tail`` at the 5% and 95% quantiles with ArviZ's</span>
+<span class="sd">        ``stats.ci_prob`` at 0.95; ArviZ 1 reads it at ``1 - ci_prob`` and</span>
+<span class="sd">        ``ci_prob``, 11% and 89% by default), and the divergences on a pair</span>
+<span class="sd">        plot. Its ``posterior`` group has one variable</span>
+<span class="sd">        per block of the state (or of `W`'s rows), named as the block, over</span>
+<span class="sd">        the dimensions ``chain``, ``draw`` and the block's labels: a block</span>
+<span class="sd">        with one level of labels has that level's name as its dimension, one</span>
+<span class="sd">        with several a dimension ``&lt;block&gt;_dim`` with a coordinate per level,</span>
+<span class="sd">        so ``.sel(cell="a")`` or ``.sel(time=...)`` picks elements. Where two</span>
+<span class="sd">        blocks would share a name (each labeled ``cell``, say), each of their</span>
+<span class="sd">        names starts with its block's (``flux_cell``). Its ``sample_stats``</span>
+<span class="sd">        group is :attr:`sample_stats`, where the method records it.</span>
+
+<span class="sd">        ArviZ needs chains of one length: each is cut to the shortest, as</span>
+<span class="sd">        :meth:`diagnostics` reads them, so with ``draws`` not a multiple of</span>
+<span class="sd">        ``chains`` a few draws are left out.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        W : Operator, optional</span>
+<span class="sd">            An aggregation, as :meth:`cov` takes it: the variables are then</span>
+<span class="sd">            the aggregates :math:`W x` of the draws, by the blocks of `W`'s</span>
+<span class="sd">            rows.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        xarray.DataTree</span>
+<span class="sd">            ArviZ's container of a run, with the groups ``posterior`` and,</span>
+<span class="sd">            where the method records it, ``sample_stats``.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ImportError</span>
+<span class="sd">            If ArviZ is not installed.</span>
+<span class="sd">        UnavailableError</span>
+<span class="sd">            If the posterior is not sampled (its solution keeps no draws).</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If the columns of `W` do not have exactly the state's labels.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        chains : The same draws, as a DataFrame.</span>
+<span class="sd">        diagnostics : ArviZ's checks of them, computed by fips.</span>
+<span class="sd">        """</span>
+        <span class="n">from_dict</span> <span class="o">=</span> <span class="n">_require_arviz</span><span class="p">()</span>
+        <span class="n">kept</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optional</span><span class="p">(</span><span class="s2">"kept"</span><span class="p">,</span> <span class="s2">"chains of draws (it is not sampled)"</span><span class="p">)</span>
+        <span class="n">draws</span><span class="p">,</span> <span class="n">space</span> <span class="o">=</span> <span class="n">kept</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span>
+        <span class="k">if</span> <span class="n">W</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">draws</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_aggregation</span><span class="p">(</span><span class="n">W</span><span class="p">)</span> <span class="o">@</span> <span class="n">draws</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+            <span class="n">space</span> <span class="o">=</span> <span class="n">W</span><span class="o">.</span><span class="n">rows</span>
+        <span class="n">lengths</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lengths</span><span class="p">(</span><span class="n">draws</span><span class="p">)</span>
+        <span class="n">chains</span> <span class="o">=</span> <span class="n">_equal_chains</span><span class="p">(</span><span class="n">draws</span><span class="p">,</span> <span class="n">lengths</span><span class="p">)</span>  <span class="c1"># rows x chains x draws</span>
+        <span class="n">posterior</span><span class="p">,</span> <span class="n">dims</span><span class="p">,</span> <span class="n">coords</span> <span class="o">=</span> <span class="p">{},</span> <span class="p">{},</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span> <span class="ow">in</span> <span class="n">_arviz_dims</span><span class="p">(</span><span class="n">space</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">posterior</span><span class="p">[</span><span class="n">block</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">moveaxis</span><span class="p">(</span><span class="n">chains</span><span class="p">[</span><span class="n">space</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="n">block</span><span class="p">)],</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">dims</span><span class="p">[</span><span class="n">block</span><span class="p">],</span> <span class="n">coords</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">dim</span><span class="p">],</span> <span class="n">labels</span>
+        <span class="n">groups</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"posterior"</span><span class="p">:</span> <span class="n">posterior</span><span class="p">}</span>
+        <span class="n">stats</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_solution</span><span class="p">,</span> <span class="s2">"stats"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">stats</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">groups</span><span class="p">[</span><span class="s2">"sample_stats"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">name</span><span class="p">:</span> <span class="n">_equal_chains</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">values</span><span class="p">)[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:],</span> <span class="n">lengths</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">stats</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="p">}</span>
+        <span class="k">return</span> <span class="n">from_dict</span><span class="p">(</span><span class="n">groups</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="n">dims</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="n">coords</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Posterior.sample">
