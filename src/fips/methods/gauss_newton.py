@@ -366,22 +366,30 @@ class GaussNewton:
         """Return the kept draws (``n x draws``, the chains side by side), which the variances, the covariances, the mean and the intervals are read from: drawn from the seed at the first call, with a warning if the chains disagree or mix too slowly for their variances."""
         kept = self.__dict__.get("_draws")
         if kept is None:
-            kept, divergent = self._run(
+            kept, stats = self._run(
                 self.options.draws, np.random.default_rng(self.options.seed)
             )
             kept = self.__dict__["_draws"] = _read_only(kept)
+            self.__dict__["_stats"] = {
+                name: _read_only(values) for name, values in stats.items()
+            }
             lengths = self.lengths()
-            _log_divergent(divergent, logger)
+            _log_divergent(stats["diverging"], logger)
             _warn_if_unmixed(kept, lengths, logger, _UNMIXED_DRAWS)
             _warn_if_imprecise(kept, logger, _SLOW_DRAWS, lengths=lengths)
         return kept
+
+    def stats(self) -> dict[str, np.ndarray]:
+        """Return the sampler's record of each kept draw, in the order :meth:`kept` holds them (``draws`` values each): :data:`_STATS`."""
+        self.kept()
+        return self.__dict__["_stats"]
 
     def __getstate__(self) -> dict:
         """Return the fields for a pickle or a copy, without the caches (the draws are made again, the same, from the seed)."""
         return {
             name: value
             for name, value in self.__dict__.items()
-            if name not in ("_sampler_", "_tuning_", "_draws")
+            if name not in ("_sampler_", "_tuning_", "_draws", "_stats")
         }
 
     def __setstate__(self, state: dict) -> None:
@@ -401,23 +409,29 @@ class GaussNewton:
         """Return `N` new draws of the posterior (``n x N``): split among the chains as evenly as they go (the first ones a draw more), each from where its burn-in ended, at its tuned step, side by side in the chains' order."""
         return self._run(N, rng)[0]
 
-    def _run(self, N: int, rng: np.random.Generator) -> tuple[np.ndarray, np.ndarray]:
-        """Return :meth:`sample`'s `N` draws and whether each one's path diverged (``N`` booleans, in the same order)."""
-        sampler, parts, divergent = self._sampler(), [], []
+    def _run(
+        self, N: int, rng: np.random.Generator
+    ) -> tuple[np.ndarray, dict[str, np.ndarray]]:
+        """Return :meth:`sample`'s `N` draws and the sampler's record of each (:data:`_STATS`, ``N`` values each, in the same order)."""
+        sampler, parts, records = self._sampler(), [], []
         for tuning, count in zip(
             self._tunings(), _split(N, self.options.chains), strict=True
         ):
             if not count:  # fewer draws asked for than there are chains
                 continue
-            draws, diverged, acceptance = sampler.run(
-                tuning.point, count, rng, tuning.step
-            )
+            draws, record = sampler.run(tuning.point, count, rng, tuning.step)
             logger.debug(
-                "%d draws of the posterior, accepted at %.2f.", count, acceptance
+                "%d draws of the posterior, accepted at %.2f.",
+                count,
+                record["acceptance_rate"].mean(),
             )
             parts.append(draws)
-            divergent.append(diverged)
-        return np.concatenate(parts, axis=1), np.concatenate(divergent)
+            records.append(record)
+        stats = {
+            name: np.concatenate([record[name] for record in records])
+            for name in _STATS
+        }
+        return np.concatenate(parts, axis=1), stats
 
     def lengths(self) -> tuple[int, ...]:
         """Return the number of kept draws of each chain, in the order :meth:`kept` holds them side by side."""
@@ -644,7 +658,8 @@ class _Sampler:
     A path the model cannot follow (it overflows) is rejected. A path whose
     energy rose by more than :data:`~fips._draws._DIVERGENT`, or that the
     model could not follow, diverged: the kept draws from one are counted and
-    logged at INFO (:func:`~fips._draws._log_divergent`).
+    logged at INFO (:func:`~fips._draws._log_divergent`). Each path's record
+    (:data:`_STATS`) is kept with its draw (``Posterior.sample_stats``).
     """
 
     def __init__(self, solution: "GaussNewton"):
@@ -743,19 +758,18 @@ class _Sampler:
 
     def move(
         self, here: _Point, v: np.ndarray, test: float, h: float, steps: int
-    ) -> tuple[_Point, float, bool]:
-        """Return the chain's next state from `here` (the path's end if the Metropolis test `test` passes, else `here`), the path's acceptance probability, and whether it diverged: its energy rose by more than :data:`~fips._draws._DIVERGENT`, or the model could not follow it."""
+    ) -> tuple[_Point, float, float]:
+        """Return the chain's next state from `here` (the path's end if the Metropolis test `test` passes, else `here`), the path's acceptance probability, and the change of the energy along it (infinite if the model could not follow it): above :data:`~fips._draws._DIVERGENT`, or NaN, the path diverged (:func:`_diverged`)."""
         try:
             with np.errstate(over="raise", invalid="raise"):
                 end, change = self.travel(here, v, h, steps)
         except _FAILED:
-            return here, 0.0, True
+            return here, 0.0, math.inf
         if change <= 0.0:
             alpha = 1.0
         else:  # a NaN change is rejected
             alpha = math.exp(-change) if change < math.inf else 0.0
-        divergent = not change <= _DIVERGENT  # a NaN change diverged too
-        return (end if test < alpha else here), alpha, divergent
+        return (end if test < alpha else here), alpha, change
 
     def moves(
         self, count: int, rng: np.random.Generator
@@ -817,19 +831,24 @@ class _Sampler:
 
     def run(
         self, start: _Point, N: int, rng: np.random.Generator, step: float
-    ) -> tuple[np.ndarray, np.ndarray, float]:
-        """Return `N` draws (``n x N``) of the chain from `start` at the step `step`, with velocities and tests drawn from `rng`, whether each one's path diverged (``N`` booleans), and its acceptance rate."""
+    ) -> tuple[np.ndarray, dict[str, np.ndarray]]:
+        """Return `N` draws (``n x N``) of the chain from `start` at the step `step`, with velocities and tests drawn from `rng`, and the record of each draw's path (:data:`_STATS`, ``N`` values each)."""
         steps = _steps(step)
         draws = np.empty((len(start.x), N))
-        divergent = np.zeros(N, dtype=bool)
-        here, accepted = start, 0.0
+        alphas, changes, sizes = np.empty(N), np.empty(N), np.empty(N)
+        here = start
         for j, (v, test, jitter) in enumerate(self.moves(N, rng)):
-            here, alpha, divergent[j] = self.move(
-                here, v, test, _QUARTER / steps * jitter, steps
-            )
-            accepted += alpha
+            sizes[j] = _QUARTER / steps * jitter
+            here, alphas[j], changes[j] = self.move(here, v, test, sizes[j], steps)
             draws[:, j] = here.x
-        return draws, divergent, accepted / N
+        record = {
+            "diverging": _diverged(changes),
+            "acceptance_rate": alphas,
+            "energy_error": changes,
+            "n_steps": np.full(N, steps),
+            "step_size": sizes,
+        }
+        return draws, record
 
 
 _SLOW_DRAWS = (
@@ -854,6 +873,25 @@ _UNMIXED_AGGREGATES = (
     "posterior."
 )
 """What the warning that the chains disagree on an aggregate says of the cause and the remedy."""
+
+
+_STATS = ("diverging", "acceptance_rate", "energy_error", "n_steps", "step_size")
+r"""
+The sampler's record of each draw, by ArviZ's names for them (its ``sample_stats``).
+
+- ``diverging``: whether the draw's path diverged (:func:`_diverged`);
+- ``acceptance_rate``: the path's acceptance probability, :math:`\min(1, e^{-\Delta H})`;
+- ``energy_error``: the change of the energy along the path, :math:`\Delta H`
+  (infinite where the model could not follow it);
+- ``n_steps``: the steps of the path, the chain's own after its burn-in;
+- ``step_size``: the length of each, the chain's tuned step jittered.
+"""
+
+
+def _diverged(change: np.ndarray) -> np.ndarray:
+    """Return whether each path diverged: its energy rose by more than :data:`~fips._draws._DIVERGENT` (Stan's rule), or by NaN, or without bound (the model could not follow it)."""
+    with np.errstate(invalid="ignore"):
+        return ~(np.asarray(change) <= _DIVERGENT)
 
 
 def _split(N: int, chains: int) -> tuple[int, ...]:

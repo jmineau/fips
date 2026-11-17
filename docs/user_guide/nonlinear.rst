@@ -348,6 +348,40 @@ fips's sampler.
 
    post.diagnostics().round(3)
 
+**The chains themselves.** :meth:`~fips.Posterior.chains` gives the kept
+draws, one column each labeled ``(chain, draw)``, and
+:attr:`~fips.Posterior.sample_stats` the sampler's record of the path that
+made each: whether it diverged, its acceptance probability, its energy
+error, its steps and their length, by ArviZ's names.
+
+.. ipython:: python
+   :okwarning:
+
+   post.chains().iloc[:, :3]
+   post.sample_stats.groupby(level="chain").mean()
+
+**ArviZ.** :meth:`~fips.Posterior.to_inference_data` hands the same draws
+and record to ArviZ (1.1 or later, which needs Python 3.12:
+``pip install "fips[arviz]"``) as it reads a PyMC or Stan run: one variable
+per block of the state, over the block's labels, so its trace and rank plots
+(``arviz.plot_trace``, ``arviz.plot_rank``) and its ``summary`` work as they
+do there. ArviZ's ``summary`` gives the numbers
+:meth:`~fips.Posterior.diagnostics` computes, but for ``ess_tail``: ArviZ 1
+reads the tail at the quantiles ``1 - ci_prob`` and ``ci_prob`` of its
+``stats.ci_prob`` setting (0.89, so 11% and 89%), fips at 5% and 95%, as
+Vehtari et al. (2021) and Stan do. Set it to 0.95 for the same numbers.
+
+.. ipython:: python
+   :okwarning:
+
+   import arviz_base
+   import arviz_stats
+
+   data = post.to_inference_data()
+   data.posterior
+   with arviz_base.rc_context({"stats.ci_prob": 0.95}):
+       print(arviz_stats.summary(data, kind="diagnostics"))
+
 **Reading an aggregate checks the chains on it.** A total depends on how the
 elements vary together, so its chains can disagree where few elements' do,
 and agree where many do. :meth:`~fips.Posterior.cov` and

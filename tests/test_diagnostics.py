@@ -254,10 +254,18 @@ def test_a_path_the_model_cannot_follow_diverged():
     sampler = post._solution._sampler()
     here = sampler.point(np.asarray(post._solution.mode))
     huge = np.full_like(here.x, 1e6)
-    end, alpha, divergent = sampler.move(here, huge, 0.5, 0.5, 3)
+    end, alpha, change = sampler.move(here, huge, 0.5, 0.5, 3)
     assert end is here
     assert alpha == 0.0
-    assert divergent
+    assert change == np.inf
+    assert gauss_newton._diverged(
+        np.array([change, np.nan, 1000.0, 1000.5])
+    ).tolist() == [
+        True,
+        True,
+        False,
+        True,
+    ]
 
 
 def test_an_interval_from_too_few_tail_draws_warns(caplog):

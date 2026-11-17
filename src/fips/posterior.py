@@ -33,13 +33,14 @@ from numpy.linalg import LinAlgError
 from scipy.linalg import inv, solve
 from scipy.special import chdtrc, ndtr, ndtri  # chi-squared sf, normal CDF, inverse
 
-from fips._draws import _diagnostics, _warn_if_tails_thin
+from fips._draws import _diagnostics, _equal_chains, _warn_if_tails_thin
 from fips._errors import warn
 from fips.covariance import Covariance, CovarianceModel
 from fips.linalg import LinearOperator
 from fips.linalg.forms import _adopt, _solve_psd
 from fips.operator import Operator
 from fips.problem import Problem, _covariance, _vector
+from fips.space import Space
 from fips.vector import Vector
 
 logger = logging.getLogger(__name__)
@@ -98,7 +99,7 @@ class Solution(Protocol):
     observations (``problem.obs``). The posterior labels them, and computes
     each one once.
 
-    Twelve members are optional, and a posterior whose solution lacks one says
+    Thirteen members are optional, and a posterior whose solution lacks one says
     so when it is asked for the feature (or, for ``linearized`` and
     ``used_prior_variances``, uses its own problem):
 
@@ -125,6 +126,10 @@ class Solution(Protocol):
       side by side; without it, the kept draws are one chain. The chain
       checks of :meth:`Posterior.diagnostics` and of an interval read from
       the draws compare the chains.
+    - ``stats() -> dict[str, np.ndarray]``: for a sampled posterior, the
+      sampler's record of each kept draw (``N`` values a name, in the order
+      ``kept`` holds them), named as ArviZ names them (``diverging``,
+      ``acceptance_rate``, ...; :attr:`Posterior.sample_stats`).
     - ``at_bound() -> np.ndarray``: which state elements sit on a bound at the
       estimate, booleans (``n``; :attr:`Posterior.at_bound`).
     - ``iterations() -> tuple[np.ndarray, ...]``: for each iteration of
@@ -483,6 +488,65 @@ def _std(variance: np.ndarray, scale: np.ndarray, what: str) -> np.ndarray:
     return np.sqrt(np.where(negative, np.nan, np.maximum(variance, 0.0)))
 
 
+def _chain_draw_index(lengths: tuple[int, ...]) -> pd.MultiIndex:
+    """Return the labels ``(chain, draw)`` of chains of the `lengths` held side by side, each counted from 0."""
+    return pd.MultiIndex.from_arrays(
+        [
+            np.repeat(np.arange(len(lengths)), lengths),
+            np.concatenate([np.arange(length) for length in lengths]),
+        ],
+        names=["chain", "draw"],
+    )
+
+
+def _arviz_dims(space: Space) -> dict[str, tuple[str, pd.Index]]:
+    """
+    Return each block's dimension in ArviZ and its labels, as given.
+
+    A block with one level of labels is over a dimension of that level's
+    name; one with several, over ``<block>_dim``, whose labels' levels become
+    coordinates of their own names. A block any of whose names (its
+    dimension, its levels) is another block's name or one of another block's,
+    or ``chain`` or ``draw``, has each of them start with its own name and an
+    underscore, so that xarray reads every name once.
+    """
+    labels = {block: space.select(block) for block in space.names}
+
+    def names(block: str, index: pd.Index) -> list[str]:
+        """Return the names `block` takes in ArviZ: its dimension, and its levels where it has several."""
+        if isinstance(index, pd.MultiIndex):
+            return [f"{block}_dim", *map(str, index.names)]
+        return [str(index.name)]
+
+    taken: dict[str, int] = {"chain": 2, "draw": 2}
+    for block in space.names:
+        taken[block] = taken.get(block, 0) + 1
+        for name in set(names(block, labels[block])):
+            taken[name] = taken.get(name, 0) + 1
+    dims = {}
+    for block, index in labels.items():
+        if any(taken[name] > 1 for name in names(block, index)):
+            index = index.set_names([f"{block}_{name}" for name in index.names])
+        dim = f"{block}_dim" if isinstance(index, pd.MultiIndex) else str(index.name)
+        dims[block] = (dim, index)
+    return dims
+
+
+def _require_arviz() -> Any:
+    """Return ArviZ's ``from_dict``, with an install hint when ArviZ is missing."""
+    try:
+        # ArviZ 1 needs Python 3.12, so the extra installs nothing on 3.11,
+        # where pyrefly checks: the module is missing there by design
+        # pyrefly: ignore[missing-import]
+        from arviz_base import from_dict
+    except ImportError as exc:
+        raise ImportError(
+            "ArviZ is required for to_inference_data; install it with "
+            '`pip install "fips[arviz]"` (Python 3.12 or later).'
+        ) from exc
+    return from_dict
+
+
 class Posterior:
     r"""
     The solution of an inverse problem, labeled.
@@ -558,6 +622,10 @@ class Posterior:
        * - ``recovery``, ``data_worth``, ``candidate_worth``
          - ``"analytic"`` only: they need an estimate linear in the observations
          - raises
+         - raises
+       * - ``chains``, ``diagnostics``, ``to_inference_data``
+         - raises
+         - the kept draws; ``sample_stats``: ``"gauss_newton"`` only
          - raises
        * - ``at_bound``
          - raises
@@ -1422,6 +1490,164 @@ class Posterior:
             draws = np.asarray(self._aggregation(W) @ draws, dtype=float)
             index = W.rows.index
         return pd.DataFrame(_diagnostics(draws, self._lengths(draws)), index=index)
+
+    def chains(self, W: Operator | None = None) -> pd.DataFrame:
+        """
+        Return a sampled posterior's kept draws, one column each, labeled by chain and draw.
+
+        These are the draws its :attr:`mean`, :attr:`variances`, :meth:`cov`
+        and intervals are read from, and its :meth:`diagnostics` check:
+        ``"gauss_newton"``'s ``chains`` chains side by side, each after its
+        burn-in; ``"bounded"``'s one chain (or its independent rectified
+        draws). Plot a row against the draw to see a chain wander, or compare
+        the chains' histograms. :meth:`sample` draws more; these are the ones
+        the posterior has.
+
+        Parameters
+        ----------
+        W : Operator, optional
+            An aggregation, as :meth:`cov` takes it: the rows are then the
+            aggregates :math:`W x` of the draws.
+
+        Returns
+        -------
+        pandas.DataFrame
+            One row per state element, labeled as the :attr:`estimate` is (or
+            one per row of `W`), and one column per kept draw, a MultiIndex
+            ``(chain, draw)`` counting each from 0. Chains may differ in
+            length by one draw (``draws`` not a multiple of ``chains``).
+
+        Raises
+        ------
+        UnavailableError
+            If the posterior is not sampled (its solution keeps no draws).
+        ValueError
+            If the columns of `W` do not have exactly the state's labels.
+
+        See Also
+        --------
+        sample_stats : The sampler's record of each of these draws.
+        to_inference_data : The same draws, for ArviZ.
+        diagnostics : The checks of these draws.
+        """
+        kept = self._optional("kept", "chains of draws (it is not sampled)")
+        draws, index = kept(), self._problem.prior.index
+        if W is not None:
+            draws = np.asarray(self._aggregation(W) @ draws, dtype=float)
+            index = W.rows.index
+        return pd.DataFrame(
+            draws, index=index, columns=_chain_draw_index(self._lengths(draws))
+        )
+
+    @cached_property
+    def sample_stats(self) -> pd.DataFrame:
+        """
+        The sampler's record of each kept draw of a sampled posterior, one row each, by ArviZ's names.
+
+        A ``"gauss_newton"`` posterior with a forward model records, for the
+        Hamiltonian path that made each draw:
+
+        - ``diverging``: whether the path diverged, its energy rising by more
+          than 1000 (Stan's rule) or the model failing along it; it is
+          rejected, so the draws stay exact, but it marks a part of the
+          posterior the sampler could not follow (the solve logs how many);
+        - ``acceptance_rate``: the path's probability of acceptance by the
+          Metropolis test; the burn-in tunes the step to 0.9 on average;
+        - ``energy_error``: the change of the energy along the path (infinite
+          where the model failed);
+        - ``n_steps``, ``step_size``: the steps of the path, and the length
+          of each (the chain's tuned step, jittered).
+
+        ``"bounded"``'s sampler is exact, with no test and no step to tune,
+        and records nothing: it raises.
+
+        Raises
+        ------
+        UnavailableError
+            If the method records nothing of its draws (an analytic or a
+            bounded posterior).
+
+        See Also
+        --------
+        chains : The draws these are of.
+        to_inference_data : These and the draws, for ArviZ.
+        """
+        stats = self._optional("stats", "the sampler's record of its draws")()
+        draws = self._optional("kept", "chains of draws (it is not sampled)")()
+        return pd.DataFrame(stats, index=_chain_draw_index(self._lengths(draws)))
+
+    def to_inference_data(self, W: Operator | None = None) -> Any:
+        """
+        Return a sampled posterior's kept draws as ArviZ's ``DataTree``, for its plots and checks.
+
+        ArviZ (1.1 or later, on Python 3.12 or later: ``pip install
+        "fips[arviz]"``) reads it as it reads a PyMC or Stan run: trace and
+        rank plots (``arviz.plot_trace``, ``arviz.plot_rank``), its
+        ``summary``, which :meth:`diagnostics` computes the same way (its
+        ``ess_tail`` at the 5% and 95% quantiles with ArviZ's
+        ``stats.ci_prob`` at 0.95; ArviZ 1 reads it at ``1 - ci_prob`` and
+        ``ci_prob``, 11% and 89% by default), and the divergences on a pair
+        plot. Its ``posterior`` group has one variable
+        per block of the state (or of `W`'s rows), named as the block, over
+        the dimensions ``chain``, ``draw`` and the block's labels: a block
+        with one level of labels has that level's name as its dimension, one
+        with several a dimension ``<block>_dim`` with a coordinate per level,
+        so ``.sel(cell="a")`` or ``.sel(time=...)`` picks elements. Where two
+        blocks would share a name (each labeled ``cell``, say), each of their
+        names starts with its block's (``flux_cell``). Its ``sample_stats``
+        group is :attr:`sample_stats`, where the method records it.
+
+        ArviZ needs chains of one length: each is cut to the shortest, as
+        :meth:`diagnostics` reads them, so with ``draws`` not a multiple of
+        ``chains`` a few draws are left out.
+
+        Parameters
+        ----------
+        W : Operator, optional
+            An aggregation, as :meth:`cov` takes it: the variables are then
+            the aggregates :math:`W x` of the draws, by the blocks of `W`'s
+            rows.
+
+        Returns
+        -------
+        xarray.DataTree
+            ArviZ's container of a run, with the groups ``posterior`` and,
+            where the method records it, ``sample_stats``.
+
+        Raises
+        ------
+        ImportError
+            If ArviZ is not installed.
+        UnavailableError
+            If the posterior is not sampled (its solution keeps no draws).
+        ValueError
+            If the columns of `W` do not have exactly the state's labels.
+
+        See Also
+        --------
+        chains : The same draws, as a DataFrame.
+        diagnostics : ArviZ's checks of them, computed by fips.
+        """
+        from_dict = _require_arviz()
+        kept = self._optional("kept", "chains of draws (it is not sampled)")
+        draws, space = kept(), self._problem.prior.space
+        if W is not None:
+            draws = np.asarray(self._aggregation(W) @ draws, dtype=float)
+            space = W.rows
+        lengths = self._lengths(draws)
+        chains = _equal_chains(draws, lengths)  # rows x chains x draws
+        posterior, dims, coords = {}, {}, {}
+        for block, (dim, labels) in _arviz_dims(space).items():
+            posterior[block] = np.moveaxis(chains[space.slice(block)], 0, -1)
+            dims[block], coords[dim] = [dim], labels
+        groups = {"posterior": posterior}
+        stats = getattr(self._solution, "stats", None)
+        if stats is not None:
+            groups["sample_stats"] = {
+                name: _equal_chains(np.asarray(values)[None, :], lengths)[0]
+                for name, values in stats().items()
+            }
+        return from_dict(groups, dims=dims, coords=coords)
 
     def sample(
         self,

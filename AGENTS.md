@@ -189,7 +189,7 @@ inversion is a function that builds the `Problem`.
 
 A module `methods/<name>.py` with three things: its options (a frozen dataclass
 with a `gamma` field, values checked in `__post_init__`), its solution (answers
-`posterior.Solution`; `with_gamma`, `with_data`, `sample`, `kept` (a sampler's kept draws), `lengths` (its chains'), `at_bound`, `estimate_is_mean`,
+`posterior.Solution`; `with_gamma`, `with_data`, `sample`, `kept` (a sampler's kept draws), `lengths` (its chains'), `stats` (its record of each kept draw, by ArviZ's names), `at_bound`, `estimate_is_mean`,
 `estimate_is_linear`, `evidence_is_laplace` (`no_evidence`, why not), and `innovation_precision` with `self_sensitivity` (for
 `Posterior.data_worth`) only if it can; a member it lacks raises `fips.UnavailableError`), and a function `(problem, options) -> Posterior`. Add a line to
 `_METHODS` in `methods/__init__.py`; its docstring says how a lognormal or an
@@ -259,7 +259,8 @@ SciPy (`scipy.linalg`, `scipy.sparse`, `LinearOperator`, `eigsh`).
 pylops is read, not installed or copied (LGPL). GSTools only in an extra,
 if `covariance/kernels.py` outgrows its kernels. fips writes the samplers its
 methods need (HMC: exact for the bounded posterior, split at a Gaussian about the mode for a model) on NumPy and SciPy. The other inverse-problem libraries (pyOE, hippylib, pyemu, the
-Yadav and Michalak code) are test oracles, not dependencies. emcee, in the `dev` group only, is the outside sampler `tests/test_outside_sampler.py` holds the sampled methods to. A new runtime
+Yadav and Michalak code) are test oracles, not dependencies. emcee, in the `dev` group only, is the outside sampler `tests/test_outside_sampler.py` holds the sampled methods to. ArviZ (1.x, Python 3.12+) is the `arviz` extra, imported only by
+`Posterior.to_inference_data`; fips computes its checks itself, and the tests hold them to `arviz-stats`. A new runtime
 dependency needs a reason, proposed first.
 
 ## Gotchas

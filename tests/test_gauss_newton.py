@@ -1369,10 +1369,10 @@ def without_the_metropolis_test(self, here, v, test, h, steps):
     """Every path accepted: the splitting's error is kept, and the draws are not of the posterior."""
     try:
         with np.errstate(over="raise", invalid="raise"):
-            end, _ = self.travel(here, v, h, steps)
+            end, change = self.travel(here, v, h, steps)
     except gauss_newton._FAILED:
-        return here, 0.0, True
-    return end, 1.0, False
+        return here, 0.0, math.inf
+    return end, 1.0, change
 
 
 def velocities_from_the_prior(self, count, rng):

@@ -34,6 +34,9 @@ dependencies = [
 viz = [
     "matplotlib>=3.6.0",
 ]
+arviz = [
+    "arviz>=1.1; python_version >= '3.12'",  # Posterior.to_inference_data; ArviZ 1 needs 3.12
+]
 
 [project.urls]
 Homepage = "https://github.com/jmineau/fips"
@@ -45,7 +48,7 @@ Changelog = "https://github.com/jmineau/fips/blob/main/CHANGELOG.md"
 [dependency-groups]
 # Dev tooling and docs together; `uv sync` installs it by default.
 dev = [
-    "fips[viz]",
+    "fips[viz,arviz]",  # arviz: the tests hold fips's R-hat and effective draws to arviz-stats', and to_inference_data's output
     "docstr-coverage>=2.3",
     "git-cliff>=2.10",  # `just changelog`
     "ipython>=9.0",  # `.. ipython::` in the docs
@@ -66,7 +69,6 @@ dev = [
     "sphinx-copybutton>=0.5",
     "twine>=6.0",  # `just dist`
     "emcee>=3.1",
-    "arviz-stats>=1.3; python_version >= '3.12'",  # tests hold fips's R-hat and effective draws to ArviZ's (it needs 3.12)
 ]
 
 [tool.coverage.run]
