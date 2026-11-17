@@ -107,6 +107,7 @@ filterwarnings = [
 markers = [
     "network: needs live network access; excluded from default runs",
     "slow: expensive in time, bandwidth or disk; excluded from default runs",
+    "reference: the reference suite (tests/reference), run only by `just test-reference`",
 ]
 
 [tool.repo-review]

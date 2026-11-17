@@ -80,7 +80,8 @@ src/fips/
     forms.py        LinearOperator and the Dense-, Sparse-, Diagonal- and MatrixFreeOperator it builds
     block.py        BlockDiagonalOperator
     kronecker.py    KroneckerOperator: a covariance kept as its factors
-tests/              pytest; test_oracle.py holds every exact method to the closed form
+tests/              pytest; test_oracle.py holds every exact method to the closed form;
+                    reference/ the sampled methods against references fips did not compute (its README)
 docs/               Sphinx: guides, reference/ (by topic), examples/ (notebooks)
 ```
 
@@ -220,6 +221,7 @@ Driven by `just` and `uv`; CI runs the same recipes.
 | `just quality-check` | `lint` + `type-check` + `docstr` + `test`: what CI checks |
 | `just test` | pytest in parallel, skipping `network`/`slow` (`-n 0` for serial); also the docstring examples |
 | `just test-slow` | only the `slow` tests: the long statistical checks, among them `tests/test_outside_sampler.py` (the sampled methods against emcee) |
+| `just test-reference` | only `tests/reference/` (marked `reference`, never in CI): hours of solves, so under SLURM (`tests/reference/run.sbatch`); ends with its table |
 | `just lint` / `just format` | ruff check and format check / fix and format |
 | `just type-check` | pyrefly (no baseline: every error fails) |
 | `just docstr` | docstr-coverage of the public API |

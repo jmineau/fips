@@ -32,17 +32,21 @@ type-check:
 docstr:
     uv run docstr-coverage src/fips --skip-magic --skip-init --fail-under 95
 
-# Run the tests in parallel (up to 8 workers; `-n 0` for serial), skipping network and slow ones
+# Run the tests in parallel (up to 8 workers; `-n 0` for serial), skipping network, slow and reference ones
 test *args:
-    uv run pytest -n auto --maxprocesses=8 -m "not network and not slow" "$@"
+    uv run pytest -n auto --maxprocesses=8 -m "not network and not slow and not reference" "$@"
 
 # Run only the slow tests: the long statistical checks (the weekly Slow tests workflow runs this)
 test-slow *args:
-    uv run pytest -n auto --maxprocesses=8 -m slow "$@"
+    uv run pytest -n auto --maxprocesses=8 -m "slow and not reference" "$@"
+
+# Run the reference suite (tests/reference): the nonlinear methods against answers fips did not compute; hours of solves spread over every core, so submit it as a job (`sbatch -A <account> -p <partition> tests/reference/run.sbatch`)
+test-reference *args:
+    uv run pytest tests/reference -m reference "$@"
 
 # Run the tests with coverage (coverage.xml, junit.xml for Codecov)
 cov *args:
-    uv run pytest -n auto --maxprocesses=8 -m "not network and not slow" --cov --cov-report=term --cov-report=xml --junitxml=junit.xml -o junit_family=legacy "$@"
+    uv run pytest -n auto --maxprocesses=8 -m "not network and not slow and not reference" --cov --cov-report=term --cov-report=xml --junitxml=junit.xml -o junit_family=legacy "$@"
 
 # Build the HTML docs, running every example, failing on warnings
 build-docs:
