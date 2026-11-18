@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../../_static/documentation_options.js?v=ce1d53dc"></script>
+    <script src="../../../_static/documentation_options.js?v=7237699d"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -504,8 +504,10 @@
 <span class="sd">the posterior is that Gaussian (a linear model), and otherwise the one of the</span>
 <span class="sd">same linearized problem solved at a thirtieth of :math:`\gamma`, wider where</span>
 <span class="sd">the data pin the state down, so that the paths reach the far ends of a</span>
-<span class="sd">posterior that bends along a curve. Several chains run from spread starts, and the</span>
-<span class="sd">solve warns when they disagree (a split R-hat): one chain that never enters</span>
+<span class="sd">posterior that bends along a curve. Several chains run from spread starts.</span>
+<span class="sd">Where they disagree on an element (a split R-hat), the sampler widens its</span>
+<span class="sd">Gaussian in the few directions their draws spread past it and draws again,</span>
+<span class="sd">and the solve warns if they still disagree: one chain that never enters</span>
 <span class="sd">a tail of a curved posterior reports too small a spread, and cannot tell.</span>
 <span class="sd">The covariance of aggregates warns when they disagree on an aggregate that</span>
 <span class="sd">is read, which depends on how the elements vary together.</span>
@@ -547,7 +549,9 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips._draws</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">_DIVERGENT</span><span class="p">,</span>
+    <span class="n">_UNMIXED</span><span class="p">,</span>
     <span class="n">_log_divergent</span><span class="p">,</span>
+    <span class="n">_split_rhat</span><span class="p">,</span>
     <span class="n">_warn_if_aggregates_unmixed</span><span class="p">,</span>
     <span class="n">_warn_if_imprecise</span><span class="p">,</span>
     <span class="n">_warn_if_unmixed</span><span class="p">,</span>
@@ -610,6 +614,11 @@
 <span class="sd">    burn_in : int, default 200</span>
 <span class="sd">        The draws each chain makes and leaves out before those it keeps, from</span>
 <span class="sd">        its start, while it tunes its step to an acceptance rate of 0.9.</span>
+<span class="sd">        Where the model bends and the chains' kept draws disagree on an</span>
+<span class="sd">        element (a split R-hat above 1.05), the sampler's Gaussian is</span>
+<span class="sd">        widened where they spread past it, each chain tunes its step again</span>
+<span class="sd">        over half a burn-in from its last draw, and the kept draws are made</span>
+<span class="sd">        again: such a solve costs about twice the model runs or more.</span>
 <span class="sd">    seed : int, default 0</span>
 <span class="sd">        The seed of the starts, the tuning and the kept draws, so that a</span>
 <span class="sd">        solve is reproducible.</span>
@@ -762,48 +771,37 @@
             <span class="n">sampler</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">"_sampler_"</span><span class="p">]</span> <span class="o">=</span> <span class="n">_Sampler</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">sampler</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_burned_in</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"tuple[_Tuning, ...]"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return each chain's step, tuned over its burn-in from its start (each chain's generator a child of the seed's, apart from the kept draws'); with one chain, from the mode."""</span>
+        <span class="n">sampler</span><span class="p">,</span> <span class="n">options</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sampler</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span>
+        <span class="n">tunings</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">child</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">SeedSequence</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span><span class="o">.</span><span class="n">spawn</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">chains</span><span class="p">)</span>
+        <span class="p">):</span>
+            <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span> <span class="k">if</span> <span class="n">options</span><span class="o">.</span><span class="n">chains</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="n">tuning</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">tune</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">burn_in</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="n">start</span><span class="p">)</span>
+            <span class="n">_log_tuning</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">tuning</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">burn_in</span><span class="p">)</span>
+            <span class="n">tunings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tuning</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">tunings</span><span class="p">)</span>
+
     <span class="k">def</span><span class="w"> </span><span class="nf">_tunings</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"tuple[_Tuning, ...]"</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Return each chain's step, tuned over its burn-in from its start at the first call (each chain's generator a child of the seed's, apart from the kept draws'); with one chain, from the mode."""</span>
-        <span class="n">tunings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"_tuning_"</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">tunings</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">sampler</span><span class="p">,</span> <span class="n">options</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sampler</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span>
-            <span class="n">children</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">SeedSequence</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span><span class="o">.</span><span class="n">spawn</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">chains</span><span class="p">)</span>
-            <span class="n">tunings</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">child</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">children</span><span class="p">):</span>
-                <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
-                <span class="n">start</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span> <span class="k">if</span> <span class="n">options</span><span class="o">.</span><span class="n">chains</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="kc">None</span>
-                <span class="n">tuning</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">tune</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">burn_in</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="n">start</span><span class="p">)</span>
-                <span class="n">tunings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tuning</span><span class="p">)</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-                    <span class="s2">"The posterior sampler's chain </span><span class="si">%d</span><span class="s2">: a step of </span><span class="si">%.3g</span><span class="s2">, </span><span class="si">%d</span><span class="s2"> steps a "</span>
-                    <span class="s2">"draw, after a burn-in of </span><span class="si">%d</span><span class="s2"> draws accepted at </span><span class="si">%.2f</span><span class="s2">."</span><span class="p">,</span>
-                    <span class="n">k</span><span class="p">,</span>
-                    <span class="n">tuning</span><span class="o">.</span><span class="n">step</span><span class="p">,</span>
-                    <span class="n">_steps</span><span class="p">(</span><span class="n">tuning</span><span class="o">.</span><span class="n">step</span><span class="p">),</span>
-                    <span class="n">options</span><span class="o">.</span><span class="n">burn_in</span><span class="p">,</span>
-                    <span class="n">tuning</span><span class="o">.</span><span class="n">acceptance</span><span class="p">,</span>
-                <span class="p">)</span>
-            <span class="n">tunings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">"_tuning_"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">tunings</span><span class="p">)</span>
-            <span class="n">steps</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">_steps</span><span class="p">(</span><span class="n">tuning</span><span class="o">.</span><span class="n">step</span><span class="p">)</span> <span class="k">for</span> <span class="n">tuning</span> <span class="ow">in</span> <span class="n">tunings</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">steps</span> <span class="o">&gt;=</span> <span class="n">_MANY_STEPS</span><span class="p">:</span>
-                <span class="n">warn</span><span class="p">(</span>
-                    <span class="n">logger</span><span class="p">,</span>
-                    <span class="s2">"The posterior sampler takes </span><span class="si">%d</span><span class="s2"> steps a draw: the posterior "</span>
-                    <span class="s2">"bends very much over its spread, or the Jacobian is not the "</span>
-                    <span class="s2">"derivative of the model (a wrong one leaves the draws exact "</span>
-                    <span class="s2">"but makes each cost hundreds of steps; check it with "</span>
-                    <span class="s2">"fips.taylortest(problem.forward, post.estimate))."</span><span class="p">,</span>
-                    <span class="n">steps</span><span class="p">,</span>
-                <span class="p">)</span>
-        <span class="k">return</span> <span class="n">tunings</span>
+<span class="w">        </span><span class="sd">"""Return each chain's tuned step and where its tuning ended: those the kept draws were made with (:meth:`kept`, made first if they were not)."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">kept</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">"_tuning_"</span><span class="p">]</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">kept</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Return the kept draws (``n x draws``, the chains side by side), which the variances, the covariances, the mean and the intervals are read from: drawn from the seed at the first call, with a warning if the chains disagree or mix too slowly for their variances."""</span>
+<span class="w">        </span><span class="sd">"""Return the kept draws (``n x draws``, the chains side by side), which the variances, the covariances, the mean and the intervals are read from: drawn from the seed at the first call (twice where the chains disagree: :meth:`_redraw`), with a warning if they still disagree or mix too slowly for their variances."""</span>
         <span class="n">kept</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"_draws"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">kept</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">kept</span><span class="p">,</span> <span class="n">stats</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">draws</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span>
-            <span class="p">)</span>
+            <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span>
+            <span class="n">tunings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_burned_in</span><span class="p">()</span>
+            <span class="n">kept</span><span class="p">,</span> <span class="n">stats</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run</span><span class="p">(</span><span class="n">tunings</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">draws</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_disagree</span><span class="p">(</span><span class="n">kept</span><span class="p">):</span>
+                <span class="n">tunings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_redraw</span><span class="p">(</span><span class="n">kept</span><span class="p">,</span> <span class="n">tunings</span><span class="p">)</span>
+                <span class="n">kept</span><span class="p">,</span> <span class="n">stats</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run</span><span class="p">(</span><span class="n">tunings</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">draws</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">"_tuning_"</span><span class="p">]</span> <span class="o">=</span> <span class="n">tunings</span>
+            <span class="n">_warn_if_many_steps</span><span class="p">(</span><span class="n">tunings</span><span class="p">)</span>
             <span class="n">kept</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">"_draws"</span><span class="p">]</span> <span class="o">=</span> <span class="n">_read_only</span><span class="p">(</span><span class="n">kept</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">"_stats"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="n">name</span><span class="p">:</span> <span class="n">_read_only</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">stats</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
@@ -813,6 +811,61 @@
             <span class="n">_warn_if_unmixed</span><span class="p">(</span><span class="n">kept</span><span class="p">,</span> <span class="n">lengths</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="n">_UNMIXED_DRAWS</span><span class="p">)</span>
             <span class="n">_warn_if_imprecise</span><span class="p">(</span><span class="n">kept</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="n">_SLOW_DRAWS</span><span class="p">,</span> <span class="n">lengths</span><span class="o">=</span><span class="n">lengths</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">kept</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_disagree</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kept</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return whether the chains of the draws `kept` disagree where the model bends, so that :meth:`kept` draws them again: a split R-hat above :data:`~fips._draws._UNMIXED` on any element, where the sampler is split at the wider Gaussian."""</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sampler</span><span class="p">()</span><span class="o">.</span><span class="n">bends</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">chains</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">rhat</span> <span class="o">=</span> <span class="n">_split_rhat</span><span class="p">(</span><span class="n">kept</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lengths</span><span class="p">())</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="n">rhat</span> <span class="o">&gt;</span> <span class="n">_UNMIXED</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">count</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">"The posterior's chains disagree on </span><span class="si">%d</span><span class="s2"> of </span><span class="si">%d</span><span class="s2"> state elements (split "</span>
+                <span class="s2">"R-hat above </span><span class="si">%.2f</span><span class="s2">, the worst </span><span class="si">%.3g</span><span class="s2">): the sampler's Gaussian is "</span>
+                <span class="s2">"refitted from their draws, and the draws made again."</span><span class="p">,</span>
+                <span class="n">count</span><span class="p">,</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">rhat</span><span class="p">),</span>
+                <span class="n">_UNMIXED</span><span class="p">,</span>
+                <span class="nb">float</span><span class="p">(</span><span class="n">rhat</span><span class="o">.</span><span class="n">max</span><span class="p">()),</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">count</span> <span class="o">&gt;</span> <span class="mi">0</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_redraw</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">kept</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">tunings</span><span class="p">:</span> <span class="s2">"tuple[_Tuning, ...]"</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"tuple[_Tuning, ...]"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Refit the sampler's Gaussian from the draws `kept` and return each chain's step tuned again, from its last draw, over half a burn-in.</span>
+
+<span class="sd">        The refit reads at most :data:`_MOST_SEEN` of the draws, every k-th</span>
+<span class="sd">        of each chain's (:meth:`_Sampler.refit`). Each chain's step starts</span>
+<span class="sd">        from the one it was tuned to (`tunings`), and its generator is a</span>
+<span class="sd">        child of the seed's after the probes'. The draws `kept` are left out,</span>
+<span class="sd">        as the burn-in's are: the kept draws are made again from where they</span>
+<span class="sd">        ended, with the refitted Gaussian fixed, so the chain stays exact.</span>
+<span class="sd">        """</span>
+        <span class="n">sampler</span><span class="p">,</span> <span class="n">options</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sampler</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span>
+        <span class="n">every</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="o">-</span><span class="n">options</span><span class="o">.</span><span class="n">draws</span> <span class="o">//</span> <span class="n">_MOST_SEEN</span><span class="p">)</span>
+        <span class="n">ends</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lengths</span><span class="p">())</span>
+        <span class="n">chains</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">kept</span><span class="p">[:,</span> <span class="n">end</span> <span class="o">-</span> <span class="n">length</span> <span class="p">:</span> <span class="n">end</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">length</span><span class="p">,</span> <span class="n">end</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lengths</span><span class="p">(),</span> <span class="n">ends</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="n">sampler</span><span class="o">.</span><span class="n">refit</span><span class="p">(</span>
+            <span class="p">[[</span><span class="n">sampler</span><span class="o">.</span><span class="n">point</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">chain</span><span class="p">[:,</span> <span class="p">::</span><span class="n">every</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">]</span> <span class="k">for</span> <span class="n">chain</span> <span class="ow">in</span> <span class="n">chains</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">children</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">SeedSequence</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span><span class="o">.</span><span class="n">spawn</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">options</span><span class="o">.</span><span class="n">chains</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">again</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="n">chain</span><span class="p">,</span> <span class="n">tuning</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
+            <span class="nb">zip</span><span class="p">(</span><span class="n">children</span><span class="p">[</span><span class="n">options</span><span class="o">.</span><span class="n">chains</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:],</span> <span class="n">chains</span><span class="p">,</span> <span class="n">tunings</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="p">):</span>
+            <span class="n">burn_in</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">burn_in</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">last</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">point</span><span class="p">(</span><span class="n">chain</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">tuning</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">tune</span><span class="p">(</span>
+                <span class="n">burn_in</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">child</span><span class="p">),</span> <span class="n">last</span><span class="p">,</span> <span class="n">tuning</span><span class="o">.</span><span class="n">step</span>
+            <span class="p">)</span>
+            <span class="n">_log_tuning</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">tuning</span><span class="p">,</span> <span class="n">burn_in</span><span class="p">)</span>
+            <span class="n">again</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tuning</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">again</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">stats</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""Return the sampler's record of each kept draw, in the order :meth:`kept` holds them (``draws`` values each): :data:`_STATS`."""</span>
@@ -841,17 +894,15 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Return `N` new draws of the posterior (``n x N``): split among the chains as evenly as they go (the first ones a draw more), each from where its burn-in ended, at its tuned step, side by side in the chains' order."""</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">rng</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="w">        </span><span class="sd">"""Return `N` new draws of the posterior (``n x N``): split among the chains as evenly as they go (the first ones a draw more), each from where its tuning for the kept draws ended (the kept draws are made first, if they were not), at its tuned step, side by side in the chains' order."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tunings</span><span class="p">(),</span> <span class="n">N</span><span class="p">,</span> <span class="n">rng</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_run</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">tunings</span><span class="p">:</span> <span class="s2">"tuple[_Tuning, ...]"</span><span class="p">,</span> <span class="n">N</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]:</span>
-<span class="w">        </span><span class="sd">"""Return :meth:`sample`'s `N` draws and the sampler's record of each (:data:`_STATS`, ``N`` values each, in the same order)."""</span>
+<span class="w">        </span><span class="sd">"""Return `N` draws made from the chains' `tunings`, as :meth:`sample`'s, and the sampler's record of each (:data:`_STATS`, ``N`` values each, in the same order)."""</span>
         <span class="n">sampler</span><span class="p">,</span> <span class="n">parts</span><span class="p">,</span> <span class="n">records</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sampler</span><span class="p">(),</span> <span class="p">[],</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">tuning</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_tunings</span><span class="p">(),</span> <span class="n">_split</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">chains</span><span class="p">),</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span>
-        <span class="p">):</span>
+        <span class="k">for</span> <span class="n">tuning</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">tunings</span><span class="p">,</span> <span class="n">_split</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">chains</span><span class="p">),</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">count</span><span class="p">:</span>  <span class="c1"># fewer draws asked for than there are chains</span>
                 <span class="k">continue</span>
             <span class="n">draws</span><span class="p">,</span> <span class="n">record</span> <span class="o">=</span> <span class="n">sampler</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">tuning</span><span class="o">.</span><span class="n">point</span><span class="p">,</span> <span class="n">count</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="n">tuning</span><span class="o">.</span><span class="n">step</span><span class="p">)</span>
@@ -998,6 +1049,15 @@
 <span class="n">_PROBES</span> <span class="o">=</span> <span class="mi">16</span>
 <span class="sd">"""The draws of the Gaussian at the mode the remainder is read at, to choose the Gaussian the sampler is split at."""</span>
 
+<span class="n">_RANK</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="sd">"""The most directions the sampler's Gaussian is widened along when it is refitted."""</span>
+
+<span class="n">_WIDENS</span> <span class="o">=</span> <span class="mf">2.0</span>
+<span class="sd">"""The ratio of the draws' variance along a direction to the sampler's Gaussian's above which a refit widens it there."""</span>
+
+<span class="n">_MOST_SEEN</span> <span class="o">=</span> <span class="mi">1000</span>
+<span class="sd">"""The most draws, of all the chains, the sampler's Gaussian is refitted from: of more, every k-th of each chain's (the refit's cost grows as their square)."""</span>
+
 
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">_Point</span><span class="p">:</span>
@@ -1066,6 +1126,33 @@
 <span class="sd">    elements whose spread is more than 10% off fell from a median of 1.6% to</span>
 <span class="sd">    0.1%, at 1.6 times the model runs in the median (at most 2.8).</span>
 
+<span class="sd">    **The refit.** The wider Gaussian is still a guess at the posterior's</span>
+<span class="sd">    spread, and where the posterior has arms it does not reach, chains</span>
+<span class="sd">    started apart can settle in different ones. So where the chains' kept</span>
+<span class="sd">    draws disagree (a split R-hat above :data:`~fips._draws._UNMIXED` on</span>
+<span class="sd">    any element; :meth:`GaussNewton._disagree`), they refit it</span>
+<span class="sd">    (:meth:`refit`): :math:`S'' = S' + U U^T`, widened along the</span>
+<span class="sd">    directions where the draws of all the chains spread more than</span>
+<span class="sd">    :data:`_WIDENS` times :math:`S'` does, to their spread there, at most</span>
+<span class="sd">    :data:`_RANK` of them. Written as :math:`U = S' B`, Woodbury gives</span>
+<span class="sd">    :math:`S''^{-1} = S'^{-1} - B \Lambda^{-1} B^T`, so the remainder below</span>
+<span class="sd">    gains :math:`\tfrac{1}{2} q^T \Lambda^{-1} q` with :math:`q = B^T (x -</span>
+<span class="sd">    \hat{x})`, a velocity gains :math:`U \eta`, and a kick needs one</span>
+<span class="sd">    product with :math:`S'` as before. Each chain then tunes its step again</span>
+<span class="sd">    over half a burn-in from its last draw, and the kept draws are made</span>
+<span class="sd">    again with the refitted Gaussian fixed: the first ones are left out as</span>
+<span class="sd">    the burn-in's are, so the chain is exact as before. Measured on the</span>
+<span class="sd">    reference suite (``tests/reference``, 2026-11-17, against grids and</span>
+<span class="sd">    nutpie's long runs): no solve of the problems of 100 to 900 elements</span>
+<span class="sd">    was drawn again (their draws are as before); on a softplus problem of</span>
+<span class="sd">    400 elements with a log-std of 1.5, whose chains settle in different</span>
+<span class="sd">    arms, the standard deviations' error fell from 83% to 2.8% (rms), at</span>
+<span class="sd">    3.5 to 4.6 times the model runs; the curved pairs of #203 were drawn</span>
+<span class="sd">    again in 3 and 7 solves of 16, at about 2.2 times the runs, their</span>
+<span class="sd">    errors 5.6% to 5.2% and 7.8% to 5.2%. Refitting in every burn-in</span>
+<span class="sd">    instead helped about as much at about twice the runs on every solve</span>
+<span class="sd">    that bends, right ones included.</span>
+
 <span class="sd">    :math:`S_0^{-1}` is never needed. With :math:`\hat{x} = x_0 + S_0</span>
 <span class="sd">    \hat{y}` (``mode_y``) and every state in :math:`x_0` plus the range of</span>
 <span class="sd">    :math:`S_0` (the velocities and kicks are), in the state whitened by</span>
@@ -1111,13 +1198,16 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">values</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">_offset_values</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">split_gamma</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">split</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="p">,</span> <span class="n">analytic</span>
+        <span class="n">empty</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">),</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">U</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">B</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">widths</span> <span class="o">=</span> <span class="n">empty</span><span class="p">,</span> <span class="n">empty</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
         <span class="n">options</span> <span class="o">=</span> <span class="n">solution</span><span class="o">.</span><span class="n">options</span>
         <span class="c1"># The probes' stream is the seed's child after the chains', so the chains' own are unchanged</span>
         <span class="n">probe_rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span>
             <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">SeedSequence</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span><span class="o">.</span><span class="n">spawn</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">chains</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="p">)</span>
         <span class="n">spread</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spread</span><span class="p">(</span><span class="n">probe_rng</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">spread</span> <span class="o">&gt;=</span> <span class="n">_FLAT</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bends</span> <span class="o">=</span> <span class="n">spread</span> <span class="o">&gt;=</span> <span class="n">_FLAT</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bends</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">split_gamma</span> <span class="o">=</span> <span class="n">_WIDER</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">split</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">analytic</span><span class="p">)</span><span class="o">.</span><span class="n">factor</span><span class="p">(</span><span class="n">analytic</span><span class="o">.</span><span class="n">problem</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">split_gamma</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">split_mean</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">split</span><span class="o">.</span><span class="n">estimate</span><span class="p">()</span>
@@ -1164,6 +1254,11 @@
                 <span class="o">-</span> <span class="n">wide</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">J_T</span> <span class="o">@</span> <span class="n">weighted</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
             <span class="p">)</span>
             <span class="n">S_rho</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">split</span><span class="o">.</span><span class="n">_cov_times</span><span class="p">(</span><span class="n">rho</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">])[:,</span> <span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">widths</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>  <span class="c1"># the low-rank part of the refitted Gaussian</span>
+                <span class="n">q</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">B</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">dx</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">widths</span>
+                <span class="n">R</span> <span class="o">+=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">q</span> <span class="o">@</span> <span class="p">(</span><span class="n">q</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">widths</span><span class="p">))</span>
+                <span class="n">rho</span> <span class="o">=</span> <span class="n">rho</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">B</span> <span class="o">@</span> <span class="n">q</span>
+                <span class="n">S_rho</span> <span class="o">=</span> <span class="n">S_rho</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">U</span> <span class="o">@</span> <span class="p">(</span><span class="n">q</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">U</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">rho</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">R</span><span class="p">)</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">S_rho</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()):</span>
             <span class="k">raise</span> <span class="ne">FloatingPointError</span><span class="p">(</span><span class="s2">"The remainder is not finite."</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">_Point</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="n">S_rho</span><span class="p">)</span>
@@ -1214,6 +1309,8 @@
         <span class="k">while</span> <span class="n">done</span> <span class="o">&lt;</span> <span class="n">count</span><span class="p">:</span>
             <span class="n">block</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">_BLOCK</span><span class="p">,</span> <span class="n">count</span> <span class="o">-</span> <span class="n">done</span><span class="p">)</span>
             <span class="n">V</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">split</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">split_mean</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">widths</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+                <span class="n">V</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">U</span> <span class="o">@</span> <span class="n">rng</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">widths</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">block</span><span class="p">))</span>
             <span class="n">tests</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
             <span class="n">jitters</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">_JITTER</span><span class="p">,</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="n">_JITTER</span><span class="p">,</span> <span class="n">block</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">block</span><span class="p">):</span>
@@ -1239,20 +1336,81 @@
                 <span class="n">offset</span> <span class="o">=</span> <span class="n">offset</span> <span class="o">/</span> <span class="mi">2</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">point</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">))</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">refit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seen</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="n">_Point</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Widen the sampler's Gaussian where the draws `seen` (each chain's states) spread more than it does: :math:`S'' = S' + U U^T`.</span>
+
+<span class="sd">        The widened Gaussian is written :math:`U = S' B`, so that by Woodbury</span>
+<span class="sd">        :math:`S''^{-1} = S'^{-1} - B \Lambda^{-1} B^T`, and the sampler needs</span>
+<span class="sd">        only :math:`B^T (x - \hat{x})` and products with :math:`S'` (no</span>
+<span class="sd">        :math:`S'^{-1}`, :meth:`point`). The columns of :math:`B` are</span>
+<span class="sd">        :math:`b_j \sqrt{\lambda_j - 1}`, with :math:`\lambda_j` the ratio of</span>
+<span class="sd">        the draws' second moment along :math:`b_j` (about the mode) to the</span>
+<span class="sd">        Gaussian's, :math:`b_j^T S' b_j = 1`, and :math:`\Lambda` their</span>
+<span class="sd">        diagonal: along :math:`b_j` the widened Gaussian has the draws'</span>
+<span class="sd">        spread, and elsewhere :math:`S'`'s. The :math:`b_j` are the leading</span>
+<span class="sd">        ratios (Rayleigh-Ritz) in the span of the leading directions of the</span>
+<span class="sd">        remainder's gradients at the draws (where the posterior is not the</span>
+<span class="sd">        Gaussian; measured by :math:`S'`) and of the draws themselves, at</span>
+<span class="sd">        most :data:`_RANK` of them, each above :data:`_WIDENS`.</span>
+<span class="sd">        """</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="p">[</span><span class="n">point</span> <span class="k">for</span> <span class="n">chain</span> <span class="ow">in</span> <span class="n">seen</span> <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">chain</span><span class="p">]</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span><span class="n">point</span><span class="o">.</span><span class="n">x</span> <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">points</span><span class="p">])</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="n">P</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span><span class="n">point</span><span class="o">.</span><span class="n">rho</span> <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">points</span><span class="p">])</span>
+        <span class="n">SP</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span><span class="n">point</span><span class="o">.</span><span class="n">S_rho</span> <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">points</span><span class="p">])</span>
+        <span class="n">P</span> <span class="o">-=</span> <span class="n">P</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">SP</span> <span class="o">-=</span> <span class="n">SP</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">directions</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">_RANK</span>
+        <span class="n">gram</span> <span class="o">=</span> <span class="n">P</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">SP</span>
+        <span class="n">values</span><span class="p">,</span> <span class="n">vectors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">gram</span> <span class="o">+</span> <span class="n">gram</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+        <span class="n">top</span> <span class="o">=</span> <span class="n">vectors</span><span class="p">[:,</span> <span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">][:,</span> <span class="p">:</span><span class="n">directions</span><span class="p">]</span>
+        <span class="n">draws</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">full_matrices</span><span class="o">=</span><span class="kc">False</span><span class="p">)[</span><span class="mi">0</span><span class="p">][:,</span> <span class="p">:</span><span class="n">directions</span><span class="p">]</span>
+        <span class="n">dual</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span><span class="n">P</span> <span class="o">@</span> <span class="n">top</span><span class="p">,</span> <span class="n">draws</span><span class="p">])</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span><span class="n">SP</span> <span class="o">@</span> <span class="n">top</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">split</span><span class="o">.</span><span class="n">_cov_times</span><span class="p">(</span><span class="n">draws</span><span class="p">)])</span>
+        <span class="n">norms</span> <span class="o">=</span> <span class="n">dual</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">image</span>
+        <span class="n">values</span><span class="p">,</span> <span class="n">vectors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">norms</span> <span class="o">+</span> <span class="n">norms</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+        <span class="n">kept</span> <span class="o">=</span> <span class="n">values</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span> <span class="o">*</span> <span class="n">values</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">initial</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">kept</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>  <span class="c1"># the draws never moved</span>
+            <span class="k">return</span>
+        <span class="n">basis</span> <span class="o">=</span> <span class="n">vectors</span><span class="p">[:,</span> <span class="n">kept</span><span class="p">]</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span>
+            <span class="n">values</span><span class="p">[</span><span class="n">kept</span><span class="p">]</span>
+        <span class="p">)</span>  <span class="c1"># dual @ basis is S'-orthonormal</span>
+        <span class="n">seen_spread</span> <span class="o">=</span> <span class="p">(</span><span class="n">dual</span> <span class="o">@</span> <span class="n">basis</span><span class="p">)</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">X</span>
+        <span class="n">ratios</span><span class="p">,</span> <span class="n">rotations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">seen_spread</span> <span class="o">@</span> <span class="n">seen_spread</span><span class="o">.</span><span class="n">T</span> <span class="o">/</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">ratios</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">][:</span><span class="n">_RANK</span><span class="p">]</span>
+        <span class="n">order</span> <span class="o">=</span> <span class="n">order</span><span class="p">[</span><span class="n">ratios</span><span class="p">[</span><span class="n">order</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">_WIDENS</span><span class="p">]</span>
+        <span class="n">widths</span> <span class="o">=</span> <span class="n">ratios</span><span class="p">[</span><span class="n">order</span><span class="p">]</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">basis</span> <span class="o">@</span> <span class="n">rotations</span><span class="p">[:,</span> <span class="n">order</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">widths</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">B</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">U</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">widths</span> <span class="o">=</span> <span class="n">dual</span> <span class="o">@</span> <span class="n">a</span><span class="p">,</span> <span class="n">image</span> <span class="o">@</span> <span class="n">a</span><span class="p">,</span> <span class="n">widths</span>
+        <span class="k">if</span> <span class="n">widths</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">"The posterior sampler's Gaussian is widened along </span><span class="si">%d</span><span class="s2"> directions, "</span>
+                <span class="s2">"from </span><span class="si">%d</span><span class="s2"> draws: by </span><span class="si">%s</span><span class="s2"> in variance."</span><span class="p">,</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">widths</span><span class="p">),</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">),</span>
+                <span class="n">_shown</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">widths</span><span class="p">)),</span>
+            <span class="p">)</span>
+
     <span class="k">def</span><span class="w"> </span><span class="nf">tune</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">burn_in</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span><span class="p">,</span> <span class="n">start</span><span class="p">:</span> <span class="n">_Point</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">burn_in</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">rng</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span><span class="p">,</span>
+        <span class="n">start</span><span class="p">:</span> <span class="n">_Point</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">step</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Tuning</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the step tuned over `burn_in` draws from `start` (the mode if None), by dual averaging (Hoffman and Gelman, 2014, algorithm 5) of its logarithm, and where they ended.</span>
 
 <span class="sd">        It starts from one step a draw, and the step stays between</span>
 <span class="sd">        :data:`_QUARTER` over :data:`_MOST_STEPS` and :data:`_QUARTER`. With</span>
-<span class="sd">        no burn-in, the step is a whole quarter period.</span>
+<span class="sd">        no burn-in, the step is a whole quarter period. With `step`, it starts</span>
+<span class="sd">        from that step instead (the tuning after a :meth:`refit`).</span>
 <span class="sd">        """</span>
         <span class="n">here</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">point</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">))</span> <span class="k">if</span> <span class="n">start</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">start</span>
         <span class="n">longest</span><span class="p">,</span> <span class="n">shortest</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">_QUARTER</span><span class="p">),</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">_QUARTER</span> <span class="o">/</span> <span class="n">_MOST_STEPS</span><span class="p">)</span>
-        <span class="n">target</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">10.0</span> <span class="o">*</span> <span class="n">_QUARTER</span><span class="p">)</span>
-        <span class="n">log_h</span><span class="p">,</span> <span class="n">log_mean</span><span class="p">,</span> <span class="n">error</span><span class="p">,</span> <span class="n">accepted</span> <span class="o">=</span> <span class="n">longest</span><span class="p">,</span> <span class="n">longest</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span>
+        <span class="n">first</span> <span class="o">=</span> <span class="n">longest</span> <span class="k">if</span> <span class="n">step</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">min</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">step</span><span class="p">),</span> <span class="n">longest</span><span class="p">)</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">first</span> <span class="o">+</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">10.0</span><span class="p">)</span>
+        <span class="n">log_h</span><span class="p">,</span> <span class="n">log_mean</span><span class="p">,</span> <span class="n">error</span><span class="p">,</span> <span class="n">accepted</span> <span class="o">=</span> <span class="n">first</span><span class="p">,</span> <span class="n">first</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span>
         <span class="k">for</span> <span class="n">m</span><span class="p">,</span> <span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">test</span><span class="p">,</span> <span class="n">jitter</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">moves</span><span class="p">(</span><span class="n">burn_in</span><span class="p">,</span> <span class="n">rng</span><span class="p">),</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
             <span class="n">steps</span> <span class="o">=</span> <span class="n">_steps</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">log_h</span><span class="p">))</span>
             <span class="n">here</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="n">here</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">test</span><span class="p">,</span> <span class="n">_QUARTER</span> <span class="o">/</span> <span class="n">steps</span> <span class="o">*</span> <span class="n">jitter</span><span class="p">,</span> <span class="n">steps</span><span class="p">)</span>
@@ -1265,7 +1423,11 @@
         <span class="k">return</span> <span class="n">_Tuning</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">log_mean</span><span class="p">),</span> <span class="n">here</span><span class="p">,</span> <span class="n">acceptance</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="p">:</span> <span class="n">_Point</span><span class="p">,</span> <span class="n">N</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">float</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">start</span><span class="p">:</span> <span class="n">_Point</span><span class="p">,</span>
+        <span class="n">N</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">rng</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span><span class="p">,</span>
+        <span class="n">step</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">"""Return `N` draws (``n x N``) of the chain from `start` at the step `step`, with velocities and tests drawn from `rng`, and the record of each draw's path (:data:`_STATS`, ``N`` values each)."""</span>
         <span class="n">steps</span> <span class="o">=</span> <span class="n">_steps</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
@@ -1321,6 +1483,34 @@
 <span class="sd">- ``n_steps``: the steps of the path, the chain's own after its burn-in;</span>
 <span class="sd">- ``step_size``: the length of each, the chain's tuned step jittered.</span>
 <span class="sd">"""</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_log_tuning</span><span class="p">(</span><span class="n">k</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">tuning</span><span class="p">:</span> <span class="n">_Tuning</span><span class="p">,</span> <span class="n">burn_in</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Log chain `k`'s tuned step, after a burn-in of `burn_in` draws."""</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="s2">"The posterior sampler's chain </span><span class="si">%d</span><span class="s2">: a step of </span><span class="si">%.3g</span><span class="s2">, </span><span class="si">%d</span><span class="s2"> steps a draw, after a "</span>
+        <span class="s2">"burn-in of </span><span class="si">%d</span><span class="s2"> draws accepted at </span><span class="si">%.2f</span><span class="s2">."</span><span class="p">,</span>
+        <span class="n">k</span><span class="p">,</span>
+        <span class="n">tuning</span><span class="o">.</span><span class="n">step</span><span class="p">,</span>
+        <span class="n">_steps</span><span class="p">(</span><span class="n">tuning</span><span class="o">.</span><span class="n">step</span><span class="p">),</span>
+        <span class="n">burn_in</span><span class="p">,</span>
+        <span class="n">tuning</span><span class="o">.</span><span class="n">acceptance</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_warn_if_many_steps</span><span class="p">(</span><span class="n">tunings</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">_Tuning</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Warn when a chain's tuned step takes :data:`_MANY_STEPS` or more steps a draw."""</span>
+    <span class="n">steps</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">_steps</span><span class="p">(</span><span class="n">tuning</span><span class="o">.</span><span class="n">step</span><span class="p">)</span> <span class="k">for</span> <span class="n">tuning</span> <span class="ow">in</span> <span class="n">tunings</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">steps</span> <span class="o">&gt;=</span> <span class="n">_MANY_STEPS</span><span class="p">:</span>
+        <span class="n">warn</span><span class="p">(</span>
+            <span class="n">logger</span><span class="p">,</span>
+            <span class="s2">"The posterior sampler takes </span><span class="si">%d</span><span class="s2"> steps a draw: the posterior "</span>
+            <span class="s2">"bends very much over its spread, or the Jacobian is not the "</span>
+            <span class="s2">"derivative of the model (a wrong one leaves the draws exact "</span>
+            <span class="s2">"but makes each cost hundreds of steps; check it with "</span>
+            <span class="s2">"fips.taylortest(problem.forward, post.estimate))."</span><span class="p">,</span>
+            <span class="n">steps</span><span class="p">,</span>
+        <span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_diverged</span><span class="p">(</span><span class="n">change</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
