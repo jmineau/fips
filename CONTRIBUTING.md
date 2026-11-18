@@ -61,6 +61,8 @@ the orientation file it should read.
    # Or directly: uv run pytest
    ```
    This also runs the `>>>` examples in the docstrings under `src/`.
+   To test with every dependency at the minimum `pyproject.toml` declares (CI does
+   this in its "minimum dependencies" job), run `just sync-floors`, then `just test`.
 
 5. Run pre-commit checks:
    ```bash

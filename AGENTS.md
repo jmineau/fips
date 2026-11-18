@@ -220,6 +220,7 @@ Driven by `just` and `uv`; CI runs the same recipes.
 | `just sync` | `uv sync`: fips, its `viz` extra, and the dev tools |
 | `just quality-check` | `lint` + `type-check` + `docstr` + `test`: what CI checks |
 | `just test` | pytest in parallel, skipping `network`/`slow` (`-n 0` for serial); also the docstring examples |
+| `just sync-floors` | every dependency at its declared minimum (then `just test`); CI's "minimum dependencies" job: give each direct dependency a minimum |
 | `just test-slow` | only the `slow` tests: the long statistical checks, among them `tests/test_outside_sampler.py` (the sampled methods against emcee) |
 | `just test-reference` | only `tests/reference/` (marked `reference`, never in CI): hours of solves, so under SLURM (`tests/reference/run.sbatch`); ends with its table |
 | `just lint` / `just format` | ruff check and format check / fix and format |

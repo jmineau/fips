@@ -54,9 +54,25 @@ myst_enable_extensions = ["html_image", "colon_fence", "dollarmath"]
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = "pydata_sphinx_theme"
+html_title = f"{project} {version_match}"  # the site title (tab, search); not the full dev version
 html_static_path = ["_static"]
 html_css_files = ["custom.css"]
 
+# Optional branding: drop files in docs/_static/ and the site uses them.
+#   logo.svg (logo_dark.svg for the dark theme), favicon.ico, social-preview.png
+# The preview image is the picture Slack, Discord and the like show for a link;
+# they need a full URL, so it is read from the main branch on GitHub.
+_static = Path(__file__).parent / "_static"
+if (_static / "favicon.ico").exists():
+    html_favicon = "_static/favicon.ico"
+html_context = {
+    "og_description": "Flexible Inverse Problem Solver (FIPS)",
+    "og_image": (
+        "https://raw.githubusercontent.com/jmineau/fips/main/docs/_static/social-preview.png"
+        if (_static / "social-preview.png").exists()
+        else ""
+    ),
+}
 html_theme_options = {
     "github_url": "https://github.com/jmineau/fips",
     "show_toc_level": 2,
@@ -76,7 +92,12 @@ html_theme_options = {
     "show_version_warning_banner": True,  # point old versions at stable
 }
 
-# -- Extension configuration -------------------------------------------------
+if (_static / "logo.svg").exists():
+    html_theme_options["logo"]["image_light"] = "_static/logo.svg"
+    _dark = "logo_dark.svg" if (_static / "logo_dark.svg").exists() else "logo.svg"
+    html_theme_options["logo"]["image_dark"] = f"_static/{_dark}"
+
+# -- Extensions ----------------------------------------------------------------
 
 # Napoleon settings
 napoleon_google_docstring = False
