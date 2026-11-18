@@ -2,5 +2,4 @@ fips.Posterior.chi2\_tests
 ==========================
 
 .. currentmodule:: fips
-
 .. automethod:: Posterior.chi2_tests

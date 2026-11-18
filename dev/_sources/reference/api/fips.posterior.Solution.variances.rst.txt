@@ -2,5 +2,4 @@ fips.posterior.Solution.variances
 =================================
 
 .. currentmodule:: fips.posterior
-
 .. automethod:: Solution.variances

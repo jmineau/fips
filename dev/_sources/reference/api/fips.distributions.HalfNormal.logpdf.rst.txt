@@ -2,5 +2,4 @@ fips.distributions.HalfNormal.logpdf
 ====================================
 
 .. currentmodule:: fips.distributions
-
 .. automethod:: HalfNormal.logpdf

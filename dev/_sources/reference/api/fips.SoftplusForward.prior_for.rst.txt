@@ -2,5 +2,4 @@ fips.SoftplusForward.prior\_for
 ===============================
 
 .. currentmodule:: fips
-
 .. automethod:: SoftplusForward.prior_for

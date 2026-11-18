@@ -9,10 +9,13 @@
 
 
 
+
+
 .. rubric:: Attributes
 
 .. autosummary::
    :toctree:
+   :nosignatures:
 
    ~VariationalOptions.cg_tol
    ~VariationalOptions.gamma

@@ -2,5 +2,4 @@ fips.Operator.to\_frame
 =======================
 
 .. currentmodule:: fips
-
 .. automethod:: Operator.to_frame

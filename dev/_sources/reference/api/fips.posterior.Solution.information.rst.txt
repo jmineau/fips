@@ -2,5 +2,4 @@ fips.posterior.Solution.information
 ===================================
 
 .. currentmodule:: fips.posterior
-
 .. automethod:: Solution.information

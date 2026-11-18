@@ -2,5 +2,4 @@ fips.Hierarchical.sample
 ========================
 
 .. currentmodule:: fips
-
 .. automethod:: Hierarchical.sample

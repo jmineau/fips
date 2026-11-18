@@ -2,5 +2,4 @@ fips.Hierarchical.cov
 =====================
 
 .. currentmodule:: fips
-
 .. automethod:: Hierarchical.cov

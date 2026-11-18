@@ -2,5 +2,4 @@ fips.Posterior.chains
 =====================
 
 .. currentmodule:: fips
-
 .. automethod:: Posterior.chains

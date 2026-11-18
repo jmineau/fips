@@ -10,10 +10,13 @@
 
 
 
+
+
 .. rubric:: Attributes
 
 .. autosummary::
    :toctree:
+   :nosignatures:
 
    ~Uniform.high
    ~Uniform.low

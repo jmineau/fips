@@ -2,5 +2,4 @@ fips.Posterior.desroziers
 =========================
 
 .. currentmodule:: fips
-
 .. automethod:: Posterior.desroziers

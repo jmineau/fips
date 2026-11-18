@@ -2,5 +2,4 @@
 ===========================
 
 .. currentmodule:: fips
-
 .. automethod:: Vector.__getitem__

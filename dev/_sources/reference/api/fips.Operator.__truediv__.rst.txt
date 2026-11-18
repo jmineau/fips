@@ -2,5 +2,4 @@
 =============================
 
 .. currentmodule:: fips
-
 .. automethod:: Operator.__truediv__

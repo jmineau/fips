@@ -2,5 +2,4 @@ fips.linalg.BlockDiagonalOperator.dense
 =======================================
 
 .. currentmodule:: fips.linalg
-
 .. automethod:: BlockDiagonalOperator.dense

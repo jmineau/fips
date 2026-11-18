@@ -2,5 +2,4 @@ fips.LogNormalForward.prior\_for
 ================================
 
 .. currentmodule:: fips
-
 .. automethod:: LogNormalForward.prior_for

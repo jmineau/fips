@@ -2,5 +2,4 @@ fips.Covariance.logdet
 ======================
 
 .. currentmodule:: fips
-
 .. automethod:: Covariance.logdet

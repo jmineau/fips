@@ -2,5 +2,4 @@ fips.Matern.correlation
 =======================
 
 .. currentmodule:: fips
-
 .. automethod:: Matern.correlation

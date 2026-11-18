@@ -2,5 +2,4 @@ fips.covariance.CovarianceModel.build
 =====================================
 
 .. currentmodule:: fips.covariance
-
 .. automethod:: CovarianceModel.build

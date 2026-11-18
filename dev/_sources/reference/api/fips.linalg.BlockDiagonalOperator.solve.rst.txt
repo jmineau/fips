@@ -2,5 +2,4 @@ fips.linalg.BlockDiagonalOperator.solve
 =======================================
 
 .. currentmodule:: fips.linalg
-
 .. automethod:: BlockDiagonalOperator.solve

@@ -2,5 +2,4 @@ fips.Sweep.uncertainty
 ======================
 
 .. currentmodule:: fips
-
 .. automethod:: Sweep.uncertainty

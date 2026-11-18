@@ -2,5 +2,4 @@ fips.Constant.correlation
 =========================
 
 .. currentmodule:: fips
-
 .. automethod:: Constant.correlation

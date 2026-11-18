@@ -9,10 +9,13 @@
 
 
 
+
+
 .. rubric:: Attributes
 
 .. autosummary::
    :toctree:
+   :nosignatures:
 
    ~Posterior.at_bound
    ~Posterior.chi2

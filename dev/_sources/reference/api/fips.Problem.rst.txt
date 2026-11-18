@@ -9,10 +9,13 @@
 
 
 
+
+
 .. rubric:: Attributes
 
 .. autosummary::
    :toctree:
+   :nosignatures:
 
    ~Problem.forward
    ~Problem.obs

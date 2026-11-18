@@ -2,5 +2,4 @@ fips.Vector.to\_series
 ======================
 
 .. currentmodule:: fips
-
 .. automethod:: Vector.to_series

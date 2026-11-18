@@ -10,10 +10,13 @@
 
 
 
+
+
 .. rubric:: Attributes
 
 .. autosummary::
    :toctree:
+   :nosignatures:
 
    ~LogNormal.median
    ~LogNormal.mu

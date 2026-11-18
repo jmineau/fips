@@ -2,5 +2,4 @@ fips.linalg.LinearOperator.dot
 ==============================
 
 .. currentmodule:: fips.linalg
-
 .. automethod:: LinearOperator.dot

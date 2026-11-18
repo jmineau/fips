@@ -2,5 +2,4 @@ fips.Covariance.block\_diag
 ===========================
 
 .. currentmodule:: fips
-
 .. automethod:: Covariance.block_diag

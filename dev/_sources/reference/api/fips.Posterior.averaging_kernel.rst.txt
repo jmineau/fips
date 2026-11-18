@@ -2,5 +2,4 @@ fips.Posterior.averaging\_kernel
 ================================
 
 .. currentmodule:: fips
-
 .. automethod:: Posterior.averaging_kernel

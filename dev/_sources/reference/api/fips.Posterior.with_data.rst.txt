@@ -2,5 +2,4 @@ fips.Posterior.with\_data
 =========================
 
 .. currentmodule:: fips
-
 .. automethod:: Posterior.with_data

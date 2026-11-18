@@ -2,5 +2,4 @@
 ===========================================
 
 .. currentmodule:: fips.covariance
-
 .. automethod:: CovarianceModel.__add__

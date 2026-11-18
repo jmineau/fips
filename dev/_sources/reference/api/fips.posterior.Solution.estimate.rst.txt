@@ -2,5 +2,4 @@ fips.posterior.Solution.estimate
 ================================
 
 .. currentmodule:: fips.posterior
-
 .. automethod:: Solution.estimate

@@ -9,10 +9,13 @@
 
 
 
+
+
 .. rubric:: Attributes
 
 .. autosummary::
    :toctree:
+   :nosignatures:
 
    ~BoundedOptions.burn_in
    ~BoundedOptions.distribution

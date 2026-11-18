@@ -2,5 +2,4 @@ fips.linalg.SparseOperator.logdet
 =================================
 
 .. currentmodule:: fips.linalg
-
 .. automethod:: SparseOperator.logdet

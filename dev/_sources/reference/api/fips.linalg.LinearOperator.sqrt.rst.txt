@@ -2,5 +2,4 @@ fips.linalg.LinearOperator.sqrt
 ===============================
 
 .. currentmodule:: fips.linalg
-
 .. automethod:: LinearOperator.sqrt

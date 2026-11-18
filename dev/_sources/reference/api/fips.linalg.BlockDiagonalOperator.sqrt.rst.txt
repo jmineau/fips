@@ -2,5 +2,4 @@ fips.linalg.BlockDiagonalOperator.sqrt
 ======================================
 
 .. currentmodule:: fips.linalg
-
 .. automethod:: BlockDiagonalOperator.sqrt

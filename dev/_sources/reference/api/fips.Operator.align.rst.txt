@@ -2,5 +2,4 @@ fips.Operator.align
 ===================
 
 .. currentmodule:: fips
-
 .. automethod:: Operator.align

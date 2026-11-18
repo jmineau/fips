@@ -2,5 +2,4 @@ fips.Sweep.at
 =============
 
 .. currentmodule:: fips
-
 .. automethod:: Sweep.at

@@ -2,5 +2,4 @@ fips.linalg.DiagonalOperator.diagonal
 =====================================
 
 .. currentmodule:: fips.linalg
-
 .. automethod:: DiagonalOperator.diagonal

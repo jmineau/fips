@@ -2,5 +2,4 @@ fips.Vector.round\_labels
 =========================
 
 .. currentmodule:: fips
-
 .. automethod:: Vector.round_labels

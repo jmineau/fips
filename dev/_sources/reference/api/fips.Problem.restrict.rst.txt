@@ -2,5 +2,4 @@ fips.Problem.restrict
 =====================
 
 .. currentmodule:: fips
-
 .. automethod:: Problem.restrict

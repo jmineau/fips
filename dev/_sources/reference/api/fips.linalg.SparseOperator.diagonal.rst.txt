@@ -2,5 +2,4 @@ fips.linalg.SparseOperator.diagonal
 ===================================
 
 .. currentmodule:: fips.linalg
-
 .. automethod:: SparseOperator.diagonal

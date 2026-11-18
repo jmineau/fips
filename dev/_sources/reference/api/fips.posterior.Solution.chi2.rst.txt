@@ -2,5 +2,4 @@ fips.posterior.Solution.chi2
 ============================
 
 .. currentmodule:: fips.posterior
-
 .. automethod:: Solution.chi2

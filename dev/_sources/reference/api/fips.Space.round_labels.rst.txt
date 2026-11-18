@@ -2,5 +2,4 @@ fips.Space.round\_labels
 ========================
 
 .. currentmodule:: fips
-
 .. automethod:: Space.round_labels

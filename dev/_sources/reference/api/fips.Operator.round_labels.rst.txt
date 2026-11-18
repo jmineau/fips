@@ -2,5 +2,4 @@ fips.Operator.round\_labels
 ===========================
 
 .. currentmodule:: fips
-
 .. automethod:: Operator.round_labels

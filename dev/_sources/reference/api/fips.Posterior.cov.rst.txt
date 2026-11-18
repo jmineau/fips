@@ -2,5 +2,4 @@ fips.Posterior.cov
 ==================
 
 .. currentmodule:: fips
-
 .. automethod:: Posterior.cov
