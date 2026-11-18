@@ -72,8 +72,10 @@ test keeps the chain exact. That Gaussian is the Gaussian at the mode where
 the posterior is that Gaussian (a linear model), and otherwise the one of the
 same linearized problem solved at a thirtieth of :math:`\gamma`, wider where
 the data pin the state down, so that the paths reach the far ends of a
-posterior that bends along a curve. Several chains run from spread starts, and the
-solve warns when they disagree (a split R-hat): one chain that never enters
+posterior that bends along a curve. Several chains run from spread starts.
+Where they disagree on an element (a split R-hat), the sampler widens its
+Gaussian in the few directions their draws spread past it and draws again,
+and the solve warns if they still disagree: one chain that never enters
 a tail of a curved posterior reports too small a spread, and cannot tell.
 The covariance of aggregates warns when they disagree on an aggregate that
 is read, which depends on how the elements vary together.
@@ -115,7 +117,9 @@ from numpy.linalg import LinAlgError
 
 from fips._draws import (
     _DIVERGENT,
+    _UNMIXED,
     _log_divergent,
+    _split_rhat,
     _warn_if_aggregates_unmixed,
     _warn_if_imprecise,
     _warn_if_unmixed,
@@ -176,6 +180,11 @@ class GaussNewtonOptions:
     burn_in : int, default 200
         The draws each chain makes and leaves out before those it keeps, from
         its start, while it tunes its step to an acceptance rate of 0.9.
+        Where the model bends and the chains' kept draws disagree on an
+        element (a split R-hat above 1.05), the sampler's Gaussian is
+        widened where they spread past it, each chain tunes its step again
+        over half a burn-in from its last draw, and the kept draws are made
+        again: such a solve costs about twice the model runs or more.
     seed : int, default 0
         The seed of the starts, the tuning and the kept draws, so that a
         solve is reproducible.
@@ -327,48 +336,37 @@ class GaussNewton:
             sampler = self.__dict__["_sampler_"] = _Sampler(self)
         return sampler
 
+    def _burned_in(self) -> "tuple[_Tuning, ...]":
+        """Return each chain's step, tuned over its burn-in from its start (each chain's generator a child of the seed's, apart from the kept draws'); with one chain, from the mode."""
+        sampler, options = self._sampler(), self.options
+        tunings = []
+        for k, child in enumerate(
+            np.random.SeedSequence(options.seed).spawn(options.chains)
+        ):
+            rng = np.random.default_rng(child)
+            start = sampler.start(rng) if options.chains > 1 else None
+            tuning = sampler.tune(options.burn_in, rng, start)
+            _log_tuning(k, tuning, options.burn_in)
+            tunings.append(tuning)
+        return tuple(tunings)
+
     def _tunings(self) -> "tuple[_Tuning, ...]":
-        """Return each chain's step, tuned over its burn-in from its start at the first call (each chain's generator a child of the seed's, apart from the kept draws'); with one chain, from the mode."""
-        tunings = self.__dict__.get("_tuning_")
-        if tunings is None:
-            sampler, options = self._sampler(), self.options
-            children = np.random.SeedSequence(options.seed).spawn(options.chains)
-            tunings = []
-            for k, child in enumerate(children):
-                rng = np.random.default_rng(child)
-                start = sampler.start(rng) if options.chains > 1 else None
-                tuning = sampler.tune(options.burn_in, rng, start)
-                tunings.append(tuning)
-                logger.info(
-                    "The posterior sampler's chain %d: a step of %.3g, %d steps a "
-                    "draw, after a burn-in of %d draws accepted at %.2f.",
-                    k,
-                    tuning.step,
-                    _steps(tuning.step),
-                    options.burn_in,
-                    tuning.acceptance,
-                )
-            tunings = self.__dict__["_tuning_"] = tuple(tunings)
-            steps = max(_steps(tuning.step) for tuning in tunings)
-            if steps >= _MANY_STEPS:
-                warn(
-                    logger,
-                    "The posterior sampler takes %d steps a draw: the posterior "
-                    "bends very much over its spread, or the Jacobian is not the "
-                    "derivative of the model (a wrong one leaves the draws exact "
-                    "but makes each cost hundreds of steps; check it with "
-                    "fips.taylortest(problem.forward, post.estimate)).",
-                    steps,
-                )
-        return tunings
+        """Return each chain's tuned step and where its tuning ended: those the kept draws were made with (:meth:`kept`, made first if they were not)."""
+        self.kept()
+        return self.__dict__["_tuning_"]
 
     def kept(self) -> np.ndarray:
-        """Return the kept draws (``n x draws``, the chains side by side), which the variances, the covariances, the mean and the intervals are read from: drawn from the seed at the first call, with a warning if the chains disagree or mix too slowly for their variances."""
+        """Return the kept draws (``n x draws``, the chains side by side), which the variances, the covariances, the mean and the intervals are read from: drawn from the seed at the first call (twice where the chains disagree: :meth:`_redraw`), with a warning if they still disagree or mix too slowly for their variances."""
         kept = self.__dict__.get("_draws")
         if kept is None:
-            kept, stats = self._run(
-                self.options.draws, np.random.default_rng(self.options.seed)
-            )
+            rng = np.random.default_rng(self.options.seed)
+            tunings = self._burned_in()
+            kept, stats = self._run(tunings, self.options.draws, rng)
+            if self._disagree(kept):
+                tunings = self._redraw(kept, tunings)
+                kept, stats = self._run(tunings, self.options.draws, rng)
+            self.__dict__["_tuning_"] = tunings
+            _warn_if_many_steps(tunings)
             kept = self.__dict__["_draws"] = _read_only(kept)
             self.__dict__["_stats"] = {
                 name: _read_only(values) for name, values in stats.items()
@@ -378,6 +376,61 @@ class GaussNewton:
             _warn_if_unmixed(kept, lengths, logger, _UNMIXED_DRAWS)
             _warn_if_imprecise(kept, logger, _SLOW_DRAWS, lengths=lengths)
         return kept
+
+    def _disagree(self, kept: np.ndarray) -> bool:
+        """Return whether the chains of the draws `kept` disagree where the model bends, so that :meth:`kept` draws them again: a split R-hat above :data:`~fips._draws._UNMIXED` on any element, where the sampler is split at the wider Gaussian."""
+        if not self._sampler().bends or self.options.chains < 2:
+            return False
+        rhat = _split_rhat(kept, self.lengths())
+        count = int((rhat > _UNMIXED).sum())
+        if count:
+            logger.info(
+                "The posterior's chains disagree on %d of %d state elements (split "
+                "R-hat above %.2f, the worst %.3g): the sampler's Gaussian is "
+                "refitted from their draws, and the draws made again.",
+                count,
+                len(rhat),
+                _UNMIXED,
+                float(rhat.max()),
+            )
+        return count > 0
+
+    def _redraw(
+        self, kept: np.ndarray, tunings: "tuple[_Tuning, ...]"
+    ) -> "tuple[_Tuning, ...]":
+        """
+        Refit the sampler's Gaussian from the draws `kept` and return each chain's step tuned again, from its last draw, over half a burn-in.
+
+        The refit reads at most :data:`_MOST_SEEN` of the draws, every k-th
+        of each chain's (:meth:`_Sampler.refit`). Each chain's step starts
+        from the one it was tuned to (`tunings`), and its generator is a
+        child of the seed's after the probes'. The draws `kept` are left out,
+        as the burn-in's are: the kept draws are made again from where they
+        ended, with the refitted Gaussian fixed, so the chain stays exact.
+        """
+        sampler, options = self._sampler(), self.options
+        every = -(-options.draws // _MOST_SEEN)
+        ends = np.cumsum(self.lengths())
+        chains = [
+            kept[:, end - length : end]
+            for length, end in zip(self.lengths(), ends, strict=True)
+        ]
+        sampler.refit(
+            [[sampler.point(x) for x in chain[:, ::every].T] for chain in chains]
+        )
+        children = np.random.SeedSequence(options.seed).spawn(2 * options.chains + 1)
+        again = []
+        for k, (child, chain, tuning) in enumerate(
+            zip(children[options.chains + 1 :], chains, tunings, strict=True)
+        ):
+            burn_in = max(options.burn_in // 2, 1)
+            last = sampler.point(chain[:, -1])
+            tuning = sampler.tune(
+                burn_in, np.random.default_rng(child), last, tuning.step
+            )
+            _log_tuning(k, tuning, burn_in)
+            again.append(tuning)
+        return tuple(again)
 
     def stats(self) -> dict[str, np.ndarray]:
         """Return the sampler's record of each kept draw, in the order :meth:`kept` holds them (``draws`` values each): :data:`_STATS`."""
@@ -406,17 +459,15 @@ class GaussNewton:
         return self.mode
 
     def sample(self, N: int, rng: np.random.Generator) -> np.ndarray:
-        """Return `N` new draws of the posterior (``n x N``): split among the chains as evenly as they go (the first ones a draw more), each from where its burn-in ended, at its tuned step, side by side in the chains' order."""
-        return self._run(N, rng)[0]
+        """Return `N` new draws of the posterior (``n x N``): split among the chains as evenly as they go (the first ones a draw more), each from where its tuning for the kept draws ended (the kept draws are made first, if they were not), at its tuned step, side by side in the chains' order."""
+        return self._run(self._tunings(), N, rng)[0]
 
     def _run(
-        self, N: int, rng: np.random.Generator
+        self, tunings: "tuple[_Tuning, ...]", N: int, rng: np.random.Generator
     ) -> tuple[np.ndarray, dict[str, np.ndarray]]:
-        """Return :meth:`sample`'s `N` draws and the sampler's record of each (:data:`_STATS`, ``N`` values each, in the same order)."""
+        """Return `N` draws made from the chains' `tunings`, as :meth:`sample`'s, and the sampler's record of each (:data:`_STATS`, ``N`` values each, in the same order)."""
         sampler, parts, records = self._sampler(), [], []
-        for tuning, count in zip(
-            self._tunings(), _split(N, self.options.chains), strict=True
-        ):
+        for tuning, count in zip(tunings, _split(N, self.options.chains), strict=True):
             if not count:  # fewer draws asked for than there are chains
                 continue
             draws, record = sampler.run(tuning.point, count, rng, tuning.step)
@@ -563,6 +614,15 @@ _FLAT = 0.1
 _PROBES = 16
 """The draws of the Gaussian at the mode the remainder is read at, to choose the Gaussian the sampler is split at."""
 
+_RANK = 10
+"""The most directions the sampler's Gaussian is widened along when it is refitted."""
+
+_WIDENS = 2.0
+"""The ratio of the draws' variance along a direction to the sampler's Gaussian's above which a refit widens it there."""
+
+_MOST_SEEN = 1000
+"""The most draws, of all the chains, the sampler's Gaussian is refitted from: of more, every k-th of each chain's (the refit's cost grows as their square)."""
+
 
 @dataclass(frozen=True)
 class _Point:
@@ -631,6 +691,33 @@ class _Sampler:
     elements whose spread is more than 10% off fell from a median of 1.6% to
     0.1%, at 1.6 times the model runs in the median (at most 2.8).
 
+    **The refit.** The wider Gaussian is still a guess at the posterior's
+    spread, and where the posterior has arms it does not reach, chains
+    started apart can settle in different ones. So where the chains' kept
+    draws disagree (a split R-hat above :data:`~fips._draws._UNMIXED` on
+    any element; :meth:`GaussNewton._disagree`), they refit it
+    (:meth:`refit`): :math:`S'' = S' + U U^T`, widened along the
+    directions where the draws of all the chains spread more than
+    :data:`_WIDENS` times :math:`S'` does, to their spread there, at most
+    :data:`_RANK` of them. Written as :math:`U = S' B`, Woodbury gives
+    :math:`S''^{-1} = S'^{-1} - B \Lambda^{-1} B^T`, so the remainder below
+    gains :math:`\tfrac{1}{2} q^T \Lambda^{-1} q` with :math:`q = B^T (x -
+    \hat{x})`, a velocity gains :math:`U \eta`, and a kick needs one
+    product with :math:`S'` as before. Each chain then tunes its step again
+    over half a burn-in from its last draw, and the kept draws are made
+    again with the refitted Gaussian fixed: the first ones are left out as
+    the burn-in's are, so the chain is exact as before. Measured on the
+    reference suite (``tests/reference``, 2026-11-17, against grids and
+    nutpie's long runs): no solve of the problems of 100 to 900 elements
+    was drawn again (their draws are as before); on a softplus problem of
+    400 elements with a log-std of 1.5, whose chains settle in different
+    arms, the standard deviations' error fell from 83% to 2.8% (rms), at
+    3.5 to 4.6 times the model runs; the curved pairs of #203 were drawn
+    again in 3 and 7 solves of 16, at about 2.2 times the runs, their
+    errors 5.6% to 5.2% and 7.8% to 5.2%. Refitting in every burn-in
+    instead helped about as much at about twice the runs on every solve
+    that bends, right ones included.
+
     :math:`S_0^{-1}` is never needed. With :math:`\hat{x} = x_0 + S_0
     \hat{y}` (``mode_y``) and every state in :math:`x_0` plus the range of
     :math:`S_0` (the velocities and kicks are), in the state whitened by
@@ -676,13 +763,16 @@ class _Sampler:
         self.z = problem.obs.values
         self.c = problem._offset_values()
         self.split_gamma, self.split = self.gamma, analytic
+        empty = np.empty((len(self.mode), 0))
+        self.U, self.B, self.widths = empty, empty, np.empty(0)
         options = solution.options
         # The probes' stream is the seed's child after the chains', so the chains' own are unchanged
         probe_rng = np.random.default_rng(
             np.random.SeedSequence(options.seed).spawn(options.chains + 1)[-1]
         )
         spread = self._spread(probe_rng)
-        if spread >= _FLAT:
+        self.bends = spread >= _FLAT
+        if self.bends:
             self.split_gamma = _WIDER * self.gamma
             self.split = type(analytic).factor(analytic.problem, self.split_gamma)
         self.split_mean = self.split.estimate()
@@ -729,6 +819,11 @@ class _Sampler:
                 - wide * np.asarray(self.J_T @ weighted[:, 1], dtype=float)
             )
             S_rho = self.split._cov_times(rho[:, None])[:, 0]
+            if self.widths.size:  # the low-rank part of the refitted Gaussian
+                q = (self.B.T @ dx) / self.widths
+                R += 0.5 * float(q @ (q * self.widths))
+                rho = rho + self.B @ q
+                S_rho = S_rho + self.U @ (q + self.U.T @ rho)
         if not (math.isfinite(R) and np.isfinite(S_rho).all()):
             raise FloatingPointError("The remainder is not finite.")
         return _Point(x, R, rho, S_rho)
@@ -779,6 +874,8 @@ class _Sampler:
         while done < count:
             block = min(_BLOCK, count - done)
             V = self.split.sample(block, rng) - self.split_mean[:, None]
+            if self.widths.size:
+                V += self.U @ rng.standard_normal((self.widths.size, block))
             tests = rng.random(block)
             jitters = rng.uniform(1.0 - _JITTER, 1.0 + _JITTER, block)
             for j in range(block):
@@ -804,20 +901,81 @@ class _Sampler:
                 offset = offset / 2
         return self.point(np.array(self.mode))
 
+    def refit(self, seen: list[list[_Point]]) -> None:
+        r"""
+        Widen the sampler's Gaussian where the draws `seen` (each chain's states) spread more than it does: :math:`S'' = S' + U U^T`.
+
+        The widened Gaussian is written :math:`U = S' B`, so that by Woodbury
+        :math:`S''^{-1} = S'^{-1} - B \Lambda^{-1} B^T`, and the sampler needs
+        only :math:`B^T (x - \hat{x})` and products with :math:`S'` (no
+        :math:`S'^{-1}`, :meth:`point`). The columns of :math:`B` are
+        :math:`b_j \sqrt{\lambda_j - 1}`, with :math:`\lambda_j` the ratio of
+        the draws' second moment along :math:`b_j` (about the mode) to the
+        Gaussian's, :math:`b_j^T S' b_j = 1`, and :math:`\Lambda` their
+        diagonal: along :math:`b_j` the widened Gaussian has the draws'
+        spread, and elsewhere :math:`S'`'s. The :math:`b_j` are the leading
+        ratios (Rayleigh-Ritz) in the span of the leading directions of the
+        remainder's gradients at the draws (where the posterior is not the
+        Gaussian; measured by :math:`S'`) and of the draws themselves, at
+        most :data:`_RANK` of them, each above :data:`_WIDENS`.
+        """
+        points = [point for chain in seen for point in chain]
+        X = np.column_stack([point.x for point in points]) - self.mode[:, None]
+        P = np.column_stack([point.rho for point in points])
+        SP = np.column_stack([point.S_rho for point in points])
+        P -= P.mean(axis=1, keepdims=True)
+        SP -= SP.mean(axis=1, keepdims=True)
+        directions = 2 * _RANK
+        gram = P.T @ SP
+        values, vectors = np.linalg.eigh(0.5 * (gram + gram.T))
+        top = vectors[:, ::-1][:, :directions]
+        draws = np.linalg.svd(X, full_matrices=False)[0][:, :directions]
+        dual = np.column_stack([P @ top, draws])
+        image = np.column_stack([SP @ top, self.split._cov_times(draws)])
+        norms = dual.T @ image
+        values, vectors = np.linalg.eigh(0.5 * (norms + norms.T))
+        kept = values > len(values) * np.finfo(float).eps * values.max(initial=0.0)
+        if not kept.any():  # the draws never moved
+            return
+        basis = vectors[:, kept] / np.sqrt(
+            values[kept]
+        )  # dual @ basis is S'-orthonormal
+        seen_spread = (dual @ basis).T @ X
+        ratios, rotations = np.linalg.eigh(seen_spread @ seen_spread.T / X.shape[1])
+        order = np.argsort(ratios)[::-1][:_RANK]
+        order = order[ratios[order] > _WIDENS]
+        widths = ratios[order]
+        a = basis @ rotations[:, order] * np.sqrt(widths - 1.0)
+        self.B, self.U, self.widths = dual @ a, image @ a, widths
+        if widths.size:
+            logger.info(
+                "The posterior sampler's Gaussian is widened along %d directions, "
+                "from %d draws: by %s in variance.",
+                len(widths),
+                len(points),
+                _shown(list(widths)),
+            )
+
     def tune(
-        self, burn_in: int, rng: np.random.Generator, start: _Point | None = None
+        self,
+        burn_in: int,
+        rng: np.random.Generator,
+        start: _Point | None = None,
+        step: float | None = None,
     ) -> _Tuning:
         """
         Return the step tuned over `burn_in` draws from `start` (the mode if None), by dual averaging (Hoffman and Gelman, 2014, algorithm 5) of its logarithm, and where they ended.
 
         It starts from one step a draw, and the step stays between
         :data:`_QUARTER` over :data:`_MOST_STEPS` and :data:`_QUARTER`. With
-        no burn-in, the step is a whole quarter period.
+        no burn-in, the step is a whole quarter period. With `step`, it starts
+        from that step instead (the tuning after a :meth:`refit`).
         """
         here = self.point(np.array(self.mode)) if start is None else start
         longest, shortest = math.log(_QUARTER), math.log(_QUARTER / _MOST_STEPS)
-        target = math.log(10.0 * _QUARTER)
-        log_h, log_mean, error, accepted = longest, longest, 0.0, 0.0
+        first = longest if step is None else min(math.log(step), longest)
+        target = first + math.log(10.0)
+        log_h, log_mean, error, accepted = first, first, 0.0, 0.0
         for m, (v, test, jitter) in enumerate(self.moves(burn_in, rng), start=1):
             steps = _steps(math.exp(log_h))
             here, alpha, _ = self.move(here, v, test, _QUARTER / steps * jitter, steps)
@@ -830,7 +988,11 @@ class _Sampler:
         return _Tuning(math.exp(log_mean), here, acceptance)
 
     def run(
-        self, start: _Point, N: int, rng: np.random.Generator, step: float
+        self,
+        start: _Point,
+        N: int,
+        rng: np.random.Generator,
+        step: float,
     ) -> tuple[np.ndarray, dict[str, np.ndarray]]:
         """Return `N` draws (``n x N``) of the chain from `start` at the step `step`, with velocities and tests drawn from `rng`, and the record of each draw's path (:data:`_STATS`, ``N`` values each)."""
         steps = _steps(step)
@@ -886,6 +1048,34 @@ The sampler's record of each draw, by ArviZ's names for them (its ``sample_stats
 - ``n_steps``: the steps of the path, the chain's own after its burn-in;
 - ``step_size``: the length of each, the chain's tuned step jittered.
 """
+
+
+def _log_tuning(k: int, tuning: _Tuning, burn_in: int) -> None:
+    """Log chain `k`'s tuned step, after a burn-in of `burn_in` draws."""
+    logger.info(
+        "The posterior sampler's chain %d: a step of %.3g, %d steps a draw, after a "
+        "burn-in of %d draws accepted at %.2f.",
+        k,
+        tuning.step,
+        _steps(tuning.step),
+        burn_in,
+        tuning.acceptance,
+    )
+
+
+def _warn_if_many_steps(tunings: tuple[_Tuning, ...]) -> None:
+    """Warn when a chain's tuned step takes :data:`_MANY_STEPS` or more steps a draw."""
+    steps = max(_steps(tuning.step) for tuning in tunings)
+    if steps >= _MANY_STEPS:
+        warn(
+            logger,
+            "The posterior sampler takes %d steps a draw: the posterior "
+            "bends very much over its spread, or the Jacobian is not the "
+            "derivative of the model (a wrong one leaves the draws exact "
+            "but makes each cost hundreds of steps; check it with "
+            "fips.taylortest(problem.forward, post.estimate)).",
+            steps,
+        )
 
 
 def _diverged(change: np.ndarray) -> np.ndarray:

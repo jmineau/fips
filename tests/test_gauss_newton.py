@@ -1221,6 +1221,74 @@ def test_the_sampler_is_split_at_the_gaussian_at_the_mode_only_where_that_is_the
         assert np.linalg.eigvalsh(problem.prior_cov.dense() - wide).min() > -1e-12
 
 
+def test_the_refitted_gaussian_is_exact_algebra_on_the_split():
+    """
+    On a curve, a refit from draws widens the sampler's Gaussian, ``S'' = S' + U U^T`` with ``U = S' B``, in directions where the draws spread more than ``_WIDENS`` times ``S'``: the remainder rises by ``dx^T (S'^-1 - S''^-1) dx / 2``, its gradient by that matrix times ``dx``, a kick is ``S''`` times the gradient, and the velocities have the covariance ``S''``, each checked against dense inverses.
+    """
+    solution = fips.solve(two_cells(), "gauss_newton")._solution
+    kept = solution.kept()
+    sampler, before = gauss_newton._Sampler(solution), gauss_newton._Sampler(solution)
+    sampler.refit([[sampler.point(x) for x in kept[:, ::4].T]])
+    assert sampler.widths.size >= 1
+    assert np.all(sampler.widths > gauss_newton._WIDENS)
+    assert before.widths.size == 0
+    eye = np.eye(len(sampler.mode))
+    S = sampler.split._cov_times(eye)
+    S2 = S + sampler.U @ sampler.U.T
+    np.testing.assert_allclose(sampler.U, S @ sampler.B, atol=1e-12)
+    difference = np.linalg.inv(S) - np.linalg.inv(S2)
+    rng = np.random.default_rng(3)
+    for _ in range(5):
+        x = sampler.mode + 0.3 * rng.standard_normal(len(sampler.mode))
+        dx = x - sampler.mode
+        here, there = sampler.point(x), before.point(x)
+        assert pytest.approx(0.5 * dx @ difference @ dx, rel=1e-9) == here.R - there.R
+        np.testing.assert_allclose(here.rho - there.rho, difference @ dx, rtol=1e-9)
+        np.testing.assert_allclose(here.S_rho, S2 @ here.rho, rtol=1e-9, atol=1e-12)
+    velocities = np.column_stack(
+        [v for v, _, _ in sampler.moves(40_000, np.random.default_rng(4))]
+    )
+    np.testing.assert_allclose(np.cov(velocities), S2, rtol=0.03, atol=0.03 * S2.max())
+
+
+def test_the_draws_are_made_again_refitted_only_where_the_chains_disagree(
+    monkeypatch,
+):
+    """
+    Where the kept draws' chains agree (or the model is linear), they are the draws of the first pass, and the sampler is not refitted; where they disagree, the sampler's Gaussian is refitted from them, every chain is tuned again from its last draw, and the kept draws are new; either way a solve is reproducible from its seed.
+    """
+    arrays = Arrays.random(1, 3, 5)
+    linear = fips.solve(linear_problem(arrays, model=True), "gauss_newton")._solution
+    linear.kept()
+    assert not linear._sampler().bends
+    assert linear._sampler().widths.size == 0
+
+    def solved(disagree):
+        monkeypatch.setattr(
+            gauss_newton.GaussNewton, "_disagree", lambda self, kept: disagree
+        )
+        solution = fips.solve(
+            two_cells(), "gauss_newton", draws=400, burn_in=100
+        )._solution
+        return solution, solution.kept()
+
+    first, agreed = solved(False)
+    again, redrawn = solved(True)
+    assert first._sampler().widths.size == 0
+    assert again._sampler().widths.size >= 1
+    assert not np.array_equal(agreed, redrawn)
+    burned_in = [tuning.point.x for tuning in first._tunings()]
+    ends = np.cumsum(first.lengths())
+    for tuning, before, end in zip(again._tunings(), burned_in, ends, strict=True):
+        assert not np.array_equal(tuning.point.x, before)
+        assert not np.array_equal(tuning.point.x, agreed[:, end - 1])
+    np.testing.assert_array_equal(solved(True)[1], redrawn)
+    monkeypatch.undo()
+    solution = fips.solve(two_cells(), "gauss_newton", draws=400, burn_in=100)._solution
+    disagreed = gauss_newton.GaussNewton._disagree(solution, agreed)
+    np.testing.assert_array_equal(solution.kept(), redrawn if disagreed else agreed)
+
+
 @pytest.mark.slow
 @pytest.mark.parametrize("name", ["two_exp", "two_cells"])
 def test_on_a_closely_pinned_curve_each_elements_spread_is_the_grids(name):
@@ -1643,14 +1711,18 @@ def test_reading_an_aggregate_warns_when_its_chains_disagree_and_runs_no_model(
     The guide's two cells with their total pinned to 2.5%: reading the covariance or the uncertainty of the cells' difference and sum warns that the chains disagree on both (a FipsWarning, and a log line), at no run of the model past those of the draws; the full covariance, with no aggregation, does not; with the total observed loosely, or with one chain, nothing is said.
 
     The sampler is split at the Gaussian at the mode here (``_WIDER`` 1, the
-    split before issue #203's fix), whose chains disagree on these cells:
-    the warning is for a sampler that has not reached part of the posterior,
-    which the wider split makes rarer. Measured (2026-11-15) over 4 seeds at
-    these draws, so split: the aggregates' split R-hat 1.2 to 4.9 pinned,
-    against the warning's 1.1, and at most 1.04 with the total observed
-    loosely (error 0.5); with the wider split, 1.04 to 1.28 pinned.
+    split before issue #203's fix), and its draws are not made again where
+    the chains disagree, so its chains disagree on these cells: the warning
+    is for a sampler that has not reached part of the posterior, which the
+    wider split and the second pass make rarer. Measured (2026-11-15) over 4
+    seeds at these draws, so split: the aggregates' split R-hat 1.2 to 4.9
+    pinned, against the warning's 1.1, and at most 1.04 with the total
+    observed loosely (error 0.5); with the wider split, 1.04 to 1.28 pinned;
+    split at the Gaussian at the mode with the second pass (2026-11-17), 1.02
+    to 1.37, drawn again in 4 seeds of 4.
     """
     monkeypatch.setattr(gauss_newton, "_WIDER", 1.0)
+    monkeypatch.setattr(gauss_newton.GaussNewton, "_disagree", lambda self, kept: False)
     problem = two_cells()
     rows = Space({"cells": pd.Index(["a - b", "a + b"], name="aggregate")})
     W = Operator(np.array([[1.0, -1.0], [1.0, 1.0]]), rows, problem.prior.space)
@@ -1702,9 +1774,11 @@ def test_std_errors_of_chains_count_each_chains_own_autocorrelation():
     assert np.median(tau) == pytest.approx((1 + rho**2) / (1 - rho**2), rel=0.2)
 
 
-def test_the_chains_disagree_on_a_closely_pinned_curve_and_the_solve_warns(caplog):
+def test_the_chains_disagree_on_a_closely_pinned_curve_and_the_solve_warns(
+    caplog, monkeypatch
+):
     """
-    The guide's two cells with their total pinned to 2.5%: one chain stays out of an arm of the curve that another reaches, and the solve warns that the chains disagree, naming an element and its chains' standard deviations (issue #203).
+    The guide's two cells with their total pinned to 2.5%, with the draws not made again where the chains disagree: one chain stays out of an arm of the curve that another reaches, and the solve warns that the chains disagree, naming an element and its chains' standard deviations (issue #203).
 
     One chain cannot give this warning: on main before it, with 2000 draws
     in one chain, the standard deviation of a cell was 14% to 47% off in
@@ -1712,8 +1786,10 @@ def test_the_chains_disagree_on_a_closely_pinned_curve_and_the_solve_warns(caplo
     400 draws: the largest split R-hat 1.05 to 1.46 (above the warning's 1.05
     in 19), where the split at the Gaussian at the mode, before issue #203's
     fix, gives 1.23 to 8.6; with the total observed loosely (error 0.5) at
-    most 1.03.
+    most 1.03. With the second pass (the default; 2026-11-17, 20 seeds), 1.009
+    to 1.106, above 1.05 in 6, drawn again in 19.
     """
+    monkeypatch.setattr(gauss_newton.GaussNewton, "_disagree", lambda self, kept: False)
     with caplog.at_level("WARNING", logger="fips.methods.gauss_newton"):
         post = fips.solve(two_cells(), "gauss_newton", draws=400, burn_in=100)
         post.variances  # noqa: B018 (the draws, and their checks, are made here)

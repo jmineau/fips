@@ -34,11 +34,6 @@ emcee run is longer than 50 of its integrated autocorrelation times (emcee's
 own guidance) and that both sides' errors are small against the posterior's
 spread, so that agreement is not bought with noise.
 
-In the strongly nonlinear lognormal regime, one statistic of fips's
-``"gauss_newton"`` draws is just less precise than the test asks: that case
-is expected to fail (:data:`IMPRECISE`), and strictly, so that it turns the
-suite red once it passes.
-
 These tests are ``slow``; ``just test-slow`` runs them, and so does the
 weekly Slow tests workflow.
 
@@ -440,36 +435,19 @@ A user reads a solve's spread from one such solve, so a solve that lands
 somewhere else from seed to seed is a wrong answer for them even when many
 solves average to the right one. In the mild regimes the errors are under
 1% of the scale.
-"""
 
-IMPRECISE = pytest.mark.xfail(
-    strict=True,
-    raises=Disagrees,
-    reason="the standard deviation of element 0 from 16 default solves is known "
-    "to 2.6% of its scale, just above the test's 2.5%",
-)
-"""
-The strongly nonlinear lognormal regime: fips's draws agree with emcee's, and one statistic of 16 default solves is just less precise than :data:`PRECISION`.
-
-Measured (2026-11-15) against eight emcee runs of 120,000 steps: every
-statistic within 2 combined errors of emcee's, fips's errors under 2.5% of
-the scale except the standard deviation of element 0, 2.6% (its value 1.4%
-above emcee's). In the softplus regime, which passes, the errors are under
-1.5%. Before the sampler was split at a wider Gaussian where the model bends
-(issue #203), both regimes failed: errors up to 6% of the scale (lognormal,
-the std of element 0) and 22% (softplus, the mean of element 1), and the
-standard deviations low in 17 of the 19 elements compared, by up to 13%,
-because a chain of the default length missed part of the curved posterior.
+The strongly nonlinear lognormal regime failed this by one statistic until
+the sampler drew again where its chains disagree (2026-11-17): the standard
+deviation of element 0 was known to 2.6% of its scale (2026-11-15). Before
+the sampler was split at a wider Gaussian where the model bends (issue #203),
+both strong regimes failed: errors up to 6% of the scale (lognormal, the std
+of element 0) and 22% (softplus, the mean of element 1), and the standard
+deviations low in 17 of the 19 elements compared, by up to 13%, because a
+chain of the default length missed part of the curved posterior.
 """
 
 
-@pytest.mark.parametrize(
-    "regime",
-    [
-        pytest.param(name, marks=IMPRECISE) if name == "lognormal-strong" else name
-        for name in REGIMES
-    ],
-)
+@pytest.mark.parametrize("regime", REGIMES)
 def test_gauss_newton_draws_are_emcee_draws(regime):
     """
     ``"gauss_newton"`` with each transform, in each regime: the draws' means, standard deviations, a correlation, and the 5% and 95% quantiles of the total value are emcee's.

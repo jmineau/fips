@@ -50,12 +50,5 @@ def test_a_larger_problem_against_nutpie(name, pool):
     check(failures, KNOWN.get(name))
 
 
-KNOWN = {
-    "softplus-logstd1.5": Known(
-        "with a prior log standard deviation of 1.5 the softplus posterior has arms "
-        "that 2,000 draws in four chains do not settle: 3 of 4 solves off, 9% of the "
-        "elements' spreads and 8 of 24 aggregates more than 10% (the worst 70%), and "
-        "fips warns of each of the 3"
-    )
-}
+KNOWN: dict[str, Known] = {}
 """The problems known to fail, and why."""

@@ -269,7 +269,8 @@ Each is a keyword of ``fips.solve(problem, "gauss_newton", ...)``
    * - ``burn_in``
      - 200
      - The draws each chain makes from its start and leaves out before those
-       it keeps, while it tunes its step.
+       it keeps, while it tunes its step. Where the chains disagree, each
+       tunes its step again over half as many (below).
    * - ``seed``
      - 0
      - The seed of the starts, the tuning and the kept draws.
@@ -534,6 +535,23 @@ than 0.1 only where that Gaussian is the posterior. Over the 23 problems
 above, the share of elements whose standard deviation from a default solve
 was more than 10% off fell from a median of 1.6% to 0.1% with the wider
 Gaussian (2026-11-15).
+
+**The second pass.** That wider Gaussian is still a guess, and where the
+posterior has arms it does not reach, chains started apart can settle in
+different ones. So when the kept draws' chains disagree on any element (a
+split R-hat above 1.05), the sampler widens its Gaussian from those draws,
+in the few directions (at most 10) where they spread more than twice as
+far, in variance, as the Gaussian does; each chain tunes its step again
+over half a burn-in, from its last draw; and the kept draws are made again.
+The first draws are left out, as the burn-in's are, and the widened
+Gaussian stays fixed, so each kept draw is still exact. A solve whose
+chains agree costs nothing more; one drawn again costs about twice the
+model runs or more. On the reference suite (2026-11-17), no solve of the
+problems of 100 to 900 elements was drawn again; on a softplus problem of
+400 elements with a log-std of 1.5, whose chains settled in different arms,
+the standard deviations' error fell from 83% to 2.8%, at about four times
+the runs; the solve still warns if the chains disagree after the second
+pass.
 
 
 References
