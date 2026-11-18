@@ -1788,10 +1788,16 @@ def test_the_chains_disagree_on_a_closely_pinned_curve_and_the_solve_warns(
     fix, gives 1.23 to 8.6; with the total observed loosely (error 0.5) at
     most 1.03. With the second pass (the default; 2026-11-17, 20 seeds), 1.009
     to 1.106, above 1.05 in 6, drawn again in 19.
+
+    The seed is one whose chains disagree by a margin on every NumPy and
+    SciPy fips supports (a seed fixes a solve per version, not across them):
+    at seed 9, 1.195 on NumPy 2.5 and SciPy 1.18 and 1.26 at the floors (NumPy
+    1.24, SciPy 1.12), where the default seed gives 1.136 and 1.034
+    (2026-11-18).
     """
     monkeypatch.setattr(gauss_newton.GaussNewton, "_disagree", lambda self, kept: False)
     with caplog.at_level("WARNING", logger="fips.methods.gauss_newton"):
-        post = fips.solve(two_cells(), "gauss_newton", draws=400, burn_in=100)
+        post = fips.solve(two_cells(), "gauss_newton", draws=400, burn_in=100, seed=9)
         post.variances  # noqa: B018 (the draws, and their checks, are made here)
     assert "The posterior's 4 chains disagree" in caplog.text
     assert "raise draws=" in caplog.text
