@@ -4,16 +4,34 @@ fips's warning class, its error for an iteration that did not converge, and the 
 A warning that changes how far an answer can be trusted goes to both places:
 the ``fips`` logger, for a program that configures logging, and Python's
 :mod:`warnings`, so that a user who never does still sees it. :func:`warn` does
-both, so the two cannot drift apart.
+both, so the two cannot drift apart. Inside :func:`_quietly` it logs at INFO
+alone: a computation fips makes only to check another (Gauss-Newton from
+another start) does not warn of its own steps.
 """
 
+import contextlib
+import contextvars
 import inspect
 import logging
 import os
 import warnings
+from collections.abc import Iterator
 
 _PACKAGE = os.path.dirname(os.path.abspath(__file__)) + os.sep
 """The folder fips is imported from: a frame whose file is in it is fips's own."""
+
+_QUIET: contextvars.ContextVar[bool] = contextvars.ContextVar("_QUIET", default=False)
+"""Whether :func:`warn` logs at INFO alone (inside :func:`_quietly`)."""
+
+
+@contextlib.contextmanager
+def _quietly() -> Iterator[None]:
+    """Make :func:`warn` log at INFO alone, with no Python warning, inside the block."""
+    token = _QUIET.set(True)
+    try:
+        yield
+    finally:
+        _QUIET.reset(token)
 
 
 class FipsWarning(UserWarning):
@@ -103,8 +121,12 @@ def warn(logger: logging.Logger, message: str, *args: object) -> None:
     `message` and `args` are formatted as :mod:`logging` formats them
     (``message % args``). The warning points at the user's call that led to
     it, not at the line in fips that found it, so Python's once-per-line rule
-    and a traceback under ``-W error`` name the user's code.
+    and a traceback under ``-W error`` name the user's code. Inside
+    :func:`_quietly`, it logs at INFO alone.
     """
+    if _QUIET.get():
+        logger.info(message, *args)
+        return
     logger.warning(message, *args)
     frame, level = inspect.currentframe(), 1
     while frame is not None and frame.f_code.co_filename.startswith(_PACKAGE):

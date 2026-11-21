@@ -344,6 +344,8 @@ dependency needs a reason, proposed first.
   no `S_0^-1`. A draw is a few `F`, `J^T v` (`ForwardModel._gradient`), `S' v`. A step that raises the
   cost is halved. A transform's `_curvature` (diagonal; None for other models) adds Newton's step (CG
   preconditioned by `S_hat`), the lower cost taken; only a whole Gauss-Newton step (and Newton's) stops.
+  `starts` (default 4) runs `_iterate` again from prior draws (`_starts`, quietly: `_errors._quietly`) and
+  keeps the prior mean's solution unless another ends at a lower mode over one posterior sd away.
 - **`hierarchical`'s fast path reads every step from one eigendecomposition** (`_Factors._evidence_terms`,
   `_draws_at`): at a prior-std factor `s` and a mismatch-covariance factor `c` the problem is the unscaled
   one at `gamma = s^2 / c`, with chi2 over `s^2` and `m ln c` in the evidence (the information form's chi2

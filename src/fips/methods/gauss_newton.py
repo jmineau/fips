@@ -11,7 +11,7 @@ estimate, is the state where the cost
         + \gamma\, (z - F(x) - c)^T S_z^{-1} (z - F(x) - c)
 
 is least. ``_gauss_newton`` finds it as Rodgers (2000, chapter 5) does:
-from the prior, each step solves the problem linearized at the last estimate
+from the prior (and, with ``starts``, from draws of it too: ``_starts``), each step solves the problem linearized at the last estimate
 (:meth:`Problem.linearized <fips.Problem.linearized>`, with the Jacobian
 :math:`J_i` at :math:`x_i`) by the analytic method,
 
@@ -124,7 +124,7 @@ from fips._draws import (
     _warn_if_imprecise,
     _warn_if_unmixed,
 )
-from fips._errors import ConvergenceError, warn
+from fips._errors import ConvergenceError, _quietly, warn
 from fips.linalg import LinearOperator
 from fips.linalg.forms import _read_only
 from fips.methods.analytic import AnalyticOptions, Information, Whitened, _factor
@@ -197,6 +197,23 @@ class GaussNewtonOptions:
         never enters a tail of a curved posterior reports a small spread and
         a small error together. Each chain costs a burn-in more; one chain is
         the sampler of fips 0.2.0b2, from the mode.
+    starts : int, default 4
+        The number of starts Gauss-Newton runs from: the prior mean and
+        ``starts - 1`` draws of the prior. Where they end at modes more
+        than one posterior standard deviation apart, the posterior has
+        several, and the solve warns: its draws, split at the Gaussian at
+        one mode, do not reach another, and chains that agree cannot show
+        it. The estimate is then the mode of lowest cost; otherwise it is
+        the prior mean's, the same as with one start. Each start costs a
+        Gauss-Newton solve more, and a start that does not converge is
+        logged and left out. On the reference suite's problems (12 to 900
+        elements, 2026-11-21) four starts cost 3 to 8 times one start's
+        solve, a few percent of the draws', and found other modes only where
+        a softplus prior is wide (log standard deviation 1.5): an element
+        either near zero, where the model is flat, or well above it. :meth:`Posterior.with_data
+        <fips.Posterior.with_data>` (and so each trial of
+        :meth:`Posterior.trials <fips.Posterior.trials>`) solves from the
+        last linearization alone.
 
     Raises
     ------
@@ -204,8 +221,8 @@ class GaussNewtonOptions:
         If `gamma` is not a positive, finite number, `max_iterations` is not a
         positive integer, `tol` is not a positive, finite number, `draws` is
         not an integer of at least 2, `burn_in` or `seed` is not a
-        nonnegative one, `chains` is not a positive one, or `draws` is fewer
-        than two for each chain.
+        nonnegative one, `chains` or `starts` is not a positive one, or
+        `draws` is fewer than two for each chain.
     """
 
     gamma: float = 1.0
@@ -222,6 +239,8 @@ class GaussNewtonOptions:
     """The seed of the starts, the tuning and the kept draws."""
     chains: int = 4
     """The number of chains the draws are split among, each from its own start."""
+    starts: int = 4
+    """The number of starts of Gauss-Newton: the prior mean and draws of the prior."""
 
     def __post_init__(self):
         object.__setattr__(self, "gamma", AnalyticOptions(self.gamma).gamma)
@@ -242,7 +261,13 @@ class GaussNewtonOptions:
         if not (math.isfinite(tol) and tol > 0):
             raise ValueError(f"tol must be positive and finite, got {tol}.")
         object.__setattr__(self, "tol", tol)
-        for name, least in (("draws", 2), ("burn_in", 0), ("seed", 0), ("chains", 1)):
+        for name, least in (
+            ("draws", 2),
+            ("burn_in", 0),
+            ("seed", 0),
+            ("chains", 1),
+            ("starts", 1),
+        ):
             value = getattr(self, name)
             if (
                 not isinstance(value, numbers.Integral)
@@ -1336,10 +1361,13 @@ def _along(
 
 
 def _iterate(
-    problem: Problem, options: GaussNewtonOptions, start: GaussNewton | None = None
+    problem: Problem,
+    options: GaussNewtonOptions,
+    start: GaussNewton | None = None,
+    origin: tuple[np.ndarray, np.ndarray] | None = None,
 ) -> GaussNewton:
     """
-    Return the Gauss-Newton solution of `problem`, from the prior or from the last linearization of `start` (a solution of the same problem with other observations).
+    Return the Gauss-Newton solution of `problem`, from the prior, from the last linearization of `start` (a solution of the same problem with other observations), or from `origin`, a state :math:`x = x_0 + S_0 y` given as ``(x, y)``.
 
     Each step goes to the analytic estimate of the problem linearized at the
     last estimate; for a model with a curvature (a transform), to Newton's
@@ -1374,7 +1402,7 @@ def _iterate(
 
     analytic: Whitened | Information | None
     if start is None:
-        x, y = problem.prior.values, np.zeros(n)
+        x, y = origin if origin is not None else (problem.prior.values, np.zeros(n))
         analytic = None
     else:
         x, y = start.point, start.point_y
@@ -1497,8 +1525,125 @@ def _unconverged(
     )
 
 
+_DISTINCT = 1.0
+r"""
+The distance between two starts' modes, in posterior standard deviations (:math:`\sqrt{d^2}` in the metric of the Gaussian at the lower one), above which they are different modes.
+
+Two solves that converge to one mode differ by about the rule's
+:math:`\sqrt{\mathrm{tol} \cdot n}`, far below it.
+"""
+
+
+def _starts(
+    problem: Problem, options: GaussNewtonOptions, solved: GaussNewton
+) -> GaussNewton:
+    r"""
+    Return the solution `solved` (from the prior mean), or the lowest-cost mode another start ended at where that is a different one, with a warning when the starts end at different modes.
+
+    The other starts are draws of the prior, :math:`x = x_0 + R w`, each
+    with :math:`y = S_0^{-1} (x - x_0)` (one solve with the prior covariance
+    for them all, quietly: a nearly singular one falls back to
+    :math:`LDL^T`, whose :math:`y` still gives :math:`x`; a singular one
+    draws no start, logged), from the seed's child after the
+    sampler's (so the chains' streams are unchanged). Two modes differ when
+    they are more than :data:`_DISTINCT` posterior standard deviations apart
+    (``_d2``, in the metric of the problem linearized at the lower one).
+    A start that does not converge, or that the model cannot run from, is
+    logged and left out. The other starts run quietly (their own warnings
+    are logged at INFO: they are checks); a start whose mode is taken is
+    solved again aloud, so that the answer's warnings are given.
+    """
+    rng = np.random.default_rng(
+        np.random.SeedSequence(options.seed).spawn(2 * options.chains + 2)[-1]
+    )
+    x_0 = problem.prior.values
+    S_0 = problem.prior_cov.data
+    solve_S_z = problem.obs_cov.data._solver()
+    gamma = options.gamma
+
+    def cost(solution: GaussNewton) -> float:
+        """Return the cost at the solution's mode."""
+        return gamma * solution.data_misfit + solution.state_misfit
+
+    def distance(a: GaussNewton, b: GaussNewton) -> float:
+        """Return how far apart the modes of `a` and `b` are, in standard deviations of the Gaussian at the lower one."""
+        low = a if cost(a) <= cost(b) else b
+        step = b.mode - a.mode
+        J = low.analytic.problem._operator.data
+        J_step = np.asarray(J @ step, dtype=float)
+        return math.sqrt(
+            max(_d2(b.mode_y - a.mode_y, J_step, S_0, solve_S_z, gamma), 0.0)
+        )
+
+    offsets = np.column_stack(
+        [problem.prior_cov.sample(rng).values for _ in range(1, options.starts)]
+    )
+    try:
+        with _quietly():  # a prior nearly singular: LDL^T's y is still x's, to roundoff
+            ys = np.asarray(S_0.solve(offsets), dtype=float).reshape(offsets.shape)
+    except LinAlgError:
+        logger.info(
+            "Gauss-Newton ran from the prior mean alone: the prior covariance "
+            "is singular, so a draw of it has no y with x = x_0 + S_0 y."
+        )
+        return solved
+    modes, failed = [solved], 0
+    origins: dict[int, tuple[np.ndarray, np.ndarray]] = {}
+    for k in range(1, options.starts):
+        x, y = x_0 + offsets[:, k - 1], ys[:, k - 1]
+        try:
+            with _quietly():
+                other = _iterate(problem, options, origin=(x, y))
+            origins[id(other)] = (x, y)
+        except (ConvergenceError, RuntimeError, *_FAILED) as err:
+            failed += 1
+            logger.info(
+                "Gauss-Newton from the prior draw %d did not end at a mode: %s", k, err
+            )
+            continue
+        if all(distance(other, mode) > _DISTINCT for mode in modes):
+            modes.append(other)
+        else:
+            logger.debug(
+                "Gauss-Newton from the prior draw %d ended at a mode already found.", k
+            )
+    ran = options.starts - failed
+    if len(modes) == 1:
+        logger.info(
+            "Gauss-Newton from the prior mean and %d draws of the prior ended at one "
+            "mode%s.",
+            options.starts - 1,
+            f" ({failed} of the draws did not converge)" if failed else "",
+        )
+        return solved
+    costs = [cost(mode) for mode in modes]
+    best = modes[int(np.argmin(costs))]
+    far = max(distance(best, mode) for mode in modes if mode is not best)
+    warn(
+        logger,
+        "Gauss-Newton from %d starts (the prior mean and %d draws of the prior) "
+        "ended at %d modes, up to %.3g posterior standard deviations from the one "
+        "of lowest cost (costs %s): the posterior has several modes. The estimate "
+        "is the one of lowest cost%s; the draws, split at the Gaussian there, do not "
+        "reach the others, so its variances and intervals are of that mode alone. "
+        "More observations or a narrower prior can rule the others out.",
+        ran,
+        ran - 1,
+        len(modes),
+        far,
+        ", ".join(f"{c:.6g}" for c in sorted(costs)),
+        "" if best is solved else " (not the one from the prior mean)",
+    )
+    if best is solved:
+        return best
+    return _iterate(problem, options, origin=origins[id(best)])  # aloud: its warnings
+
+
 def _gauss_newton(problem: Problem, options: GaussNewtonOptions) -> Posterior:
-    """Find the mode by Gauss-Newton; with a forward operator, the analytic posterior itself."""
+    """Find the mode by Gauss-Newton, from the prior mean and the `starts` - 1 draws of the prior; with a forward operator, the analytic posterior itself."""
     if isinstance(problem.forward, Operator):
         return Posterior(problem, _factor(problem, options.gamma), options)
-    return Posterior(problem, _iterate(problem, options), options)
+    solved = _iterate(problem, options)
+    if options.starts > 1:
+        solved = _starts(problem, options, solved)
+    return Posterior(problem, solved, options)

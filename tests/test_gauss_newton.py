@@ -929,6 +929,7 @@ def test_a_wrong_jacobian_that_stalls_reports_the_d2_the_rule_compared():
         ({"burn_in": -1}, "burn_in"),
         ({"seed": 1.5}, "seed"),
         ({"chains": 0}, "chains must be a positive integer"),
+        ({"starts": 0}, "starts must be a positive integer"),
         ({"chains": 1.5}, "chains"),
         ({"draws": 7}, "at least 2 for each of the 4 chains"),
     ],
@@ -1827,3 +1828,125 @@ def test_the_chains_start_apart_and_share_the_draws():
     assert gauss_newton._split(10, 4) == (3, 3, 2, 2)
     assert post._solution.kept().shape == (4, 10)
     assert post.sample(2, rng=0).to_numpy().shape == (4, 2)
+
+
+# ---------------------------------------------------------------------------
+# Several starts for the mode
+# ---------------------------------------------------------------------------
+
+
+class SquareAndValue(ForwardModel):
+    """``F(x) = (x^2, x)`` of one element: the first observation of ``x^2`` has two modes, ``+-sqrt(z)``, and the second tells them apart."""
+
+    def __init__(self, cols: Space, rows: Space):
+        super().__init__(rows, cols)
+
+    def __call__(self, x):
+        v = x.values[0]
+        return Vector([v * v, v], self.rows)
+
+    def jacobian(self, x):
+        v = x.values[0]
+        return Operator(np.array([[2.0 * v], [1.0]]), self.rows, self.cols)
+
+
+def two_modes(value: float = -2.0) -> Problem:
+    """
+    One element with prior N(0.3, 1), ``x^2`` observed as 4 (error 0.1) and ``x`` as `value` (error 1): modes near +2 and -2.
+
+    From the prior mean Gauss-Newton ends near +2; at the default `value`
+    the mode near -2 has the lower cost (the second observation is there).
+    """
+    cells = Space({"x": pd.RangeIndex(1, name="i")})
+    rows = Space({"z": pd.RangeIndex(2, name="j")})
+    return Problem(
+        prior=Vector([0.3], cells),
+        prior_cov=fips.Independent().with_std(1.0),
+        obs=Vector([4.0, value], rows),
+        obs_cov=Covariance.diagonal(np.array([0.01, 1.0]), rows),
+        forward=SquareAndValue(cells, rows),
+    )
+
+
+def test_starts_find_a_lower_mode_and_warn(caplog):
+    """One start ends at the mode near +2; four find the lower-cost one near -2, take it, and warn that the posterior has several modes."""
+    one = fips.solve(two_modes(), "gauss_newton", starts=1)
+    assert one.estimate.values[0] == pytest.approx(2.0, abs=0.01)
+    with (
+        caplog.at_level("WARNING", logger="fips.methods.gauss_newton"),
+        pytest.warns(fips.FipsWarning, match="ended at 2 modes"),
+    ):
+        four = fips.solve(two_modes(), "gauss_newton", starts=4)
+    assert four.estimate.values[0] == pytest.approx(-2.0, abs=0.01)
+    assert "not the one from the prior mean" in caplog.text
+    assert "the posterior has several modes" in caplog.text
+    # the mode of the prior mean is kept where it is the lower one
+    caplog.clear()
+    with caplog.at_level("WARNING", logger="fips.methods.gauss_newton"):
+        kept = fips.solve(two_modes(2.0), "gauss_newton", starts=4)
+    assert kept.estimate.values[0] == pytest.approx(2.0, abs=0.01)
+    assert "ended at 2 modes" in caplog.text
+    assert "not the one from the prior mean" not in caplog.text
+
+
+def test_starts_at_one_mode_change_nothing(caplog):
+    """On a posterior of one mode, more starts give the same estimate and the same draws, bit for bit, and log that they agree."""
+    problem = two_cells()
+    one = fips.solve(problem, "gauss_newton", draws=400, burn_in=100, starts=1)
+    with caplog.at_level("INFO", logger="fips.methods.gauss_newton"):
+        four = fips.solve(problem, "gauss_newton", draws=400, burn_in=100)
+    assert "ended at one mode" in caplog.text
+    assert "modes" not in caplog.text.replace("one mode", "")
+    np.testing.assert_array_equal(four.estimate.values, one.estimate.values)
+    np.testing.assert_array_equal(four._solution.kept(), one._solution.kept())
+
+
+def test_a_start_that_does_not_converge_is_left_out(caplog, monkeypatch):
+    """A start whose Gauss-Newton raises is logged and left out; the prior mean's mode stays."""
+    real = gauss_newton._iterate
+
+    def failing(problem, options, start=None, origin=None):
+        if origin is not None:
+            raise fips.ConvergenceError("no mode here")
+        return real(problem, options, start, origin)
+
+    monkeypatch.setattr(gauss_newton, "_iterate", failing)
+    with caplog.at_level("INFO", logger="fips.methods.gauss_newton"):
+        post = fips.solve(two_modes(), "gauss_newton", starts=3)
+    assert caplog.text.count("did not end at a mode") == 2
+    assert "2 of the draws did not converge" in caplog.text
+    assert post.estimate.values[0] == pytest.approx(2.0, abs=0.01)
+
+
+def test_the_other_starts_do_not_warn_of_their_own_steps(caplog, monkeypatch):
+    """A warning inside another start's solve is logged at INFO with no Python warning; the prior mean's solve warns as before."""
+    real = gauss_newton._iterate
+
+    def noisy(problem, options, start=None, origin=None):
+        if origin is not None:
+            fips._errors.warn(gauss_newton.logger, "a step of another start")
+        return real(problem, options, start, origin)
+
+    monkeypatch.setattr(gauss_newton, "_iterate", noisy)
+    with caplog.at_level("INFO", logger="fips.methods.gauss_newton"):
+        fips.solve(
+            two_modes(2.0), "gauss_newton", starts=3
+        )  # no warning but the modes'
+    records = [r for r in caplog.records if r.getMessage() == "a step of another start"]
+    assert len(records) == 2 and all(r.levelname == "INFO" for r in records)
+
+
+def test_a_mode_taken_from_another_start_warns_of_its_own_steps(monkeypatch):
+    """The start whose mode is taken is solved again aloud: its warnings are the answer's."""
+    real = gauss_newton._iterate
+
+    def noisy(problem, options, start=None, origin=None):
+        if origin is not None and float(origin[0][0]) < 0:
+            fips._errors.warn(gauss_newton.logger, "a step of the start taken")
+        return real(problem, options, start, origin)
+
+    monkeypatch.setattr(gauss_newton, "_iterate", noisy)
+    with pytest.warns(fips.FipsWarning) as caught:
+        post = fips.solve(two_modes(), "gauss_newton", starts=4)
+    assert post.estimate.values[0] == pytest.approx(-2.0, abs=0.01)
+    assert any("a step of the start taken" in str(w.message) for w in caught)
