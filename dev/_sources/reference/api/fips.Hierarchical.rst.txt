@@ -18,8 +18,8 @@
    :nosignatures:
 
    ~Hierarchical.acceptance
-   ~Hierarchical.ess
    ~Hierarchical.estimate
+   ~Hierarchical.hyperparameter_diagnostics
    ~Hierarchical.hyperparameters
    ~Hierarchical.mode
    ~Hierarchical.variances
@@ -32,7 +32,9 @@
    :toctree:
 
    ~Hierarchical.at
+   ~Hierarchical.chains
    ~Hierarchical.cov
+   ~Hierarchical.diagnostics
    ~Hierarchical.sample
    ~Hierarchical.uncertainty
 

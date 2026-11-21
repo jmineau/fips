@@ -1,6 +1,0 @@
-fips.Hierarchical.ess
-=====================
-
-.. currentmodule:: fips
-
-.. autoproperty:: Hierarchical.ess

@@ -36,7 +36,9 @@ The result
    Hierarchical.hyperparameters
    Hierarchical.mode
    Hierarchical.acceptance
-   Hierarchical.ess
+   Hierarchical.hyperparameter_diagnostics
+   Hierarchical.diagnostics
+   Hierarchical.chains
    Hierarchical.estimate
    Hierarchical.variances
    Hierarchical.cov

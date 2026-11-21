@@ -1,0 +1,5 @@
+fips.Hierarchical.diagnostics
+=============================
+
+.. currentmodule:: fips
+.. automethod:: Hierarchical.diagnostics

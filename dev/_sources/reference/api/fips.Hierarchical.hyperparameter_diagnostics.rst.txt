@@ -1,0 +1,6 @@
+fips.Hierarchical.hyperparameter\_diagnostics
+=============================================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Hierarchical.hyperparameter_diagnostics

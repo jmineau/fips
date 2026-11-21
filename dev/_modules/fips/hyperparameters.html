@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=7237699d"></script>
+    <script src="../../_static/documentation_options.js?v=55658842"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -456,7 +456,8 @@
 <span class="sd">Laplace's approximation of the hyperparameters' posterior at its mode (a numerical</span>
 <span class="sd">Hessian), scaled during the burn-in towards an acceptance of 0.3 (Gelman,</span>
 <span class="sd">Roberts and Gilks, 1996): a few hyperparameters need no gradient, and each step costs</span>
-<span class="sd">one solve.</span>
+<span class="sd">one solve. It runs four chains from spread starts, and warns where they</span>
+<span class="sd">disagree on a hyperparameter, as the Gauss-Newton sampler does on the state.</span>
 
 <span class="sd">:func:`sweep` solves the problem at every combination of a grid of the</span>
 <span class="sd">hyperparameters' values instead, with no prior on them: :class:`Sweep` holds</span>
@@ -475,14 +476,22 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">numpy.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinAlgError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">minimize</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips._draws</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_chains</span><span class="p">,</span>
+    <span class="n">_diagnostics</span><span class="p">,</span>
+    <span class="n">_split_rhat</span><span class="p">,</span>
+    <span class="n">_warn_if_aggregates_unmixed</span><span class="p">,</span>
+    <span class="n">_warn_if_tails_thin</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips._errors</span><span class="w"> </span><span class="kn">import</span> <span class="n">warn</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.covariance</span><span class="w"> </span><span class="kn">import</span> <span class="n">Covariance</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.distributions</span><span class="w"> </span><span class="kn">import</span> <span class="n">_LOG_2PI</span><span class="p">,</span> <span class="n">_Distribution</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg.forms</span><span class="w"> </span><span class="kn">import</span> <span class="n">_adopt</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.methods</span><span class="w"> </span><span class="kn">import</span> <span class="n">solve</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.methods.analytic</span><span class="w"> </span><span class="kn">import</span> <span class="n">AnalyticOptions</span><span class="p">,</span> <span class="n">Information</span><span class="p">,</span> <span class="n">Whitened</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.methods.gauss_newton</span><span class="w"> </span><span class="kn">import</span> <span class="n">_split</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.operator</span><span class="w"> </span><span class="kn">import</span> <span class="n">Operator</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">fips.posterior</span><span class="w"> </span><span class="kn">import</span> <span class="n">Posterior</span><span class="p">,</span> <span class="n">UnavailableError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.posterior</span><span class="w"> </span><span class="kn">import</span> <span class="n">Posterior</span><span class="p">,</span> <span class="n">UnavailableError</span><span class="p">,</span> <span class="n">_chain_draw_index</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.problem</span><span class="w"> </span><span class="kn">import</span> <span class="n">Problem</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.space</span><span class="w"> </span><span class="kn">import</span> <span class="n">Space</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.vector</span><span class="w"> </span><span class="kn">import</span> <span class="n">Vector</span>
@@ -494,6 +503,42 @@
 
 <span class="n">_ACCEPTANCE</span> <span class="o">=</span> <span class="mf">0.3</span>
 <span class="sd">"""The acceptance the burn-in steers the proposal's scale towards."""</span>
+
+<span class="n">_SPREAD</span> <span class="o">=</span> <span class="mf">2.0</span>
+<span class="sd">"""How much wider than Laplace's approximation the draws a chain starts from are (each chain but with one chain, which starts at the mode)."""</span>
+
+<span class="n">_HALVINGS</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="sd">"""The times a start where the hyperparameters' posterior has no density is moved halfway to the mode, before the chain starts at the mode."""</span>
+
+<span class="n">_UNMIXED_HYPERPARAMETER</span> <span class="o">=</span> <span class="mf">1.1</span>
+<span class="sd">"""</span>
+<span class="sd">The split R-hat of a hyperparameter above which its chains disagree, and the run warns: any one hyperparameter.</span>
+
+<span class="sd">As an aggregate's (``_draws._UNMIXED_AGGREGATE``): there are few, and each</span>
+<span class="sd">is read. Measured over 1,320 default runs in worlds drawn from the</span>
+<span class="sd">hyperparameters' priors, 12 to 400 elements, two or three hyperparameters,</span>
+<span class="sd">priors a factor of 1.6 to 4.5 wide (2026-11-21): the default runs, whose</span>
+<span class="sd">intervals covered as claimed and whose truths ranked uniformly among their</span>
+<span class="sd">draws, were above it in 0% to 1% of the worlds of a setting; runs with no</span>
+<span class="sd">burn-in and 200 draws (11 to 18 effective draws) in 96% to 100%. At 1.05,</span>
+<span class="sd">the elements' cutoff, the default runs were above it in up to 18% (three</span>
+<span class="sd">hyperparameters, about 150 effective draws); at Stan's 1.01</span>
+<span class="sd">(rank-normalized) nearly all were: a Metropolis chain of 500 draws does not</span>
+<span class="sd">reach it.</span>
+<span class="sd">"""</span>
+
+<span class="n">_UNMIXED_CHAINS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"The chain has not yet forgotten its start or stays in one part of the "</span>
+    <span class="s2">"hyperparameters' posterior; raise burn_in= and draws=, or look at "</span>
+    <span class="s2">"result.hyperparameters by chain."</span>
+<span class="p">)</span>
+<span class="sd">"""What a warning that the chains disagree on the hyperparameters says to do."""</span>
+
+<span class="n">_UNMIXED_AGGREGATES</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"The hyperparameters' chains move slowly between the parts of their "</span>
+    <span class="s2">"posterior these aggregates depend on; raise draws=."</span>
+<span class="p">)</span>
+<span class="sd">"""What a warning that the chains disagree on an aggregate says to do."""</span>
 
 
 <span class="c1"># -- what one step of the chain solves ---------------------------------------</span>
@@ -724,30 +769,101 @@
     <span class="k">return</span> <span class="n">mode</span><span class="p">,</span> <span class="p">(</span><span class="n">vectors</span> <span class="o">/</span> <span class="n">eigenvalues</span><span class="p">)</span> <span class="o">@</span> <span class="n">vectors</span><span class="o">.</span><span class="n">T</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_effective_size</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_start</span><span class="p">(</span>
+    <span class="n">log_density</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="nb">float</span><span class="p">],</span>
+    <span class="n">mode</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">root</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">rng</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Return the effective sample size of the chain `x`, by Geyer's initial monotone sequence.</span>
+<span class="sd">    Return a chain's start: a draw of Laplace's approximation at the mode, :data:`_SPREAD` times wider, from `rng`.</span>
 
-<span class="sd">    The autocorrelations, by FFT, are summed in pairs while the pairs are</span>
-<span class="sd">    positive, each pair at most the one before (Geyer, 1992); the size is</span>
-<span class="sd">    the number of draws over the integrated autocorrelation time.</span>
+<span class="sd">    Starts spread wider than the posterior let the chains' disagreement show</span>
+<span class="sd">    a chain that has not forgotten where it began (Gelman and Rubin, 1992).</span>
+<span class="sd">    A start where the posterior has no density is moved halfway to the mode</span>
+<span class="sd">    until it has one (the mode itself last).</span>
 <span class="sd">    """</span>
-    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-    <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="nb">all</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">):</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">initial</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>  <span class="c1"># the FFT does not overflow</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">x</span><span class="p">)):</span>
-        <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">nan</span>
-    <span class="n">sum_sq</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">x</span> <span class="o">@</span> <span class="n">x</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">4</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">sum_sq</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
-    <span class="n">spectrum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">rfft</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">n</span><span class="p">)</span>
-    <span class="n">acf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">irfft</span><span class="p">(</span><span class="n">spectrum</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">spectrum</span><span class="p">),</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">n</span><span class="p">)[:</span><span class="n">n</span><span class="p">]</span> <span class="o">/</span> <span class="n">sum_sq</span>
-    <span class="n">pairs</span> <span class="o">=</span> <span class="n">acf</span><span class="p">[</span><span class="mi">0</span> <span class="p">:</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span> <span class="p">:</span> <span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">acf</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="n">n</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
-    <span class="n">negative</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">pairs</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">)</span>
-    <span class="n">pairs</span> <span class="o">=</span> <span class="n">pairs</span><span class="p">[:</span> <span class="n">negative</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">negative</span><span class="p">)</span> <span class="k">else</span> <span class="nb">len</span><span class="p">(</span><span class="n">pairs</span><span class="p">)]</span>
-    <span class="n">tau</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span> <span class="o">+</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="o">.</span><span class="n">accumulate</span><span class="p">(</span><span class="n">pairs</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
-    <span class="k">return</span> <span class="n">n</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">tau</span><span class="p">,</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">n</span><span class="p">)</span>
+    <span class="n">offset</span> <span class="o">=</span> <span class="n">_SPREAD</span> <span class="o">*</span> <span class="p">(</span><span class="n">root</span> <span class="o">@</span> <span class="n">rng</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mode</span><span class="p">)))</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">_HALVINGS</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">math</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">log_density</span><span class="p">(</span><span class="n">mode</span> <span class="o">+</span> <span class="n">offset</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="n">mode</span> <span class="o">+</span> <span class="n">offset</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="n">offset</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">mode</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_chain</span><span class="p">(</span>
+    <span class="n">evaluate</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
+    <span class="n">start</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">root</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">burn_in</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">draws</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">rng</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span><span class="p">,</span>
+    <span class="n">keep</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">],</span> <span class="n">Any</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return one chain's kept steps in unbounded coordinates (``draws x p``), what each kept step's draw of the state needs (`keep` of it), how many of the kept steps accepted, and the proposal's tuned scale.</span>
+
+<span class="sd">    A random-walk Metropolis from `start`, its proposal `root` times normals</span>
+<span class="sd">    times a scale that the `burn_in` steers towards an acceptance of</span>
+<span class="sd">    :data:`_ACCEPTANCE` (a Robbins-Monro step on its log) and that is fixed</span>
+<span class="sd">    after, so the kept steps are a Markov chain of the exact posterior.</span>
+<span class="sd">    """</span>
+    <span class="n">log_scale</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">2.38</span> <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">start</span><span class="p">)))</span>
+    <span class="n">u</span> <span class="o">=</span> <span class="n">start</span>
+    <span class="n">log_density</span><span class="p">,</span> <span class="n">payload</span> <span class="o">=</span> <span class="n">evaluate</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+    <span class="n">chain</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">draws</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">start</span><span class="p">)))</span>
+    <span class="n">kept</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">accepted</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">burn_in</span> <span class="o">+</span> <span class="n">draws</span><span class="p">):</span>
+        <span class="n">proposal</span> <span class="o">=</span> <span class="n">u</span> <span class="o">+</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">log_scale</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">root</span> <span class="o">@</span> <span class="n">rng</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">u</span><span class="p">)))</span>
+        <span class="n">proposed</span><span class="p">,</span> <span class="n">proposed_payload</span> <span class="o">=</span> <span class="n">evaluate</span><span class="p">(</span><span class="n">proposal</span><span class="p">)</span>
+        <span class="n">log_ratio</span> <span class="o">=</span> <span class="n">proposed</span> <span class="o">-</span> <span class="n">log_density</span> <span class="k">if</span> <span class="n">math</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">proposed</span><span class="p">)</span> <span class="k">else</span> <span class="o">-</span><span class="n">math</span><span class="o">.</span><span class="n">inf</span>
+        <span class="n">accept</span> <span class="o">=</span> <span class="n">_accept</span><span class="p">(</span><span class="n">log_ratio</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">accept</span><span class="p">:</span>
+            <span class="n">u</span><span class="p">,</span> <span class="n">log_density</span><span class="p">,</span> <span class="n">payload</span> <span class="o">=</span> <span class="n">proposal</span><span class="p">,</span> <span class="n">proposed</span><span class="p">,</span> <span class="n">proposed_payload</span>
+        <span class="k">if</span> <span class="n">step</span> <span class="o">&lt;</span> <span class="n">burn_in</span><span class="p">:</span>
+            <span class="n">probability</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">log_ratio</span><span class="p">))</span>
+            <span class="n">log_scale</span> <span class="o">+=</span> <span class="p">(</span><span class="n">probability</span> <span class="o">-</span> <span class="n">_ACCEPTANCE</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">step</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="mf">0.6</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">chain</span><span class="p">[</span><span class="n">step</span> <span class="o">-</span> <span class="n">burn_in</span><span class="p">]</span> <span class="o">=</span> <span class="n">u</span>
+            <span class="n">kept</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">keep</span><span class="p">(</span><span class="n">payload</span><span class="p">))</span>
+            <span class="n">accepted</span> <span class="o">+=</span> <span class="n">accept</span>
+    <span class="k">return</span> <span class="n">chain</span><span class="p">,</span> <span class="n">kept</span><span class="p">,</span> <span class="n">accepted</span><span class="p">,</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">log_scale</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_warn_if_unmixed</span><span class="p">(</span><span class="n">u</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">lengths</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Warn (and a :class:`~fips.FipsWarning`) when the chains of the hyperparameters `u` (unbounded coordinates, ``p x draws``, the chains side by side, of the `lengths` given) disagree: a split R-hat above :data:`_UNMIXED_HYPERPARAMETER` on any one.</span>
+
+<span class="sd">    Any one hyperparameter warns: there are few, and the state's draws at a</span>
+<span class="sd">    hyperparameter the chains disagree on are mixed in the wrong amounts. It</span>
+<span class="sd">    names the worst and the least and the most of its chains' medians, in the</span>
+<span class="sd">    hyperparameter's own units.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lengths</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="n">rhat</span> <span class="o">=</span> <span class="n">_split_rhat</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">lengths</span><span class="p">)</span>
+    <span class="n">unmixed</span> <span class="o">=</span> <span class="n">rhat</span> <span class="o">&gt;</span> <span class="n">_UNMIXED_HYPERPARAMETER</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">unmixed</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="k">return</span>
+    <span class="n">worst</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">rhat</span><span class="p">))</span>
+    <span class="n">medians</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">chain</span><span class="p">[</span><span class="n">worst</span><span class="p">]))</span> <span class="k">for</span> <span class="n">chain</span> <span class="ow">in</span> <span class="n">_chains</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">lengths</span><span class="p">)]</span>
+    <span class="n">warn</span><span class="p">(</span>
+        <span class="n">logger</span><span class="p">,</span>
+        <span class="s2">"The hyperparameters' </span><span class="si">%d</span><span class="s2"> chains disagree: </span><span class="si">%d</span><span class="s2"> of the </span><span class="si">%d</span><span class="s2"> have a split R-hat "</span>
+        <span class="s2">"above </span><span class="si">%.2f</span><span class="s2">, the worst (</span><span class="si">%s</span><span class="s2">) </span><span class="si">%.2f</span><span class="s2">, its median </span><span class="si">%.3g</span><span class="s2"> in one chain and </span><span class="si">%.3g</span><span class="s2"> "</span>
+        <span class="s2">"in another (in its unbounded coordinate). Their draws, and the state's "</span>
+        <span class="s2">"mixed over them, are not yet the posterior's. </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
+        <span class="nb">len</span><span class="p">(</span><span class="n">lengths</span><span class="p">),</span>
+        <span class="nb">int</span><span class="p">(</span><span class="n">unmixed</span><span class="o">.</span><span class="n">sum</span><span class="p">()),</span>
+        <span class="nb">len</span><span class="p">(</span><span class="n">rhat</span><span class="p">),</span>
+        <span class="n">_UNMIXED_HYPERPARAMETER</span><span class="p">,</span>
+        <span class="n">names</span><span class="p">[</span><span class="n">worst</span><span class="p">],</span>
+        <span class="nb">float</span><span class="p">(</span><span class="n">rhat</span><span class="p">[</span><span class="n">worst</span><span class="p">]),</span>
+        <span class="nb">min</span><span class="p">(</span><span class="n">medians</span><span class="p">),</span>
+        <span class="nb">max</span><span class="p">(</span><span class="n">medians</span><span class="p">),</span>
+        <span class="n">_UNMIXED_CHAINS</span><span class="p">,</span>
+    <span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_count</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">what</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">least</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
@@ -771,6 +887,7 @@
     <span class="o">*</span><span class="p">,</span>
     <span class="n">draws</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2000</span><span class="p">,</span>
     <span class="n">burn_in</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">500</span><span class="p">,</span>
+    <span class="n">chains</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
     <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Hierarchical"</span><span class="p">:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
@@ -781,17 +898,28 @@
 <span class="sd">    the exact evidence of the problem `build` makes at :math:`s`</span>
 <span class="sd">    (:attr:`Posterior.log_evidence &lt;fips.Posterior.log_evidence&gt;`, the</span>
 <span class="sd">    analytic method's). The sampler is a random-walk Metropolis in unbounded</span>
-<span class="sd">    coordinates (the log of a positive hyperparameter, the logit of a bounded one):</span>
-<span class="sd">    it starts at the posterior mode of the hyperparameters (L-BFGS-B from the</span>
-<span class="sd">    priors' medians), proposes from Laplace's approximation there (the</span>
-<span class="sd">    inverse of a numerical Hessian), and during the `burn_in` scales that</span>
-<span class="sd">    proposal towards an acceptance of 0.3 (a Robbins-Monro step on the log of</span>
-<span class="sd">    its scale; fixed after, so the kept chain is a Markov chain of the exact</span>
-<span class="sd">    posterior). Each step solves one problem. At each of the `draws` kept</span>
-<span class="sd">    steps, it draws the state exactly from the posterior at the chain's</span>
+<span class="sd">    coordinates (the log of a positive hyperparameter, the logit of a bounded one),</span>
+<span class="sd">    run as `chains` chains: it finds the posterior mode of the hyperparameters</span>
+<span class="sd">    (L-BFGS-B from the priors' medians) and Laplace's approximation there (the</span>
+<span class="sd">    inverse of a numerical Hessian), starts each chain from a draw of that</span>
+<span class="sd">    approximation twice as wide (one chain starts at the mode), proposes from</span>
+<span class="sd">    it, and during each chain's `burn_in` scales the proposal towards an</span>
+<span class="sd">    acceptance of 0.3 (a Robbins-Monro step on the log of its scale; fixed</span>
+<span class="sd">    after, so the kept steps are a Markov chain of the exact posterior). Each</span>
+<span class="sd">    step solves one problem. At each of the `draws` kept steps, split among</span>
+<span class="sd">    the chains, it draws the state exactly from the posterior at the chain's</span>
 <span class="sd">    hyperparameters (:meth:`Posterior.sample &lt;fips.Posterior.sample&gt;`), so the</span>
 <span class="sd">    state's draws are draws of :math:`p(x \mid z)`, the Gaussian posteriors</span>
 <span class="sd">    mixed over the hyperparameters' posterior.</span>
+
+<span class="sd">    **The chains are checked.** Where they disagree on a hyperparameter (a</span>
+<span class="sd">    split R-hat above 1.1), the run warns: a chain has not forgotten its</span>
+<span class="sd">    start, or stays in one part of the posterior.</span>
+<span class="sd">    :attr:`Hierarchical.hyperparameter_diagnostics` and</span>
+<span class="sd">    :meth:`Hierarchical.diagnostics` give the numbers PyMC and Stan users</span>
+<span class="sd">    read (R-hat, the effective draws in the bulk and the tails, the Monte</span>
+<span class="sd">    Carlo errors), and reading the aggregates or an interval warns as a</span>
+<span class="sd">    sampled :class:`~fips.Posterior` does.</span>
 
 <span class="sd">    **The fast path.** When the only hyperparameters are a factor on the prior's</span>
 <span class="sd">    standard deviation and one on the observation error's, pass the problem</span>
@@ -817,13 +945,19 @@
 <span class="sd">        :class:`~fips.distributions.Uniform`. Its</span>
 <span class="sd">        order is the columns' of :attr:`Hierarchical.hyperparameters`.</span>
 <span class="sd">    draws : int, default 2000</span>
-<span class="sd">        The number of kept steps, each with one draw of the state.</span>
+<span class="sd">        The number of kept steps, each with one draw of the state, split</span>
+<span class="sd">        among the chains as evenly as they go (the first ones a step more).</span>
 <span class="sd">    burn_in : int, default 500</span>
-<span class="sd">        The steps before them, which tune the proposal and are not kept.</span>
+<span class="sd">        The steps each chain makes before its kept ones, which tune its</span>
+<span class="sd">        proposal and are not kept.</span>
+<span class="sd">    chains : int, default 4</span>
+<span class="sd">        The number of chains, each from its own start and with its own</span>
+<span class="sd">        proposal's scale. One chain starts at the mode and cannot check</span>
+<span class="sd">        itself; with one, a run is that of fips 0.2.</span>
 <span class="sd">    seed : int, default 0</span>
-<span class="sd">        The seed of the chain and of the state's draws, so that a run is</span>
-<span class="sd">        reproducible. The two have their own streams: the chain is the same</span>
-<span class="sd">        whatever the state's draws are.</span>
+<span class="sd">        The seed of the chains and of the state's draws, so that a run is</span>
+<span class="sd">        reproducible. The chains and the state's draws have their own</span>
+<span class="sd">        streams: the chains are the same whatever the state's draws are.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -839,9 +973,9 @@
 <span class="sd">        an analytic posterior.</span>
 <span class="sd">    ValueError</span>
 <span class="sd">        If `priors` is empty, the fast path is given other names than its</span>
-<span class="sd">        three (or both ``"obs_scale"`` and ``"gamma"``), `draws`, `burn_in` or</span>
-<span class="sd">        `seed` is not an integer in range, or the log posterior is not finite</span>
-<span class="sd">        at the priors' medians.</span>
+<span class="sd">        three (or both ``"obs_scale"`` and ``"gamma"``), `draws`, `burn_in`,</span>
+<span class="sd">        `chains` or `seed` is not an integer in range (`draws` fewer than</span>
+<span class="sd">        `chains`), or the log posterior is not finite at the priors' medians.</span>
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
@@ -850,11 +984,11 @@
 
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
+<span class="sd">    Gelman, A., and Rubin, D. B. (1992). Inference from iterative simulation</span>
+<span class="sd">    using multiple sequences. *Statistical Science*, 7(4), 457-472.</span>
+
 <span class="sd">    Gelman, A., Roberts, G. O., and Gilks, W. R. (1996). Efficient</span>
 <span class="sd">    Metropolis jumping rules. *Bayesian Statistics 5*, 599-607.</span>
-
-<span class="sd">    Geyer, C. J. (1992). Practical Markov chain Monte Carlo. *Statistical</span>
-<span class="sd">    Science*, 7(4), 473-483.</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
@@ -937,7 +1071,12 @@
             <span class="p">)</span>
     <span class="n">draws</span> <span class="o">=</span> <span class="n">_count</span><span class="p">(</span><span class="n">draws</span><span class="p">,</span> <span class="s2">"draws"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
     <span class="n">burn_in</span> <span class="o">=</span> <span class="n">_count</span><span class="p">(</span><span class="n">burn_in</span><span class="p">,</span> <span class="s2">"burn_in"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">chains</span> <span class="o">=</span> <span class="n">_count</span><span class="p">(</span><span class="n">chains</span><span class="p">,</span> <span class="s2">"chains"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
     <span class="n">seed</span> <span class="o">=</span> <span class="n">_count</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="s2">"seed"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">draws</span> <span class="o">&lt;</span> <span class="n">chains</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"draws must be at least one for each of the </span><span class="si">{</span><span class="n">chains</span><span class="si">}</span><span class="s2"> chains, got </span><span class="si">{</span><span class="n">draws</span><span class="si">}</span><span class="s2">."</span>
+        <span class="p">)</span>
     <span class="n">target</span><span class="p">:</span> <span class="n">_Built</span> <span class="o">|</span> <span class="n">_Scales</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">build</span><span class="p">,</span> <span class="n">Problem</span><span class="p">):</span>
         <span class="n">unknown</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_SCALES</span><span class="p">]</span>
@@ -976,48 +1115,56 @@
         <span class="n">log_evidence</span><span class="p">,</span> <span class="n">payload</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">log_prior</span> <span class="o">+</span> <span class="n">log_evidence</span><span class="p">,</span> <span class="n">payload</span>
 
-    <span class="n">chain_rng</span><span class="p">,</span> <span class="n">state_rng</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">child</span><span class="p">)</span> <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">SeedSequence</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span><span class="o">.</span><span class="n">spawn</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">chain_seed</span><span class="p">,</span> <span class="n">state_seed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">SeedSequence</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span><span class="o">.</span><span class="n">spawn</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">state_rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">state_seed</span><span class="p">)</span>
+    <span class="n">rngs</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">chain_seed</span><span class="p">)]</span>  <span class="c1"># one chain: fips 0.2's</span>
+        <span class="k">if</span> <span class="n">chains</span> <span class="o">==</span> <span class="mi">1</span>
+        <span class="k">else</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">child</span><span class="p">)</span> <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">chain_seed</span><span class="o">.</span><span class="n">spawn</span><span class="p">(</span><span class="n">chains</span><span class="p">)]</span>
     <span class="p">)</span>
     <span class="n">start</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">p</span><span class="o">.</span><span class="n">_to_unbounded</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">median</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">distributions</span><span class="p">])</span>
-    <span class="n">mode</span><span class="p">,</span> <span class="n">laplace</span> <span class="o">=</span> <span class="n">_laplace</span><span class="p">(</span><span class="k">lambda</span> <span class="n">u</span><span class="p">:</span> <span class="n">evaluate</span><span class="p">(</span><span class="n">u</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">start</span><span class="p">,</span> <span class="n">names</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">log_density</span><span class="p">(</span><span class="n">u</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the hyperparameters' log posterior at unbounded coordinates `u`."""</span>
+        <span class="k">return</span> <span class="n">evaluate</span><span class="p">(</span><span class="n">u</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">mode</span><span class="p">,</span> <span class="n">laplace</span> <span class="o">=</span> <span class="n">_laplace</span><span class="p">(</span><span class="n">log_density</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">names</span><span class="p">)</span>
     <span class="n">root</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">cholesky</span><span class="p">(</span><span class="n">laplace</span><span class="p">)</span>
-    <span class="n">log_scale</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">2.38</span> <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">names</span><span class="p">)))</span>
-    <span class="n">u</span> <span class="o">=</span> <span class="n">mode</span>
-    <span class="n">log_density</span><span class="p">,</span> <span class="n">payload</span> <span class="o">=</span> <span class="n">evaluate</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
-    <span class="n">chain</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">draws</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">names</span><span class="p">)))</span>
-    <span class="n">kept</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">accepted</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">burn_in</span> <span class="o">+</span> <span class="n">draws</span><span class="p">):</span>
-        <span class="n">proposal</span> <span class="o">=</span> <span class="n">u</span> <span class="o">+</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">log_scale</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">root</span> <span class="o">@</span> <span class="n">chain_rng</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">u</span><span class="p">)))</span>
-        <span class="n">proposed</span><span class="p">,</span> <span class="n">proposed_payload</span> <span class="o">=</span> <span class="n">evaluate</span><span class="p">(</span><span class="n">proposal</span><span class="p">)</span>
-        <span class="n">log_ratio</span> <span class="o">=</span> <span class="n">proposed</span> <span class="o">-</span> <span class="n">log_density</span> <span class="k">if</span> <span class="n">math</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">proposed</span><span class="p">)</span> <span class="k">else</span> <span class="o">-</span><span class="n">math</span><span class="o">.</span><span class="n">inf</span>
-        <span class="n">accept</span> <span class="o">=</span> <span class="n">_accept</span><span class="p">(</span><span class="n">log_ratio</span><span class="p">,</span> <span class="n">chain_rng</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">accept</span><span class="p">:</span>
-            <span class="n">u</span><span class="p">,</span> <span class="n">log_density</span><span class="p">,</span> <span class="n">payload</span> <span class="o">=</span> <span class="n">proposal</span><span class="p">,</span> <span class="n">proposed</span><span class="p">,</span> <span class="n">proposed_payload</span>
-        <span class="k">if</span> <span class="n">step</span> <span class="o">&lt;</span> <span class="n">burn_in</span><span class="p">:</span>
-            <span class="n">probability</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">log_ratio</span><span class="p">))</span>
-            <span class="n">log_scale</span> <span class="o">+=</span> <span class="p">(</span><span class="n">probability</span> <span class="o">-</span> <span class="n">_ACCEPTANCE</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">step</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="mf">0.6</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">chain</span><span class="p">[</span><span class="n">step</span> <span class="o">-</span> <span class="n">burn_in</span><span class="p">]</span> <span class="o">=</span> <span class="n">u</span>
-            <span class="n">kept</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">keep</span><span class="p">(</span><span class="n">payload</span><span class="p">,</span> <span class="n">state_rng</span><span class="p">))</span>
-            <span class="n">accepted</span> <span class="o">+=</span> <span class="n">accept</span>
+    <span class="n">lengths</span> <span class="o">=</span> <span class="n">_split</span><span class="p">(</span><span class="n">draws</span><span class="p">,</span> <span class="n">chains</span><span class="p">)</span>
+    <span class="n">steps</span><span class="p">,</span> <span class="n">kept</span><span class="p">,</span> <span class="n">accepted</span><span class="p">,</span> <span class="n">scales</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="mi">0</span><span class="p">,</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">rng</span><span class="p">,</span> <span class="n">length</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">rngs</span><span class="p">,</span> <span class="n">lengths</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="n">begin</span> <span class="o">=</span> <span class="n">mode</span> <span class="k">if</span> <span class="n">chains</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">_start</span><span class="p">(</span><span class="n">log_density</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
+        <span class="n">chain</span><span class="p">,</span> <span class="n">chain_kept</span><span class="p">,</span> <span class="n">chain_accepted</span><span class="p">,</span> <span class="n">scale</span> <span class="o">=</span> <span class="n">_chain</span><span class="p">(</span>
+            <span class="n">evaluate</span><span class="p">,</span>
+            <span class="n">begin</span><span class="p">,</span>
+            <span class="n">root</span><span class="p">,</span>
+            <span class="n">burn_in</span><span class="p">,</span>
+            <span class="n">length</span><span class="p">,</span>
+            <span class="n">rng</span><span class="p">,</span>
+            <span class="k">lambda</span> <span class="n">payload</span><span class="p">:</span> <span class="n">target</span><span class="o">.</span><span class="n">keep</span><span class="p">(</span><span class="n">payload</span><span class="p">,</span> <span class="n">state_rng</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">chain</span><span class="p">)</span>
+        <span class="n">kept</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">chain_kept</span><span class="p">)</span>
+        <span class="n">accepted</span> <span class="o">+=</span> <span class="n">chain_accepted</span>
+        <span class="n">scales</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span>
+    <span class="n">u</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">steps</span><span class="p">)</span>
     <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
         <span class="p">[</span>
             <span class="p">[</span>
                 <span class="n">p</span><span class="o">.</span><span class="n">_from_unbounded</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
                 <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">distributions</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="p">]</span>
-            <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">chain</span>
+            <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">u</span>
         <span class="p">]</span>
     <span class="p">)</span>
-    <span class="n">index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">RangeIndex</span><span class="p">(</span><span class="n">draws</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"draw"</span><span class="p">)</span>
     <span class="n">space</span><span class="p">,</span> <span class="n">states</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">kept</span><span class="p">,</span> <span class="n">state_rng</span><span class="p">)</span>
     <span class="n">result</span> <span class="o">=</span> <span class="n">Hierarchical</span><span class="p">(</span>
         <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
         <span class="n">names</span><span class="o">=</span><span class="n">names</span><span class="p">,</span>
         <span class="n">hyperparameters</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
-            <span class="n">values</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">names</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"hyperparameter"</span><span class="p">)</span>
+            <span class="n">values</span><span class="p">,</span>
+            <span class="n">index</span><span class="o">=</span><span class="n">_chain_draw_index</span><span class="p">(</span><span class="n">lengths</span><span class="p">),</span>
+            <span class="n">columns</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">names</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"hyperparameter"</span><span class="p">),</span>
         <span class="p">),</span>
         <span class="n">space</span><span class="o">=</span><span class="n">space</span><span class="p">,</span>
         <span class="n">states</span><span class="o">=</span><span class="n">states</span><span class="p">,</span>
@@ -1030,16 +1177,19 @@
             <span class="n">name</span><span class="o">=</span><span class="s2">"mode"</span><span class="p">,</span>
         <span class="p">),</span>
         <span class="n">acceptance</span><span class="o">=</span><span class="n">accepted</span> <span class="o">/</span> <span class="n">draws</span><span class="p">,</span>
-        <span class="n">proposal_scale</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">log_scale</span><span class="p">),</span>
+        <span class="n">proposal_scales</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">scales</span><span class="p">),</span>
     <span class="p">)</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-        <span class="s2">"hierarchical: </span><span class="si">%d</span><span class="s2"> draws after </span><span class="si">%d</span><span class="s2"> burn-in steps; acceptance </span><span class="si">%.2f</span><span class="s2">; "</span>
-        <span class="s2">"effective sample sizes </span><span class="si">%s</span><span class="s2">."</span><span class="p">,</span>
+        <span class="s2">"hierarchical: </span><span class="si">%d</span><span class="s2"> draws in </span><span class="si">%d</span><span class="s2"> chains, each after </span><span class="si">%d</span><span class="s2"> burn-in steps; "</span>
+        <span class="s2">"acceptance </span><span class="si">%.2f</span><span class="s2">; effective draws </span><span class="si">%s</span><span class="s2">; split R-hat </span><span class="si">%s</span><span class="s2">."</span><span class="p">,</span>
         <span class="n">draws</span><span class="p">,</span>
+        <span class="n">chains</span><span class="p">,</span>
         <span class="n">burn_in</span><span class="p">,</span>
         <span class="n">result</span><span class="o">.</span><span class="n">acceptance</span><span class="p">,</span>
-        <span class="n">result</span><span class="o">.</span><span class="n">ess</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">hyperparameter_diagnostics</span><span class="p">[</span><span class="s2">"ess_bulk"</span><span class="p">]</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">hyperparameter_diagnostics</span><span class="p">[</span><span class="s2">"r_hat"</span><span class="p">]</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
     <span class="p">)</span>
+    <span class="n">_warn_if_unmixed</span><span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">lengths</span><span class="p">,</span> <span class="n">names</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">result</span></div>
 
 
@@ -1057,7 +1207,8 @@
 <span class="sd">    posterior of the state is a mixture of Gaussians, one for each draw of the</span>
 <span class="sd">    hyperparameters, so its estimate, variances and covariances are those of the</span>
 <span class="sd">    draws of the state (``draws`` of them: a Monte Carlo estimate, whose</span>
-<span class="sd">    error falls as the effective number of draws, :attr:`ess`, grows). What is defined only for one Gaussian (the gain,</span>
+<span class="sd">    error falls as the effective number of draws grows:</span>
+<span class="sd">    :attr:`hyperparameter_diagnostics`, :meth:`diagnostics`). What is defined only for one Gaussian (the gain,</span>
 <span class="sd">    DOFS, the chi-squared tests, the evidence) is on the posterior at one</span>
 <span class="sd">    hyperparameter, :meth:`at`. The draws of the state are held as a ``state x</span>
 <span class="sd">    draws`` array.</span>
@@ -1076,7 +1227,7 @@
         <span class="n">states</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
         <span class="n">mode</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span>
         <span class="n">acceptance</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
-        <span class="n">proposal_scale</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">proposal_scales</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
     <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_target</span> <span class="o">=</span> <span class="n">target</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_names</span> <span class="o">=</span> <span class="n">names</span>
@@ -1086,48 +1237,63 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_states</span><span class="o">.</span><span class="n">flags</span><span class="o">.</span><span class="n">writeable</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_mode</span> <span class="o">=</span> <span class="n">mode</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_acceptance</span> <span class="o">=</span> <span class="n">acceptance</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_proposal_scale</span> <span class="o">=</span> <span class="n">proposal_scale</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_proposal_scales</span> <span class="o">=</span> <span class="n">proposal_scales</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">hyperparameters</span><span class="o">.</span><span class="n">index</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="p">)</span>  <span class="c1"># (chain, draw)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lengths</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">count</span><span class="p">)</span> <span class="k">for</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">bincount</span><span class="p">(</span><span class="n">index</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="s2">"chain"</span><span class="p">))</span>
+        <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Return the hyperparameters, the number of draws and the acceptance."""</span>
+<span class="w">        </span><span class="sd">"""Return the hyperparameters, the number of draws and chains, and the acceptance."""</span>
         <span class="k">return</span> <span class="p">(</span>
             <span class="sa">f</span><span class="s2">"Hierarchical(hyperparameters=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_names</span><span class="si">}</span><span class="s2">, draws=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_hyperparameters</span><span class="p">)</span><span class="si">}</span><span class="s2">, "</span>
-            <span class="sa">f</span><span class="s2">"acceptance=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_acceptance</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">)"</span>
+            <span class="sa">f</span><span class="s2">"chains=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_lengths</span><span class="p">)</span><span class="si">}</span><span class="s2">, acceptance=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_acceptance</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">)"</span>
         <span class="p">)</span>
 
     <span class="c1"># -- the hyperparameters ----------------------------------------------------------</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">hyperparameters</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""The kept draws of the hyperparameters: one row a draw (``draw``), one column a hyperparameter."""</span>
+<span class="w">        </span><span class="sd">"""The kept draws of the hyperparameters: one row a draw, labeled ``(chain, draw)`` (each counted from 0), one column a hyperparameter."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hyperparameters</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""The posterior mode of the hyperparameters, where the chain started and Laplace's approximation was taken."""</span>
+<span class="w">        </span><span class="sd">"""The posterior mode of the hyperparameters, where Laplace's approximation was taken (and a single chain starts)."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mode</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">acceptance</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""The fraction of the kept steps whose proposal was accepted (near 0.3 when the burn-in tuned the proposal well)."""</span>
+<span class="w">        </span><span class="sd">"""The fraction of the kept steps whose proposal was accepted, over all the chains (near 0.3 when the burn-ins tuned the proposals well)."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_acceptance</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">ess</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">hyperparameter_diagnostics</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""</span>
-<span class="sd">        The effective sample size of each hyperparameter's draws: about as many independent draws as they are worth.</span>
+<span class="sd">        The checks of the hyperparameters' draws, one row per hyperparameter: the numbers PyMC and Stan users read after a run.</span>
 
-<span class="sd">        By Geyer's initial monotone sequence of autocorrelations. A Monte</span>
-<span class="sd">        Carlo standard error of a hyperparameter's mean is its standard deviation</span>
-<span class="sd">        over the root of this.</span>
+<span class="sd">        As :meth:`Posterior.diagnostics &lt;fips.Posterior.diagnostics&gt;` gives</span>
+<span class="sd">        them (ArviZ's ``summary``; Vehtari et al., 2021): ``mean`` and</span>
+<span class="sd">        ``sd`` of the draws, their Monte Carlo errors ``mcse_mean`` and</span>
+<span class="sd">        ``mcse_sd``, the effective numbers of independent draws in the bulk</span>
+<span class="sd">        (``ess_bulk``) and in the 5% and 95% tails (``ess_tail``), and the</span>
+<span class="sd">        rank-normalized split R-hat (``r_hat``, near 1 when the chains draw</span>
+<span class="sd">        the same distribution; NaN with one chain). A Metropolis chain's</span>
+<span class="sd">        draws are far from independent: a few hundred effective draws from</span>
+<span class="sd">        2000 are usual. A hyperparameter's mean is known to ``mcse_mean``;</span>
+<span class="sd">        for a smaller error, raise ``draws``.</span>
+
+<span class="sd">        References</span>
+<span class="sd">        ----------</span>
+<span class="sd">        Vehtari, A., Gelman, A., Simpson, D., Carpenter, B., and Bürkner,</span>
+<span class="sd">        P.-C. (2021). Rank-normalization, folding, and localization: an</span>
+<span class="sd">        improved R-hat for assessing convergence of MCMC. *Bayesian</span>
+<span class="sd">        Analysis*, 16(2), 667-718. https://doi.org/10.1214/20-BA1221</span>
 <span class="sd">        """</span>
-        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span>
-            <span class="p">[</span>
-                <span class="n">_effective_size</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_hyperparameters</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))</span>
-                <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_names</span>
-            <span class="p">],</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+            <span class="n">_diagnostics</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_hyperparameters</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lengths</span><span class="p">),</span>
             <span class="n">index</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_hyperparameters</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span>
-            <span class="n">name</span><span class="o">=</span><span class="s2">"ess"</span><span class="p">,</span>
         <span class="p">)</span>
 
 <div class="viewcode-block" id="Hierarchical.at">
@@ -1177,6 +1343,82 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_states</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_space</span><span class="o">.</span><span class="n">index</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_aggregation</span><span class="p">(</span><span class="n">W</span><span class="p">)</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">_states</span><span class="p">),</span> <span class="n">W</span><span class="o">.</span><span class="n">rows</span><span class="o">.</span><span class="n">index</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_read</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">Operator</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Return the draws of the state (or of `W` x) and their row labels, with a warning if the chains disagree on an aggregate of `W` (any one row, above 1.1)."""</span>
+        <span class="n">values</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="p">(</span><span class="n">W</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">W</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">_warn_if_aggregates_unmixed</span><span class="p">(</span>
+                <span class="n">values</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lengths</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="n">_UNMIXED_AGGREGATES</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">values</span><span class="p">,</span> <span class="n">index</span>
+
+<div class="viewcode-block" id="Hierarchical.diagnostics">
+<a class="viewcode-back" href="../../reference/api/fips.Hierarchical.diagnostics.html#fips.Hierarchical.diagnostics">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">diagnostics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">Operator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return the checks of the state's draws, or of aggregates of them, one row each: as :meth:`Posterior.diagnostics &lt;fips.Posterior.diagnostics&gt;` gives them.</span>
+
+<span class="sd">        The state's draws at the kept steps are exact given the step's</span>
+<span class="sd">        hyperparameters, so their chains disagree, or mix slowly, only through</span>
+<span class="sd">        the hyperparameters': a total that depends on a hyperparameter the</span>
+<span class="sd">        chains disagree on disagrees too. :attr:`hyperparameter_diagnostics`</span>
+<span class="sd">        checks the hyperparameters themselves.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        W : Operator, optional</span>
+<span class="sd">            An aggregation, as :meth:`cov` takes it: the rows are then the</span>
+<span class="sd">            aggregates :math:`W x` of the draws.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas.DataFrame</span>
+<span class="sd">            On the state's labels (or `W`'s rows), the columns ``mean``,</span>
+<span class="sd">            ``sd``, ``mcse_mean``, ``mcse_sd``, ``ess_bulk``, ``ess_tail``</span>
+<span class="sd">            and ``r_hat``.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If `W` is not an Operator.</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If the columns of `W` do not have exactly the state's labels.</span>
+<span class="sd">        """</span>
+        <span class="n">values</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="p">(</span><span class="n">W</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">_diagnostics</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lengths</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Hierarchical.chains">
+<a class="viewcode-back" href="../../reference/api/fips.Hierarchical.chains.html#fips.Hierarchical.chains">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">chains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">Operator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return the kept draws of the state, or of aggregates of them, one column each, labeled by chain and draw: as :meth:`Posterior.chains &lt;fips.Posterior.chains&gt;` gives them.</span>
+
+<span class="sd">        A column is the draw made at the row of :attr:`hyperparameters` of</span>
+<span class="sd">        the same label.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        W : Operator, optional</span>
+<span class="sd">            An aggregation, as :meth:`cov` takes it.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas.DataFrame</span>
+<span class="sd">            One row per state element (or row of `W`), one column per kept</span>
+<span class="sd">            draw, a MultiIndex ``(chain, draw)``.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If `W` is not an Operator.</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If the columns of `W` do not have exactly the state's labels.</span>
+<span class="sd">        """</span>
+        <span class="n">values</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="p">(</span><span class="n">W</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_hyperparameters</span><span class="o">.</span><span class="n">index</span><span class="p">)</span></div>
+
+
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vector</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""The posterior mean of the state, the mean of its draws: :math:`E[\hat{x}(s)]` over the hyperparameters' posterior."""</span>
@@ -1200,6 +1442,10 @@
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the posterior covariance of the state, or of aggregates of it, from the draws.</span>
 
+<span class="sd">        Reading aggregates warns when the chains disagree on any of them (a</span>
+<span class="sd">        split R-hat above 1.1), as a sampled posterior's :meth:`Posterior.cov</span>
+<span class="sd">        &lt;fips.Posterior.cov&gt;` does.</span>
+
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        W : Operator, optional</span>
@@ -1220,7 +1466,7 @@
 <span class="sd">        ValueError</span>
 <span class="sd">            If the columns of `W` do not have exactly the state's labels.</span>
 <span class="sd">        """</span>
-        <span class="n">values</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="p">(</span><span class="n">W</span><span class="p">)</span>
+        <span class="n">values</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read</span><span class="p">(</span><span class="n">W</span><span class="p">)</span>
         <span class="n">space</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_space</span> <span class="k">if</span> <span class="n">W</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">W</span><span class="o">.</span><span class="n">rows</span>
         <span class="n">covariance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">Covariance</span><span class="o">.</span><span class="n">_computed</span><span class="p">(</span><span class="n">_adopt</span><span class="p">(</span><span class="n">covariance</span><span class="p">),</span> <span class="n">space</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"posterior_cov"</span><span class="p">)</span></div>
@@ -1233,6 +1479,11 @@
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the mean, standard deviation and central interval of each element or aggregate, from the draws.</span>
+
+<span class="sd">        It warns as a sampled posterior's :meth:`Posterior.uncertainty</span>
+<span class="sd">        &lt;fips.Posterior.uncertainty&gt;` does: when the chains disagree on an</span>
+<span class="sd">        aggregate, and when the draws in the tails, which the interval's ends</span>
+<span class="sd">        are read from, are fewer than about 100 effective ones for each chain.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1261,7 +1512,8 @@
 <span class="sd">        """</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">numbers</span><span class="o">.</span><span class="n">Real</span><span class="p">)</span> <span class="ow">and</span> <span class="mf">0.0</span> <span class="o">&lt;</span> <span class="n">level</span> <span class="o">&lt;</span> <span class="mf">1.0</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"level is a probability between 0 and 1, got </span><span class="si">{</span><span class="n">level</span><span class="si">!r}</span><span class="s2">."</span><span class="p">)</span>
-        <span class="n">values</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="p">(</span><span class="n">W</span><span class="p">)</span>
+        <span class="n">values</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read</span><span class="p">(</span><span class="n">W</span><span class="p">)</span>
+        <span class="n">_warn_if_tails_thin</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lengths</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="n">aggregates</span><span class="o">=</span><span class="n">W</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span>
             <span class="n">values</span><span class="p">,</span> <span class="p">[(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">level</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">,</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">level</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span>
         <span class="p">)</span>
@@ -1290,7 +1542,7 @@
 
 <span class="sd">        The draws are those made at the kept steps of the chain, one at each</span>
 <span class="sd">        step's hyperparameters, so a column's draw belongs to the row of</span>
-<span class="sd">        :attr:`hyperparameters` its label names. They are chosen at random,</span>
+<span class="sd">        :attr:`hyperparameters` its label, ``(chain, draw)``, names. They are chosen at random,</span>
 <span class="sd">        without repeats, and listed in the order of the chain; all of them,</span>
 <span class="sd">        when `n` is the number kept.</span>
 
@@ -1311,7 +1563,7 @@
 <span class="sd">        pandas.DataFrame</span>
 <span class="sd">            One row per state element, labeled as the :attr:`estimate` is (or</span>
 <span class="sd">            one per row of `W`), and one column per draw, labeled by its row</span>
-<span class="sd">            of :attr:`hyperparameters` (``draw``).</span>
+<span class="sd">            of :attr:`hyperparameters` (``(chain, draw)``).</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
@@ -1338,7 +1590,7 @@
         <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
             <span class="n">values</span><span class="p">[:,</span> <span class="n">chosen</span><span class="p">],</span>
             <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span>
-            <span class="n">columns</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_hyperparameters</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">chosen</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">"draw"</span><span class="p">),</span>
+            <span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_hyperparameters</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">chosen</span><span class="p">],</span>
         <span class="p">)</span></div>
 </div>
 

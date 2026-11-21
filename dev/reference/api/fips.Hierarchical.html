@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=7237699d"></script>
+    <script src="../../_static/documentation_options.js?v=55658842"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -842,13 +842,15 @@
 <li class="toctree-l2"><a class="reference internal" href="fips.hierarchical.html">fips.hierarchical</a></li>
 <li class="toctree-l2 current active has-children"><a aria-current="page" class="current reference internal" href="#">fips.Hierarchical</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.acceptance.html">fips.Hierarchical.acceptance</a></li>
-<li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.ess.html">fips.Hierarchical.ess</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.estimate.html">fips.Hierarchical.estimate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.hyperparameter_diagnostics.html">fips.Hierarchical.hyperparameter_diagnostics</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.hyperparameters.html">fips.Hierarchical.hyperparameters</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.mode.html">fips.Hierarchical.mode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.variances.html">fips.Hierarchical.variances</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.at.html">fips.Hierarchical.at</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.chains.html">fips.Hierarchical.chains</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.cov.html">fips.Hierarchical.cov</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.diagnostics.html">fips.Hierarchical.diagnostics</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.sample.html">fips.Hierarchical.sample</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.uncertainty.html">fips.Hierarchical.uncertainty</a></li>
 </ul>
@@ -856,7 +858,9 @@
 <li class="toctree-l2"><a class="reference internal" href="fips.Hierarchical.hyperparameters.html">fips.Hierarchical.hyperparameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Hierarchical.mode.html">fips.Hierarchical.mode</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Hierarchical.acceptance.html">fips.Hierarchical.acceptance</a></li>
-<li class="toctree-l2"><a class="reference internal" href="fips.Hierarchical.ess.html">fips.Hierarchical.ess</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Hierarchical.hyperparameter_diagnostics.html">fips.Hierarchical.hyperparameter_diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Hierarchical.diagnostics.html">fips.Hierarchical.diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Hierarchical.chains.html">fips.Hierarchical.chains</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Hierarchical.estimate.html">fips.Hierarchical.estimate</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Hierarchical.variances.html">fips.Hierarchical.variances</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Hierarchical.cov.html">fips.Hierarchical.cov</a></li>
@@ -1071,13 +1075,14 @@
 <h1>fips.Hierarchical<a class="headerlink" href="#fips-hierarchical" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="fips.Hierarchical">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">fips.</span></span><span class="sig-name descname"><span class="pre">Hierarchical</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hyperparameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">space</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">acceptance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proposal_scale</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fips/hyperparameters.html#Hierarchical"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fips.Hierarchical" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">fips.</span></span><span class="sig-name descname"><span class="pre">Hierarchical</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hyperparameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">space</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">states</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">acceptance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proposal_scales</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fips/hyperparameters.html#Hierarchical"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fips.Hierarchical" title="Link to this definition">#</a></dt>
 <dd><p>Draws of the covariance hyperparameters from their posterior, and of the state at each: the posterior with the hyperparameters’ uncertainty.</p>
 <p><a class="reference internal" href="fips.hierarchical.html#fips.hierarchical" title="fips.hierarchical"><code class="xref py py-func docutils literal notranslate"><span class="pre">hierarchical()</span></code></a> builds it. It is not a <a class="reference internal" href="fips.Posterior.html#fips.Posterior" title="fips.Posterior"><code class="xref py py-class docutils literal notranslate"><span class="pre">Posterior</span></code></a>: the
 posterior of the state is a mixture of Gaussians, one for each draw of the
 hyperparameters, so its estimate, variances and covariances are those of the
 draws of the state (<code class="docutils literal notranslate"><span class="pre">draws</span></code> of them: a Monte Carlo estimate, whose
-error falls as the effective number of draws, <a class="reference internal" href="fips.Hierarchical.ess.html#fips.Hierarchical.ess" title="fips.Hierarchical.ess"><code class="xref py py-attr docutils literal notranslate"><span class="pre">ess</span></code></a>, grows). What is defined only for one Gaussian (the gain,
+error falls as the effective number of draws grows:
+<a class="reference internal" href="fips.Hierarchical.hyperparameter_diagnostics.html#fips.Hierarchical.hyperparameter_diagnostics" title="fips.Hierarchical.hyperparameter_diagnostics"><code class="xref py py-attr docutils literal notranslate"><span class="pre">hyperparameter_diagnostics</span></code></a>, <a class="reference internal" href="fips.Hierarchical.diagnostics.html#fips.Hierarchical.diagnostics" title="fips.Hierarchical.diagnostics"><code class="xref py py-meth docutils literal notranslate"><span class="pre">diagnostics()</span></code></a>). What is defined only for one Gaussian (the gain,
 DOFS, the chi-squared tests, the evidence) is on the posterior at one
 hyperparameter, <a class="reference internal" href="fips.Hierarchical.at.html#fips.Hierarchical.at" title="fips.Hierarchical.at"><code class="xref py py-meth docutils literal notranslate"><span class="pre">at()</span></code></a>. The draws of the state are held as a <code class="docutils literal notranslate"><span class="pre">state</span> <span class="pre">x</span>
 <span class="pre">draws</span></code> array.</p>
@@ -1089,19 +1094,19 @@ hyperparameter, <a class="reference internal" href="fips.Hierarchical.at.html#fi
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="fips.Hierarchical.acceptance.html#fips.Hierarchical.acceptance" title="fips.Hierarchical.acceptance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">acceptance</span></code></a></p></td>
-<td><p>The fraction of the kept steps whose proposal was accepted (near 0.3 when the burn-in tuned the proposal well).</p></td>
+<td><p>The fraction of the kept steps whose proposal was accepted, over all the chains (near 0.3 when the burn-ins tuned the proposals well).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="fips.Hierarchical.ess.html#fips.Hierarchical.ess" title="fips.Hierarchical.ess"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ess</span></code></a></p></td>
-<td><p>about as many independent draws as they are worth.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="fips.Hierarchical.estimate.html#fips.Hierarchical.estimate" title="fips.Hierarchical.estimate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">estimate</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="fips.Hierarchical.estimate.html#fips.Hierarchical.estimate" title="fips.Hierarchical.estimate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">estimate</span></code></a></p></td>
 <td><p><span class="math notranslate nohighlight">\(E[\hat{x}(s)]\)</span> over the hyperparameters' posterior.</p></td>
 </tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="fips.Hierarchical.hyperparameter_diagnostics.html#fips.Hierarchical.hyperparameter_diagnostics" title="fips.Hierarchical.hyperparameter_diagnostics"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hyperparameter_diagnostics</span></code></a></p></td>
+<td><p>the numbers PyMC and Stan users read after a run.</p></td>
+</tr>
 <tr class="row-even"><td><p><a class="reference internal" href="fips.Hierarchical.hyperparameters.html#fips.Hierarchical.hyperparameters" title="fips.Hierarchical.hyperparameters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hyperparameters</span></code></a></p></td>
-<td><p>one row a draw (<code class="docutils literal notranslate"><span class="pre">draw</span></code>), one column a hyperparameter.</p></td>
+<td><p>one row a draw, labeled <code class="docutils literal notranslate"><span class="pre">(chain,</span> <span class="pre">draw)</span></code> (each counted from 0), one column a hyperparameter.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="fips.Hierarchical.mode.html#fips.Hierarchical.mode" title="fips.Hierarchical.mode"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mode</span></code></a></p></td>
-<td><p>The posterior mode of the hyperparameters, where the chain started and Laplace's approximation was taken.</p></td>
+<td><p>The posterior mode of the hyperparameters, where Laplace's approximation was taken (and a single chain starts).</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="fips.Hierarchical.variances.html#fips.Hierarchical.variances" title="fips.Hierarchical.variances"><code class="xref py py-obj docutils literal notranslate"><span class="pre">variances</span></code></a></p></td>
 <td><p>The posterior variances of the state, those of its draws (about their mean).</p></td>
@@ -1115,8 +1120,14 @@ hyperparameter, <a class="reference internal" href="fips.Hierarchical.at.html#fi
 <tr class="row-odd"><td><p><a class="reference internal" href="fips.Hierarchical.at.html#fips.Hierarchical.at" title="fips.Hierarchical.at"><code class="xref py py-obj docutils literal notranslate"><span class="pre">at</span></code></a>(hyperparameters)</p></td>
 <td><p>Return the posterior at one hyperparameter of every hyperparameter: the ordinary <a class="reference internal" href="fips.Posterior.html#fips.Posterior" title="fips.Posterior"><code class="xref py py-class docutils literal notranslate"><span class="pre">Posterior</span></code></a>, solved.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="fips.Hierarchical.cov.html#fips.Hierarchical.cov" title="fips.Hierarchical.cov"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cov</span></code></a>([W])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="fips.Hierarchical.chains.html#fips.Hierarchical.chains" title="fips.Hierarchical.chains"><code class="xref py py-obj docutils literal notranslate"><span class="pre">chains</span></code></a>([W])</p></td>
+<td><p>Return the kept draws of the state, or of aggregates of them, one column each, labeled by chain and draw: as <a class="reference internal" href="fips.Posterior.chains.html#fips.Posterior.chains" title="fips.Posterior.chains"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Posterior.chains</span></code></a> gives them.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="fips.Hierarchical.cov.html#fips.Hierarchical.cov" title="fips.Hierarchical.cov"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cov</span></code></a>([W])</p></td>
 <td><p>Return the posterior covariance of the state, or of aggregates of it, from the draws.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="fips.Hierarchical.diagnostics.html#fips.Hierarchical.diagnostics" title="fips.Hierarchical.diagnostics"><code class="xref py py-obj docutils literal notranslate"><span class="pre">diagnostics</span></code></a>([W])</p></td>
+<td><p>Return the checks of the state's draws, or of aggregates of them, one row each: as <a class="reference internal" href="fips.Posterior.diagnostics.html#fips.Posterior.diagnostics" title="fips.Posterior.diagnostics"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Posterior.diagnostics</span></code></a> gives them.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="fips.Hierarchical.sample.html#fips.Hierarchical.sample" title="fips.Hierarchical.sample"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sample</span></code></a>(n[, rng, W])</p></td>
 <td><p>Return <cite>n</cite> of the kept draws of the state, mixed over the hyperparameters' draws: one column each.</p></td>

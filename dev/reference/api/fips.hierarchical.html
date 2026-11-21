@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=7237699d"></script>
+    <script src="../../_static/documentation_options.js?v=55658842"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -842,13 +842,15 @@
 <li class="toctree-l2 current active"><a aria-current="page" class="current reference internal" href="#">fips.hierarchical</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="fips.Hierarchical.html">fips.Hierarchical</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.acceptance.html">fips.Hierarchical.acceptance</a></li>
-<li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.ess.html">fips.Hierarchical.ess</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.estimate.html">fips.Hierarchical.estimate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.hyperparameter_diagnostics.html">fips.Hierarchical.hyperparameter_diagnostics</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.hyperparameters.html">fips.Hierarchical.hyperparameters</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.mode.html">fips.Hierarchical.mode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.variances.html">fips.Hierarchical.variances</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.at.html">fips.Hierarchical.at</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.chains.html">fips.Hierarchical.chains</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.cov.html">fips.Hierarchical.cov</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.diagnostics.html">fips.Hierarchical.diagnostics</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.sample.html">fips.Hierarchical.sample</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.uncertainty.html">fips.Hierarchical.uncertainty</a></li>
 </ul>
@@ -856,7 +858,9 @@
 <li class="toctree-l2"><a class="reference internal" href="fips.Hierarchical.hyperparameters.html">fips.Hierarchical.hyperparameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Hierarchical.mode.html">fips.Hierarchical.mode</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Hierarchical.acceptance.html">fips.Hierarchical.acceptance</a></li>
-<li class="toctree-l2"><a class="reference internal" href="fips.Hierarchical.ess.html">fips.Hierarchical.ess</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Hierarchical.hyperparameter_diagnostics.html">fips.Hierarchical.hyperparameter_diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Hierarchical.diagnostics.html">fips.Hierarchical.diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Hierarchical.chains.html">fips.Hierarchical.chains</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Hierarchical.estimate.html">fips.Hierarchical.estimate</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Hierarchical.variances.html">fips.Hierarchical.variances</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Hierarchical.cov.html">fips.Hierarchical.cov</a></li>
@@ -1071,24 +1075,34 @@
 <h1>fips.hierarchical<a class="headerlink" href="#fips-hierarchical" title="Link to this heading">#</a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="fips.hierarchical">
-<span class="sig-prename descclassname"><span class="pre">fips.</span></span><span class="sig-name descname"><span class="pre">hierarchical</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">build</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priors</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">draws</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">burn_in</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">500</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fips/hyperparameters.html#hierarchical"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fips.hierarchical" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fips.</span></span><span class="sig-name descname"><span class="pre">hierarchical</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">build</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priors</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">draws</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">burn_in</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">500</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chains</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fips/hyperparameters.html#hierarchical"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fips.hierarchical" title="Link to this definition">#</a></dt>
 <dd><p>Draw the covariance hyperparameters from their posterior, and the state at each draw: the posterior with the hyperparameters’ uncertainty.</p>
 <p>The hyperparameters get priors (<cite>priors</cite>), and their posterior is
 <span class="math notranslate nohighlight">\(p(s \mid z) \propto p(s) \, p(z \mid s)\)</span>, with <span class="math notranslate nohighlight">\(p(z \mid s)\)</span>
 the exact evidence of the problem <cite>build</cite> makes at <span class="math notranslate nohighlight">\(s\)</span>
 (<a class="reference internal" href="fips.Posterior.log_evidence.html#fips.Posterior.log_evidence" title="fips.Posterior.log_evidence"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Posterior.log_evidence</span></code></a>, the
 analytic method’s). The sampler is a random-walk Metropolis in unbounded
-coordinates (the log of a positive hyperparameter, the logit of a bounded one):
-it starts at the posterior mode of the hyperparameters (L-BFGS-B from the
-priors’ medians), proposes from Laplace’s approximation there (the
-inverse of a numerical Hessian), and during the <cite>burn_in</cite> scales that
-proposal towards an acceptance of 0.3 (a Robbins-Monro step on the log of
-its scale; fixed after, so the kept chain is a Markov chain of the exact
-posterior). Each step solves one problem. At each of the <cite>draws</cite> kept
-steps, it draws the state exactly from the posterior at the chain’s
+coordinates (the log of a positive hyperparameter, the logit of a bounded one),
+run as <cite>chains</cite> chains: it finds the posterior mode of the hyperparameters
+(L-BFGS-B from the priors’ medians) and Laplace’s approximation there (the
+inverse of a numerical Hessian), starts each chain from a draw of that
+approximation twice as wide (one chain starts at the mode), proposes from
+it, and during each chain’s <cite>burn_in</cite> scales the proposal towards an
+acceptance of 0.3 (a Robbins-Monro step on the log of its scale; fixed
+after, so the kept steps are a Markov chain of the exact posterior). Each
+step solves one problem. At each of the <cite>draws</cite> kept steps, split among
+the chains, it draws the state exactly from the posterior at the chain’s
 hyperparameters (<a class="reference internal" href="fips.Posterior.sample.html#fips.Posterior.sample" title="fips.Posterior.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Posterior.sample</span></code></a>), so the
 state’s draws are draws of <span class="math notranslate nohighlight">\(p(x \mid z)\)</span>, the Gaussian posteriors
 mixed over the hyperparameters’ posterior.</p>
+<p><strong>The chains are checked.</strong> Where they disagree on a hyperparameter (a
+split R-hat above 1.1), the run warns: a chain has not forgotten its
+start, or stays in one part of the posterior.
+<a class="reference internal" href="fips.Hierarchical.hyperparameter_diagnostics.html#fips.Hierarchical.hyperparameter_diagnostics" title="fips.Hierarchical.hyperparameter_diagnostics"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Hierarchical.hyperparameter_diagnostics</span></code></a> and
+<a class="reference internal" href="fips.Hierarchical.diagnostics.html#fips.Hierarchical.diagnostics" title="fips.Hierarchical.diagnostics"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Hierarchical.diagnostics()</span></code></a> give the numbers PyMC and Stan users
+read (R-hat, the effective draws in the bulk and the tails, the Monte
+Carlo errors), and reading the aggregates or an interval warns as a
+sampled <a class="reference internal" href="fips.Posterior.html#fips.Posterior" title="fips.Posterior"><code class="xref py py-class docutils literal notranslate"><span class="pre">Posterior</span></code></a> does.</p>
 <p><strong>The fast path.</strong> When the only hyperparameters are a factor on the prior’s
 standard deviation and one on the observation error’s, pass the problem
 at factors of 1 as <cite>build</cite>, and name the hyperparameters <code class="docutils literal notranslate"><span class="pre">&quot;prior_scale&quot;</span></code> (the
@@ -1110,11 +1124,16 @@ to make gamma a hyperparameter). Or, for the fast path, the problem itself.</p><
 <a class="reference internal" href="fips.distributions.HalfNormal.html#fips.distributions.HalfNormal" title="fips.distributions.HalfNormal"><code class="xref py py-class docutils literal notranslate"><span class="pre">HalfNormal</span></code></a> or
 <a class="reference internal" href="fips.distributions.Uniform.html#fips.distributions.Uniform" title="fips.distributions.Uniform"><code class="xref py py-class docutils literal notranslate"><span class="pre">Uniform</span></code></a>. Its
 order is the columns’ of <a class="reference internal" href="fips.Hierarchical.hyperparameters.html#fips.Hierarchical.hyperparameters" title="fips.Hierarchical.hyperparameters"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Hierarchical.hyperparameters</span></code></a>.</p></li>
-<li><p><strong>draws</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – The number of kept steps, each with one draw of the state.</p></li>
-<li><p><strong>burn_in</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – The steps before them, which tune the proposal and are not kept.</p></li>
-<li><p><strong>seed</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – The seed of the chain and of the state’s draws, so that a run is
-reproducible. The two have their own streams: the chain is the same
-whatever the state’s draws are.</p></li>
+<li><p><strong>draws</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – The number of kept steps, each with one draw of the state, split
+among the chains as evenly as they go (the first ones a step more).</p></li>
+<li><p><strong>burn_in</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – The steps each chain makes before its kept ones, which tune its
+proposal and are not kept.</p></li>
+<li><p><strong>chains</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – The number of chains, each from its own start and with its own
+proposal’s scale. One chain starts at the mode and cannot check
+itself; with one, a run is that of fips 0.2.</p></li>
+<li><p><strong>seed</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – The seed of the chains and of the state’s draws, so that a run is
+reproducible. The chains and the state’s draws have their own
+streams: the chains are the same whatever the state’s draws are.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1130,9 +1149,9 @@ the chain.</p>
     is neither callable nor a problem, or it makes neither a problem nor
     an analytic posterior.</p></li>
 <li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – If <cite>priors</cite> is empty, the fast path is given other names than its
-    three (or both <code class="docutils literal notranslate"><span class="pre">&quot;obs_scale&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;gamma&quot;</span></code>), <cite>draws</cite>, <cite>burn_in</cite> or
-    <cite>seed</cite> is not an integer in range, or the log posterior is not finite
-    at the priors’ medians.</p></li>
+    three (or both <code class="docutils literal notranslate"><span class="pre">&quot;obs_scale&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;gamma&quot;</span></code>), <cite>draws</cite>, <cite>burn_in</cite>,
+    <cite>chains</cite> or <cite>seed</cite> is not an integer in range (<cite>draws</cite> fewer than
+    <cite>chains</cite>), or the log posterior is not finite at the priors’ medians.</p></li>
 </ul>
 </dd>
 </dl>
@@ -1146,10 +1165,10 @@ the chain.</p>
 </dl>
 </div>
 <p class="rubric">References</p>
+<p>Gelman, A., and Rubin, D. B. (1992). Inference from iterative simulation
+using multiple sequences. <em>Statistical Science</em>, 7(4), 457-472.</p>
 <p>Gelman, A., Roberts, G. O., and Gilks, W. R. (1996). Efficient
 Metropolis jumping rules. <em>Bayesian Statistics 5</em>, 599-607.</p>
-<p>Geyer, C. J. (1992). Practical Markov chain Monte Carlo. <em>Statistical
-Science</em>, 7(4), 473-483.</p>
 <p class="rubric">Examples</p>
 <p>The fast path: a factor on the prior std and one on the observation error’s, on a
 problem of 60 observations of 20 cells, whose truth has a std of 2 and

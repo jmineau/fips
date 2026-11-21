@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=7237699d"></script>
+    <script src="../../_static/documentation_options.js?v=55658842"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -60,8 +60,8 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="fips.Hierarchical.sample" href="fips.Hierarchical.sample.html" />
-    <link rel="prev" title="fips.Hierarchical.at" href="fips.Hierarchical.at.html" />
+    <link rel="next" title="fips.Hierarchical.diagnostics" href="fips.Hierarchical.diagnostics.html" />
+    <link rel="prev" title="fips.Hierarchical.chains" href="fips.Hierarchical.chains.html" />
   
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
@@ -842,13 +842,15 @@
 <li class="toctree-l2"><a class="reference internal" href="fips.hierarchical.html">fips.hierarchical</a></li>
 <li class="toctree-l2 current active has-children"><a class="reference internal" href="fips.Hierarchical.html">fips.Hierarchical</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.acceptance.html">fips.Hierarchical.acceptance</a></li>
-<li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.ess.html">fips.Hierarchical.ess</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.estimate.html">fips.Hierarchical.estimate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.hyperparameter_diagnostics.html">fips.Hierarchical.hyperparameter_diagnostics</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.hyperparameters.html">fips.Hierarchical.hyperparameters</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.mode.html">fips.Hierarchical.mode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.variances.html">fips.Hierarchical.variances</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.at.html">fips.Hierarchical.at</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.chains.html">fips.Hierarchical.chains</a></li>
 <li class="toctree-l3 current active"><a aria-current="page" class="current reference internal" href="#">fips.Hierarchical.cov</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.diagnostics.html">fips.Hierarchical.diagnostics</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.sample.html">fips.Hierarchical.sample</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.uncertainty.html">fips.Hierarchical.uncertainty</a></li>
 </ul>
@@ -856,7 +858,9 @@
 <li class="toctree-l2"><a class="reference internal" href="fips.Hierarchical.hyperparameters.html">fips.Hierarchical.hyperparameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Hierarchical.mode.html">fips.Hierarchical.mode</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Hierarchical.acceptance.html">fips.Hierarchical.acceptance</a></li>
-<li class="toctree-l2"><a class="reference internal" href="fips.Hierarchical.ess.html">fips.Hierarchical.ess</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Hierarchical.hyperparameter_diagnostics.html">fips.Hierarchical.hyperparameter_diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Hierarchical.diagnostics.html">fips.Hierarchical.diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Hierarchical.chains.html">fips.Hierarchical.chains</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Hierarchical.estimate.html">fips.Hierarchical.estimate</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Hierarchical.variances.html">fips.Hierarchical.variances</a></li>
 <li class="toctree-l2 current active"><a aria-current="page" class="current reference internal" href="#">fips.Hierarchical.cov</a></li>
@@ -1076,6 +1080,8 @@
 <dt class="sig sig-object py" id="fips.Hierarchical.cov">
 <span class="sig-prename descclassname"><span class="pre">Hierarchical.</span></span><span class="sig-name descname"><span class="pre">cov</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">W</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fips/hyperparameters.html#Hierarchical.cov"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fips.Hierarchical.cov" title="Link to this definition">#</a></dt>
 <dd><p>Return the posterior covariance of the state, or of aggregates of it, from the draws.</p>
+<p>Reading aggregates warns when the chains disagree on any of them (a
+split R-hat above 1.1), as a sampled posterior’s <a class="reference internal" href="fips.Posterior.cov.html#fips.Posterior.cov" title="fips.Posterior.cov"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Posterior.cov</span></code></a> does.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>W</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="fips.Operator.html#fips.Operator" title="fips.operator.Operator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Operator</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span>) – An aggregation, as <a class="reference internal" href="fips.Posterior.cov.html#fips.Posterior.cov" title="fips.Posterior.cov"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Posterior.cov</span></code></a>
@@ -1111,20 +1117,20 @@ columns (in any order).</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="fips.Hierarchical.at.html"
+       href="fips.Hierarchical.chains.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">fips.Hierarchical.at</p>
+        <p class="prev-next-title">fips.Hierarchical.chains</p>
       </div>
     </a>
     <a class="right-next"
-       href="fips.Hierarchical.sample.html"
+       href="fips.Hierarchical.diagnostics.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">fips.Hierarchical.sample</p>
+        <p class="prev-next-title">fips.Hierarchical.diagnostics</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

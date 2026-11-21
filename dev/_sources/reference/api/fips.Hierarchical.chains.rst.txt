@@ -1,0 +1,5 @@
+fips.Hierarchical.chains
+========================
+
+.. currentmodule:: fips
+.. automethod:: Hierarchical.chains

@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=7237699d"></script>
+    <script src="../../_static/documentation_options.js?v=55658842"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -61,7 +61,7 @@
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="fips.Hierarchical.uncertainty" href="fips.Hierarchical.uncertainty.html" />
-    <link rel="prev" title="fips.Hierarchical.cov" href="fips.Hierarchical.cov.html" />
+    <link rel="prev" title="fips.Hierarchical.diagnostics" href="fips.Hierarchical.diagnostics.html" />
   
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
@@ -842,13 +842,15 @@
 <li class="toctree-l2"><a class="reference internal" href="fips.hierarchical.html">fips.hierarchical</a></li>
 <li class="toctree-l2 current active has-children"><a class="reference internal" href="fips.Hierarchical.html">fips.Hierarchical</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.acceptance.html">fips.Hierarchical.acceptance</a></li>
-<li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.ess.html">fips.Hierarchical.ess</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.estimate.html">fips.Hierarchical.estimate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.hyperparameter_diagnostics.html">fips.Hierarchical.hyperparameter_diagnostics</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.hyperparameters.html">fips.Hierarchical.hyperparameters</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.mode.html">fips.Hierarchical.mode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.variances.html">fips.Hierarchical.variances</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.at.html">fips.Hierarchical.at</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.chains.html">fips.Hierarchical.chains</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.cov.html">fips.Hierarchical.cov</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.diagnostics.html">fips.Hierarchical.diagnostics</a></li>
 <li class="toctree-l3 current active"><a aria-current="page" class="current reference internal" href="#">fips.Hierarchical.sample</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Hierarchical.uncertainty.html">fips.Hierarchical.uncertainty</a></li>
 </ul>
@@ -856,7 +858,9 @@
 <li class="toctree-l2"><a class="reference internal" href="fips.Hierarchical.hyperparameters.html">fips.Hierarchical.hyperparameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Hierarchical.mode.html">fips.Hierarchical.mode</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Hierarchical.acceptance.html">fips.Hierarchical.acceptance</a></li>
-<li class="toctree-l2"><a class="reference internal" href="fips.Hierarchical.ess.html">fips.Hierarchical.ess</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Hierarchical.hyperparameter_diagnostics.html">fips.Hierarchical.hyperparameter_diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Hierarchical.diagnostics.html">fips.Hierarchical.diagnostics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Hierarchical.chains.html">fips.Hierarchical.chains</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Hierarchical.estimate.html">fips.Hierarchical.estimate</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Hierarchical.variances.html">fips.Hierarchical.variances</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Hierarchical.cov.html">fips.Hierarchical.cov</a></li>
@@ -1078,7 +1082,7 @@
 <dd><p>Return <cite>n</cite> of the kept draws of the state, mixed over the hyperparameters’ draws: one column each.</p>
 <p>The draws are those made at the kept steps of the chain, one at each
 step’s hyperparameters, so a column’s draw belongs to the row of
-<a class="reference internal" href="fips.Hierarchical.hyperparameters.html#fips.Hierarchical.hyperparameters" title="fips.Hierarchical.hyperparameters"><code class="xref py py-attr docutils literal notranslate"><span class="pre">hyperparameters</span></code></a> its label names. They are chosen at random,
+<a class="reference internal" href="fips.Hierarchical.hyperparameters.html#fips.Hierarchical.hyperparameters" title="fips.Hierarchical.hyperparameters"><code class="xref py py-attr docutils literal notranslate"><span class="pre">hyperparameters</span></code></a> its label, <code class="docutils literal notranslate"><span class="pre">(chain,</span> <span class="pre">draw)</span></code>, names. They are chosen at random,
 without repeats, and listed in the order of the chain; all of them,
 when <cite>n</cite> is the number kept.</p>
 <dl class="field-list simple">
@@ -1094,7 +1098,7 @@ of <span class="math notranslate nohighlight">\(W x\)</span>.</p></li>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>One row per state element, labeled as the <a class="reference internal" href="fips.Hierarchical.estimate.html#fips.Hierarchical.estimate" title="fips.Hierarchical.estimate"><code class="xref py py-attr docutils literal notranslate"><span class="pre">estimate</span></code></a> is (or
 one per row of <cite>W</cite>), and one column per draw, labeled by its row
-of <a class="reference internal" href="fips.Hierarchical.hyperparameters.html#fips.Hierarchical.hyperparameters" title="fips.Hierarchical.hyperparameters"><code class="xref py py-attr docutils literal notranslate"><span class="pre">hyperparameters</span></code></a> (<code class="docutils literal notranslate"><span class="pre">draw</span></code>).</p>
+of <a class="reference internal" href="fips.Hierarchical.hyperparameters.html#fips.Hierarchical.hyperparameters" title="fips.Hierarchical.hyperparameters"><code class="xref py py-attr docutils literal notranslate"><span class="pre">hyperparameters</span></code></a> (<code class="docutils literal notranslate"><span class="pre">(chain,</span> <span class="pre">draw)</span></code>).</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a></span></p>
@@ -1122,12 +1126,12 @@ of <a class="reference internal" href="fips.Hierarchical.hyperparameters.html#fi
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="fips.Hierarchical.cov.html"
+       href="fips.Hierarchical.diagnostics.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">fips.Hierarchical.cov</p>
+        <p class="prev-next-title">fips.Hierarchical.diagnostics</p>
       </div>
     </a>
     <a class="right-next"
