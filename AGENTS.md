@@ -57,8 +57,8 @@ src/fips/
   _draws.py         the checks of a sampler's chains: autocorrelation, split R-hat, ArviZ's rank-normalized
                     R-hat, bulk and tail ESS, MCSE (`Posterior.diagnostics`); the warnings (divergent paths, thin tails)
   distributions.py  LogNormal, HalfNormal, Uniform: the priors of a hyperparameter, on `_Distribution`
-  hyperparameters.py  hierarchical, Hierarchical: the hyperparameters by Metropolis on the exact evidence,
-                    the state drawn at each kept step; `_Built` (the caller's function) or
+  hyperparameters.py  hierarchical, Hierarchical: the hyperparameters by Metropolis on the exact evidence (four
+                    chains, R-hat warned), the state drawn at each kept step; `_Built` (the caller's function) or
                     `_Scales` (a Problem: the fast path). sweep, Sweep: a grid solved member by member
   visualization.py  plot_comparison, the one plot (the `viz` extra: matplotlib)
   covariance/       Covariance and the models that write one down (public)
@@ -349,5 +349,7 @@ dependency needs a reason, proposed first.
   one at `gamma = s^2 / c`, with chi2 over `s^2` and `m ln c` in the evidence (the information form's chi2
   is `gamma q - gamma sum w b^2`, `q = d^T S_z^-1 d`). Its draws take each draw's normals in turn, as
   `sample(1)` would, so one seed gives the fast and the general path the same chain and draws
-  (`tests/test_hierarchical.py`). The chain and the state's draws have their own streams (`spawn(2)`), and
-  `_accept` takes one uniform a step, so the chain does not depend on how the state is drawn.
+  (`tests/test_hierarchical.py`). The chains and the state's draws have their own streams (`spawn(2)`; the
+  chains' stream spawns one per chain, except one chain, which keeps fips 0.2's stream and start), the chains
+  run one after another and draw the state in their order, and `_accept` takes one uniform a step, so the
+  chains do not depend on how the state is drawn.

@@ -115,22 +115,34 @@ Reading the result
 ------------------
 
 **The hyperparameters.** :attr:`~fips.Hierarchical.hyperparameters` is the kept draws, one
-row per draw and one column per hyperparameter; :attr:`~fips.Hierarchical.mode` is
+row per draw, labeled by its chain and its draw in the chain, and one column per
+hyperparameter; :attr:`~fips.Hierarchical.mode` is
 the posterior mode in the coordinates the sampler works in (the log of a
 positive hyperparameter, the logit of a bounded one), mapped back: close to the fit
-of :doc:`hyperparameters`, but not the peak of the hyperparameters' density itself. Two
-numbers say whether the chain can be trusted:
-:attr:`~fips.Hierarchical.acceptance`, the fraction of proposals accepted
-(near 0.3 when the proposal is tuned), and :attr:`~fips.Hierarchical.ess`,
-each hyperparameter's effective sample size: about as many independent draws as the
-correlated ones are worth.
+of :doc:`hyperparameters`, but not the peak of the hyperparameters' density itself.
+
+**Can the draws be trusted?** The sampler runs four chains, each from its own
+start, and :attr:`~fips.Hierarchical.hyperparameter_diagnostics` gives, for each
+hyperparameter, the numbers a PyMC or Stan user reads after a run: the mean and
+standard deviation of the draws and their Monte Carlo errors, the effective
+number of independent draws in the bulk and in the tails, and the split R-hat,
+which compares the chains (near 1 when they draw the same distribution).
+:attr:`~fips.Hierarchical.acceptance` is the fraction of proposals accepted, near
+0.3 when the proposals are tuned.
 
 .. ipython:: python
 
-   round(result.acceptance, 2), result.ess.round().to_dict()
+   round(result.acceptance, 2)
+   result.hyperparameter_diagnostics.round(3)
 
-A hyperparameter's mean is known to its standard deviation over the root of its
-effective sample size. For a smaller error, ask for more ``draws``.
+A Metropolis chain's draws are far from independent: a few hundred effective
+draws of 2000 are usual. A hyperparameter's mean is known to ``mcse_mean``; for a
+smaller error, ask for more ``draws``. Where the chains disagree on a
+hyperparameter (a split R-hat above 1.1), the run warns. Stan's cutoff of
+1.01 asks more than a Metropolis chain of 500 draws gives: nearly every run
+whose answers are right is above it.
+:meth:`~fips.Hierarchical.diagnostics` gives the same table for the state or its
+aggregates, and :meth:`~fips.Hierarchical.chains` the state's draws by chain.
 
 **The state.** :attr:`~fips.Hierarchical.estimate`,
 :attr:`~fips.Hierarchical.variances`, :meth:`~fips.Hierarchical.cov`,
@@ -255,14 +267,20 @@ Options
        order is the order of the columns of ``result.hyperparameters``.
    * - ``draws``
      - 2000
-     - The kept steps of the chain, each with one draw of the state.
+     - The kept steps, each with one draw of the state, split among the chains.
    * - ``burn_in``
      - 500
-     - The steps before them, which tune the proposal and are not kept.
+     - The steps each chain makes before its kept ones, which tune its proposal
+       and are not kept.
+   * - ``chains``
+     - 4
+     - The number of chains, each from a draw of Laplace's approximation at
+       the mode twice as wide. One chain starts at the mode and cannot be
+       checked against another.
    * - ``seed``
      - 0
-     - The seed of the chain and of the state's draws (an integer), so a run
-       is reproducible. The two have their own streams: the chain is the same
+     - The seed of the chains and of the state's draws (an integer), so a run
+       is reproducible. They have their own streams: the chains are the same
        whatever the state's draws are.
 
 
@@ -274,9 +292,19 @@ Warnings and checks
   combination of them. The proposal takes a variance of 1 there and the
   burn-in scales it, but the chain may be slow: look at the effective sample
   sizes, and give that hyperparameter a narrower prior or hold it fixed.
-- **A low acceptance or a small effective sample size**: run more ``draws``
-  or a longer ``burn_in``. An ``INFO`` record gives both at the end of each
-  run, and another says when the search for the mode stopped early.
+- **The hyperparameters' chains disagree** (a warning; a split R-hat above
+  1.1 on any hyperparameter): a chain has not forgotten its start, or stays
+  in one part of the posterior. Run a longer ``burn_in`` and more ``draws``,
+  and look at ``result.hyperparameters`` chain by chain.
+- **The chains disagree on an aggregate that is read** (a warning from
+  ``cov(W)`` or ``uncertainty(W)``, above 1.1), and **an interval read from
+  too few draws in its tails** (a warning from ``uncertainty``, under 100
+  effective draws for each chain), as a sampled :class:`~fips.Posterior`'s:
+  run more ``draws``.
+- **A low acceptance or few effective draws**: run more ``draws`` or a
+  longer ``burn_in``. An ``INFO`` record gives both, and each
+  hyperparameter's R-hat, at the end of each run, and another says when the
+  search for the mode stopped early.
 - **A problem that does not solve at some hyperparameters** (a covariance that is
   not positive definite) has no density there, and the chain does not step
   to it. At the priors' medians it raises a :class:`ValueError`, because the

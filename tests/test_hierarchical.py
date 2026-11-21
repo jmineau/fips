@@ -18,7 +18,11 @@ How it is held to being right:
    paths give the same chain and the same draws of the state.
 4. **The priors**: their densities against SciPy's, the map to unbounded
    coordinates and its Jacobian.
-5. Seeds reproduce, the result pickles, labels and refusals.
+5. **The chains**: they start apart, each tunes its own proposal, a run
+   whose chains have not forgotten their starts warns (and a run on the same
+   problem with a burn-in does not), and reading an aggregate they disagree
+   on or an interval from too few draws warns.
+6. Seeds reproduce, the result pickles, labels and refusals.
 
 A slow test: simulation-based calibration. Worlds draw the hyperparameters from
 their priors, then the state, then the data; the rank of the true hyperparameters
@@ -37,8 +41,9 @@ from scipy.integrate import trapezoid
 
 import fips
 import fips.hyperparameters
+from fips._draws import _diagnostics
 from fips.distributions import HalfNormal, LogNormal, Uniform
-from fips.hyperparameters import _effective_size, _Scales
+from fips.hyperparameters import _Scales
 from fips.methods import analytic
 
 
@@ -144,7 +149,7 @@ def test_the_setting_and_the_state_match_quadrature(path, exact):
             problem, {"prior_scale": PRIOR_STD}, draws=20000, seed=1
         )
         draws = result.hyperparameters["prior_scale"].values
-    ess = float(result.ess.iloc[0])
+    ess = float(result.hyperparameter_diagnostics["ess_bulk"].iloc[0])
     assert ess > 0.1 * len(draws)
     assert 0.2 < result.acceptance < 0.5
     errors = _setting_errors(draws, ess, exact)
@@ -392,12 +397,17 @@ def test_the_results_labels_and_aggregates(result):
         by=pd.Series("all", index=PRIOR.space.select("flux"), name="region"),
     )
     assert list(result.hyperparameters.columns) == ["std"]
-    assert result.hyperparameters.index.name == "draw"
+    assert result.hyperparameters.index.names == ["chain", "draw"]
+    assert list(result.hyperparameters.index.get_level_values("chain").unique()) == [
+        0,
+        1,
+        2,
+        3,
+    ]
     draws = result.sample(100, rng=0)
     assert draws.shape == (3, 100)
     assert draws.index.equals(PRIOR.index)
     assert draws.columns.is_unique and draws.columns.is_monotonic_increasing
-    assert draws.columns.min() >= 0 and draws.columns.max() <= 399
     # a column is the draw made at its row of the hyperparameters
     np.testing.assert_array_equal(
         draws.values, every_draw(result).loc[:, draws.columns].values
@@ -493,23 +503,107 @@ def test_refusals(build, hyperparameters, error, match):
 
 
 @pytest.mark.parametrize(
-    ("name", "value"), [("draws", 0), ("burn_in", -1), ("seed", 1.5)]
+    ("name", "value"), [("draws", 0), ("burn_in", -1), ("chains", 0), ("seed", 1.5)]
 )
 def test_counts_are_checked(name, value):
     with pytest.raises(ValueError, match=name):
         fips.hierarchical(build_tiny, {"std": PRIOR_STD}, **{name: value})
+    with pytest.raises(ValueError, match="each of the 4 chains"):
+        fips.hierarchical(build_tiny, {"std": PRIOR_STD}, draws=3)
 
 
-def test_the_effective_size_of_independent_and_correlated_chains():
-    rng = np.random.default_rng(0)
-    white = rng.standard_normal(20000)
-    assert _effective_size(white) == pytest.approx(20000, rel=0.1)
-    ar = np.empty(20000)
-    ar[0] = 0.0
-    for t in range(1, len(ar)):
-        ar[t] = 0.9 * ar[t - 1] + rng.standard_normal()
-    # an AR(1) chain of coefficient 0.9 has tau = (1 + 0.9) / (1 - 0.9) = 19
-    assert _effective_size(ar) == pytest.approx(20000 / 19, rel=0.2)
+# -- the chains -----------------------------------------------------------------
+
+
+TOTAL = fips.aggregate.sum(
+    PRIOR.space, by=pd.Series("all", index=PRIOR.space.select("flux"), name="region")
+)
+
+
+def test_the_chains_start_apart_and_tune_their_own_proposals():
+    """Four chains from spread starts, each with its own scale; one chain starts at the mode, alone."""
+    result = fips.hierarchical(build_tiny, {"std": PRIOR_STD}, draws=400, burn_in=0)
+    first = result.hyperparameters.xs(0, level="draw")["std"]
+    assert first.index.tolist() == [0, 1, 2, 3]
+    assert first.nunique() == 4
+    assert result._lengths == (100, 100, 100, 100)
+    tuned = fips.hierarchical(build_tiny, {"std": PRIOR_STD}, draws=400, burn_in=100)
+    assert len(set(tuned._proposal_scales)) == 4
+    one = fips.hierarchical(
+        build_tiny, {"std": PRIOR_STD}, draws=400, burn_in=100, chains=1
+    )
+    assert one._lengths == (400,)
+    assert np.isnan(one.hyperparameter_diagnostics["r_hat"]).all()
+    uneven = fips.hierarchical(
+        build_tiny, {"std": PRIOR_STD}, draws=10, burn_in=10, chains=3
+    )
+    assert uneven._lengths == (4, 3, 3)
+
+
+def test_the_checks_are_the_draws_by_chain(result):
+    """The tables are ``_draws._diagnostics`` of the draws, by chain; ``chains`` labels each draw by its hyperparameters' row."""
+    table = result.hyperparameter_diagnostics
+    assert table.index.equals(result.hyperparameters.columns)
+    assert list(table.columns) == [
+        "mean",
+        "sd",
+        "mcse_mean",
+        "mcse_sd",
+        "ess_bulk",
+        "ess_tail",
+        "r_hat",
+    ]
+    lengths = (100, 100, 100, 100)
+    expected = _diagnostics(result.hyperparameters.values.T, lengths)
+    for column, values in expected.items():
+        np.testing.assert_allclose(table[column].values, values)
+    chains = result.chains()
+    assert chains.columns.equals(result.hyperparameters.index)
+    assert chains.index.equals(PRIOR.index)
+    pd.testing.assert_frame_equal(chains, every_draw(result))
+    state = result.diagnostics()
+    np.testing.assert_allclose(
+        state["r_hat"].values, _diagnostics(chains.values, lengths)["r_hat"]
+    )
+    totals = result.diagnostics(TOTAL)
+    assert totals.index.equals(TOTAL.rows.index)
+    np.testing.assert_allclose(
+        totals["sd"].values, result.chains(TOTAL).values.std(axis=1, ddof=1)
+    )
+
+
+def test_chains_that_have_not_forgotten_their_starts_warn(caplog, monkeypatch):
+    """
+    Starts twenty times wider than Laplace's approximation and no burn-in: the chains disagree on the hyperparameter, the run warns naming it, and reading the total warns too; the same run with the default spread and a burn-in does not.
+    """
+    with caplog.at_level("WARNING", logger="fips.hyperparameters"):
+        right = fips.hierarchical(build_tiny, {"std": PRIOR_STD}, draws=2000)
+        right.cov(TOTAL)
+        right.uncertainty(TOTAL)
+    assert "disagree" not in caplog.text
+    assert float(right.hyperparameter_diagnostics["r_hat"].iloc[0]) < 1.05
+    monkeypatch.setattr(fips.hyperparameters, "_SPREAD", 20.0)
+    caplog.clear()
+    with (
+        caplog.at_level("WARNING", logger="fips.hyperparameters"),
+        pytest.warns(fips.FipsWarning, match="hyperparameters' 4 chains disagree"),
+    ):
+        wrong = fips.hierarchical(build_tiny, {"std": PRIOR_STD}, draws=200, burn_in=0)
+    assert "the worst (std)" in caplog.text
+    assert "raise burn_in=" in caplog.text
+    with pytest.warns(fips.FipsWarning, match="disagree on 1 of the 1 aggregates"):
+        wrong.cov(TOTAL)
+
+
+def test_an_interval_from_too_few_draws_in_its_tails_warns(caplog):
+    """Forty draws in four chains: an interval's ends are read from fewer than 100 effective draws in the tails for each chain."""
+    few = fips.hierarchical(build_tiny, {"std": PRIOR_STD}, draws=40, burn_in=100)
+    with (
+        caplog.at_level("WARNING", logger="fips.hyperparameters"),
+        pytest.warns(fips.FipsWarning, match="effective draws in their tails"),
+    ):
+        few.uncertainty(TOTAL)
+    assert "1 of the 1 aggregates" in caplog.text
 
 
 # -- simulation-based calibration ---------------------------------------------

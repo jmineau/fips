@@ -27,7 +27,8 @@ sampler works. The sampler is a random-walk Metropolis whose proposal is
 Laplace's approximation of the hyperparameters' posterior at its mode (a numerical
 Hessian), scaled during the burn-in towards an acceptance of 0.3 (Gelman,
 Roberts and Gilks, 1996): a few hyperparameters need no gradient, and each step costs
-one solve.
+one solve. It runs four chains from spread starts, and warns where they
+disagree on a hyperparameter, as the Gauss-Newton sampler does on the state.
 
 :func:`sweep` solves the problem at every combination of a grid of the
 hyperparameters' values instead, with no prior on them: :class:`Sweep` holds
@@ -46,14 +47,22 @@ import pandas as pd
 from numpy.linalg import LinAlgError
 from scipy.optimize import minimize
 
+from fips._draws import (
+    _chains,
+    _diagnostics,
+    _split_rhat,
+    _warn_if_aggregates_unmixed,
+    _warn_if_tails_thin,
+)
 from fips._errors import warn
 from fips.covariance import Covariance
 from fips.distributions import _LOG_2PI, _Distribution
 from fips.linalg.forms import _adopt
 from fips.methods import solve
 from fips.methods.analytic import AnalyticOptions, Information, Whitened
+from fips.methods.gauss_newton import _split
 from fips.operator import Operator
-from fips.posterior import Posterior, UnavailableError
+from fips.posterior import Posterior, UnavailableError, _chain_draw_index
 from fips.problem import Problem
 from fips.space import Space
 from fips.vector import Vector
@@ -65,6 +74,42 @@ _SCALES = ("prior_scale", "obs_scale", "gamma")
 
 _ACCEPTANCE = 0.3
 """The acceptance the burn-in steers the proposal's scale towards."""
+
+_SPREAD = 2.0
+"""How much wider than Laplace's approximation the draws a chain starts from are (each chain but with one chain, which starts at the mode)."""
+
+_HALVINGS = 10
+"""The times a start where the hyperparameters' posterior has no density is moved halfway to the mode, before the chain starts at the mode."""
+
+_UNMIXED_HYPERPARAMETER = 1.1
+"""
+The split R-hat of a hyperparameter above which its chains disagree, and the run warns: any one hyperparameter.
+
+As an aggregate's (``_draws._UNMIXED_AGGREGATE``): there are few, and each
+is read. Measured over 1,320 default runs in worlds drawn from the
+hyperparameters' priors, 12 to 400 elements, two or three hyperparameters,
+priors a factor of 1.6 to 4.5 wide (2026-11-21): the default runs, whose
+intervals covered as claimed and whose truths ranked uniformly among their
+draws, were above it in 0% to 1% of the worlds of a setting; runs with no
+burn-in and 200 draws (11 to 18 effective draws) in 96% to 100%. At 1.05,
+the elements' cutoff, the default runs were above it in up to 18% (three
+hyperparameters, about 150 effective draws); at Stan's 1.01
+(rank-normalized) nearly all were: a Metropolis chain of 500 draws does not
+reach it.
+"""
+
+_UNMIXED_CHAINS = (
+    "The chain has not yet forgotten its start or stays in one part of the "
+    "hyperparameters' posterior; raise burn_in= and draws=, or look at "
+    "result.hyperparameters by chain."
+)
+"""What a warning that the chains disagree on the hyperparameters says to do."""
+
+_UNMIXED_AGGREGATES = (
+    "The hyperparameters' chains move slowly between the parts of their "
+    "posterior these aggregates depend on; raise draws=."
+)
+"""What a warning that the chains disagree on an aggregate says to do."""
 
 
 # -- what one step of the chain solves ---------------------------------------
@@ -295,30 +340,101 @@ def _laplace(
     return mode, (vectors / eigenvalues) @ vectors.T
 
 
-def _effective_size(x: np.ndarray) -> float:
+def _start(
+    log_density: Callable[[np.ndarray], float],
+    mode: np.ndarray,
+    root: np.ndarray,
+    rng: np.random.Generator,
+) -> np.ndarray:
     """
-    Return the effective sample size of the chain `x`, by Geyer's initial monotone sequence.
+    Return a chain's start: a draw of Laplace's approximation at the mode, :data:`_SPREAD` times wider, from `rng`.
 
-    The autocorrelations, by FFT, are summed in pairs while the pairs are
-    positive, each pair at most the one before (Geyer, 1992); the size is
-    the number of draws over the integrated autocorrelation time.
+    Starts spread wider than the posterior let the chains' disagreement show
+    a chain that has not forgotten where it began (Gelman and Rubin, 1992).
+    A start where the posterior has no density is moved halfway to the mode
+    until it has one (the mode itself last).
     """
-    n = len(x)
-    with np.errstate(all="ignore"):
-        x = np.asarray(x, dtype=float) - np.mean(x)
-        x = x / np.max(np.abs(x), initial=0.0)  # the FFT does not overflow
-    if not np.all(np.isfinite(x)):
-        return math.nan
-    sum_sq = float(x @ x)
-    if n < 4 or not sum_sq > 0:
-        return float(n)
-    spectrum = np.fft.rfft(x, 2 * n)
-    acf = np.fft.irfft(spectrum * np.conj(spectrum), 2 * n)[:n] / sum_sq
-    pairs = acf[0 : n - 1 : 2] + acf[1:n:2]
-    negative = np.flatnonzero(pairs <= 0)
-    pairs = pairs[: negative[0] if len(negative) else len(pairs)]
-    tau = -1.0 + 2.0 * float(np.minimum.accumulate(pairs).sum())
-    return n / max(tau, 1.0 / n)
+    offset = _SPREAD * (root @ rng.standard_normal(len(mode)))
+    for _ in range(_HALVINGS):
+        if math.isfinite(log_density(mode + offset)):
+            return mode + offset
+        offset = offset / 2
+    return np.array(mode)
+
+
+def _chain(
+    evaluate: Callable[[np.ndarray], tuple[float, Any]],
+    start: np.ndarray,
+    root: np.ndarray,
+    burn_in: int,
+    draws: int,
+    rng: np.random.Generator,
+    keep: Callable[[Any], Any],
+) -> tuple[np.ndarray, list[Any], int, float]:
+    """
+    Return one chain's kept steps in unbounded coordinates (``draws x p``), what each kept step's draw of the state needs (`keep` of it), how many of the kept steps accepted, and the proposal's tuned scale.
+
+    A random-walk Metropolis from `start`, its proposal `root` times normals
+    times a scale that the `burn_in` steers towards an acceptance of
+    :data:`_ACCEPTANCE` (a Robbins-Monro step on its log) and that is fixed
+    after, so the kept steps are a Markov chain of the exact posterior.
+    """
+    log_scale = math.log(2.38 / math.sqrt(len(start)))
+    u = start
+    log_density, payload = evaluate(u)
+    chain = np.empty((draws, len(start)))
+    kept: list[Any] = []
+    accepted = 0
+    for step in range(burn_in + draws):
+        proposal = u + math.exp(log_scale) * (root @ rng.standard_normal(len(u)))
+        proposed, proposed_payload = evaluate(proposal)
+        log_ratio = proposed - log_density if math.isfinite(proposed) else -math.inf
+        accept = _accept(log_ratio, rng)
+        if accept:
+            u, log_density, payload = proposal, proposed, proposed_payload
+        if step < burn_in:
+            probability = math.exp(min(0.0, log_ratio))
+            log_scale += (probability - _ACCEPTANCE) / (step + 1) ** 0.6
+        else:
+            chain[step - burn_in] = u
+            kept.append(keep(payload))
+            accepted += accept
+    return chain, kept, accepted, math.exp(log_scale)
+
+
+def _warn_if_unmixed(u: np.ndarray, lengths: tuple[int, ...], names: list[str]) -> None:
+    """
+    Warn (and a :class:`~fips.FipsWarning`) when the chains of the hyperparameters `u` (unbounded coordinates, ``p x draws``, the chains side by side, of the `lengths` given) disagree: a split R-hat above :data:`_UNMIXED_HYPERPARAMETER` on any one.
+
+    Any one hyperparameter warns: there are few, and the state's draws at a
+    hyperparameter the chains disagree on are mixed in the wrong amounts. It
+    names the worst and the least and the most of its chains' medians, in the
+    hyperparameter's own units.
+    """
+    if len(lengths) < 2:
+        return
+    rhat = _split_rhat(u, lengths)
+    unmixed = rhat > _UNMIXED_HYPERPARAMETER
+    if not unmixed.any():
+        return
+    worst = int(np.argmax(rhat))
+    medians = [float(np.median(chain[worst])) for chain in _chains(u, lengths)]
+    warn(
+        logger,
+        "The hyperparameters' %d chains disagree: %d of the %d have a split R-hat "
+        "above %.2f, the worst (%s) %.2f, its median %.3g in one chain and %.3g "
+        "in another (in its unbounded coordinate). Their draws, and the state's "
+        "mixed over them, are not yet the posterior's. %s",
+        len(lengths),
+        int(unmixed.sum()),
+        len(rhat),
+        _UNMIXED_HYPERPARAMETER,
+        names[worst],
+        float(rhat[worst]),
+        min(medians),
+        max(medians),
+        _UNMIXED_CHAINS,
+    )
 
 
 def _count(value: Any, what: str, least: int) -> int:
@@ -340,6 +456,7 @@ def hierarchical(
     *,
     draws: int = 2000,
     burn_in: int = 500,
+    chains: int = 4,
     seed: int = 0,
 ) -> "Hierarchical":
     r"""
@@ -350,17 +467,28 @@ def hierarchical(
     the exact evidence of the problem `build` makes at :math:`s`
     (:attr:`Posterior.log_evidence <fips.Posterior.log_evidence>`, the
     analytic method's). The sampler is a random-walk Metropolis in unbounded
-    coordinates (the log of a positive hyperparameter, the logit of a bounded one):
-    it starts at the posterior mode of the hyperparameters (L-BFGS-B from the
-    priors' medians), proposes from Laplace's approximation there (the
-    inverse of a numerical Hessian), and during the `burn_in` scales that
-    proposal towards an acceptance of 0.3 (a Robbins-Monro step on the log of
-    its scale; fixed after, so the kept chain is a Markov chain of the exact
-    posterior). Each step solves one problem. At each of the `draws` kept
-    steps, it draws the state exactly from the posterior at the chain's
+    coordinates (the log of a positive hyperparameter, the logit of a bounded one),
+    run as `chains` chains: it finds the posterior mode of the hyperparameters
+    (L-BFGS-B from the priors' medians) and Laplace's approximation there (the
+    inverse of a numerical Hessian), starts each chain from a draw of that
+    approximation twice as wide (one chain starts at the mode), proposes from
+    it, and during each chain's `burn_in` scales the proposal towards an
+    acceptance of 0.3 (a Robbins-Monro step on the log of its scale; fixed
+    after, so the kept steps are a Markov chain of the exact posterior). Each
+    step solves one problem. At each of the `draws` kept steps, split among
+    the chains, it draws the state exactly from the posterior at the chain's
     hyperparameters (:meth:`Posterior.sample <fips.Posterior.sample>`), so the
     state's draws are draws of :math:`p(x \mid z)`, the Gaussian posteriors
     mixed over the hyperparameters' posterior.
+
+    **The chains are checked.** Where they disagree on a hyperparameter (a
+    split R-hat above 1.1), the run warns: a chain has not forgotten its
+    start, or stays in one part of the posterior.
+    :attr:`Hierarchical.hyperparameter_diagnostics` and
+    :meth:`Hierarchical.diagnostics` give the numbers PyMC and Stan users
+    read (R-hat, the effective draws in the bulk and the tails, the Monte
+    Carlo errors), and reading the aggregates or an interval warns as a
+    sampled :class:`~fips.Posterior` does.
 
     **The fast path.** When the only hyperparameters are a factor on the prior's
     standard deviation and one on the observation error's, pass the problem
@@ -386,13 +514,19 @@ def hierarchical(
         :class:`~fips.distributions.Uniform`. Its
         order is the columns' of :attr:`Hierarchical.hyperparameters`.
     draws : int, default 2000
-        The number of kept steps, each with one draw of the state.
+        The number of kept steps, each with one draw of the state, split
+        among the chains as evenly as they go (the first ones a step more).
     burn_in : int, default 500
-        The steps before them, which tune the proposal and are not kept.
+        The steps each chain makes before its kept ones, which tune its
+        proposal and are not kept.
+    chains : int, default 4
+        The number of chains, each from its own start and with its own
+        proposal's scale. One chain starts at the mode and cannot check
+        itself; with one, a run is that of fips 0.2.
     seed : int, default 0
-        The seed of the chain and of the state's draws, so that a run is
-        reproducible. The two have their own streams: the chain is the same
-        whatever the state's draws are.
+        The seed of the chains and of the state's draws, so that a run is
+        reproducible. The chains and the state's draws have their own
+        streams: the chains are the same whatever the state's draws are.
 
     Returns
     -------
@@ -408,9 +542,9 @@ def hierarchical(
         an analytic posterior.
     ValueError
         If `priors` is empty, the fast path is given other names than its
-        three (or both ``"obs_scale"`` and ``"gamma"``), `draws`, `burn_in` or
-        `seed` is not an integer in range, or the log posterior is not finite
-        at the priors' medians.
+        three (or both ``"obs_scale"`` and ``"gamma"``), `draws`, `burn_in`,
+        `chains` or `seed` is not an integer in range (`draws` fewer than
+        `chains`), or the log posterior is not finite at the priors' medians.
 
     See Also
     --------
@@ -419,11 +553,11 @@ def hierarchical(
 
     References
     ----------
+    Gelman, A., and Rubin, D. B. (1992). Inference from iterative simulation
+    using multiple sequences. *Statistical Science*, 7(4), 457-472.
+
     Gelman, A., Roberts, G. O., and Gilks, W. R. (1996). Efficient
     Metropolis jumping rules. *Bayesian Statistics 5*, 599-607.
-
-    Geyer, C. J. (1992). Practical Markov chain Monte Carlo. *Statistical
-    Science*, 7(4), 473-483.
 
     Examples
     --------
@@ -506,7 +640,12 @@ def hierarchical(
             )
     draws = _count(draws, "draws", 1)
     burn_in = _count(burn_in, "burn_in", 0)
+    chains = _count(chains, "chains", 1)
     seed = _count(seed, "seed", 0)
+    if draws < chains:
+        raise ValueError(
+            f"draws must be at least one for each of the {chains} chains, got {draws}."
+        )
     target: _Built | _Scales
     if isinstance(build, Problem):
         unknown = [name for name in names if name not in _SCALES]
@@ -545,48 +684,56 @@ def hierarchical(
         log_evidence, payload = target.evaluate(values)
         return log_prior + log_evidence, payload
 
-    chain_rng, state_rng = (
-        np.random.default_rng(child) for child in np.random.SeedSequence(seed).spawn(2)
+    chain_seed, state_seed = np.random.SeedSequence(seed).spawn(2)
+    state_rng = np.random.default_rng(state_seed)
+    rngs = (
+        [np.random.default_rng(chain_seed)]  # one chain: fips 0.2's
+        if chains == 1
+        else [np.random.default_rng(child) for child in chain_seed.spawn(chains)]
     )
     start = np.array([p._to_unbounded(p.median) for p in distributions])
-    mode, laplace = _laplace(lambda u: evaluate(u)[0], start, names)
+
+    def log_density(u: np.ndarray) -> float:
+        """Return the hyperparameters' log posterior at unbounded coordinates `u`."""
+        return evaluate(u)[0]
+
+    mode, laplace = _laplace(log_density, start, names)
     root = np.linalg.cholesky(laplace)
-    log_scale = math.log(2.38 / math.sqrt(len(names)))
-    u = mode
-    log_density, payload = evaluate(u)
-    chain = np.empty((draws, len(names)))
-    kept: list[Any] = []
-    accepted = 0
-    for step in range(burn_in + draws):
-        proposal = u + math.exp(log_scale) * (root @ chain_rng.standard_normal(len(u)))
-        proposed, proposed_payload = evaluate(proposal)
-        log_ratio = proposed - log_density if math.isfinite(proposed) else -math.inf
-        accept = _accept(log_ratio, chain_rng)
-        if accept:
-            u, log_density, payload = proposal, proposed, proposed_payload
-        if step < burn_in:
-            probability = math.exp(min(0.0, log_ratio))
-            log_scale += (probability - _ACCEPTANCE) / (step + 1) ** 0.6
-        else:
-            chain[step - burn_in] = u
-            kept.append(target.keep(payload, state_rng))
-            accepted += accept
+    lengths = _split(draws, chains)
+    steps, kept, accepted, scales = [], [], 0, []
+    for rng, length in zip(rngs, lengths, strict=True):
+        begin = mode if chains == 1 else _start(log_density, mode, root, rng)
+        chain, chain_kept, chain_accepted, scale = _chain(
+            evaluate,
+            begin,
+            root,
+            burn_in,
+            length,
+            rng,
+            lambda payload: target.keep(payload, state_rng),
+        )
+        steps.append(chain)
+        kept.extend(chain_kept)
+        accepted += chain_accepted
+        scales.append(scale)
+    u = np.concatenate(steps)
     values = np.array(
         [
             [
                 p._from_unbounded(float(x))
                 for p, x in zip(distributions, row, strict=True)
             ]
-            for row in chain
+            for row in u
         ]
     )
-    index = pd.RangeIndex(draws, name="draw")
     space, states = target.stack(kept, state_rng)
     result = Hierarchical(
         target=target,
         names=names,
         hyperparameters=pd.DataFrame(
-            values, index=index, columns=pd.Index(names, name="hyperparameter")
+            values,
+            index=_chain_draw_index(lengths),
+            columns=pd.Index(names, name="hyperparameter"),
         ),
         space=space,
         states=states,
@@ -599,16 +746,19 @@ def hierarchical(
             name="mode",
         ),
         acceptance=accepted / draws,
-        proposal_scale=math.exp(log_scale),
+        proposal_scales=tuple(scales),
     )
     logger.info(
-        "hierarchical: %d draws after %d burn-in steps; acceptance %.2f; "
-        "effective sample sizes %s.",
+        "hierarchical: %d draws in %d chains, each after %d burn-in steps; "
+        "acceptance %.2f; effective draws %s; split R-hat %s.",
         draws,
+        chains,
         burn_in,
         result.acceptance,
-        result.ess.round(0).to_dict(),
+        result.hyperparameter_diagnostics["ess_bulk"].round(0).to_dict(),
+        result.hyperparameter_diagnostics["r_hat"].round(3).to_dict(),
     )
+    _warn_if_unmixed(u.T, lengths, names)
     return result
 
 
@@ -623,7 +773,8 @@ class Hierarchical:
     posterior of the state is a mixture of Gaussians, one for each draw of the
     hyperparameters, so its estimate, variances and covariances are those of the
     draws of the state (``draws`` of them: a Monte Carlo estimate, whose
-    error falls as the effective number of draws, :attr:`ess`, grows). What is defined only for one Gaussian (the gain,
+    error falls as the effective number of draws grows:
+    :attr:`hyperparameter_diagnostics`, :meth:`diagnostics`). What is defined only for one Gaussian (the gain,
     DOFS, the chi-squared tests, the evidence) is on the posterior at one
     hyperparameter, :meth:`at`. The draws of the state are held as a ``state x
     draws`` array.
@@ -642,7 +793,7 @@ class Hierarchical:
         states: np.ndarray,
         mode: pd.Series,
         acceptance: float,
-        proposal_scale: float,
+        proposal_scales: tuple[float, ...],
     ):
         self._target = target
         self._names = names
@@ -652,48 +803,63 @@ class Hierarchical:
         self._states.flags.writeable = False
         self._mode = mode
         self._acceptance = acceptance
-        self._proposal_scale = proposal_scale
+        self._proposal_scales = proposal_scales
+        index = hyperparameters.index
+        assert isinstance(index, pd.MultiIndex)  # (chain, draw)
+        self._lengths = tuple(
+            int(count) for count in np.bincount(index.get_level_values("chain"))
+        )
 
     def __repr__(self) -> str:
-        """Return the hyperparameters, the number of draws and the acceptance."""
+        """Return the hyperparameters, the number of draws and chains, and the acceptance."""
         return (
             f"Hierarchical(hyperparameters={self._names}, draws={len(self._hyperparameters)}, "
-            f"acceptance={self._acceptance:.2f})"
+            f"chains={len(self._lengths)}, acceptance={self._acceptance:.2f})"
         )
 
     # -- the hyperparameters ----------------------------------------------------------
 
     @property
     def hyperparameters(self) -> pd.DataFrame:
-        """The kept draws of the hyperparameters: one row a draw (``draw``), one column a hyperparameter."""
+        """The kept draws of the hyperparameters: one row a draw, labeled ``(chain, draw)`` (each counted from 0), one column a hyperparameter."""
         return self._hyperparameters
 
     @property
     def mode(self) -> pd.Series:
-        """The posterior mode of the hyperparameters, where the chain started and Laplace's approximation was taken."""
+        """The posterior mode of the hyperparameters, where Laplace's approximation was taken (and a single chain starts)."""
         return self._mode
 
     @property
     def acceptance(self) -> float:
-        """The fraction of the kept steps whose proposal was accepted (near 0.3 when the burn-in tuned the proposal well)."""
+        """The fraction of the kept steps whose proposal was accepted, over all the chains (near 0.3 when the burn-ins tuned the proposals well)."""
         return self._acceptance
 
     @property
-    def ess(self) -> pd.Series:
+    def hyperparameter_diagnostics(self) -> pd.DataFrame:
         """
-        The effective sample size of each hyperparameter's draws: about as many independent draws as they are worth.
+        The checks of the hyperparameters' draws, one row per hyperparameter: the numbers PyMC and Stan users read after a run.
 
-        By Geyer's initial monotone sequence of autocorrelations. A Monte
-        Carlo standard error of a hyperparameter's mean is its standard deviation
-        over the root of this.
+        As :meth:`Posterior.diagnostics <fips.Posterior.diagnostics>` gives
+        them (ArviZ's ``summary``; Vehtari et al., 2021): ``mean`` and
+        ``sd`` of the draws, their Monte Carlo errors ``mcse_mean`` and
+        ``mcse_sd``, the effective numbers of independent draws in the bulk
+        (``ess_bulk``) and in the 5% and 95% tails (``ess_tail``), and the
+        rank-normalized split R-hat (``r_hat``, near 1 when the chains draw
+        the same distribution; NaN with one chain). A Metropolis chain's
+        draws are far from independent: a few hundred effective draws from
+        2000 are usual. A hyperparameter's mean is known to ``mcse_mean``;
+        for a smaller error, raise ``draws``.
+
+        References
+        ----------
+        Vehtari, A., Gelman, A., Simpson, D., Carpenter, B., and Bürkner,
+        P.-C. (2021). Rank-normalization, folding, and localization: an
+        improved R-hat for assessing convergence of MCMC. *Bayesian
+        Analysis*, 16(2), 667-718. https://doi.org/10.1214/20-BA1221
         """
-        return pd.Series(
-            [
-                _effective_size(self._hyperparameters[name].to_numpy(dtype=float))
-                for name in self._names
-            ],
+        return pd.DataFrame(
+            _diagnostics(self._hyperparameters.to_numpy(dtype=float).T, self._lengths),
             index=self._hyperparameters.columns,
-            name="ess",
         )
 
     def at(self, hyperparameters: "Mapping[str, float] | pd.Series") -> Posterior:
@@ -740,6 +906,76 @@ class Hierarchical:
             return self._states, self._space.index
         return np.asarray(self._aggregation(W) @ self._states), W.rows.index
 
+    def _read(self, W: Operator | None) -> tuple[np.ndarray, pd.Index]:
+        """Return the draws of the state (or of `W` x) and their row labels, with a warning if the chains disagree on an aggregate of `W` (any one row, above 1.1)."""
+        values, index = self._draws(W)
+        if W is not None:
+            _warn_if_aggregates_unmixed(
+                values, self._lengths, logger, _UNMIXED_AGGREGATES
+            )
+        return values, index
+
+    def diagnostics(self, W: Operator | None = None) -> pd.DataFrame:
+        """
+        Return the checks of the state's draws, or of aggregates of them, one row each: as :meth:`Posterior.diagnostics <fips.Posterior.diagnostics>` gives them.
+
+        The state's draws at the kept steps are exact given the step's
+        hyperparameters, so their chains disagree, or mix slowly, only through
+        the hyperparameters': a total that depends on a hyperparameter the
+        chains disagree on disagrees too. :attr:`hyperparameter_diagnostics`
+        checks the hyperparameters themselves.
+
+        Parameters
+        ----------
+        W : Operator, optional
+            An aggregation, as :meth:`cov` takes it: the rows are then the
+            aggregates :math:`W x` of the draws.
+
+        Returns
+        -------
+        pandas.DataFrame
+            On the state's labels (or `W`'s rows), the columns ``mean``,
+            ``sd``, ``mcse_mean``, ``mcse_sd``, ``ess_bulk``, ``ess_tail``
+            and ``r_hat``.
+
+        Raises
+        ------
+        TypeError
+            If `W` is not an Operator.
+        ValueError
+            If the columns of `W` do not have exactly the state's labels.
+        """
+        values, index = self._draws(W)
+        return pd.DataFrame(_diagnostics(values, self._lengths), index=index)
+
+    def chains(self, W: Operator | None = None) -> pd.DataFrame:
+        """
+        Return the kept draws of the state, or of aggregates of them, one column each, labeled by chain and draw: as :meth:`Posterior.chains <fips.Posterior.chains>` gives them.
+
+        A column is the draw made at the row of :attr:`hyperparameters` of
+        the same label.
+
+        Parameters
+        ----------
+        W : Operator, optional
+            An aggregation, as :meth:`cov` takes it.
+
+        Returns
+        -------
+        pandas.DataFrame
+            One row per state element (or row of `W`), one column per kept
+            draw, a MultiIndex ``(chain, draw)``.
+
+        Raises
+        ------
+        TypeError
+            If `W` is not an Operator.
+        ValueError
+            If the columns of `W` do not have exactly the state's labels.
+        """
+        values, index = self._draws(W)
+        return pd.DataFrame(values, index=index, columns=self._hyperparameters.index)
+
     @property
     def estimate(self) -> Vector:
         r"""The posterior mean of the state, the mean of its draws: :math:`E[\hat{x}(s)]` over the hyperparameters' posterior."""
@@ -761,6 +997,10 @@ class Hierarchical:
         """
         Return the posterior covariance of the state, or of aggregates of it, from the draws.
 
+        Reading aggregates warns when the chains disagree on any of them (a
+        split R-hat above 1.1), as a sampled posterior's :meth:`Posterior.cov
+        <fips.Posterior.cov>` does.
+
         Parameters
         ----------
         W : Operator, optional
@@ -781,7 +1021,7 @@ class Hierarchical:
         ValueError
             If the columns of `W` do not have exactly the state's labels.
         """
-        values, _ = self._draws(W)
+        values, _ = self._read(W)
         space = self._space if W is None else W.rows
         covariance = np.atleast_2d(np.cov(values, ddof=1))
         return Covariance._computed(_adopt(covariance), space, name="posterior_cov")
@@ -791,6 +1031,11 @@ class Hierarchical:
     ) -> pd.DataFrame:
         """
         Return the mean, standard deviation and central interval of each element or aggregate, from the draws.
+
+        It warns as a sampled posterior's :meth:`Posterior.uncertainty
+        <fips.Posterior.uncertainty>` does: when the chains disagree on an
+        aggregate, and when the draws in the tails, which the interval's ends
+        are read from, are fewer than about 100 effective ones for each chain.
 
         Parameters
         ----------
@@ -819,7 +1064,8 @@ class Hierarchical:
         """
         if not (isinstance(level, numbers.Real) and 0.0 < level < 1.0):
             raise ValueError(f"level is a probability between 0 and 1, got {level!r}.")
-        values, index = self._draws(W)
+        values, index = self._read(W)
+        _warn_if_tails_thin(values, self._lengths, logger, aggregates=W is not None)
         lower, upper = np.quantile(
             values, [(1.0 - level) / 2.0, (1.0 + level) / 2.0], axis=1
         )
@@ -845,7 +1091,7 @@ class Hierarchical:
 
         The draws are those made at the kept steps of the chain, one at each
         step's hyperparameters, so a column's draw belongs to the row of
-        :attr:`hyperparameters` its label names. They are chosen at random,
+        :attr:`hyperparameters` its label, ``(chain, draw)``, names. They are chosen at random,
         without repeats, and listed in the order of the chain; all of them,
         when `n` is the number kept.
 
@@ -866,7 +1112,7 @@ class Hierarchical:
         pandas.DataFrame
             One row per state element, labeled as the :attr:`estimate` is (or
             one per row of `W`), and one column per draw, labeled by its row
-            of :attr:`hyperparameters` (``draw``).
+            of :attr:`hyperparameters` (``(chain, draw)``).
 
         Raises
         ------
@@ -893,7 +1139,7 @@ class Hierarchical:
         return pd.DataFrame(
             values[:, chosen],
             index=index,
-            columns=pd.Index(self._hyperparameters.index[chosen], name="draw"),
+            columns=self._hyperparameters.index[chosen],
         )
 
 

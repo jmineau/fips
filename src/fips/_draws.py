@@ -467,7 +467,8 @@ def _ess_of(chains: np.ndarray) -> np.ndarray:
     the one before, and :math:`\tau = -1 + 2 \sum_k (\rho_{2k} +
     \rho_{2k+1}) + \rho_{2K}`, at least :math:`1 / \log_{10}(M N)`; the
     effective number is :math:`M N / \tau`. A row that never moves has
-    :math:`M N`.
+    :math:`M N`. Each row is centered and scaled to at most 1 first (the
+    number does not change), so that draws far out do not overflow the FFT.
     """
     rows, M, N = chains.shape
     size = M * N
@@ -482,14 +483,18 @@ def _ess_of(chains: np.ndarray) -> np.ndarray:
         if not moves.any():
             continue
         x = block[moves]
-        x = x - x.mean(axis=2, keepdims=True)
+        with np.errstate(all="ignore"):  # the number is the same at any scale
+            x = x - x.mean(axis=(1, 2), keepdims=True)
+            x = x / np.max(np.abs(x), axis=(1, 2), keepdims=True)  # no overflow
+        means = x.mean(axis=2)
+        x = x - means[:, :, None]
         f = np.fft.rfft(x, 2 * N, axis=2)
         acov = np.fft.irfft(f * np.conj(f), 2 * N, axis=2)[:, :, :N] / N
         mean_acov = acov.mean(axis=1)  # rows x N
         mean_var = mean_acov[:, 0] * N / (N - 1.0)
         var_plus = mean_var * (N - 1.0) / N
         if M > 1:
-            var_plus = var_plus + block[moves].mean(axis=2).var(axis=1, ddof=1)
+            var_plus = var_plus + means.var(axis=1, ddof=1)
         rho = 1.0 - (mean_var[:, None] - mean_acov) / var_plus[:, None]
         rho[:, 0] = 1.0
         sums = rho[:, 0 : 2 * pairs : 2] + rho[:, 1 : 2 * pairs : 2]  # rows x pairs
@@ -567,10 +572,11 @@ def _diagnostics(draws: np.ndarray, lengths: tuple[int, ...]) -> dict[str, np.nd
     ess_mean = _ess_of(_halves(chains))
     rows = chains.reshape(len(chains), -1)
     centered = rows - rows.mean(axis=1, keepdims=True)
-    y = centered**2
-    ess_y = _ess_of(_halves(y.reshape(chains.shape)))
-    y_mean = y.mean(axis=1)
-    with np.errstate(divide="ignore", invalid="ignore"):
+    with np.errstate(over="ignore", invalid="ignore"):  # draws far out: inf, NaN
+        y = centered**2
+        ess_y = _ess_of(_halves(y.reshape(chains.shape)))
+        y_mean = y.mean(axis=1)
+    with np.errstate(over="ignore", divide="ignore", invalid="ignore"):
         mcse_mean = rows.std(axis=1, ddof=1) / np.sqrt(ess_mean)
         mcse_sd = np.sqrt(((y**2).mean(axis=1) - y_mean**2) / ess_y / y_mean / 4.0)
     return {
