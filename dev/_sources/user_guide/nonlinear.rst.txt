@@ -280,6 +280,13 @@ Each is a keyword of ``fips.solve(problem, "gauss_newton", ...)``
        draw of the Gaussian at the mode. The solve warns when they disagree.
        ``chains=1`` is the sampler of 0.2.0b2, one chain from the mode, which
        cannot be checked this way.
+   * - ``starts``
+     - 4
+     - The number of starts of Gauss-Newton: the prior mean and ``starts - 1``
+       draws of the prior. The solve warns when they end at different modes,
+       and takes the one of lowest cost; on a posterior of one mode the
+       answer is the same as from one start. Each start costs a Gauss-Newton
+       solve.
    * - ``gamma``
      - 1.0
      - The regularization factor: the observation covariance is divided by
@@ -316,6 +323,13 @@ when:
   INFO level: with hundreds of elements a few mix slowly at the default
   draws in nearly every solve, while totals of them are right (400
   elements, 2026-11-12).
+- **the starts ended at different modes** (with ``starts`` above 1): Gauss-Newton
+  from some draws of the prior found another mode, more than one posterior
+  standard deviation from the first. The estimate is the mode of lowest
+  cost, and the draws, split at the Gaussian there, stay near it: chains
+  that agree cannot show another mode, since they all start from draws of
+  one mode's Gaussian. More observations, or a narrower prior, can rule the
+  others out.
 - **the kept draws mix slowly**: a standard deviation from them is uncertain
   by more than 10%. It says how many draws would do; raise ``draws``, or read
   the aggregates the data constrain, which mix faster.

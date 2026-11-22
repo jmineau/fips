@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=55658842"></script>
+    <script src="../../_static/documentation_options.js?v=0309763a"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -700,6 +700,7 @@
 <li class="toctree-l3"><a class="reference internal" href="fips.methods.gauss_newton.GaussNewtonOptions.gamma.html">fips.methods.gauss_newton.GaussNewtonOptions.gamma</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.methods.gauss_newton.GaussNewtonOptions.max_iterations.html">fips.methods.gauss_newton.GaussNewtonOptions.max_iterations</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.methods.gauss_newton.GaussNewtonOptions.seed.html">fips.methods.gauss_newton.GaussNewtonOptions.seed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.methods.gauss_newton.GaussNewtonOptions.starts.html">fips.methods.gauss_newton.GaussNewtonOptions.starts</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.methods.gauss_newton.GaussNewtonOptions.tol.html">fips.methods.gauss_newton.GaussNewtonOptions.tol</a></li>
 </ul>
 </details></li>
@@ -1075,7 +1076,7 @@
 <h1>fips.methods.gauss_newton.GaussNewtonOptions<a class="headerlink" href="#fips-methods-gauss-newton-gaussnewtonoptions" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="fips.methods.gauss_newton.GaussNewtonOptions">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">fips.methods.gauss_newton.</span></span><span class="sig-name descname"><span class="pre">GaussNewtonOptions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iterations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">draws</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">burn_in</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chains</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fips/methods/gauss_newton.html#GaussNewtonOptions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fips.methods.gauss_newton.GaussNewtonOptions" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">fips.methods.gauss_newton.</span></span><span class="sig-name descname"><span class="pre">GaussNewtonOptions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iterations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">draws</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">burn_in</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chains</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">starts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fips/methods/gauss_newton.html#GaussNewtonOptions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fips.methods.gauss_newton.GaussNewtonOptions" title="Link to this definition">#</a></dt>
 <dd><p>The options of the <code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code> method.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1127,14 +1128,29 @@ fewer are logged at INFO), are a warning that one chain cannot give: a chain tha
 never enters a tail of a curved posterior reports a small spread and
 a small error together. Each chain costs a burn-in more; one chain is
 the sampler of fips 0.2.0b2, from the mode.</p></li>
+<li><p><strong>starts</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – The number of starts Gauss-Newton runs from: the prior mean and
+<code class="docutils literal notranslate"><span class="pre">starts</span> <span class="pre">-</span> <span class="pre">1</span></code> draws of the prior. Where they end at modes more
+than one posterior standard deviation apart, the posterior has
+several, and the solve warns: its draws, split at the Gaussian at
+one mode, do not reach another, and chains that agree cannot show
+it. The estimate is then the mode of lowest cost; otherwise it is
+the prior mean’s, the same as with one start. Each start costs a
+Gauss-Newton solve more, and a start that does not converge is
+logged and left out. On the reference suite’s problems (12 to 900
+elements, 2026-11-21) four starts cost 3 to 8 times one start’s
+solve, a few percent of the draws’, and found other modes only where
+a softplus prior is wide (log standard deviation 1.5): an element
+either near zero, where the model is flat, or well above it. <a class="reference internal" href="fips.Posterior.with_data.html#fips.Posterior.with_data" title="fips.Posterior.with_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Posterior.with_data</span></code></a> (and so each trial of
+<a class="reference internal" href="fips.Posterior.trials.html#fips.Posterior.trials" title="fips.Posterior.trials"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Posterior.trials</span></code></a>) solves from the
+last linearization alone.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – If <cite>gamma</cite> is not a positive, finite number, <cite>max_iterations</cite> is not a
     positive integer, <cite>tol</cite> is not a positive, finite number, <cite>draws</cite> is
     not an integer of at least 2, <cite>burn_in</cite> or <cite>seed</cite> is not a
-    nonnegative one, <cite>chains</cite> is not a positive one, or <cite>draws</cite> is fewer
-    than two for each chain.</p>
+    nonnegative one, <cite>chains</cite> or <cite>starts</cite> is not a positive one, or
+    <cite>draws</cite> is fewer than two for each chain.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1160,7 +1176,10 @@ the sampler of fips 0.2.0b2, from the mode.</p></li>
 <tr class="row-even"><td><p><a class="reference internal" href="fips.methods.gauss_newton.GaussNewtonOptions.seed.html#fips.methods.gauss_newton.GaussNewtonOptions.seed" title="fips.methods.gauss_newton.GaussNewtonOptions.seed"><code class="xref py py-obj docutils literal notranslate"><span class="pre">seed</span></code></a></p></td>
 <td><p>The seed of the starts, the tuning and the kept draws.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="fips.methods.gauss_newton.GaussNewtonOptions.tol.html#fips.methods.gauss_newton.GaussNewtonOptions.tol" title="fips.methods.gauss_newton.GaussNewtonOptions.tol"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tol</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="fips.methods.gauss_newton.GaussNewtonOptions.starts.html#fips.methods.gauss_newton.GaussNewtonOptions.starts" title="fips.methods.gauss_newton.GaussNewtonOptions.starts"><code class="xref py py-obj docutils literal notranslate"><span class="pre">starts</span></code></a></p></td>
+<td><p>the prior mean and draws of the prior.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="fips.methods.gauss_newton.GaussNewtonOptions.tol.html#fips.methods.gauss_newton.GaussNewtonOptions.tol" title="fips.methods.gauss_newton.GaussNewtonOptions.tol"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tol</span></code></a></p></td>
 <td><p>The iterations stop when <span class="math notranslate nohighlight">\(d^2 &lt;\)</span> <code class="docutils literal notranslate"><span class="pre">tol</span></code> <span class="math notranslate nohighlight">\(\cdot\, n\)</span>.</p></td>
 </tr>
 </tbody>

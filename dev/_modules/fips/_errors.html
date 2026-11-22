@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=55658842"></script>
+    <script src="../../_static/documentation_options.js?v=0309763a"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -433,16 +433,34 @@
 <span class="sd">A warning that changes how far an answer can be trusted goes to both places:</span>
 <span class="sd">the ``fips`` logger, for a program that configures logging, and Python's</span>
 <span class="sd">:mod:`warnings`, so that a user who never does still sees it. :func:`warn` does</span>
-<span class="sd">both, so the two cannot drift apart.</span>
+<span class="sd">both, so the two cannot drift apart. Inside :func:`_quietly` it logs at INFO</span>
+<span class="sd">alone: a computation fips makes only to check another (Gauss-Newton from</span>
+<span class="sd">another start) does not warn of its own steps.</span>
 <span class="sd">"""</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">contextlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">contextvars</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">inspect</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterator</span>
 
 <span class="n">_PACKAGE</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span> <span class="o">+</span> <span class="n">os</span><span class="o">.</span><span class="n">sep</span>
 <span class="sd">"""The folder fips is imported from: a frame whose file is in it is fips's own."""</span>
+
+<span class="n">_QUIET</span><span class="p">:</span> <span class="n">contextvars</span><span class="o">.</span><span class="n">ContextVar</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="n">contextvars</span><span class="o">.</span><span class="n">ContextVar</span><span class="p">(</span><span class="s2">"_QUIET"</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="sd">"""Whether :func:`warn` logs at INFO alone (inside :func:`_quietly`)."""</span>
+
+
+<span class="nd">@contextlib</span><span class="o">.</span><span class="n">contextmanager</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_quietly</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="kc">None</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Make :func:`warn` log at INFO alone, with no Python warning, inside the block."""</span>
+    <span class="n">token</span> <span class="o">=</span> <span class="n">_QUIET</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">yield</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">_QUIET</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="FipsWarning">
@@ -538,8 +556,12 @@
 <span class="sd">    `message` and `args` are formatted as :mod:`logging` formats them</span>
 <span class="sd">    (``message % args``). The warning points at the user's call that led to</span>
 <span class="sd">    it, not at the line in fips that found it, so Python's once-per-line rule</span>
-<span class="sd">    and a traceback under ``-W error`` name the user's code.</span>
+<span class="sd">    and a traceback under ``-W error`` name the user's code. Inside</span>
+<span class="sd">    :func:`_quietly`, it logs at INFO alone.</span>
 <span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">_QUIET</span><span class="o">.</span><span class="n">get</span><span class="p">():</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
     <span class="n">frame</span><span class="p">,</span> <span class="n">level</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">currentframe</span><span class="p">(),</span> <span class="mi">1</span>
     <span class="k">while</span> <span class="n">frame</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">frame</span><span class="o">.</span><span class="n">f_code</span><span class="o">.</span><span class="n">co_filename</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">_PACKAGE</span><span class="p">):</span>

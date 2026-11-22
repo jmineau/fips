@@ -23,6 +23,7 @@
    ~GaussNewtonOptions.gamma
    ~GaussNewtonOptions.max_iterations
    ~GaussNewtonOptions.seed
+   ~GaussNewtonOptions.starts
    ~GaussNewtonOptions.tol
 
 
