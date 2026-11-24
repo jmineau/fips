@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Can I trust the draws? &#8212; fips dev</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx_autodoc_typehints.css?v=057ac668" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=f47294b6" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="../_static/documentation_options.js?v=dbe58b1f"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/diagnostics';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/fips/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Fitting the covariance hyperparameters" href="hyperparameters.html" />
+    <link rel="prev" title="A problem too large to factor: the variational method" href="variational.html" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.2" />
+  
+    
+    <script src="../_static/searchtools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../searchindex.js"></script>
+  
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="fips">
+  <meta property="og:title" content="Can I trust the draws?">
+  <meta property="og:description" content="Flexible Inverse Problem Solver (FIPS)">
+
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips dev - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips dev - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/fips" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/fips" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><p aria-level="2" class="caption" role="heading"><span class="caption-text">Every problem</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="problem.html">Building a problem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="posterior.html">Reading the posterior</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Beyond the linear Gaussian problem</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="methods.html">Choosing a method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bounds.html">Bounds on the state</a></li>
+<li class="toctree-l1"><a class="reference internal" href="positive.html">Values that stay positive</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nonlinear.html">A nonlinear forward model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ensemble.html">A model without a Jacobian: the ensemble method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="variational.html">A problem too large to factor: the variational method</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Checking and tuning an inversion</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Can I trust the draws?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hyperparameters.html">Fitting the covariance hyperparameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hierarchical.html">The uncertainty of the hyperparameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="synthetic.html">Synthetic experiments</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="examples/index.html">Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="examples/gravity_2d.html">Gravity: density below the surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/flux_regional.html">A regional flux inversion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/synthetic_truth.html">Does the inversion recover a known flux?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/data_worth.html">Which observations constrain a regional total?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/comparison.html">Comparing ways to keep a quantity positive</a></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">User Guide</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Can I trust the draws?</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="can-i-trust-the-draws">
+<span id="diagnostics"></span><h1>Can I trust the draws?<a class="headerlink" href="#can-i-trust-the-draws" title="Link to this heading">#</a></h1>
+<p><strong>Some answers come from draws of the posterior, and a run has only so many.</strong>
+Where fips cannot write the posterior down (a nonlinear forward model, a
+bound on the state, priors on the hyperparameters), it draws from the
+posterior with a Markov chain, and the mean, the standard deviations and
+the intervals it reports are those of the draws. They are exact in the limit
+of many draws; a run has a few thousand, from chains that each start
+somewhere and move a little at each step. <strong>The checks say whether these
+draws are enough</strong>: the same checks a PyMC or Stan user reads after a run,
+and warnings at cutoffs measured on fips’s own sampler. Checks catch most
+runs that are off, not every one: the last two sections say what they
+cannot see, and how fips’s sampler is tested against answers it did not
+compute.</p>
+<nav class="contents local" id="on-this-page">
+<p class="topic-title">On this page</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#which-answers-are-draws" id="id1">Which answers are draws</a></p></li>
+<li><p><a class="reference internal" href="#read-them-in-this-order" id="id2">Read them in this order</a></p></li>
+<li><p><a class="reference internal" href="#an-example" id="id3">An example</a></p></li>
+<li><p><a class="reference internal" href="#the-warnings" id="id4">The warnings</a></p></li>
+<li><p><a class="reference internal" href="#the-table" id="id5">The table</a></p></li>
+<li><p><a class="reference internal" href="#totals" id="id6">Totals</a></p></li>
+<li><p><a class="reference internal" href="#looking-at-the-chains" id="id7">Looking at the chains</a></p></li>
+<li><p><a class="reference internal" href="#what-the-checks-cannot-see" id="id8">What the checks cannot see</a></p></li>
+<li><p><a class="reference internal" href="#how-fips-s-sampler-is-tested" id="id9">How fips’s sampler is tested</a></p></li>
+<li><p><a class="reference internal" href="#references" id="id10">References</a></p></li>
+</ul>
+</nav>
+<section id="which-answers-are-draws">
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">Which answers are draws</a><a class="headerlink" href="#which-answers-are-draws" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 30.0%" />
+<col style="width: 35.0%" />
+<col style="width: 35.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Method</p></th>
+<th class="head"><p>Its answer</p></th>
+<th class="head"><p>What to check</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;analytic&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;variational&quot;</span></code></p></td>
+<td><p>The closed-form posterior (<code class="docutils literal notranslate"><span class="pre">&quot;variational&quot;</span></code>: to its solver’s
+tolerance).</p></td>
+<td><p>No draws to check (<a class="reference internal" href="variational.html"><span class="doc">A problem too large to factor: the variational method</span></a> for its convergence).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;ensemble&quot;</span></code></p></td>
+<td><p>An update of members drawn from the prior: a sample, but not a
+chain.</p></td>
+<td><p>Its error falls as one over the root of the members (<a class="reference internal" href="ensemble.html"><span class="doc">A model without a Jacobian: the ensemble method</span></a>).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;bounded&quot;</span></code> with a finite bound</p></td>
+<td><p>One chain of exact draws of the truncated posterior (or independent
+rectified draws).</p></td>
+<td><p>The warnings, and <a class="reference internal" href="../reference/api/fips.Posterior.diagnostics.html#fips.Posterior.diagnostics" title="fips.Posterior.diagnostics"><code class="xref py py-meth docutils literal notranslate"><span class="pre">diagnostics()</span></code></a> (no R-hat: one
+chain).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code> with a <a class="reference internal" href="../reference/api/fips.ForwardModel.html#fips.ForwardModel" title="fips.ForwardModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">ForwardModel</span></code></a>,
+<a class="reference internal" href="../reference/api/fips.LogNormalForward.html#fips.LogNormalForward" title="fips.LogNormalForward"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogNormalForward</span></code></a> or <a class="reference internal" href="../reference/api/fips.SoftplusForward.html#fips.SoftplusForward" title="fips.SoftplusForward"><code class="xref py py-class docutils literal notranslate"><span class="pre">SoftplusForward</span></code></a></p></td>
+<td><p>Four chains of Hamiltonian Monte Carlo, from the mode.</p></td>
+<td><p>Everything on this page.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="../reference/api/fips.hierarchical.html#fips.hierarchical" title="fips.hierarchical"><code class="xref py py-func docutils literal notranslate"><span class="pre">fips.hierarchical()</span></code></a></p></td>
+<td><p>Four Metropolis chains of the hyperparameters, and a draw of the state
+at each step.</p></td>
+<td><p>Its warnings, <a class="reference internal" href="../reference/api/fips.Hierarchical.hyperparameter_diagnostics.html#fips.Hierarchical.hyperparameter_diagnostics" title="fips.Hierarchical.hyperparameter_diagnostics"><code class="xref py py-attr docutils literal notranslate"><span class="pre">hyperparameter_diagnostics</span></code></a>,
+and the table, totals and chains of the state
+(<a class="reference internal" href="../reference/api/fips.Hierarchical.diagnostics.html#fips.Hierarchical.diagnostics" title="fips.Hierarchical.diagnostics"><code class="xref py py-meth docutils literal notranslate"><span class="pre">diagnostics()</span></code></a>).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">post.estimate</span></code> is not a draw: for <code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;bounded&quot;</span></code> it
+is the mode, found by optimization. <code class="docutils literal notranslate"><span class="pre">post.mean</span></code>, <code class="docutils literal notranslate"><span class="pre">post.variances</span></code>,
+<a class="reference internal" href="../reference/api/fips.Posterior.cov.html#fips.Posterior.cov" title="fips.Posterior.cov"><code class="xref py py-meth docutils literal notranslate"><span class="pre">cov()</span></code></a>, <a class="reference internal" href="../reference/api/fips.Posterior.uncertainty.html#fips.Posterior.uncertainty" title="fips.Posterior.uncertainty"><code class="xref py py-meth docutils literal notranslate"><span class="pre">uncertainty()</span></code></a> and
+<a class="reference internal" href="../reference/api/fips.Posterior.trials.html#fips.Posterior.trials" title="fips.Posterior.trials"><code class="xref py py-meth docutils literal notranslate"><span class="pre">trials()</span></code></a> are read from the draws.</p>
+</section>
+<section id="read-them-in-this-order">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Read them in this order</a><a class="headerlink" href="#read-them-in-this-order" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p><strong>The warnings.</strong> A solve, and reading an answer from it, warns when a
+check fails at fips’s cutoffs (<a class="reference internal" href="#the-warnings">The warnings</a>). Read every one.</p></li>
+<li><p><strong>The table.</strong> <a class="reference internal" href="../reference/api/fips.Posterior.diagnostics.html#fips.Posterior.diagnostics" title="fips.Posterior.diagnostics"><code class="xref py py-meth docutils literal notranslate"><span class="pre">diagnostics()</span></code></a> gives each element’s
+R-hat, effective number of draws and Monte Carlo errors (<a class="reference internal" href="#the-table">The table</a>).
+Read it for the elements you report, even with no warning.</p></li>
+<li><p><strong>The totals you report.</strong> <code class="docutils literal notranslate"><span class="pre">diagnostics(W)</span></code> gives the same for the rows
+of an aggregation (<a class="reference internal" href="#totals">Totals</a>). A total can be right where its elements
+are not.</p></li>
+<li><p><strong>The chains.</strong> <a class="reference internal" href="../reference/api/fips.Posterior.chains.html#fips.Posterior.chains" title="fips.Posterior.chains"><code class="xref py py-meth docutils literal notranslate"><span class="pre">chains()</span></code></a> and
+<a class="reference internal" href="../reference/api/fips.Posterior.to_inference_data.html#fips.Posterior.to_inference_data" title="fips.Posterior.to_inference_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">to_inference_data()</span></code></a> show the draws themselves, for
+ArviZ’s plots (<a class="reference internal" href="#looking-at-the-chains">Looking at the chains</a>).</p></li>
+<li><p><strong>What none of these see</strong> (<a class="reference internal" href="#what-the-checks-cannot-see">What the checks cannot see</a>): every chain
+missing the same part of the posterior, a second mode, a wrong model.</p></li>
+</ol>
+</section>
+<section id="an-example">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">An example</a><a class="headerlink" href="#an-example" title="Link to this heading">#</a></h2>
+<p>Two values whose total is observed, <span class="math notranslate nohighlight">\(a + b = 2\)</span> to within 0.05, each
+with a lognormal prior of mean 1 (<a class="reference internal" href="positive.html"><span class="doc">Values that stay positive</span></a>). Any pair on the curve
+<span class="math notranslate nohighlight">\(e^{u_a} + e^{u_b} = 2\)</span> fits, so the posterior is a thin arc in
+<span class="math notranslate nohighlight">\((u_a, u_b)\)</span>, and the chains must travel along it to its ends, where
+one value is near 2 and the other near 0. Two dimensions are few enough for
+a grid, so the right answer is known:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [1]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="gp">In [2]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="gp">In [3]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">fips</span>
+
+<span class="gp">In [4]: </span><span class="n">state</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"value"</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">([</span><span class="s2">"a"</span><span class="p">,</span> <span class="s2">"b"</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">"element"</span><span class="p">)})</span>
+
+<span class="gp">In [5]: </span><span class="n">total</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"total"</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">RangeIndex</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"obs_id"</span><span class="p">)})</span>
+
+<span class="gp">In [6]: </span><span class="n">model</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">LogNormalForward</span><span class="p">(</span><span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)),</span> <span class="n">total</span><span class="p">,</span> <span class="n">state</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">)</span>
+
+<span class="gp">In [7]: </span><span class="n">u_0</span><span class="p">,</span> <span class="n">sigma</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">prior_for</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">e</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">))</span>
+
+<span class="gp">In [8]: </span><span class="n">problem</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span>
+<span class="gp">   ...: </span>    <span class="n">prior</span><span class="o">=</span><span class="n">u_0</span><span class="p">,</span>
+<span class="gp">   ...: </span>    <span class="n">prior_cov</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Covariance</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(</span><span class="n">sigma</span><span class="o">.</span><span class="n">values</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">state</span><span class="p">),</span>
+<span class="gp">   ...: </span>    <span class="n">obs</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">([</span><span class="mf">2.0</span><span class="p">],</span> <span class="n">total</span><span class="p">),</span>
+<span class="gp">   ...: </span>    <span class="n">obs_cov</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Covariance</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(</span><span class="mf">0.05</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">total</span><span class="p">),</span>
+<span class="gp">   ...: </span>    <span class="n">forward</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+<span class="gp">   ...: </span><span class="p">)</span>
+<span class="gp">   ...: </span>
+</pre></div>
+</div>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [9]: </span><span class="n">grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mf">8.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="mi">1601</span><span class="p">)</span>
+
+<span class="gp">In [10]: </span><span class="n">u_a</span><span class="p">,</span> <span class="n">u_b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="n">indexing</span><span class="o">=</span><span class="s2">"ij"</span><span class="p">)</span>
+
+<span class="gp">In [11]: </span><span class="n">log_p</span> <span class="o">=</span> <span class="p">(</span>
+<span class="gp">   ....: </span>    <span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">((</span><span class="n">u_a</span> <span class="o">-</span> <span class="n">u_0</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="n">sigma</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span>
+<span class="gp">   ....: </span>    <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">((</span><span class="n">u_b</span> <span class="o">-</span> <span class="n">u_0</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="n">sigma</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">**</span> <span class="mi">2</span>
+<span class="gp">   ....: </span>    <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">u_a</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">u_b</span><span class="p">)</span> <span class="o">-</span> <span class="mf">2.0</span><span class="p">)</span> <span class="o">/</span> <span class="mf">0.05</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+<span class="gp">   ....: </span><span class="p">)</span>
+<span class="gp">   ....: </span>
+
+<span class="gp">In [12]: </span><span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">log_p</span> <span class="o">-</span> <span class="n">log_p</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+
+<span class="gp">In [13]: </span><span class="n">p</span> <span class="o">/=</span> <span class="n">p</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+<span class="gp">In [14]: </span><span class="n">mean_a</span> <span class="o">=</span> <span class="p">(</span><span class="n">p</span> <span class="o">*</span> <span class="n">u_a</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+<span class="gp">In [15]: </span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">p</span> <span class="o">*</span> <span class="p">(</span><span class="n">u_a</span> <span class="o">-</span> <span class="n">mean_a</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>  <span class="c1"># the standard deviation of u_a</span>
+<span class="gh">Out[15]: </span><span class="go">np.float64(0.7557902502784922)</span>
+</pre></div>
+</div>
+<p>A solve at the default 2000 draws:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [16]: </span><span class="n">post</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="s2">"gauss_newton"</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="gp">In [17]: </span><span class="n">post</span><span class="o">.</span><span class="n">diagnostics</span><span class="p">()</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gh">Out[17]: </span>
+<span class="go">                mean     sd  mcse_mean  mcse_sd  ess_bulk  ess_tail  r_hat</span>
+<span class="go">block element                                                             </span>
+<span class="go">value a       -0.231  0.789      0.075    0.076   131.305   115.571  1.026</span>
+<span class="go">      b       -0.204  0.721      0.056    0.043   131.972   169.687  1.027</span>
+</pre></div>
+</div>
+<p>The two R-hats are above Stan’s 1.01, and the effective draws in the bulk
+are near a hundred of the 2000. The solve did not warn: fips warns of an
+element’s R-hat above 1.05, a cutoff measured on its own sampler (<a class="reference internal" href="#the-warnings">The
+warnings</a>). This is the usual case for these two values at the default
+draws: over eight seeds (2026-11-24) the R-hats were 1.006 to 1.036, the
+effective draws 110 to 500, and the standard deviations 9% below to 14%
+above the grid’s, with no warning from the solve. <strong>An R-hat between 1.01 and 1.05 says the
+chains have not yet agreed to within their own scatter; the standard
+deviations are good to about a tenth.</strong> The tails are thinner still:
+<code class="docutils literal notranslate"><span class="pre">ess_tail</span></code> is under 100 a chain, so reading an interval warns, in your
+session, that its ends come from too few draws:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [18]: </span><span class="n">post</span><span class="o">.</span><span class="n">uncertainty</span><span class="p">()</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gh">Out[18]: </span>
+<span class="go">               estimate  prior_std  posterior_std  reduction  lower  upper</span>
+<span class="go">block element                                                             </span>
+<span class="go">value a          -0.001        1.0          0.789      0.211 -2.235  0.614</span>
+<span class="go">      b          -0.001        1.0          0.721      0.279 -1.947  0.633</span>
+</pre></div>
+</div>
+<p>If that is not good enough, raise <code class="docutils literal notranslate"><span class="pre">draws</span></code>:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [19]: </span><span class="n">more</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="s2">"gauss_newton"</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">draws</span><span class="o">=</span><span class="mi">10_000</span><span class="p">)</span>
+
+<span class="gp">In [20]: </span><span class="n">more</span><span class="o">.</span><span class="n">diagnostics</span><span class="p">()</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gh">Out[20]: </span>
+<span class="go">                mean     sd  mcse_mean  mcse_sd  ess_bulk  ess_tail  r_hat</span>
+<span class="go">block element                                                             </span>
+<span class="go">value a       -0.223  0.771      0.033    0.034   569.499   655.149  1.004</span>
+<span class="go">      b       -0.222  0.767      0.031    0.028   588.639   730.008  1.005</span>
+</pre></div>
+</div>
+<p>Over the same eight seeds, 10,000 draws gave R-hats of 1.003 to 1.02 and
+standard deviations within 7% of the grid’s. The Monte Carlo errors fall as
+one over the root of the draws, so a fifth of the error costs 25 times the
+draws: raise <code class="docutils literal notranslate"><span class="pre">draws</span></code> until the error is small against what you need, not
+until it is zero.</p>
+</section>
+<section id="the-warnings">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">The warnings</a><a class="headerlink" href="#the-warnings" title="Link to this heading">#</a></h2>
+<p>Each warning is a <a class="reference internal" href="../reference/api/fips.FipsWarning.html#fips.FipsWarning" title="fips.FipsWarning"><code class="xref py py-class docutils literal notranslate"><span class="pre">FipsWarning</span></code></a>, which Python shows without any
+setup, and is also logged (<a class="reference internal" href="posterior.html#repeated-inversions"><span class="std std-ref">Repeated inversions, logging and saving</span></a>). A warning names the
+worst element or row, and says how many draws would do where it can tell.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 30.0%" />
+<col style="width: 35.0%" />
+<col style="width: 35.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Warning</p></th>
+<th class="head"><p>What it means</p></th>
+<th class="head"><p>What to do</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>The chains disagree</strong> (<code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code>: an element’s split R-hat
+above 1.05, on at least 5% of the elements, or on any one with 20
+elements or fewer)</p></td>
+<td><p>One chain stayed out of a part of the posterior that another reached:
+those elements’ spreads are not yet the posterior’s.</p></td>
+<td><p>Raise <code class="docutils literal notranslate"><span class="pre">draws</span></code>, or report the totals the data constrain, which mix
+faster (<a class="reference internal" href="#totals">Totals</a>).</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>The chains disagree on a total</strong> (reading
+<a class="reference internal" href="../reference/api/fips.Posterior.cov.html#fips.Posterior.cov" title="fips.Posterior.cov"><code class="xref py py-meth docutils literal notranslate"><span class="pre">cov()</span></code></a>, <a class="reference internal" href="../reference/api/fips.Posterior.uncertainty.html#fips.Posterior.uncertainty" title="fips.Posterior.uncertainty"><code class="xref py py-meth docutils literal notranslate"><span class="pre">uncertainty()</span></code></a> or
+<a class="reference internal" href="../reference/api/fips.Posterior.trials.html#fips.Posterior.trials" title="fips.Posterior.trials"><code class="xref py py-meth docutils literal notranslate"><span class="pre">trials()</span></code></a> with <code class="docutils literal notranslate"><span class="pre">W</span></code>: any row’s split R-hat
+above 1.1)</p></td>
+<td><p>The total you are reading is not settled.</p></td>
+<td><p>Raise <code class="docutils literal notranslate"><span class="pre">draws</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Too few draws in the tails</strong> (reading an interval: fewer than 100
+effective draws a chain in the tails, for any total or 5% of the
+elements)</p></td>
+<td><p>An interval’s ends are the 5% and 95% quantiles of the draws, and
+few draws are out there.</p></td>
+<td><p>Raise <code class="docutils literal notranslate"><span class="pre">draws</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>The kept draws mix slowly</strong> (<code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;bounded&quot;</span></code>: a
+standard deviation uncertain by more than 10%)</p></td>
+<td><p>The draws are too few for the spread to be known to a tenth.</p></td>
+<td><p>Raise <code class="docutils literal notranslate"><span class="pre">draws</span></code>, as the warning says.</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>The starts ended at different modes</strong> (<code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code> with
+<code class="docutils literal notranslate"><span class="pre">starts</span></code> above 1)</p></td>
+<td><p>Gauss-Newton from draws of the prior found another mode. The draws
+stay near the lowest one.</p></td>
+<td><p>More observations or a narrower prior can rule the others out
+(<a class="reference internal" href="#what-the-checks-cannot-see">What the checks cannot see</a>).</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>The sampler takes 200 or more steps a draw</strong> (<code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code>)</p></td>
+<td><p>The posterior bends very much over its spread, or the Jacobian is not
+the model’s derivative.</p></td>
+<td><p>Check the Jacobian with <a class="reference internal" href="../reference/api/fips.taylortest.html#fips.taylortest" title="fips.taylortest"><code class="xref py py-func docutils literal notranslate"><span class="pre">fips.taylortest()</span></code></a> (<a class="reference internal" href="nonlinear.html"><span class="doc">A nonlinear forward model</span></a>).</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>The hyperparameters’ chains disagree</strong> (<a class="reference internal" href="../reference/api/fips.hierarchical.html#fips.hierarchical" title="fips.hierarchical"><code class="xref py py-func docutils literal notranslate"><span class="pre">fips.hierarchical()</span></code></a>:
+a hyperparameter’s split R-hat above 1.1)</p></td>
+<td><p>The chains have not agreed on the hyperparameters, so neither have
+the state’s draws made at them.</p></td>
+<td><p>Raise <code class="docutils literal notranslate"><span class="pre">draws</span></code>; read
+<a class="reference internal" href="../reference/api/fips.Hierarchical.hyperparameter_diagnostics.html#fips.Hierarchical.hyperparameter_diagnostics" title="fips.Hierarchical.hyperparameter_diagnostics"><code class="xref py py-attr docutils literal notranslate"><span class="pre">hyperparameter_diagnostics</span></code></a>
+(<a class="reference internal" href="hierarchical.html"><span class="doc">The uncertainty of the hyperparameters</span></a>).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Why fips’s cutoffs are not Stan’s.</strong> Stan warns of an R-hat above 1.01 and
+of under 100 effective draws a chain, for every parameter. With hundreds of
+elements, a few mix slowly at the default draws in nearly every solve, while
+their totals are right, so an element warns at 1.05 and only when 5% of them
+do (400 elements, 2026-11-12); a total, which is what a user reports, warns
+at 1.1, a cutoff that caught every total more than 20% off in 736 solves of
+23 problems (2026-11-14). Fewer elements above 1.05 are logged at the INFO
+level, as are divergences (below).</p>
+</section>
+<section id="the-table">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">The table</a><a class="headerlink" href="#the-table" title="Link to this heading">#</a></h2>
+<p><a class="reference internal" href="../reference/api/fips.Posterior.diagnostics.html#fips.Posterior.diagnostics" title="fips.Posterior.diagnostics"><code class="xref py py-meth docutils literal notranslate"><span class="pre">diagnostics()</span></code></a> gives one row per element, as ArviZ’s
+<code class="docutils literal notranslate"><span class="pre">summary</span></code> computes it (Vehtari et al., 2021):</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 40.0%" />
+<col style="width: 40.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Column</p></th>
+<th class="head"><p>What it is</p></th>
+<th class="head"><p>A bad value</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mean</span></code>, <code class="docutils literal notranslate"><span class="pre">sd</span></code></p></td>
+<td><p>The draws’ mean and standard deviation: what the posterior reports.</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mcse_mean</span></code>, <code class="docutils literal notranslate"><span class="pre">mcse_sd</span></code></p></td>
+<td><p>Their Monte Carlo errors: how much another run would move them. They
+fall as one over the root of the draws.</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">mcse_sd</span></code> above a tenth of <code class="docutils literal notranslate"><span class="pre">sd</span></code>: the spread is not known to a
+tenth (the solve warns).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ess_bulk</span></code></p></td>
+<td><p>The number of independent draws the chain’s draws are worth, for the
+mean and the spread.</p></td>
+<td><p>Under 100 a chain (400 for four): the chains move slowly there.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ess_tail</span></code></p></td>
+<td><p>The same for the 5% and 95% quantiles, which an interval’s ends are.</p></td>
+<td><p>Under 100 a chain: an interval read from the draws warns.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">r_hat</span></code></p></td>
+<td><p>The rank-normalized split R-hat: the chains (and each chain’s halves)
+compared, in location and spread. Near 1 when they draw the same
+distribution; NaN with one chain.</p></td>
+<td><p>Above 1.01 (Stan’s cutoff): the chains do not yet agree. fips warns
+above 1.05 (<a class="reference internal" href="#the-warnings">The warnings</a>).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Effective draws well below the number of draws mean the chain moves slowly
+there; more draws fix it, at a cost in proportion. The R-hat is the one check
+of several chains against each other: the draws of <code class="docutils literal notranslate"><span class="pre">&quot;bounded&quot;</span></code>, from one
+chain, have none.</p>
+</section>
+<section id="totals">
+<h2><a class="toc-backref" href="#id6" role="doc-backlink">Totals</a><a class="headerlink" href="#totals" title="Link to this heading">#</a></h2>
+<p><strong>Check the totals you report, not only the elements.</strong> A total depends on
+how the elements vary together: where the observations see only a sum, the
+elements wander along the curve while their total holds still, so a total’s
+chains can agree where its elements’ do not. <code class="docutils literal notranslate"><span class="pre">post.diagnostics(W)</span></code> checks
+the rows of an aggregation <span class="math notranslate nohighlight">\(W\)</span> (<a class="reference internal" href="posterior.html"><span class="doc">Reading the posterior</span></a>), and reading a total
+with <a class="reference internal" href="../reference/api/fips.Posterior.cov.html#fips.Posterior.cov" title="fips.Posterior.cov"><code class="xref py py-meth docutils literal notranslate"><span class="pre">cov()</span></code></a>, <a class="reference internal" href="../reference/api/fips.Posterior.uncertainty.html#fips.Posterior.uncertainty" title="fips.Posterior.uncertainty"><code class="xref py py-meth docutils literal notranslate"><span class="pre">uncertainty()</span></code></a> or
+<a class="reference internal" href="../reference/api/fips.Posterior.trials.html#fips.Posterior.trials" title="fips.Posterior.trials"><code class="xref py py-meth docutils literal notranslate"><span class="pre">trials()</span></code></a> checks it and warns. In the 736 solves above,
+every total more than 20% off had an R-hat above 1.1.</p>
+<p>For <a class="reference internal" href="../reference/api/fips.LogNormalForward.html#fips.LogNormalForward" title="fips.LogNormalForward"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogNormalForward</span></code></a> and <a class="reference internal" href="../reference/api/fips.SoftplusForward.html#fips.SoftplusForward" title="fips.SoftplusForward"><code class="xref py py-class docutils literal notranslate"><span class="pre">SoftplusForward</span></code></a>, the
+state is the transformed one, <span class="math notranslate nohighlight">\(u\)</span>, and <span class="math notranslate nohighlight">\(W\)</span> sums <span class="math notranslate nohighlight">\(u\)</span>, not the
+values: a total of the values is the total of each draw’s values, read from
+the draws (<a class="reference internal" href="methods.html#methods-transformed"><span class="std std-ref">Reading a transformed state</span></a>).</p>
+</section>
+<section id="looking-at-the-chains">
+<h2><a class="toc-backref" href="#id7" role="doc-backlink">Looking at the chains</a><a class="headerlink" href="#looking-at-the-chains" title="Link to this heading">#</a></h2>
+<p><a class="reference internal" href="../reference/api/fips.Posterior.chains.html#fips.Posterior.chains" title="fips.Posterior.chains"><code class="xref py py-meth docutils literal notranslate"><span class="pre">chains()</span></code></a> gives the kept draws, one column each,
+labeled <code class="docutils literal notranslate"><span class="pre">(chain,</span> <span class="pre">draw)</span></code>, and <a class="reference internal" href="../reference/api/fips.Posterior.sample_stats.html#fips.Posterior.sample_stats" title="fips.Posterior.sample_stats"><code class="xref py py-attr docutils literal notranslate"><span class="pre">sample_stats</span></code></a> the
+sampler’s record of the path that made each draw, by ArviZ’s names. A path
+that <em>diverged</em> (its energy rose by more than 1000, Stan’s rule, or the model
+failed along it) is rejected, so the draws stay exact, but it marks where the
+sampler could not follow the posterior:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [21]: </span><span class="n">post</span><span class="o">.</span><span class="n">sample_stats</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="s2">"chain"</span><span class="p">)[[</span><span class="s2">"diverging"</span><span class="p">,</span> <span class="s2">"acceptance_rate"</span><span class="p">,</span> <span class="s2">"n_steps"</span><span class="p">]]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+<span class="gh">Out[21]: </span>
+<span class="go">       diverging  acceptance_rate  n_steps</span>
+<span class="go">chain                                     </span>
+<span class="go">0          0.008         0.924401     27.0</span>
+<span class="go">1          0.000         0.927752     27.0</span>
+<span class="go">2          0.000         0.944992     30.0</span>
+<span class="go">3          0.032         0.852050     24.0</span>
+</pre></div>
+</div>
+<p>Stan warns of any divergence. For fips’s sampler they did not mark the
+solves that were off (over 90 default solves of 23 problems, 2026-11-16, a
+fifth had one, none of them off), so the solve logs them at the INFO level:
+they show where the posterior bends most, not that the answer is wrong.</p>
+<p><strong>ArviZ.</strong> <a class="reference internal" href="../reference/api/fips.Posterior.to_inference_data.html#fips.Posterior.to_inference_data" title="fips.Posterior.to_inference_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">to_inference_data()</span></code></a> hands the draws and the
+record to ArviZ (1.1 or later, which needs Python 3.12:
+<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">&quot;fips[arviz]&quot;</span></code>) as it reads a PyMC or Stan run, so its plots
+work as they do there. A trace plot draws each chain’s density (left) and its
+path (right), with the divergent draws marked:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [22]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">arviz_plots</span>
+
+<span class="gp">In [23]: </span><span class="n">data</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">to_inference_data</span><span class="p">()</span>
+
+<span class="gp">In [24]: </span><span class="n">arviz_plots</span><span class="o">.</span><span class="n">plot_trace_dist</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="p">{</span><span class="s2">"element"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"a"</span><span class="p">]});</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="../_images/diagnostics_trace.png"><img alt="../_images/diagnostics_trace.png" src="../_images/diagnostics_trace.png" style="width: 6in;" />
+</a>
+<p>The chains’ densities differ most near the arc’s upper end,
+<span class="math notranslate nohighlight">\(u_a\)</span> near <span class="math notranslate nohighlight">\(\log 2\)</span> (where <span class="math notranslate nohighlight">\(b\)</span> is near 0), and the
+divergent draws (the ticks) sit towards both ends, where the arc bends most:
+the parts of the posterior the chains reach least often. ArviZ’s
+<code class="docutils literal notranslate"><span class="pre">summary</span></code> gives the table above (<a class="reference internal" href="nonlinear.html"><span class="doc">A nonlinear forward model</span></a> shows how to make its
+<code class="docutils literal notranslate"><span class="pre">ess_tail</span></code> match fips’s).</p>
+</section>
+<section id="what-the-checks-cannot-see">
+<h2><a class="toc-backref" href="#id8" role="doc-backlink">What the checks cannot see</a><a class="headerlink" href="#what-the-checks-cannot-see" title="Link to this heading">#</a></h2>
+<p>Every check compares the draws with each other. None can see a part of the
+posterior that no chain reached:</p>
+<ul class="simple">
+<li><p><strong>A far, thin arm that every chain misses.</strong> In the ten-element softplus
+problem of fips’s reference suite, element 0’s posterior has a thin arm,
+towards a value near zero, which a run visits rarely. Single default
+solves gave its standard deviation 25% to 45% below the references’ in 9 of
+16 solves, 6 of them with no warning; its 90% interval was right. When an
+element’s own spread matters, raise <code class="docutils literal notranslate"><span class="pre">draws</span></code>, and compare with another
+estimate where you can (a grid, for a few elements; another sampler on the
+same log density).</p></li>
+<li><p><strong>A second mode.</strong> Every chain starts from draws of one Gaussian at the
+mode, so chains that agree cannot show another mode. <code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code>
+runs Gauss-Newton from three draws of the prior as well as its mean
+(<code class="docutils literal notranslate"><span class="pre">starts</span></code>) and warns when they end at different modes; more starts look
+further.</p></li>
+<li><p><strong>A wrong model, prior or error covariance.</strong> The draws are of the
+posterior the problem states. Whether that posterior is right is a
+question for the data: <a class="reference internal" href="synthetic.html"><span class="doc">Synthetic experiments</span></a> tests an inversion where the truth
+is known, and <a class="reference internal" href="../reference/api/fips.Posterior.chi2_tests.html#fips.Posterior.chi2_tests" title="fips.Posterior.chi2_tests"><code class="xref py py-meth docutils literal notranslate"><span class="pre">chi2_tests()</span></code></a> tests the covariances
+against the data.</p></li>
+</ul>
+<p>Calls to <a class="reference internal" href="../reference/api/fips.Posterior.sample.html#fips.Posterior.sample" title="fips.Posterior.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a> continue the chains from where their
+burn-ins ended, so draws from two calls are not independent runs. To compare
+runs, solve again with another <code class="docutils literal notranslate"><span class="pre">seed</span></code>.</p>
+</section>
+<section id="how-fips-s-sampler-is-tested">
+<h2><a class="toc-backref" href="#id9" role="doc-backlink">How fips’s sampler is tested</a><a class="headerlink" href="#how-fips-s-sampler-is-tested" title="Link to this heading">#</a></h2>
+<p>Beside the tests of its code, fips’s sampler is held to answers fips did not
+compute: a reference suite of problems from two elements to 900, both
+transforms, each solved by default solves with their own seeds and compared,
+statistic by statistic, with a grid or with long runs of other samplers
+(emcee and nutpie), plus simulation-based calibration (Talts et al., 2018).
+A solve’s standard deviation is <em>off</em> where it differs from the reference’s
+by more than 10% (or an interval’s end by more than 10% of its width); a
+solve <em>misses</em> where a total is off or more than 5% of the elements are, and
+a miss with no warning is the failure the suite looks for. The suite is in
+<code class="docutils literal notranslate"><span class="pre">tests/reference</span></code> (its README says how to run it); the table from fips’s
+<code class="docutils literal notranslate"><span class="pre">main</span></code> branch on 2026-11-21, by group:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 34.0%" />
+<col style="width: 22.0%" />
+<col style="width: 22.0%" />
+<col style="width: 22.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Problems (reference)</p></th>
+<th class="head"><p>Elements off</p></th>
+<th class="head"><p>Totals off (worst)</p></th>
+<th class="head"><p>Misses with no warning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Two elements on a curve, 2000 draws (grid)</p></td>
+<td><p>4 of 32</p></td>
+<td><p>0 of 16 (5%)</p></td>
+<td><p>0 of 4</p></td>
+</tr>
+<tr class="row-odd"><td><p>The same, 20,000 draws (grid)</p></td>
+<td><p>0 of 24</p></td>
+<td><p>0 of 12 (1%)</p></td>
+<td><p>0</p></td>
+</tr>
+<tr class="row-even"><td><p>Ten elements, mildly nonlinear (emcee, nutpie)</p></td>
+<td><p>0 of 320</p></td>
+<td><p>0 of 32 (5%)</p></td>
+<td><p>0</p></td>
+</tr>
+<tr class="row-odd"><td><p>Ten elements, strongly nonlinear (nutpie)</p></td>
+<td><p>5 of 304</p></td>
+<td><p>0 of 32 (5%)</p></td>
+<td><p>4 of 5</p></td>
+</tr>
+<tr class="row-even"><td><p>100 to 900 elements, 10 settings (nutpie)</p></td>
+<td><p>18 of 17,492</p></td>
+<td><p>0 of 240 (9%)</p></td>
+<td><p>0</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>In calibration (1000 worlds of each ten-element problem, 400 of each
+100-element one), no element’s or total’s ranks were rejected as non-uniform.</p>
+<p><strong>What the table says.</strong> Totals were within 9% of the references in every
+solve. Single elements were off where they lie along a curve the data do not
+fix: at the default draws, in a few of the two-element solves (each of them
+warned, and none at 20,000 draws) and in the strongly nonlinear problems,
+mostly with no warning (the thin arms above). Report totals where you can,
+and raise <code class="docutils literal notranslate"><span class="pre">draws</span></code> for an element’s spread.</p>
+</section>
+<section id="references">
+<h2><a class="toc-backref" href="#id10" role="doc-backlink">References</a><a class="headerlink" href="#references" title="Link to this heading">#</a></h2>
+<p>Talts, S., Betancourt, M., Simpson, D., Vehtari, A., and Gelman, A. (2018).
+Validating Bayesian inference algorithms with simulation-based calibration.
+arXiv:1804.06788.</p>
+<p>Vehtari, A., Gelman, A., Simpson, D., Carpenter, B., and Bürkner, P.-C.
+(2021). Rank-normalization, folding, and localization: an improved R-hat for
+assessing convergence of MCMC. <em>Bayesian Analysis</em>, 16(2), 667-718.
+<a class="reference external" href="https://doi.org/10.1214/20-BA1221">https://doi.org/10.1214/20-BA1221</a></p>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="variational.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">A problem too large to factor: the variational method</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="hyperparameters.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Fitting the covariance hyperparameters</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#which-answers-are-draws">Which answers are draws</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#read-them-in-this-order">Read them in this order</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#an-example">An example</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-warnings">The warnings</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-table">The table</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#totals">Totals</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#looking-at-the-chains">Looking at the chains</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-checks-cannot-see">What the checks cannot see</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-fips-s-sampler-is-tested">How fips’s sampler is tested</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#references">References</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/user_guide/diagnostics.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025-2026, James Mineau.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

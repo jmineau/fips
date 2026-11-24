@@ -36,6 +36,8 @@ words.
      - :ref:`hyperparameters-grid`
    * - carry the uncertainty of those hyperparameters into the answer
      - :doc:`hierarchical`
+   * - check the draws of a nonlinear, bounded or hierarchical solve
+     - :doc:`diagnostics`
    * - test an inversion on data whose answer you know
      - :doc:`synthetic`
    * - see whole problems worked from start to finish
@@ -63,6 +65,7 @@ words.
    :maxdepth: 1
    :caption: Checking and tuning an inversion
 
+   diagnostics
    hyperparameters
    hierarchical
    synthetic
