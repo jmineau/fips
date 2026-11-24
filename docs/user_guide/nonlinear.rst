@@ -300,6 +300,9 @@ the posterior where the model bends, is
 Warnings and checks
 -------------------
 
+:doc:`diagnostics` gathers the checks of every method that draws, with what
+to do about each; this section is ``"gauss_newton"``'s own.
+
 Each warning is a :class:`~fips.FipsWarning`, which Python shows without any
 setup, and is also logged (:ref:`repeated-inversions`). The solve warns
 when:
