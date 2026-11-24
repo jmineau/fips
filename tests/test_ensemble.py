@@ -16,9 +16,18 @@ import pickle
 import numpy as np
 import pandas as pd
 import pytest
+import scipy.sparse as sp
 from scipy.linalg import sqrtm
 
 import fips
+from fips.linalg import (
+    BlockDiagonalOperator,
+    DenseOperator,
+    DiagonalOperator,
+    KroneckerOperator,
+    LinearOperator,
+    SparseOperator,
+)
 from fips.methods.ensemble import EnsembleOptions
 
 N_STATE, N_OBS = 8, 12
@@ -273,6 +282,58 @@ def assert_same(post: fips.Posterior, other: fips.Posterior, atol=1e-11):
         assert getattr(post, name) == pytest.approx(
             getattr(other, name), rel=1e-10, abs=atol
         )
+
+
+def _spd(rng: np.random.Generator, k: int) -> np.ndarray:
+    """A random symmetric positive-definite ``k x k`` matrix."""
+    A = rng.normal(size=(k, k))
+    return A @ A.T / k + np.eye(k)
+
+
+def _structured_obs_covs(m: int) -> dict[str, LinearOperator]:
+    """An observation covariance of ``m = 12`` rows in each form that has a root of its own."""
+    rng = np.random.default_rng(3)
+    order = rng.permutation(m)
+    grouped = sp.csr_array(
+        sp.block_diag([sp.coo_array(_spd(rng, 3))] * 4)
+    )  # four groups
+    return {
+        "block diagonal": BlockDiagonalOperator(
+            [
+                _spd(rng, 5),
+                DiagonalOperator(rng.uniform(0.2, 1.0, 3)),
+                sp.csr_array(_spd(rng, 4)),
+            ]
+        ),
+        "sparse": SparseOperator(grouped[order][:, order]),
+        "kronecker": KroneckerOperator(
+            [_spd(rng, 3), _spd(rng, 4)], std=rng.uniform(0.5, 1.5, m)
+        ),
+    }
+
+
+@pytest.mark.parametrize("form", ["block diagonal", "sparse", "kronecker"])
+def test_an_obs_covariance_whitens_in_its_own_form(form):
+    """A block diagonal, sparse or Kronecker S_z whitens through its own root, never its dense m x m matrix, and gives the posterior its dense matrix gives."""
+    problem = build(5, m=12)
+    S_z = _structured_obs_covs(12)[form]
+    posts = {}
+    for kind, data in (("form", S_z), ("dense", S_z.dense())):
+        posts[kind] = fips.solve(
+            fips.Problem(
+                prior=problem.prior,
+                prior_cov=problem.prior_cov,
+                obs=problem.obs,
+                obs_cov=fips.Covariance(data, problem.obs.space),
+                forward=problem.forward,
+                offset=problem.offset,
+            ),
+            "ensemble",
+            members=20,
+        )
+    root = posts["form"]._solution.obs_root
+    assert isinstance(root, LinearOperator) and not isinstance(root, DenseOperator)
+    assert_same(posts["form"], posts["dense"], atol=1e-10)
 
 
 @pytest.mark.parametrize("model", ["linear", "cubic"])
