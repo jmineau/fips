@@ -253,7 +253,11 @@ def test_default_tol_keeps_small_eigenvalues():
     post = fips.solve(problem, "variational")
     exact = fips.solve(problem)
     assert len(post.eigenvalues) == m
-    np.testing.assert_allclose(post.variances.values, exact.variances.values, rtol=1e-6)
+    # 1 - lambda / (1 + lambda) cancels for lambda = 1e10: an absolute floor (of a
+    # prior variance of 1) for the smallest variances, which roundoff sets
+    np.testing.assert_allclose(
+        post.variances.values, exact.variances.values, rtol=1e-6, atol=1e-12
+    )
     assert post.dofs == pytest.approx(exact.dofs, abs=1e-8)
     assert post.log_evidence == pytest.approx(exact.log_evidence, abs=1e-8)
 
