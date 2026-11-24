@@ -1889,6 +1889,52 @@ def test_starts_find_a_lower_mode_and_warn(caplog):
     assert "not the one from the prior mean" not in caplog.text
 
 
+class SquareAndValueOfTheFirst(ForwardModel):
+    """``F(x) = (x_0^2, x_0)`` of a state with more elements than the first: the others are not observed."""
+
+    def __init__(self, cols: Space, rows: Space):
+        super().__init__(rows, cols)
+
+    def __call__(self, x):
+        v = x.values[0]
+        return Vector([v * v, v], self.rows)
+
+    def jacobian(self, x):
+        J = np.zeros((2, len(self.cols)))
+        J[:, 0] = [2.0 * x.values[0], 1.0]
+        return Operator(J, self.rows, self.cols)
+
+
+def two_modes_beside(prior_cov) -> Problem:
+    """:func:`two_modes` with a second element the observations do not see, under `prior_cov` (2 x 2)."""
+    cells = Space({"x": pd.RangeIndex(2, name="i")})
+    rows = Space({"z": pd.RangeIndex(2, name="j")})
+    return Problem(
+        prior=Vector([0.3, 0.0], cells),
+        prior_cov=Covariance(prior_cov, cells),
+        obs=Vector([4.0, -2.0], rows),
+        obs_cov=Covariance.diagonal(np.array([0.01, 1.0]), rows),
+        forward=SquareAndValueOfTheFirst(cells, rows),
+    )
+
+
+def test_starts_run_beside_an_element_of_zero_prior_variance():
+    """An element with no prior variance stays at its prior mean in every start, and the others still find the lower mode near -2 and warn."""
+    with pytest.warns(fips.FipsWarning, match="ended at 2 modes"):
+        post = fips.solve(
+            two_modes_beside(np.diag([1.0, 0.0])), "gauss_newton", starts=4
+        )
+    assert post.estimate.values[0] == pytest.approx(-2.0, abs=0.01)
+    assert post.estimate.values[1] == 0.0
+
+
+def test_starts_on_a_prior_singular_beyond_its_zero_variances_warn(caplog):
+    """Two elements perfectly correlated make a prior no draw can be written x_0 + S_0 y for: the solve runs from the prior mean alone and warns that it did not look for other modes."""
+    with caplog.at_level("WARNING", logger="fips.methods.gauss_newton"):
+        fips.solve(two_modes_beside(np.ones((2, 2))), "gauss_newton", starts=4)
+    assert "singular beyond its zero variances" in caplog.text
+
+
 def test_starts_at_one_mode_change_nothing(caplog):
     """On a posterior of one mode, more starts give the same estimate and the same draws, bit for bit, and log that they agree."""
     problem = two_cells()
