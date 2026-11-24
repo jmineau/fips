@@ -35,7 +35,7 @@ as the solve sees it, sums included: a prior covariance may be singular.
 import dataclasses
 import logging
 import math
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from functools import cached_property
 from typing import ClassVar, Self
@@ -457,9 +457,13 @@ class _Factors:
         return eigendecomposed.with_gamma(gamma)
 
     def __getstate__(self) -> dict:
-        """Return the fields for a pickle or a copy, without the kept eigendecomposition (the first ``with_gamma`` after loading redoes it)."""
+        """Return the fields for a pickle or a copy, without the kept eigendecomposition (the first ``with_gamma`` after loading redoes it) or the information form's kept factorization of the observation covariance."""
         state = dict(self.__dict__)
         state.pop("_eigendecomposed", None)
+        if "_obs_solver" in state:
+            state["_obs_solver"] = (
+                None  # a closure over the factor: refactored when next needed
+            )
         return state
 
     def __setstate__(self, state: dict) -> None:
@@ -782,8 +786,9 @@ class Information(_Factors):
     :class:`Whitened`. It factors an :math:`n \times n` matrix instead of an
     :math:`m \times m` one, and gives the same posterior. It holds one
     :math:`n \times n` array; it forms nothing :math:`m \times m` of its own
-    (a dense observation covariance is factored by Cholesky inside each solve with it; a
-    Kronecker one is applied through its factors). The arrays are read-only,
+    (a dense observation covariance is factored by Cholesky once, and the factor
+    kept for every output and every :meth:`with_data`; a Kronecker one is applied
+    through its factors). The arrays are read-only,
     also after a pickle or a copy.
 
     With :math:`S_0 = R_0 R_0^T` the prior covariance (:math:`R_0` its
@@ -835,6 +840,18 @@ class Information(_Factors):
     # (b = G^T H^T S_z^-1 (z - H x_0 - c), n), dofs_at_gamma, information_at_gamma
     G: np.ndarray
     """:math:`G = R_0 X`, the prior's square root in the basis :math:`X` (``n x n``)."""
+    _obs_solver: Callable[[np.ndarray], np.ndarray] | None = field(
+        default=None, kw_only=True, repr=False, compare=False
+    )
+    """:math:`B \\mapsto S_z^{-1} B` with the factorization made once (``S_z._solver()``), carried to :meth:`with_data` and to the readings at other gammas of one eigendecomposition; not pickled (made again at the first solve after loading)."""
+
+    def _solve_obs(self, B: np.ndarray) -> np.ndarray:
+        r"""Return :math:`S_z^{-1} B` through the kept factorization of the observation covariance."""
+        if self._obs_solver is None:
+            object.__setattr__(self, "_obs_solver", self.problem.obs_cov.data._solver())
+        solve = self._obs_solver
+        assert solve is not None
+        return np.asarray(solve(B))
 
     @classmethod
     def factor(
@@ -890,7 +907,8 @@ class Information(_Factors):
         if not eigendecompose:  # with_gamma factors the same mismatch again
             _warn_if_ill_conditioned(S_z._correlation_condition())
         HR = (H @ R_0).dense()
-        N = HR.T @ S_z.solve(HR)
+        solve = S_z._solver()  # factored once, for this solve and every output
+        N = HR.T @ np.asarray(solve(HR))
         N = 0.5 * (N + N.T)
         X, eigenvalues, dofs, information = _decompose(
             N,
@@ -905,9 +923,10 @@ class Information(_Factors):
             gamma=gamma,
             eigenvalues=None if eigenvalues is None else _read_only(eigenvalues),
             G=_read_only(G),
-            innovation=_read_only(_carried(problem, G)),
+            innovation=_read_only(_carried(problem, G, solve)),
             dofs_at_gamma=dofs,
             information_at_gamma=information,
+            _obs_solver=solve,
         )
 
     def _increment(self) -> np.ndarray:
@@ -954,7 +973,7 @@ class Information(_Factors):
         """
         problem = self.problem
         HG = np.asarray(problem._operator.data @ self.G)
-        Z = problem.obs_cov.data.solve(HG)
+        Z = self._solve_obs(HG)
         WG = self.G if W is None else np.asarray(W @ self.G)
         return (WG * self.weights()) @ Z.T
 
@@ -971,7 +990,7 @@ class Information(_Factors):
         """
         problem = self.problem
         r = _innovation(problem) - problem._operator.data @ self._increment()
-        return self.gamma * np.asarray(problem.obs_cov.data.solve(r))
+        return self.gamma * np.asarray(self._solve_obs(r))
 
     def _chi2_terms(self, kept: np.ndarray) -> np.ndarray:
         r"""
@@ -990,7 +1009,7 @@ class Information(_Factors):
     def _weighted_obs(self) -> tuple[np.ndarray, np.ndarray]:
         r"""Return :math:`H G` and :math:`Z = S_z^{-1} H G` (both ``m x n``)."""
         HG = np.asarray(self.problem._operator.data @ self.G)
-        return HG, np.asarray(self.problem.obs_cov.data.solve(HG))
+        return HG, np.asarray(self._solve_obs(HG))
 
     def innovation_precision(self, groups: Sequence[np.ndarray]) -> list[np.ndarray]:
         r"""
@@ -1016,7 +1035,7 @@ class Information(_Factors):
 
         else:
             m = S_z.shape[0]
-            solve = S_z._solver()
+            solve = self._solve_obs
 
             def inverse_block(rows: np.ndarray) -> np.ndarray:
                 """Return the block of the inverse, from a solve with the group's columns of the identity."""
@@ -1043,7 +1062,7 @@ class Information(_Factors):
     def _gain_times(self, D: np.ndarray) -> np.ndarray:
         r"""Return :math:`K D = G (w \circ (G^T H^T S_z^{-1} D))`: ``with_data``'s product (``_carried``) for a block of innovations."""
         problem = self.problem
-        Y = np.asarray(problem.obs_cov.data.solve(D))
+        Y = np.asarray(self._solve_obs(D))
         HtY = np.asarray(problem._operator.data._transpose() @ Y)
         return self.G @ (self.weights()[:, None] * (self.G.T @ HtY))
 
@@ -1063,12 +1082,12 @@ class Information(_Factors):
     def _innovation_norm(self) -> float:
         r""":math:`q = d^T S_z^{-1} d`, one solve with the observation covariance, kept (each new set of observations has its own)."""
         d = _innovation(self.problem)
-        return float(d @ np.asarray(self.problem.obs_cov.data.solve(d)))
+        return float(d @ np.asarray(self._solve_obs(d)))
 
     def _carry(self, D: np.ndarray) -> np.ndarray:
         r"""Return :math:`G^T H^T S_z^{-1} D`, the innovations carried as :math:`b` is (``_carried``)."""
         problem = self.problem
-        Y = np.asarray(problem.obs_cov.data.solve(D))
+        Y = np.asarray(self._solve_obs(D))
         return self.G.T @ np.asarray(problem._operator.data._transpose() @ Y)
 
     def _factor_times(self, V: np.ndarray) -> np.ndarray:
@@ -1088,7 +1107,7 @@ class Information(_Factors):
         \gamma) P V`.
         """
         HKV = np.asarray(self.problem._operator.data @ self._gain_times(V), dtype=float)
-        return self.gamma * np.asarray(self.problem.obs_cov.data.solve(V - HKV))
+        return self.gamma * np.asarray(self._solve_obs(V - HKV))
 
     def _whitened_increment(self, y: np.ndarray) -> np.ndarray:
         r"""
@@ -1107,7 +1126,7 @@ class Information(_Factors):
         Only :math:`b` changes: a solve with the observation covariance, a
         product with :math:`H^T` and one with :math:`G^T` (``n x n``).
         """
-        innovation = _read_only(_carried(problem, self.G))
+        innovation = _read_only(_carried(problem, self.G, self._solve_obs))
         return dataclasses.replace(self, problem=problem, innovation=innovation)
 
 
@@ -1120,9 +1139,11 @@ def _innovation(problem: Problem) -> np.ndarray:
     return problem.obs.values - problem.predict(problem.prior).values
 
 
-def _carried(problem: Problem, G: np.ndarray) -> np.ndarray:
-    r"""Return :math:`b = G^T H^T S_z^{-1} d`, the innovation carried into the information form's eigenvectors."""
-    y = problem.obs_cov.data.solve(_innovation(problem))
+def _carried(
+    problem: Problem, G: np.ndarray, solve: Callable[[np.ndarray], np.ndarray]
+) -> np.ndarray:
+    r"""Return :math:`b = G^T H^T S_z^{-1} d`, the innovation carried into the information form's eigenvectors, with `solve` applying :math:`S_z^{-1}`."""
+    y = np.asarray(solve(_innovation(problem)))
     return G.T @ (problem._operator.data._transpose() @ y)
 
 
