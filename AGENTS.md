@@ -190,7 +190,7 @@ inversion is a function that builds the `Problem`.
 
 A module `methods/<name>.py` with three things: its options (a frozen dataclass
 with a `gamma` field, values checked in `__post_init__`), its solution (answers
-`posterior.Solution`; `with_gamma`, `with_data`, `sample`, `kept` (a sampler's kept draws), `lengths` (its chains'), `stats` (its record of each kept draw, by ArviZ's names), `at_bound`, `estimate_is_mean`,
+`posterior.Solution`; `with_gamma`, `with_data` (with a `seed`, which `trials` gives each trial, when its options have one), `sample`, `kept` (a sampler's kept draws), `lengths` (its chains'), `stats` (its record of each kept draw, by ArviZ's names), `at_bound`, `estimate_is_mean`,
 `estimate_is_linear`, `evidence_is_laplace` (`no_evidence`, why not), and `innovation_precision` with `self_sensitivity` (for
 `Posterior.data_worth`) only if it can; a member it lacks raises `fips.UnavailableError`), and a function `(problem, options) -> Posterior`. Add a line to
 `_METHODS` in `methods/__init__.py`; its docstring says how a lognormal or an

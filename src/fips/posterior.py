@@ -34,7 +34,7 @@ from scipy.linalg import inv, solve
 from scipy.special import chdtrc, ndtr, ndtri  # chi-squared sf, normal CDF, inverse
 
 from fips._draws import _diagnostics, _equal_chains, _warn_if_tails_thin
-from fips._errors import warn
+from fips._errors import _quietly, warn
 from fips.covariance import Covariance, CovarianceModel
 from fips.linalg import LinearOperator
 from fips.linalg.forms import _adopt, _solve_psd
@@ -3253,6 +3253,10 @@ class Posterior:
             method cannot take new observations without solving again (its
             solution has no ``with_data``).
         """
+        return self._with_data(obs)
+
+    def _with_data(self, obs: Vector, seed: int | None = None) -> "Posterior":
+        """Return :meth:`with_data`'s posterior, its sampler (if any) drawing from `seed` instead of the method's."""
         resolve = self._optional("with_data", "the posterior of other observations")
         obs = _vector(obs, "obs")
         problem = self._problem
@@ -3268,7 +3272,8 @@ class Posterior:
             forward=problem.forward,
             offset=problem.offset,
         )
-        post = type(self)(new, resolve(new), self._options)
+        solution = resolve(new) if seed is None else resolve(new, seed=seed)
+        post = type(self)(new, solution, self._options)
         _ = post.estimate
         return post
 
@@ -3778,57 +3783,80 @@ class Posterior:
         claimed = claims(self) if linear else None
         del resolve  # with_data checks the observations' labels each trial
 
+        # a trial's sampler draws from its own seed, made from the method's and the
+        # trial's number (so the worlds, drawn from `rng`, are those of before);
+        # a method with no seed in its options takes none
+        base = getattr(self._options, "seed", None)
         truths, estimates, chi2, stds, lowers, uppers = [], [], [], [], [], []
-        for _ in range(n):
-            drawn = make(generator)
-            if (
-                not isinstance(drawn, tuple)
-                or len(drawn) != 2
-                or not all(isinstance(v, Vector) for v in drawn)
-            ):
-                raise TypeError(
-                    "The world must return (truth, obs), two Vectors, as "
-                    "Problem.simulate does."
+        warned: list[str] = []  # the first warning of each trial that warned
+        for number in range(n):
+            # a trial's own warnings are logged at INFO, and counted below
+            with _quietly() as quieted:
+                drawn = make(generator)
+                if (
+                    not isinstance(drawn, tuple)
+                    or len(drawn) != 2
+                    or not all(isinstance(v, Vector) for v in drawn)
+                ):
+                    raise TypeError(
+                        "The world must return (truth, obs), two Vectors, as "
+                        "Problem.simulate does."
+                    )
+                truth, obs = drawn
+                seed = None
+                if base is not None:
+                    seed = int(
+                        np.random.SeedSequence([base, number]).generate_state(1)[0]
+                    )
+                trial = self._with_data(obs, seed=seed)
+                estimate = trial.estimate.values
+                if W_world is not None:
+                    Ww_form = W_world._on(
+                        rows_of_W,
+                        truth.space,
+                        "W_world",
+                        ("the rows of W", "the world's truth"),
+                    )
+                    x = np.asarray(Ww_form @ truth.values)
+                else:
+                    x = truth.values
+                    if truth.space != state:
+                        try:
+                            x = x[
+                                state._align(
+                                    truth.space, "the truth", "The truth and the state"
+                                )
+                            ]
+                        except ValueError as error:
+                            raise ValueError(
+                                f"{error} A world on other state labels is compared on "
+                                "totals: give W on the posterior's state and W_world on "
+                                "the world's."
+                            ) from None
+                    if W_form is not None:
+                        x = np.asarray(W_form @ x)
+                truths.append(x)
+                estimates.append(
+                    estimate if W_form is None else np.asarray(W_form @ estimate)
                 )
-            truth, obs = drawn
-            trial = self.with_data(obs)
-            estimate = trial.estimate.values
-            if W_world is not None:
-                Ww_form = W_world._on(
-                    rows_of_W,
-                    truth.space,
-                    "W_world",
-                    ("the rows of W", "the world's truth"),
-                )
-                x = np.asarray(Ww_form @ truth.values)
-            else:
-                x = truth.values
-                if truth.space != state:
-                    try:
-                        x = x[
-                            state._align(
-                                truth.space, "the truth", "The truth and the state"
-                            )
-                        ]
-                    except ValueError as error:
-                        raise ValueError(
-                            f"{error} A world on other state labels is compared on "
-                            "totals: give W on the posterior's state and W_world on "
-                            "the world's."
-                        ) from None
-                if W_form is not None:
-                    x = np.asarray(W_form @ x)
-            truths.append(x)
-            estimates.append(
-                estimate if W_form is None else np.asarray(W_form @ estimate)
+                chi2.append(trial.reduced_chi2)
+                std = claims(trial) if claimed is None else claimed
+                if claimed is None:
+                    stds.append(std)
+                lower, upper = trial._interval(W_form, std, level)
+                lowers.append(lower)
+                uppers.append(upper)
+            if quieted:
+                warned.append(quieted[0])
+        if warned:
+            warn(
+                logger,
+                "%d of the %d trials warned of their own posterior (each warning is "
+                "logged at INFO under the fips logger); the first: %s",
+                len(warned),
+                n,
+                warned[0],
             )
-            chi2.append(trial.reduced_chi2)
-            std = claims(trial) if claimed is None else claimed
-            if claimed is None:
-                stds.append(std)
-            lower, upper = trial._interval(W_form, std, level)
-            lowers.append(lower)
-            uppers.append(upper)
         k = len(index)
         rows = pd.MultiIndex.from_arrays(
             [np.repeat(np.arange(n), k)]

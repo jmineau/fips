@@ -20,16 +20,19 @@ from collections.abc import Iterator
 _PACKAGE = os.path.dirname(os.path.abspath(__file__)) + os.sep
 """The folder fips is imported from: a frame whose file is in it is fips's own."""
 
-_QUIET: contextvars.ContextVar[bool] = contextvars.ContextVar("_QUIET", default=False)
-"""Whether :func:`warn` logs at INFO alone (inside :func:`_quietly`)."""
+_QUIET: contextvars.ContextVar[list[str] | None] = contextvars.ContextVar(
+    "_QUIET", default=None
+)
+"""Inside :func:`_quietly`, the messages :func:`warn` logged at INFO alone; None outside."""
 
 
 @contextlib.contextmanager
-def _quietly() -> Iterator[None]:
-    """Make :func:`warn` log at INFO alone, with no Python warning, inside the block."""
-    token = _QUIET.set(True)
+def _quietly() -> Iterator[list[str]]:
+    """Make :func:`warn` log at INFO alone, with no Python warning, inside the block; yield the list of the messages it kept quiet."""
+    quieted: list[str] = []
+    token = _QUIET.set(quieted)
     try:
-        yield
+        yield quieted
     finally:
         _QUIET.reset(token)
 
@@ -124,7 +127,9 @@ def warn(logger: logging.Logger, message: str, *args: object) -> None:
     and a traceback under ``-W error`` name the user's code. Inside
     :func:`_quietly`, it logs at INFO alone.
     """
-    if _QUIET.get():
+    quieted = _QUIET.get()
+    if quieted is not None:
+        quieted.append(message % args if args else message)
         logger.info(message, *args)
         return
     logger.warning(message, *args)
