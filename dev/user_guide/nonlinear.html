@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=e0193a5c"></script>
+    <script src="../_static/documentation_options.js?v=c7d61abc"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -867,7 +867,10 @@ hint of where the model bends most, not a warning.</p>
 warns when the draws have fewer than 100 effective draws in the tails for
 each chain (400 for the default four chains), for any aggregate read or for
 at least 5% of the elements: an interval’s ends are quantiles of the draws
-out there, which are fewer than the draws overall. Raise <code class="docutils literal notranslate"><span class="pre">draws</span></code>.</p>
+out there, which are fewer than the draws overall. That floor holds up to a
+95% interval; a wider one’s ends lie further out, so its floor grows until
+each end is as accurate as a 95% interval’s (about 3.3 times as many at 99%,
+22 times at 99.9%). Raise <code class="docutils literal notranslate"><span class="pre">draws</span></code>.</p>
 <p><strong>The checks as a table.</strong> <a class="reference internal" href="../reference/api/fips.Posterior.diagnostics.html#fips.Posterior.diagnostics" title="fips.Posterior.diagnostics"><code class="xref py py-meth docutils literal notranslate"><span class="pre">diagnostics()</span></code></a> gives, for
 each element (or each row of an aggregation <code class="docutils literal notranslate"><span class="pre">W</span></code>), the numbers a PyMC or
 Stan user reads after a run, as ArviZ computes them: the mean and standard
@@ -951,7 +954,7 @@ Vehtari et al. (2021) and Stan do. Set it to 0.95 for the same numbers.</p>
 <span class="go">    Data variables:</span>
 <span class="go">        flux     (chain, draw, cell) float64 160kB 0.5425 0.3668 ... 0.2786 0.1602</span>
 <span class="go">    Attributes:</span>
-<span class="go">        created_at:                 2026-11-25T21:55:40.145372+00:00</span>
+<span class="go">        created_at:                 2026-11-25T22:29:22.992671+00:00</span>
 <span class="go">        creation_library:           ArviZ</span>
 <span class="go">        creation_library_version:   1.3.1</span>
 <span class="go">        creation_library_language:  Python</span>

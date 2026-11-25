@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=e0193a5c"></script>
+    <script src="../../_static/documentation_options.js?v=c7d61abc"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -1081,7 +1081,9 @@
 <dd><p>Return the mean, standard deviation and central interval of each element or aggregate, from the draws.</p>
 <p>It warns as a sampled posterior’s <a class="reference internal" href="fips.Posterior.uncertainty.html#fips.Posterior.uncertainty" title="fips.Posterior.uncertainty"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Posterior.uncertainty</span></code></a> does: when the chains disagree on an
 aggregate, and when the draws in the tails, which the interval’s ends
-are read from, are fewer than about 100 effective ones for each chain.</p>
+are read from, are fewer than 100 effective ones for each chain up to
+a <cite>level</cite> of 0.95, and more above it, so each end stays as accurate
+as the 95% interval’s.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">

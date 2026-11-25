@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=e0193a5c"></script>
+    <script src="../../_static/documentation_options.js?v=c7d61abc"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -1483,7 +1483,9 @@
 <span class="sd">        It warns as a sampled posterior's :meth:`Posterior.uncertainty</span>
 <span class="sd">        &lt;fips.Posterior.uncertainty&gt;` does: when the chains disagree on an</span>
 <span class="sd">        aggregate, and when the draws in the tails, which the interval's ends</span>
-<span class="sd">        are read from, are fewer than about 100 effective ones for each chain.</span>
+<span class="sd">        are read from, are fewer than 100 effective ones for each chain up to</span>
+<span class="sd">        a `level` of 0.95, and more above it, so each end stays as accurate</span>
+<span class="sd">        as the 95% interval's.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1513,7 +1515,9 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">numbers</span><span class="o">.</span><span class="n">Real</span><span class="p">)</span> <span class="ow">and</span> <span class="mf">0.0</span> <span class="o">&lt;</span> <span class="n">level</span> <span class="o">&lt;</span> <span class="mf">1.0</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"level is a probability between 0 and 1, got </span><span class="si">{</span><span class="n">level</span><span class="si">!r}</span><span class="s2">."</span><span class="p">)</span>
         <span class="n">values</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read</span><span class="p">(</span><span class="n">W</span><span class="p">)</span>
-        <span class="n">_warn_if_tails_thin</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lengths</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="n">aggregates</span><span class="o">=</span><span class="n">W</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">_warn_if_tails_thin</span><span class="p">(</span>
+            <span class="n">values</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lengths</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="n">aggregates</span><span class="o">=</span><span class="n">W</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">level</span>
+        <span class="p">)</span>
         <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span>
             <span class="n">values</span><span class="p">,</span> <span class="p">[(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">level</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">,</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">level</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span>
         <span class="p">)</span>

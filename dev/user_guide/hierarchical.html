@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=e0193a5c"></script>
+    <script src="../_static/documentation_options.js?v=c7d61abc"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -830,7 +830,8 @@ and look at <code class="docutils literal notranslate"><span class="pre">result.
 <li><p><strong>The chains disagree on an aggregate that is read</strong> (a warning from
 <code class="docutils literal notranslate"><span class="pre">cov(W)</span></code> or <code class="docutils literal notranslate"><span class="pre">uncertainty(W)</span></code>, above 1.1), and <strong>an interval read from
 too few draws in its tails</strong> (a warning from <code class="docutils literal notranslate"><span class="pre">uncertainty</span></code>, under 100
-effective draws for each chain), as a sampled <a class="reference internal" href="../reference/api/fips.Posterior.html#fips.Posterior" title="fips.Posterior"><code class="xref py py-class docutils literal notranslate"><span class="pre">Posterior</span></code></a>’s:
+effective draws for each chain up to a 95% interval, more for a wider one
+so each end stays as accurate), as a sampled <a class="reference internal" href="../reference/api/fips.Posterior.html#fips.Posterior" title="fips.Posterior"><code class="xref py py-class docutils literal notranslate"><span class="pre">Posterior</span></code></a>’s:
 run more <code class="docutils literal notranslate"><span class="pre">draws</span></code>.</p></li>
 <li><p><strong>A low acceptance or few effective draws</strong>: run more <code class="docutils literal notranslate"><span class="pre">draws</span></code> or a
 longer <code class="docutils literal notranslate"><span class="pre">burn_in</span></code>. An <code class="docutils literal notranslate"><span class="pre">INFO</span></code> record gives both, and each
