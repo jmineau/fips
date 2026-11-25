@@ -1065,7 +1065,9 @@ class Hierarchical:
         if not (isinstance(level, numbers.Real) and 0.0 < level < 1.0):
             raise ValueError(f"level is a probability between 0 and 1, got {level!r}.")
         values, index = self._read(W)
-        _warn_if_tails_thin(values, self._lengths, logger, aggregates=W is not None)
+        _warn_if_tails_thin(
+            values, self._lengths, logger, aggregates=W is not None, level=level
+        )
         lower, upper = np.quantile(
             values, [(1.0 - level) / 2.0, (1.0 + level) / 2.0], axis=1
         )

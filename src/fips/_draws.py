@@ -383,6 +383,10 @@ chains) of 23 problems of 100 to 900 elements, both transforms
 them) fired on 4, all in the settings whose chains mix slowest; one of
 them was also the one solve with 5% of its elements' standard deviations
 more than 10% off a long solve's.
+
+A wider interval's tails hold fewer draws, so its floor is this times
+``0.05 / (1 - level)``: as many effective draws beyond each end as the 95%
+interval's (:func:`_warn_if_tails_thin`).
 """
 
 _DIVERGENT = 1000.0
@@ -600,9 +604,10 @@ def _warn_if_tails_thin(
     lengths: tuple[int, ...],
     logger: logging.Logger,
     aggregates: bool,
+    level: float,
 ) -> None:
     """
-    Warn (`logger`, and a :class:`~fips.FipsWarning`) when an interval is read from draws with fewer than :data:`_THIN_TAILS` effective draws in the tails for each chain (:func:`_ess_tail`).
+    Warn (`logger`, and a :class:`~fips.FipsWarning`) when an interval of probability `level` is read from draws with fewer than :data:`_THIN_TAILS` effective draws in the tails for each chain (:func:`_ess_tail`), times ``0.05 / (1 - level)`` above a level of 0.95.
 
     `draws` are the rows the interval is read for, the chains side by side,
     of the `lengths` given (none: one chain). Of `aggregates` (rows of
@@ -617,7 +622,7 @@ def _warn_if_tails_thin(
     if min(lengths) < 4:
         return
     ess = _ess_tail(draws, lengths)
-    floor = _THIN_TAILS * len(lengths)
+    floor = math.ceil(_THIN_TAILS * len(lengths) * max(1.0, 0.05 / (1.0 - level)))
     thin = ess < floor
     if not thin.any():
         return

@@ -887,8 +887,9 @@ class Posterior:
         is the estimate plus or minus :math:`z` times `std`, its standard
         deviations, with :math:`z` the normal's ``(1 + level) / 2`` quantile
         (1.96 for 0.95): the Gaussian's interval. A sampled one warns when its
-        draws have fewer than 100 effective draws in the tails for each chain
-        (any aggregate, or 5% of the elements: ``_draws._warn_if_tails_thin``).
+        draws have fewer than 100 effective draws in the tails for each chain,
+        more for a level above 0.95 (any aggregate, or 5% of the elements:
+        ``_draws._warn_if_tails_thin``).
         """
         kept = getattr(self._solution, "kept", None)
         if kept is not None:
@@ -896,7 +897,11 @@ class Posterior:
             if W_form is not None:
                 draws = np.asarray(W_form @ draws, dtype=float)
             _warn_if_tails_thin(
-                draws, self._lengths(draws), logger, aggregates=W_form is not None
+                draws,
+                self._lengths(draws),
+                logger,
+                aggregates=W_form is not None,
+                level=level,
             )
             lower, upper = np.quantile(
                 draws, [(1.0 - level) / 2.0, (1.0 + level) / 2.0], axis=1
