@@ -899,7 +899,8 @@ class Posterior:
         deviations, with :math:`z` the normal's ``(1 + level) / 2`` quantile
         (1.96 for 0.95): the Gaussian's interval. A sampled one warns when its
         draws have fewer than 100 effective draws in the tails for each chain,
-        more for a level above 0.95 (any aggregate, or 5% of the elements:
+        and more above a level of 0.95, so each end stays as accurate as the
+        95% interval's (any aggregate, or 5% of the elements:
         ``_draws._warn_if_tails_thin``).
         """
         kept = getattr(self._solution, "kept", None)

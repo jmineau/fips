@@ -350,7 +350,10 @@ Reading an interval (the ``lower`` and ``upper`` of
 warns when the draws have fewer than 100 effective draws in the tails for
 each chain (400 for the default four chains), for any aggregate read or for
 at least 5% of the elements: an interval's ends are quantiles of the draws
-out there, which are fewer than the draws overall. Raise ``draws``.
+out there, which are fewer than the draws overall. That floor holds up to a
+95% interval; a wider one's ends lie further out, so its floor grows until
+each end is as accurate as a 95% interval's (about 3.3 times as many at 99%,
+22 times at 99.9%). Raise ``draws``.
 
 **The checks as a table.** :meth:`~fips.Posterior.diagnostics` gives, for
 each element (or each row of an aggregation ``W``), the numbers a PyMC or

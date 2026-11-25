@@ -1035,7 +1035,9 @@ class Hierarchical:
         It warns as a sampled posterior's :meth:`Posterior.uncertainty
         <fips.Posterior.uncertainty>` does: when the chains disagree on an
         aggregate, and when the draws in the tails, which the interval's ends
-        are read from, are fewer than about 100 effective ones for each chain.
+        are read from, are fewer than 100 effective ones for each chain up to
+        a `level` of 0.95, and more above it, so each end stays as accurate
+        as the 95% interval's.
 
         Parameters
         ----------

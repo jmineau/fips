@@ -189,7 +189,8 @@ worst element or row, and says how many draws would do where it can tell.
      - The total you are reading is not settled.
      - Raise ``draws``.
    * - **Too few draws in the tails** (reading an interval: fewer than 100
-       effective draws a chain in the tails, for any total or 5% of the
+       effective draws a chain in the tails up to a 95% interval, more for a
+       wider one so each end stays as accurate, for any total or 5% of the
        elements)
      - An interval's ends are the 5% and 95% quantiles of the draws, and
        few draws are out there.
