@@ -351,6 +351,12 @@ class _Aggregated(ForwardModel):
         form = W._on(W.rows, J.rows, "the aggregation")
         return Operator(form @ J.data, W.rows, J.cols, name=J.name)
 
+    def _gradient(self, x: np.ndarray, v: np.ndarray) -> np.ndarray:
+        r"""Return :math:`(W J(x))^T v = J(x)^T (W^T v)`: the model's own product, so :math:`W J(x)` is never formed."""
+        W = self.aggregation
+        form = W._on(W.rows, self.model.rows, "the aggregation")
+        return self.model._gradient(x, np.asarray(form._transpose() @ v, dtype=float))
+
     def _curvature(self, x: np.ndarray, v: np.ndarray) -> np.ndarray | None:
         r"""Return the model's curvature with the weights :math:`W^T v`: :math:`\sum_k v_k \nabla^2 (W F)_k = \sum_j (W^T v)_j \nabla^2 F_j`."""
         W = self.aggregation

@@ -351,8 +351,9 @@ def _eigenpairs(
     is formed from ``r`` products and eigendecomposed (``eigh``); otherwise
     Lanczos finds the pairs from products (``eigsh``, ``which="LA"``, a
     start drawn from `seed`, so that a solve is reproducible). Eigenvalues at roundoff of
-    the largest (below ``r * eps`` of it, or for Lanczos ``cg_tol`` of it) are
-    dropped: they are directions the data do not see.
+    the largest (below ``r * eps`` of it) are dropped: they are directions the
+    data do not see. Lanczos's ``cg_tol`` bounds each eigenvalue's error relative
+    to that eigenvalue, so a small one it returns is kept.
 
     Raises
     ------
@@ -367,7 +368,6 @@ def _eigenpairs(
         Ht = system.hessian(np.eye(r))
         values, vectors = (np.asarray(a) for a in eigh(0.5 * (Ht + Ht.T)))
         eigenvalues, vectors = values[::-1][:k], vectors[:, ::-1][:, :k]
-        floor = r * np.finfo(float).eps
     else:
         start = np.random.default_rng(seed).standard_normal(r)
         try:
@@ -382,8 +382,7 @@ def _eigenpairs(
             ) from error
         order = np.argsort(values)[::-1]
         eigenvalues, vectors = values[order], vectors[:, order]
-        floor = max(r * np.finfo(float).eps, cg_tol)
-    kept = eigenvalues > floor * eigenvalues.max(initial=0.0)
+    kept = eigenvalues > r * np.finfo(float).eps * eigenvalues.max(initial=0.0)
     return (
         np.ascontiguousarray(eigenvalues[kept]) / system.gamma,
         np.ascontiguousarray(vectors[:, kept]),
