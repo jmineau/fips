@@ -49,7 +49,7 @@ import math
 
 import numpy as np
 from scipy.special import ndtri
-from scipy.stats import rankdata
+from scipy.stats import norm, rankdata
 
 from fips._errors import warn
 
@@ -383,6 +383,10 @@ chains) of 23 problems of 100 to 900 elements, both transforms
 them) fired on 4, all in the settings whose chains mix slowest; one of
 them was also the one solve with 5% of its elements' standard deviations
 more than 10% off a long solve's.
+
+A wider interval's ends lie further out, where the draws are fewer, so above
+a level of 0.95 the floor grows until each end is as accurate as the 95%
+interval's (:func:`_tails_floor`).
 """
 
 _DIVERGENT = 1000.0
@@ -595,14 +599,36 @@ def _diagnostics(draws: np.ndarray, lengths: tuple[int, ...]) -> dict[str, np.nd
     }
 
 
+def _tails_floor(level: float, chains: int) -> int:
+    r"""
+    Return the effective draws in the tails below which an interval of probability `level` read from `chains` chains warns: :data:`_THIN_TAILS` for each chain up to a level of 0.95, and above it as many as keep each end as accurate as the 95% interval's.
+
+    The Monte Carlo standard error of the :math:`p` quantile :math:`q` read
+    from :math:`E` effective draws is :math:`\sqrt{p (1 - p) / E} / f(q)`,
+    with :math:`f` the posterior's density at :math:`q`. For a normal
+    posterior, in its standard deviations, :math:`f(q)` is the normal density
+    :math:`\phi(z)` at the matching normal quantile :math:`z`. So an end at
+    :math:`p = (1 - level) / 2` has the error of the 95% interval's
+    (:math:`p = 0.025`) with :math:`p (1 - p) / \phi(z)^2`, over the same at
+    0.025, times the draws: about 3.3 times at 0.99 and 22 times at 0.999.
+    """
+    floor = _THIN_TAILS * chains
+    if level <= 0.95:
+        return floor
+    p = np.array([(1.0 - level) / 2.0, 0.025])
+    cost = p * (1.0 - p) / norm.pdf(ndtri(p)) ** 2
+    return math.ceil(floor * float(cost[0] / cost[1]))
+
+
 def _warn_if_tails_thin(
     draws: np.ndarray,
     lengths: tuple[int, ...],
     logger: logging.Logger,
     aggregates: bool,
+    level: float,
 ) -> None:
     """
-    Warn (`logger`, and a :class:`~fips.FipsWarning`) when an interval is read from draws with fewer than :data:`_THIN_TAILS` effective draws in the tails for each chain (:func:`_ess_tail`).
+    Warn (`logger`, and a :class:`~fips.FipsWarning`) when an interval of probability `level` is read from draws with fewer than :data:`_THIN_TAILS` effective draws in the tails for each chain (:func:`_ess_tail`), more above a level of 0.95 (:func:`_tails_floor`).
 
     `draws` are the rows the interval is read for, the chains side by side,
     of the `lengths` given (none: one chain). Of `aggregates` (rows of
@@ -617,7 +643,7 @@ def _warn_if_tails_thin(
     if min(lengths) < 4:
         return
     ess = _ess_tail(draws, lengths)
-    floor = _THIN_TAILS * len(lengths)
+    floor = _tails_floor(level, len(lengths))
     thin = ess < floor
     if not thin.any():
         return

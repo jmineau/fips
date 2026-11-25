@@ -21,10 +21,12 @@ table of the right shape, so:
    INFO (it does not warn: they did not mark the solves that were off); an interval
    read from draws with fewer than 100 effective draws in the tails for each
    chain warns (any aggregate, or 5% of the elements), and one read from
-   enough does not.
+   enough does not; above a level of 0.95 the floor grows so each end is as
+   accurate as the 95% interval's.
 """
 
 import logging
+from statistics import NormalDist
 
 import numpy as np
 import pandas as pd
@@ -312,6 +314,40 @@ def test_an_interval_from_enough_draws_does_not_warn(caplog):
     assert (post.diagnostics()["ess_tail"] > 1000).all()
 
 
+@pytest.mark.parametrize(
+    ("level", "floor"), [(0.5, 400), (0.95, 400), (0.99, 1334), (0.999, 8870)]
+)
+def test_the_tails_floor_keeps_each_end_as_accurate_as_the_95_interval(level, floor):
+    """Up to 95% the floor is 100 effective draws a chain; above it, as many as give each end the Monte Carlo error of the 95% interval's, sqrt(p (1 - p) / E) / phi(z) in a normal posterior's standard deviations (about 3.3 times at 0.99, 22 at 0.999)."""
+    assert _draws._tails_floor(level, 4) == floor
+
+    def error(p: float, draws: float) -> float:
+        normal = NormalDist()
+        return (p * (1 - p) / draws) ** 0.5 / normal.pdf(normal.inv_cdf(p))
+
+    if level > 0.95:
+        assert error((1 - level) / 2, floor) == pytest.approx(
+            error(0.025, 400), rel=1e-3
+        )
+
+
+@pytest.mark.parametrize("seed", [0, 1, 2])
+def test_a_99_interval_from_a_default_solve_does_not_warn(caplog, seed):
+    """2000 independent draws (four chains) have 1600 to 2100 effective draws in the tails, above the 99% interval's floor of 1334: its ends are good to about 0.1 standard deviation and it says nothing."""
+    post = fips.solve(linear_problem(), "gauss_newton", seed=seed)
+    with caplog.at_level(logging.INFO, logger="fips.posterior"):
+        post.uncertainty(level=0.99)
+    assert "effective draws in their tails" not in caplog.text
+
+
+def test_a_wider_interval_needs_more_tail_draws(caplog):
+    """A 99.9% interval's ends are each set by about one draw of 2000: its floor, 22 times the 95% interval's, warns (#253)."""
+    post = fips.solve(linear_problem(), "gauss_newton")
+    with caplog.at_level(logging.WARNING, logger="fips.posterior"):
+        post.uncertainty(level=0.999)
+    assert "30 of the 30 state elements have fewer than 8870" in caplog.text
+
+
 def test_a_few_elements_with_thin_tails_of_many_are_logged_not_warned(caplog):
     """Of more than 20 elements, fewer than 5% with thin tails are logged at INFO, as the chains' disagreement is."""
     rng = np.random.default_rng(5)
@@ -321,6 +357,8 @@ def test_a_few_elements_with_thin_tails_of_many_are_logged_not_warned(caplog):
     )  # one element of 40 with ~40 independent draws
     logger = logging.getLogger("fips.test")
     with caplog.at_level(logging.INFO, logger="fips.test"):
-        _draws._warn_if_tails_thin(draws, (1000,) * 4, logger, aggregates=False)
+        _draws._warn_if_tails_thin(
+            draws, (1000,) * 4, logger, aggregates=False, level=0.95
+        )
     assert "Too few elements to warn of" in caplog.text
     assert not [r for r in caplog.records if r.levelno >= logging.WARNING]

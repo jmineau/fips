@@ -299,7 +299,8 @@ Warnings and checks
 - **The chains disagree on an aggregate that is read** (a warning from
   ``cov(W)`` or ``uncertainty(W)``, above 1.1), and **an interval read from
   too few draws in its tails** (a warning from ``uncertainty``, under 100
-  effective draws for each chain), as a sampled :class:`~fips.Posterior`'s:
+  effective draws for each chain up to a 95% interval, more for a wider one
+  so each end stays as accurate), as a sampled :class:`~fips.Posterior`'s:
   run more ``draws``.
 - **A low acceptance or few effective draws**: run more ``draws`` or a
   longer ``burn_in``. An ``INFO`` record gives both, and each

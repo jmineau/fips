@@ -1035,7 +1035,9 @@ class Hierarchical:
         It warns as a sampled posterior's :meth:`Posterior.uncertainty
         <fips.Posterior.uncertainty>` does: when the chains disagree on an
         aggregate, and when the draws in the tails, which the interval's ends
-        are read from, are fewer than about 100 effective ones for each chain.
+        are read from, are fewer than 100 effective ones for each chain up to
+        a `level` of 0.95, and more above it, so each end stays as accurate
+        as the 95% interval's.
 
         Parameters
         ----------
@@ -1065,7 +1067,9 @@ class Hierarchical:
         if not (isinstance(level, numbers.Real) and 0.0 < level < 1.0):
             raise ValueError(f"level is a probability between 0 and 1, got {level!r}.")
         values, index = self._read(W)
-        _warn_if_tails_thin(values, self._lengths, logger, aggregates=W is not None)
+        _warn_if_tails_thin(
+            values, self._lengths, logger, aggregates=W is not None, level=level
+        )
         lower, upper = np.quantile(
             values, [(1.0 - level) / 2.0, (1.0 + level) / 2.0], axis=1
         )
