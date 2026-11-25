@@ -86,23 +86,6 @@ def _key_labels(
     """
     if isinstance(key, str):
         return _level(index, key, block)
-    if isinstance(key, pd.Grouper):
-        level = key.level
-        if not isinstance(level, str) or key.freq is None:
-            raise ValueError(
-                "A pandas Grouper in `by` needs a `level` (by name) and a "
-                "`freq`; a level on its own is its name."
-            )
-        values = _level(index, level, block)
-        # pandas numbers the bins of one key in time order, empty bins
-        # included (as size() lists them), whatever the order of the labels:
-        # bin the labels sorted, then put the bins back in the labels' order
-        order = np.argsort(values, kind="stable")
-        groups = pd.Series(np.arange(len(values)), index=values[order]).groupby(key)
-        bins = groups.size().index
-        labels = np.empty(len(values), dtype=np.intp)
-        labels[order] = groups.ngroup().to_numpy()
-        return pd.Index(bins.take(labels), name=level)
     if isinstance(key, pd.IntervalIndex):
         if key.name is None:
             raise ValueError(
@@ -127,6 +110,37 @@ def _key_labels(
         "Each key in `by` is a level name, a pandas Grouper, an IntervalIndex "
         f"or a Series, not {type(key).__name__}."
     )
+
+
+def _binned(blocks: Sequence[tuple[str, pd.Index]], key: pd.Grouper) -> pd.Index:
+    """
+    Return the bin of each label of `blocks` (their labels in order) by the pandas Grouper `key`.
+
+    The bins are made once, from every block's values: pandas starts them at
+    the first value, so blocks binned one at a time would not share them.
+
+    Raises
+    ------
+    ValueError
+        If `key` has no `level` (by name) or no `freq`, or a block lacks the level.
+    """
+    level = key.level
+    if not isinstance(level, str) or key.freq is None:
+        raise ValueError(
+            "A pandas Grouper in `by` needs a `level` (by name) and a "
+            "`freq`; a level on its own is its name."
+        )
+    parts = [_level(index, level, name) for name, index in blocks]
+    values = parts[0].append(parts[1:]) if len(parts) > 1 else parts[0]
+    # pandas numbers the bins of one key in time order, empty bins
+    # included (as size() lists them), whatever the order of the labels:
+    # bin the labels sorted, then put the bins back in the labels' order
+    order = np.argsort(values, kind="stable")
+    groups = pd.Series(np.arange(len(values)), index=values[order]).groupby(key)
+    bins = groups.size().index
+    labels = np.empty(len(values), dtype=np.intp)
+    labels[order] = groups.ngroup().to_numpy()
+    return pd.Index(bins.take(labels), name=level)
 
 
 def _mapped(
@@ -206,6 +220,9 @@ def _groups(
         raise ValueError("`by` needs at least one key.")
     columns = []
     for key in keys:
+        if isinstance(key, pd.Grouper):
+            columns.append(_binned(blocks, key))
+            continue
         parts = [_key_labels(index, key, name, dropna) for name, index in blocks]
         columns.append(parts[0].append(parts[1:]) if len(parts) > 1 else parts[0])
     names = [column.name for column in columns]
@@ -223,7 +240,12 @@ def _chosen(space: Space, blocks: "str | Sequence[str] | None") -> list[str]:
     """Return the names of `blocks` (every block of `space` by default), checked."""
     if blocks is None:
         return list(space.names)
-    chosen = [blocks] if isinstance(blocks, str) else list(blocks)
+    # names as the space keeps them (strings), each once
+    chosen = list(
+        dict.fromkeys(
+            str(name) for name in ([blocks] if isinstance(blocks, str) else blocks)
+        )
+    )
     unknown = [name for name in chosen if name not in space]
     if unknown:
         raise ValueError(

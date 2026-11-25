@@ -1208,6 +1208,26 @@ def test_an_aggregated_problem_takes_newton_steps_to_the_same_mode(monkeypatch, 
 
 
 @pytest.mark.parametrize("kind", KINDS)
+def test_an_aggregated_gradient_is_the_models_product(monkeypatch, kind):
+    """A sampler's gradient through an aggregation is J^T (W^T v), the model's own product: W J(x), and the model's Jacobian, are never formed."""
+    case = Case.random(kind, 24, 6, 16, std=0.8)
+    problem = case.problem()
+    W = fips.aggregate.sum(
+        problem.obs.space,
+        by=pd.Series(np.arange(16) // 2, index=problem.obs.space.select("conc")),
+    )
+    aggregated = problem.aggregate(W)
+    v = np.random.default_rng(1).normal(size=8)
+    expected = problem._gradient(case.x_0, W.dense().T @ v)
+
+    def no_jacobian(self, x):
+        raise AssertionError("the Jacobian was formed")
+
+    monkeypatch.setattr(type(problem.forward), "jacobian", no_jacobian)
+    np.testing.assert_allclose(aggregated._gradient(case.x_0, v), expected, rtol=1e-13)
+
+
+@pytest.mark.parametrize("kind", KINDS)
 @pytest.mark.parametrize("n, m", SIZES)
 def test_the_newton_mode_is_bfgs_minimum(kind, n, m):
     """SciPy's BFGS on the cost written densely (no Gauss-Newton, no Newton) finds the same mode, to its own precision."""

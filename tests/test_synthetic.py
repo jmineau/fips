@@ -842,6 +842,48 @@ def test_recovery_allocates_nothing_n_by_n_or_m_by_m(form):
     )
 
 
+def test_recovery_of_a_truth_and_uncertainty_of_a_sparse_w_allocate_no_n_by_n_or_n_by_k():
+    """
+    ``recovery(truth=...)`` per element builds no ``n x n`` identity, and ``uncertainty(W)`` keeps a sparse ``W`` sparse for its roundoff scale.
+
+    n = 4,000 and k = 400 per-cell totals, so one ``n x n`` array is 128 MB
+    and one ``n x k`` is 13 MB; each call's traced peak must stay under half
+    of the array it used to build.
+    """
+    n_t, n_c, m = 10, 400, 50
+    n = n_t * n_c
+    cells = pd.MultiIndex.from_product(
+        [pd.RangeIndex(n_t, name="t"), pd.RangeIndex(n_c, name="cell")]
+    )
+    prior = Vector.from_series(pd.Series(1.0, index=cells), block="flux")
+    obs = Vector.from_series(
+        pd.Series(0.0, index=pd.RangeIndex(m, name="obs_id")), block="co2"
+    )
+    H = np.random.default_rng(0).uniform(0, 1, (m, n))
+    post = fips.solve(
+        Problem(
+            prior=prior,
+            prior_cov=fips.Independent().with_std(0.5),
+            obs=obs,
+            obs_cov=fips.Independent().with_std(1.0),
+            forward=Operator(H, obs.space, prior.space),
+        )
+    )
+    W = fips.aggregate.sum(prior.space, by="cell")
+    _ = post.variances, post.cov(W)  # the posterior's own outputs, kept
+    for call, too_big in [
+        (lambda: post.recovery(truth=prior), n * n * 8),
+        (lambda: post.uncertainty(W), n * len(W.rows) * 8),
+    ]:
+        tracemalloc.start()
+        try:
+            call()
+            _, peak = tracemalloc.get_traced_memory()
+        finally:
+            tracemalloc.stop()
+        assert peak < too_big / 2, f"peak {peak / 1e6:.1f} MB"
+
+
 # ---------------------------------------------------------------------------
 # Posterior.trials: the loop as a method
 # ---------------------------------------------------------------------------
