@@ -12,7 +12,12 @@ import numpy as np
 import scipy.sparse as sp
 from scipy.linalg import block_diag
 
-from fips.linalg.forms import LinearOperator, _as_array, as_linear_operator
+from fips.linalg.forms import (
+    DiagonalOperator,
+    LinearOperator,
+    _as_array,
+    as_linear_operator,
+)
 
 
 class BlockDiagonalOperator(LinearOperator):
@@ -113,6 +118,22 @@ class BlockDiagonalOperator(LinearOperator):
                     kept.append(self.blocks[k]._select(mine, mine))
                 return kept[0] if len(kept) == 1 else BlockDiagonalOperator(kept)
         return super()._select(rows, cols)
+
+    def _add(self, other):
+        """Return ``self + other`` block by block when `other` is diagonal or block diagonal on the same rows, else None."""
+        if isinstance(other, BlockDiagonalOperator) and np.array_equal(
+            other._offsets, self._offsets
+        ):
+            parts = other.blocks
+        elif isinstance(other, DiagonalOperator):
+            parts = [
+                DiagonalOperator._adopt(other.values[rows]) for _, rows in self._parts()
+            ]
+        else:
+            return None
+        return BlockDiagonalOperator(
+            [a + b for a, b in zip(self.blocks, parts, strict=True)]
+        )
 
     def _csr(self):
         """Return the form as a CSR array, if every block is sparse or diagonal."""
