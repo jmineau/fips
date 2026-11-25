@@ -19,8 +19,10 @@ Each is a :class:`scipy.sparse.linalg.LinearOperator`, so ``matvec``,
   (``H @ S_0``) is computed through the factors and is dense; a product with a
   matrix-free side is matrix-free, applied term by term. ``A @ x`` with an
   array is an array, as in SciPy.
-- ``A + B`` and ``A - B`` follow the same rule (an array counts as dense), and
-  a scalar ``*`` or ``/`` keeps the form.
+- ``A + B`` and ``A - B`` follow the same rule (an array counts as dense),
+  except that a block diagonal form plus a diagonal one, or a block diagonal
+  one on the same rows, is added block by block and stays block diagonal; a
+  scalar ``*`` or ``/`` keeps the form.
 - A product of a sparse form and a dense array (``H @ X``, ``X @ H.T``) runs
   on threads when it is large, one block of the sparse matrix's rows to a
   thread, and is the same bit for bit as on one. The threads are the CPUs the

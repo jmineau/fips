@@ -170,7 +170,7 @@ def test_options_refuse_bad_values(kwargs):
 
 
 def test_a_tol_of_one_is_refused_by_name():
-    """CG starts at the prior, whose relative residual is 1: ``cg_tol=1`` would stop there and return the prior."""
+    """CG starts at the prior, which can already meet ``cg_tol=1``'s residual and be returned."""
     with pytest.raises(ValueError, match="cg_tol must be below 1, got 1.0"):
         fips.solve(build(seed=1), "variational", cg_tol=1.0)
     VariationalOptions(cg_tol=0.5, tol=10.0)  # tol is a step size, not a ratio
@@ -232,6 +232,77 @@ def test_default_tol_is_close():
     exact = fips.solve(problem)
     error = np.abs(post.estimate.values - exact.estimate.values)
     assert (error / np.sqrt(exact.variances.values)).max() < 1e-4
+
+
+def test_precise_observations_do_not_loosen_cg():
+    """Observations far more precise than the prior make the right side long (about 1e10 here); CG's residual is still held against the square root of its size, so at the default cg_tol the estimate is within 1e-6 posterior standard deviations of the analytic one, and chi2 is the analytic one."""
+    n, m = 30, 5
+    state = fips.Space({"x": pd.RangeIndex(n, name="i")})
+    obs = fips.Space({"z": pd.RangeIndex(m, name="j")})
+    H = np.zeros((m, n))
+    H[np.arange(m), np.arange(m)] = 1.0
+    obs_std = np.array([1e-5, 1e-4, 1e-3, 0.1, 0.3])
+    problem = fips.Problem(
+        prior=fips.Vector(np.zeros(n), state),
+        prior_cov=fips.Independent().with_std(1.0),
+        obs=fips.Vector(np.ones(m), obs),
+        obs_cov=fips.Covariance.diagonal(fips.Vector(obs_std**2, obs)),
+        forward=fips.Operator(H, obs, state),
+    )
+    post = fips.solve(problem, "variational")
+    exact = fips.solve(problem)
+    error = np.abs(post.estimate.values - exact.estimate.values)
+    assert (error / np.sqrt(exact.variances.values)).max() < 1e-6
+    assert post.chi2 == pytest.approx(exact.chi2, rel=1e-8)
+
+
+def test_cg_stops_above_roundoff():
+    """Observations a hundred million times more precise than the prior, on a random sparse H, make the right side so long that cg_tol times the square root of its size is below its roundoff; CG stops at roundoff instead of iterating on it, and the estimate is the analytic one to 1e-8 posterior standard deviations (without the floor it drifted by four)."""
+    n, m = 300, 20
+    state = fips.Space({"x": pd.RangeIndex(n, name="i")})
+    obs = fips.Space({"z": pd.RangeIndex(m, name="j")})
+    rng = np.random.default_rng(3)
+    H = sp.random(m, n, density=0.05, random_state=rng, format="csr").toarray()
+    obs_std = rng.uniform(1e-8, 7e-8, m)
+    problem = fips.Problem(
+        prior=fips.Vector(np.zeros(n), state),
+        prior_cov=fips.Independent().with_std(1.0),
+        obs=fips.Vector(rng.standard_normal(m), obs),
+        obs_cov=fips.Covariance.diagonal(fips.Vector(obs_std**2, obs)),
+        forward=fips.Operator(H, obs, state),
+    )
+    post = fips.solve(problem, "variational")
+    exact = fips.solve(problem)
+    error = np.abs(post.estimate.values - exact.estimate.values)
+    assert (error / np.sqrt(exact.variances.values)).max() < 1e-8
+
+
+def test_default_tol_keeps_small_eigenvalues():
+    """At the default cg_tol, Lanczos keeps a pair whose eigenvalue is far below the largest but still informative (they span 1e10 to 11 here), so the variances, DOFS and evidence are the analytic ones."""
+    n, m = 30, 5
+    state = fips.Space({"x": pd.RangeIndex(n, name="i")})
+    obs = fips.Space({"z": pd.RangeIndex(m, name="j")})
+    H = np.zeros((m, n))
+    H[np.arange(m), np.arange(m)] = 1.0
+    obs_std = np.array([1e-5, 1e-4, 1e-3, 0.1, 0.3])
+    problem = fips.Problem(
+        prior=fips.Vector(np.zeros(n), state),
+        prior_cov=fips.Independent().with_std(1.0),
+        # the prior predicts the precise observations, so CG's residual is small
+        obs=fips.Vector([0.0, 0.0, 0.0, 1.0, 1.0], obs),
+        obs_cov=fips.Covariance.diagonal(fips.Vector(obs_std**2, obs)),
+        forward=fips.Operator(H, obs, state),
+    )
+    post = fips.solve(problem, "variational")
+    exact = fips.solve(problem)
+    assert len(post.eigenvalues) == m
+    # 1 - lambda / (1 + lambda) cancels for lambda = 1e10: an absolute floor (of a
+    # prior variance of 1) for the smallest variances, which roundoff sets
+    np.testing.assert_allclose(
+        post.variances.values, exact.variances.values, rtol=1e-6, atol=1e-12
+    )
+    assert post.dofs == pytest.approx(exact.dofs, abs=1e-8)
+    assert post.log_evidence == pytest.approx(exact.log_evidence, abs=1e-8)
 
 
 def test_matrix_free_forward_operator():

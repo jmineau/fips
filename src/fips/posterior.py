@@ -34,7 +34,7 @@ from scipy.linalg import inv, solve
 from scipy.special import chdtrc, ndtr, ndtri  # chi-squared sf, normal CDF, inverse
 
 from fips._draws import _diagnostics, _equal_chains, _warn_if_tails_thin
-from fips._errors import warn
+from fips._errors import _quietly, warn
 from fips.covariance import Covariance, CovarianceModel
 from fips.linalg import LinearOperator
 from fips.linalg.forms import _adopt, _solve_psd
@@ -105,9 +105,13 @@ class Solution(Protocol):
 
     - ``with_gamma(gamma) -> Solution``: the solution at another
       regularization factor, without solving again (:meth:`Posterior.with_gamma`).
-    - ``with_data(problem) -> Solution``: the solution of `problem`, the same
-      problem with other values of the observations, without solving again
-      (:meth:`Posterior.with_data`).
+    - ``with_data(problem, seed=None) -> Solution``: the solution of
+      `problem`, the same problem with other values of the observations,
+      without solving again (:meth:`Posterior.with_data`); a sampled solution
+      draws from `seed` in place of its own when one is given (each trial of
+      :meth:`Posterior.trials` has its own), and any other ignores it. It is
+      passed only when the method's options have a ``seed``, and then to
+      whatever solution the method returned, the analytic one included.
     - ``innovation_precision(groups) -> list[np.ndarray]``: for each array of
       observation positions :math:`g`, the block :math:`P_{gg}` of
       :math:`P = (H S_0 H^T + S_z/\gamma)^{-1}` (``m_g x m_g``), and
@@ -413,7 +417,9 @@ def _times_pseudo_inverse(XWt: np.ndarray, W: LinearOperator) -> np.ndarray:
         ) from err
 
 
-def _largest_variance(Xt: np.ndarray | None, cov: LinearOperator) -> np.ndarray:
+def _largest_variance(
+    Xt: "np.ndarray | sp.sparray | None", cov: LinearOperator
+) -> np.ndarray:
     r"""
     Return the largest variance of each column of `Xt` under any covariance with `cov`'s variances.
 
@@ -422,12 +428,17 @@ def _largest_variance(Xt: np.ndarray | None, cov: LinearOperator) -> np.ndarray:
     :math:`S` has :math:`|S_{ij}| \le \sigma_i \sigma_j`, so this bounds
     :math:`|x|^T |S| |x|`, the size of the terms :math:`x^T S x` is summed
     from: the scale its roundoff is relative to. `Xt` None stands for the
-    identity (each element's own variance).
+    identity (each element's own variance). A sparse `Xt` stays sparse.
     """
     sigma = np.sqrt(np.maximum(cov.diagonal(), 0.0))
     if Xt is None:
         return sigma**2
-    return (np.abs(Xt).T @ sigma) ** 2
+    if isinstance(Xt, np.ndarray):
+        absolute = np.abs(Xt)
+    else:  # sparse: a new matrix of its entries' absolute values, still sparse
+        absolute = sp.csr_array(Xt)
+        absolute.data = np.abs(absolute.data)
+    return np.asarray(absolute.T @ sigma) ** 2
 
 
 def _checked_level(level: float) -> float:
@@ -1245,7 +1256,10 @@ class Posterior:
         :func:`_largest_variance` of the prior covariance for the rows of
         `W_form` (the state's elements for None).
         """
-        Wt = None if W_form is None else W_form._transpose().dense()  # n x k
+        if W_form is None:
+            return _largest_variance(None, self._problem.prior_cov.data)
+        sparse = W_form._csr()  # an aggregation's W is sparse: no n x k array
+        Wt = W_form._transpose().dense() if sparse is None else sparse.T
         return _largest_variance(Wt, self._problem.prior_cov.data)
 
     def _prior_variances(
@@ -3258,6 +3272,10 @@ class Posterior:
             method cannot take new observations without solving again (its
             solution has no ``with_data``).
         """
+        return self._with_data(obs)
+
+    def _with_data(self, obs: Vector, seed: int | None = None) -> "Posterior":
+        """Return :meth:`with_data`'s posterior, its sampler (if any) drawing from `seed` instead of the method's."""
         resolve = self._optional("with_data", "the posterior of other observations")
         obs = _vector(obs, "obs")
         problem = self._problem
@@ -3273,7 +3291,8 @@ class Posterior:
             forward=problem.forward,
             offset=problem.offset,
         )
-        post = type(self)(new, resolve(new), self._options)
+        solution = resolve(new) if seed is None else resolve(new, seed=seed)
+        post = type(self)(new, solution, self._options)
         _ = post.estimate
         return post
 
@@ -3546,14 +3565,13 @@ class Posterior:
             WK = self._solution.gain()  # n x m
             Wx0, Wmu = problem.prior.values, mu
             posterior_var = self.variances.values
-            Wt_post = Wt = np.eye(len(state))  # n x n: the per-element case
+            W_form = Ww_form = None  # the per-element case: W = I
             index = state.index
         else:
             W_form = self._aggregation(W)
             WK = self._solution.gain(W_form)  # k x m
             Wx0 = np.asarray(W_form @ problem.prior.values)
             posterior_var = self.cov(W).variances.values
-            Wt_post = W_form._transpose().dense()  # n x k
             index = W.rows.index
             if W_world is None:
                 Ww_form = W_form
@@ -3569,7 +3587,6 @@ class Posterior:
                     ("the rows of W", "the world's state"),
                 )
             Wmu = np.asarray(Ww_form @ mu)
-            Wt = Ww_form._transpose().dense()  # n_w x k
 
         estimate = Wx0 + WK @ d
         bias = estimate - Wmu
@@ -3579,13 +3596,15 @@ class Posterior:
         scale = _largest_variance(KT, world.obs_cov.data)
         if P is not None:
             # G^T = (W K H_w - W)^T = H_w^T (W K)^T - W^T, n x k
-            Gt = np.asarray(world._operator.data._transpose() @ KT) - Wt
+            Gt = np.asarray(world._operator.data._transpose() @ KT)
+            if Ww_form is None:
+                Gt[np.diag_indices(len(Gt))] -= 1.0
+            else:
+                Gt -= Ww_form._transpose().dense()  # n_w x k
             variance += np.einsum("ik,ik->k", Gt, np.asarray(P @ Gt))
             scale += _largest_variance(Gt, P)
         std = _std(variance, scale, "error variances")
-        prior_scale = _largest_variance(
-            None if W is None else Wt_post, problem.prior_cov.data
-        )
+        prior_scale = self._prior_scale(W_form)
         posterior_std = _std(posterior_var, prior_scale, "posterior variances")
 
         half = ndtri(0.5 + level / 2) * posterior_std  # half the interval
@@ -3783,57 +3802,80 @@ class Posterior:
         claimed = claims(self) if linear else None
         del resolve  # with_data checks the observations' labels each trial
 
+        # a trial's sampler draws from its own seed, made from the method's and the
+        # trial's number (so the worlds, drawn from `rng`, are those of before);
+        # a method with no seed in its options takes none
+        base = getattr(self._options, "seed", None)
         truths, estimates, chi2, stds, lowers, uppers = [], [], [], [], [], []
-        for _ in range(n):
-            drawn = make(generator)
-            if (
-                not isinstance(drawn, tuple)
-                or len(drawn) != 2
-                or not all(isinstance(v, Vector) for v in drawn)
-            ):
-                raise TypeError(
-                    "The world must return (truth, obs), two Vectors, as "
-                    "Problem.simulate does."
+        warned: list[str] = []  # the first warning of each trial that warned
+        for number in range(n):
+            # a trial's own warnings are logged at INFO, and counted below
+            with _quietly() as quieted:
+                drawn = make(generator)
+                if (
+                    not isinstance(drawn, tuple)
+                    or len(drawn) != 2
+                    or not all(isinstance(v, Vector) for v in drawn)
+                ):
+                    raise TypeError(
+                        "The world must return (truth, obs), two Vectors, as "
+                        "Problem.simulate does."
+                    )
+                truth, obs = drawn
+                seed = None
+                if base is not None:
+                    seed = int(
+                        np.random.SeedSequence([base, number]).generate_state(1)[0]
+                    )
+                trial = self._with_data(obs, seed=seed)
+                estimate = trial.estimate.values
+                if W_world is not None:
+                    Ww_form = W_world._on(
+                        rows_of_W,
+                        truth.space,
+                        "W_world",
+                        ("the rows of W", "the world's truth"),
+                    )
+                    x = np.asarray(Ww_form @ truth.values)
+                else:
+                    x = truth.values
+                    if truth.space != state:
+                        try:
+                            x = x[
+                                state._align(
+                                    truth.space, "the truth", "The truth and the state"
+                                )
+                            ]
+                        except ValueError as error:
+                            raise ValueError(
+                                f"{error} A world on other state labels is compared on "
+                                "totals: give W on the posterior's state and W_world on "
+                                "the world's."
+                            ) from None
+                    if W_form is not None:
+                        x = np.asarray(W_form @ x)
+                truths.append(x)
+                estimates.append(
+                    estimate if W_form is None else np.asarray(W_form @ estimate)
                 )
-            truth, obs = drawn
-            trial = self.with_data(obs)
-            estimate = trial.estimate.values
-            if W_world is not None:
-                Ww_form = W_world._on(
-                    rows_of_W,
-                    truth.space,
-                    "W_world",
-                    ("the rows of W", "the world's truth"),
-                )
-                x = np.asarray(Ww_form @ truth.values)
-            else:
-                x = truth.values
-                if truth.space != state:
-                    try:
-                        x = x[
-                            state._align(
-                                truth.space, "the truth", "The truth and the state"
-                            )
-                        ]
-                    except ValueError as error:
-                        raise ValueError(
-                            f"{error} A world on other state labels is compared on "
-                            "totals: give W on the posterior's state and W_world on "
-                            "the world's."
-                        ) from None
-                if W_form is not None:
-                    x = np.asarray(W_form @ x)
-            truths.append(x)
-            estimates.append(
-                estimate if W_form is None else np.asarray(W_form @ estimate)
+                chi2.append(trial.reduced_chi2)
+                std = claims(trial) if claimed is None else claimed
+                if claimed is None:
+                    stds.append(std)
+                lower, upper = trial._interval(W_form, std, level)
+                lowers.append(lower)
+                uppers.append(upper)
+            if quieted:
+                warned.append(quieted[0])
+        if warned:
+            warn(
+                logger,
+                "%d of the %d trials warned of their own posterior (each warning is "
+                "logged at INFO under the fips logger); the first: %s",
+                len(warned),
+                n,
+                warned[0],
             )
-            chi2.append(trial.reduced_chi2)
-            std = claims(trial) if claimed is None else claimed
-            if claimed is None:
-                stds.append(std)
-            lower, upper = trial._interval(W_form, std, level)
-            lowers.append(lower)
-            uppers.append(upper)
         k = len(index)
         rows = pd.MultiIndex.from_arrays(
             [np.repeat(np.arange(n), k)]

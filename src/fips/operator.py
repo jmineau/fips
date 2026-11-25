@@ -30,7 +30,7 @@ from fips.linalg import (
     SparseOperator,
     as_linear_operator,
 )
-from fips.linalg.forms import _adopt
+from fips.linalg.forms import _DENSE_FILL, _adopt
 from fips.space import Space, _listed
 from fips.vector import Vector
 
@@ -431,7 +431,9 @@ class Operator:
         -------
         Operator
             The assembled matrix: sparse if every block is sparse (or
-            diagonal), dense otherwise. A labeled block keeps its form
+            diagonal), or if its dense blocks leave it at most a quarter full
+            (a bias column beside a sparse Jacobian); dense otherwise. A
+            labeled block keeps its form
             when it covers its blocks' labels (a pandas-sparse frame is
             sparse); a single block that covers both spaces keeps its form.
 
@@ -566,6 +568,20 @@ class Operator:
         if len(forms) == 1 and len(row_space.names) == len(col_space.names) == 1:
             return cls._build(next(iter(forms.values())), row_space, col_space, name)
         parts = {key: form._csr() for key, form in forms.items()}
+        if any(part is None for part in parts.values()):
+            # a dense block (a bias column beside a sparse Jacobian) keeps the
+            # whole sparse while it is at most a quarter full, as a product does
+            stored = 0
+            for key, form in forms.items():
+                part = parts[key]
+                stored += np.count_nonzero(form.dense()) if part is None else part.nnz
+            if stored <= _DENSE_FILL * len(row_space) * len(col_space):
+                parts = {
+                    key: sp.csr_array(form.dense())
+                    if parts[key] is None
+                    else parts[key]
+                    for key, form in forms.items()
+                }
         if all(part is not None for part in parts.values()):
             grid = [
                 [parts.get((r, c)) for c in col_space.names] for r in row_space.names

@@ -410,6 +410,10 @@ class LinearOperator(_SciPyLinearOperator):
         """Return the form as a CSR array, or None if it is not sparse."""
         return None
 
+    def _add(self, other: "LinearOperator") -> "LinearOperator | None":
+        """Return ``self + other`` in a form of this one's own, or None if it has none (then :func:`_sum` picks the form)."""
+        return None
+
     def dense(self) -> np.ndarray:
         """
         Return the form as a dense NumPy array.
@@ -1335,6 +1339,11 @@ def _sum(a: LinearOperator, b: LinearOperator) -> LinearOperator:
         return _MatrixFreeSum(a, b)
     if isinstance(a, DiagonalOperator) and isinstance(b, DiagonalOperator):
         return DiagonalOperator._adopt(a.values + b.values)
+    total = a._add(b)  # a form kept by its own sum (block diagonal)
+    if total is None:
+        total = b._add(a)
+    if total is not None:
+        return total
     a_csr, b_csr = a._csr(), b._csr()
     if a_csr is not None and b_csr is not None:
         return SparseOperator._adopt(a_csr + b_csr)

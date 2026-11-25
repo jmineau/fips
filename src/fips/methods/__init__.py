@@ -28,9 +28,11 @@ below:
   the problem's spaces: ``estimate()``, ``variances()``, ``cov(W)``,
   ``gain(W)``, ``dofs()``, ``dofs_per_element()``, ``information()``,
   ``chi2()``, ``misfits()`` and ``chi2_tests()``. It may also have
-  ``with_gamma(gamma)`` and ``with_data(problem)``, which give another
-  solution without solving again, ``sample(N, rng)``, which draws from the
-  posterior (``Posterior.sample``), ``at_bound()``, which says which state
+  ``with_gamma(gamma)`` and ``with_data(problem, seed=None)``, which give
+  another solution without solving again (`seed`, given only when the
+  options have one, is for a sampler and ignored by any other solution),
+  ``sample(N, rng)``, which draws from the posterior (``Posterior.sample``),
+  ``at_bound()``, which says which state
   elements sit on a bound (``Posterior.at_bound``), ``iterations()`` and
   ``linearized()`` for an iterated method (``Posterior.iterations``, and the
   linear problem its gain is of), ``spectrum()`` for a low-rank posterior

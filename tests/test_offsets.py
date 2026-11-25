@@ -180,6 +180,21 @@ class TestBlocks:
             forward.dense(), [[1.0, 0.0], [0.0, 1.0], [1.0, 0.0]]
         )
 
+    def test_blocks_share_the_bins_of_a_grouper(self):
+        """Weekly bins are made once for every block, though one block starts two days later: pandas would start each block's bins at its own first day."""
+        early = pd.date_range("2020-01-01", periods=10, freq="D", name="obs_time")
+        late = pd.date_range("2020-01-03", periods=8, freq="D", name="obs_time")
+        obs = Space({"tower": early, "mobile": late})
+        prior, forward = fips.offset_block(
+            obs, by=pd.Grouper(level="obs_time", freq="7D")
+        )
+        weeks = pd.DatetimeIndex(["2020-01-01", "2020-01-08"], name="obs_time")
+        pd.testing.assert_index_equal(prior.space.select("offset"), weeks)
+        week = np.repeat([0, 1], 7)  # each day's week, from 2020-01-01
+        np.testing.assert_array_equal(
+            forward.dense(), np.eye(2)[np.concatenate([week[:10], week[2:10]])]
+        )
+
     def test_not_a_space_raises(self):
         """The observations' Space, not its index."""
         with pytest.raises(TypeError, match="obs_space must be a Space"):

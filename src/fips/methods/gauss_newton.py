@@ -109,7 +109,7 @@ import logging
 import math
 import numbers
 from collections.abc import Callable, Iterator
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import ClassVar
 
 import numpy as np
@@ -599,14 +599,19 @@ class GaussNewton:
         """Return the problem linearized at the last iterate, which the gain is of."""
         return self.analytic.problem
 
-    def with_data(self, problem: Problem) -> "GaussNewton":
+    def with_data(self, problem: Problem, seed: int | None = None) -> "GaussNewton":
         """
         Return the solution of `problem`, this one's with other observation values: Gauss-Newton again, from the last linearization.
 
         The first step reuses the factors of the last linearized problem (they
         do not depend on the observations' values), so it costs a product.
+        `seed` replaces the options' seed for the sampler (each trial of
+        :meth:`Posterior.trials <fips.Posterior.trials>` has its own).
         """
-        return _iterate(problem, self.options, start=self)
+        options = self.options
+        if seed is not None:
+            options = replace(options, seed=seed)
+        return _iterate(problem, options, start=self)
 
 
 _QUARTER = 0.5 * math.pi
@@ -1543,8 +1548,11 @@ def _starts(
     The other starts are draws of the prior, :math:`x = x_0 + R w`, each
     with :math:`y = S_0^{-1} (x - x_0)` (one solve with the prior covariance
     for them all, quietly: a nearly singular one falls back to
-    :math:`LDL^T`, whose :math:`y` still gives :math:`x`; a singular one
-    draws no start, logged), from the seed's child after the
+    :math:`LDL^T`, whose :math:`y` still gives :math:`x`). An element of
+    zero prior variance is at its prior mean in every draw, so its :math:`y`
+    is 0 and the solve is with the other elements' prior covariance; a prior
+    singular beyond its zero variances draws no start, with a warning. The
+    draws come from the seed's child after the
     sampler's (so the chains' streams are unchanged). Two modes differ when
     they are more than :data:`_DISTINCT` posterior standard deviations apart
     (``_d2``, in the metric of the problem linearized at the lower one).
@@ -1578,13 +1586,25 @@ def _starts(
     offsets = np.column_stack(
         [problem.prior_cov.sample(rng).values for _ in range(1, options.starts)]
     )
+    # an element of zero variance is at its prior mean in every draw: its y is 0
+    varies = np.flatnonzero(S_0.diagonal() > 0)
+    offsets[np.setdiff1d(np.arange(len(x_0)), varies)] = 0.0
+    ys = np.zeros_like(offsets)
+    part = S_0 if len(varies) == len(x_0) else S_0._select(varies, varies)
     try:
         with _quietly():  # a prior nearly singular: LDL^T's y is still x's, to roundoff
-            ys = np.asarray(S_0.solve(offsets), dtype=float).reshape(offsets.shape)
+            ys[varies] = np.asarray(part.solve(offsets[varies]), dtype=float).reshape(
+                len(varies), -1
+            )
     except LinAlgError:
-        logger.info(
-            "Gauss-Newton ran from the prior mean alone: the prior covariance "
-            "is singular, so a draw of it has no y with x = x_0 + S_0 y."
+        warn(
+            logger,
+            "Gauss-Newton ran from the prior mean alone, not from %d draws of the "
+            "prior as well: the prior covariance is singular beyond its zero "
+            "variances, so the solve with it for the draws' starts (y in "
+            "x = x_0 + S_0 y) failed. Whether the posterior has other modes was "
+            "not checked.",
+            options.starts - 1,
         )
         return solved
     modes, failed = [solved], 0

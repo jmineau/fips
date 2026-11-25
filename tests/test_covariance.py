@@ -391,6 +391,15 @@ class TestBlockDiag:
             S.dense(), scipy.linalg.block_diag(flux.dense(), bias.dense())
         )
 
+    def test_a_nugget_keeps_the_blocks(self):
+        """A diagonal added to a block diagonal covariance (a nugget) is added block by block, not to one dense matrix."""
+        S = Covariance.block_diag(COVS["dense"], Covariance.diagonal([0.5, 3.0], SITES))
+        nugget = Covariance.diagonal(0.1, S.space)
+        total = S + nugget
+        assert isinstance(total, Covariance)
+        assert isinstance(total.data, BlockDiagonalOperator)
+        np.testing.assert_allclose(total.dense(), S.dense() + nugget.dense())
+
     def test_one_part_keeps_its_form(self):
         """A single covariance is returned in its form, on its space."""
         S = Covariance.block_diag(COVS["dense"])
