@@ -370,8 +370,11 @@ class TestArithmetic:
         expected[:M, :N], expected[:M, N : N + 2] = Ha, np.eye(M, 2)
         expected[M:, N : N + 2], expected[M:, N + 2 :] = corner, np.diag([1.0, 2.0])
         np.testing.assert_array_equal(op.dense(), expected)
-        # One dense block makes it dense
+        # A dense block keeps it sparse while the whole is at most a quarter full
         blocks[("co2", "bias")] = np.eye(M, 2)
+        assert isinstance(Operator.from_blocks(blocks, rows, cols).data, SparseOperator)
+        # and makes it dense past that
+        blocks[("co2", "flux")] = np.ones((M, N))
         assert isinstance(Operator.from_blocks(blocks, rows, cols).data, DenseOperator)
 
     def test_from_blocks_single_block_keeps_its_form(self):

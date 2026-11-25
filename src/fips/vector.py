@@ -96,6 +96,9 @@ class Vector:
     array([1., 1.])
     """
 
+    __pandas_priority__ = 5000
+    """Above a DataFrame's, so ``series + v`` comes to :meth:`__radd__`, which refuses it, instead of adding by position."""
+
     def __init__(self, values: npt.ArrayLike, space: Space, name: str | None = None):
         if isinstance(values, (pd.Series, pd.DataFrame, pd.Index)):
             raise TypeError(

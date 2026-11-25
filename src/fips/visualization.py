@@ -116,7 +116,8 @@ def plot_comparison(
     ----------
     *series : pd.Series or Vector
         Variable number of series to compare. A series with no name is called
-        ``"series 1"``, ``"series 2"``, ... (its position) in the legend.
+        ``"series 1"``, ``"series 2"``, ... (its position) in the legend, and
+        series that share a name are told apart by it (``"estimate (2)"``).
     x : str or int, optional
         Name or level of the index to use for x-axis. Required if series have
         MultiIndex. It must identify each row: one point is drawn for each x.
@@ -208,8 +209,10 @@ def plot_comparison(
     x_pos = np.arange(len(x_vals))  # Used for bar chart offsets
 
     for i, col in enumerate(df.columns):
-        y = df[col]
+        y = df.iloc[:, i]  # by position: two series can share a name
         e = errors_on[i]
+        if list(df.columns).count(col) > 1:
+            col = f"{col} ({i + 1})"
 
         if kind == "line":
             ax.plot(x_vals, y, label=str(col), color=colors[i])

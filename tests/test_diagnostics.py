@@ -105,6 +105,25 @@ def test_the_checks_tell_the_kinds_apart():
     np.testing.assert_array_equal(table["ess_bulk"], 400.0)
 
 
+@pytest.mark.parametrize(
+    "scale", [2.0**-30, 2.0**-66, 2.0**66]
+)  # about 1e-9, 1e-20, 1e20; exact
+def test_the_checks_are_the_same_in_any_units(scale):
+    """The checks of draws in other units (a state in mol m-2 s-1, say) are those of the same draws at unit scale, the Monte Carlo errors scaled with them; a row that only moves by roundoff about its value still has every draw."""
+    draws, lengths = side_by_side(chains_of_each_kind()["autocorrelated"])
+    unit = _draws._diagnostics(draws, lengths)
+    scaled = _draws._diagnostics(draws * scale, lengths)
+    for name in ("ess_bulk", "ess_tail", "r_hat"):
+        np.testing.assert_allclose(scaled[name], unit[name], rtol=1e-9, err_msg=name)
+    for name in ("mcse_mean", "mcse_sd"):
+        np.testing.assert_allclose(
+            scaled[name] / scale, unit[name], rtol=1e-9, err_msg=name
+        )
+    jitter = scale * (1.0 + np.finfo(float).eps * (np.arange(400) % 3))
+    assert np.ptp(jitter) > 0
+    assert _draws._ess_of(jitter.reshape(1, 4, 100))[0] == 400.0
+
+
 def test_unequal_chains_are_cut_to_the_shortest():
     """Fips splits its draws among its chains as evenly as they go, the first ones a draw more: the checks read each chain cut to the shortest, as ArviZ would read equal ones."""
     rng = np.random.default_rng(1)
