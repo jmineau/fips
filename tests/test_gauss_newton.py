@@ -1929,7 +1929,7 @@ def test_starts_run_beside_an_element_of_zero_prior_variance():
 
 
 def test_starts_on_a_prior_singular_beyond_its_zero_variances_warn(caplog):
-    """Two elements perfectly correlated make a prior no draw can be written x_0 + S_0 y for: the solve runs from the prior mean alone and warns that it did not look for other modes."""
+    """Two elements perfectly correlated make a prior singular beyond its zero variances, which the solve for the starts' y (x = x_0 + S_0 y) cannot factor: the solve runs from the prior mean alone and warns that it did not look for other modes."""
     with caplog.at_level("WARNING", logger="fips.methods.gauss_newton"):
         fips.solve(two_modes_beside(np.ones((2, 2))), "gauss_newton", starts=4)
     assert "singular beyond its zero variances" in caplog.text

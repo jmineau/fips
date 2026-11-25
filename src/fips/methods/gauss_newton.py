@@ -1596,8 +1596,9 @@ def _starts(
             logger,
             "Gauss-Newton ran from the prior mean alone, not from %d draws of the "
             "prior as well: the prior covariance is singular beyond its zero "
-            "variances, so a draw cannot be written x = x_0 + S_0 y. Whether the "
-            "posterior has other modes was not checked.",
+            "variances, so the solve with it for the draws' starts (y in "
+            "x = x_0 + S_0 y) failed. Whether the posterior has other modes was "
+            "not checked.",
             options.starts - 1,
         )
         return solved
