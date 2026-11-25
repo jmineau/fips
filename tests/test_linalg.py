@@ -755,6 +755,23 @@ class TestBlockDiagonal:
         assert labeled.rows == obs and labeled.cols == obs
         np.testing.assert_allclose(labeled.dense(), expected, rtol=1e-12, atol=1e-12)
 
+    def test_a_sum_with_a_diagonal_or_the_same_blocks_stays_block_diagonal(self):
+        """``B + D`` (a nugget), ``D + B``, ``B - D`` and ``B + B`` add block by block, each block summed in its cheapest form; blocks on other rows give the dense sum."""
+        B, A = block_operator()
+        D = DiagonalOperator(np.linspace(0.1, 1.1, 11))
+        for result, values in [
+            (B + D, A + D.dense()),
+            (D + B, A + D.dense()),
+            (B - D, A - D.dense()),
+            (B + B, 2 * A),
+        ]:
+            assert type(result) is BlockDiagonalOperator
+            assert [b.shape for b in result.blocks] == [b.shape for b in B.blocks]
+            np.testing.assert_allclose(result.dense(), values, rtol=1e-12)
+        other = BlockDiagonalOperator([np.eye(5), np.eye(6)])
+        assert type(B + other) is DenseOperator
+        np.testing.assert_allclose((B + other).dense(), A + np.eye(11), rtol=1e-12)
+
 
 # ---------------------------------------------------------------------------
 # as_linear_operator, and the dtype of a labeled Operator

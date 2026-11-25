@@ -349,6 +349,19 @@ class TestOperators:
         np.testing.assert_array_equal(W["bias", "bias"].dense(), np.eye(2))
         np.testing.assert_array_equal(W["obs", "bias"].dense(), 0.0)
 
+    def test_blocks_are_named_as_the_space_keeps_them(self):
+        """A name given twice counts once, and a name that is not a string is the block of that name as a string (a space keeps its names as strings)."""
+        space = Space({0: TIMES, 1: TIMES})
+        once = fips.aggregate.sum(space, by=DAILY, blocks="0")
+        for blocks in ([0], ["0", "0"], [0, "0"]):
+            W = fips.aggregate.sum(space, by=DAILY, blocks=blocks)
+            assert W.rows == once.rows
+            np.testing.assert_array_equal(W.dense(), once.dense())
+        _, forward = fips.offset_block(space, by=DAILY, blocks=["0", "0"])
+        np.testing.assert_array_equal(
+            forward.dense(), fips.offset_block(space, by=DAILY, blocks="0")[1].dense()
+        )
+
     def test_every_block_on_its_own(self):
         """Two blocks with the same days are aggregated apart."""
         space = Space({"co2": TIMES, "ch4": TIMES})

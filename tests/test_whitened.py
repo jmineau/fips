@@ -297,6 +297,44 @@ def test_with_data_is_a_fresh_solve(form, gamma, analytic_form):
     np.testing.assert_array_equal(post.problem.obs.values, z)
 
 
+def test_the_information_form_factors_a_dense_mismatch_once(monkeypatch):
+    """A dense observation covariance is factored at the solve and kept: the outputs, ``with_data`` (each trial) and the eigendecomposition of the first ``with_gamma`` solve with it through that factor; a pickle factors it again when next needed."""
+    rng = np.random.default_rng(7)
+    n, m = 4, 30
+    state = Space({"x": pd.RangeIndex(n, name="i")})
+    obs = Space({"z": pd.RangeIndex(m, name="j")})
+    A = rng.standard_normal((m, m)) / np.sqrt(m)
+    problem = Problem(
+        prior=Vector(np.zeros(n), state),
+        prior_cov=Independent().with_std(1.0),
+        obs=Vector(rng.standard_normal(m), obs),
+        obs_cov=Covariance(A @ A.T + np.eye(m), obs),
+        forward=Operator(rng.standard_normal((m, n)), obs, state),
+    )
+    post = fips.solve(problem)
+    assert isinstance(post._solution, Information)
+    S_z = type(problem.obs_cov.data)
+    factored = []
+    for name in ("solve", "_solver"):
+        original = getattr(S_z, name)
+        monkeypatch.setattr(
+            S_z,
+            name,
+            lambda self, *args, _name=name, _original=original: (
+                factored.append(_name) or _original(self, *args)
+            ),
+        )
+    _ = post.chi2, post.dofs_per_element, post.kalman_gain, post.desroziers
+    assert factored == [], "outputs"
+    post.trials(n=3, rng=0)
+    assert factored == [], "trials"
+    _ = post.with_gamma(2.0).estimate, post.with_gamma(3.0).chi2
+    assert factored == [], "with_gamma"
+    loaded = pickle.loads(pickle.dumps(post))
+    assert loaded.chi2 == pytest.approx(post.chi2, rel=1e-12)
+    assert factored == ["_solver"]
+
+
 @pytest.mark.parametrize("form", FORMS)
 def test_the_factors_are_read_only(form, analytic_form):
     """No array of the factors can be written to, however the solution was made: a solve, a sweep, new data, a pickle, a copy."""

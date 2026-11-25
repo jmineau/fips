@@ -297,8 +297,12 @@ Options
    * - ``cg_tol``
      - 1e-8
      - The tolerance of the iterative solves, below 1: the conjugate
-       gradients stop when their residual is below ``cg_tol`` times the right
-       side, and Lanczos when each eigenvalue is good to ``cg_tol``.
+       gradients stop when their residual is below ``cg_tol`` times the
+       smaller of the right side's length and the square root of its size
+       ``k``, but not below roundoff (``100 eps`` times the right side's
+       length); each element of the estimate is then within ``cg_tol *
+       sqrt(k)`` posterior standard deviations wherever the floor does not set
+       the target. Lanczos stops when each eigenvalue is good to ``cg_tol``.
    * - ``max_cg_iterations``
      - 1000
      - The most conjugate-gradient iterations of one solve.

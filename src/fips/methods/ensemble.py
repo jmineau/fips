@@ -100,11 +100,21 @@ from typing import Any, ClassVar
 
 import numpy as np
 import pandas as pd
+import scipy.sparse as sp
 from numpy.linalg import LinAlgError
 from scipy.linalg import cholesky, eigh, solve_triangular, svd
+from scipy.sparse.linalg import splu
 
-from fips.linalg import DiagonalOperator, LinearOperator
+from fips.linalg import (
+    BlockDiagonalOperator,
+    DenseOperator,
+    DiagonalOperator,
+    KroneckerOperator,
+    LinearOperator,
+    SparseOperator,
+)
 from fips.linalg.forms import _read_only
+from fips.linalg.kronecker import _KroneckerRoot
 from fips.methods.analytic import AnalyticOptions
 from fips.operator import Operator
 from fips.posterior import Posterior
@@ -336,8 +346,8 @@ class Ensemble:
     r"""The prior members' deviations, scaled: :math:`A = (X - \bar{x}) / \sqrt{N - 1}` (``n x N``)."""
     predicted_mean: np.ndarray
     r"""The mean of the modeled observations, :math:`\bar{y}` (``m``)."""
-    obs_root: np.ndarray
-    r"""The root of :math:`S_z`: the square roots of a diagonal one (``m``), or its lower Cholesky factor :math:`L` (``m x m``)."""
+    obs_root: LinearOperator
+    r"""A square root :math:`L` of :math:`S_z` (:math:`L L^T = S_z`), in a form that keeps its structure: the square roots of a diagonal one, a root per block or per group of correlated rows, a Kronecker one's factors' Cholesky factors, or the lower Cholesky factor of a dense one."""
     eigenvectors: np.ndarray
     r""":math:`Q`, the eigenvectors of :math:`M` with an eigenvalue kept (``m x k``)."""
     eigenvalues: np.ndarray
@@ -509,8 +519,8 @@ class Ensemble:
         """Return the same ensemble's update at `gamma`: the factors do not depend on it."""
         return dataclasses.replace(self, gamma=gamma)
 
-    def with_data(self, problem: Problem) -> "Ensemble":
-        """Return the update of `problem`, this one's with other observation values: the same members and modeled observations, the innovation alone computed again."""
+    def with_data(self, problem: Problem, seed: int | None = None) -> "Ensemble":
+        """Return the update of `problem`, this one's with other observation values: the same members and modeled observations, the innovation alone computed again (`seed` is ignored: nothing is drawn)."""
         innovation, outside = _innovation(
             problem, self.predicted_mean, self.obs_root, self.eigenvectors
         )
@@ -532,18 +542,48 @@ class Ensemble:
                 _read_only(value)
 
 
-def _whiten(root: np.ndarray, X: np.ndarray, transpose: bool = False) -> np.ndarray:
-    r"""Return :math:`L^{-1} X`, or :math:`L^{-T} X` with `transpose`, for the root of :math:`S_z` (``Ensemble.obs_root``)."""
-    if root.ndim == 1:
-        return X / (root[:, None] if X.ndim == 2 else root)
-    trans = "T" if transpose else "N"
+def _whiten(root: LinearOperator, X: np.ndarray, transpose: bool = False) -> np.ndarray:
+    r"""Return :math:`L^{-1} X`, or :math:`L^{-T} X` with `transpose`, for the root :math:`L` of :math:`S_z` (``Ensemble.obs_root``), in its form."""
+    X = np.asarray(X, dtype=float)
+    if isinstance(root, DiagonalOperator):
+        return X / (root.values if X.ndim == 1 else root.values[:, None])
+    if isinstance(root, BlockDiagonalOperator):
+        return np.concatenate(
+            [_whiten(form, X[rows], transpose) for form, rows in root._parts()]
+        )
+    if isinstance(root, _KroneckerRoot):
+        # L = D P (L_1 kron ... kron L_K) P^T on the whole grid, inverted factor by factor
+        of, s = root._of, root._of.std
+        inverses = tuple(
+            np.asarray(solve_triangular(L, np.eye(len(L)), lower=True))
+            for L in root._roots
+        )
+        Y = X.reshape(len(X), -1)
+        if transpose:
+            Y = of._gather(of._through(of._scatter(Y), tuple(M.T for M in inverses)))
+            Y = Y / s[:, None]
+        else:
+            Y = of._gather(of._through(of._scatter(Y / s[:, None]), inverses))
+        return Y.reshape(X.shape)
+    if isinstance(root, SparseOperator):
+        return np.asarray(
+            splu(sp.csc_matrix(root.matrix)).solve(X, trans="T" if transpose else "N")
+        )
     # np.asarray: SciPy is not annotated, and gives no array type
-    return np.asarray(solve_triangular(root, X, lower=True, trans=trans))
+    return np.asarray(
+        solve_triangular(root.dense(), X, lower=True, trans=1 if transpose else 0)
+    )
 
 
-def _obs_root(S_z: LinearOperator) -> np.ndarray:
+def _obs_root(S_z: LinearOperator) -> LinearOperator:
     """
-    Return the root of the observation covariance: the square roots of a diagonal one, or the Cholesky factor of any other, made dense.
+    Return a square root of the observation covariance, in a form that keeps its structure.
+
+    A diagonal one gives its square roots, a block diagonal one the root of
+    each block, a Kronecker one on its whole grid the Cholesky factors of its
+    factors, and a sparse one the Cholesky factor of each group of rows that
+    are correlated (its draws' root). Any other is the Cholesky factor of its
+    dense matrix. Nothing ``m x m`` is formed but for a dense covariance.
 
     Raises
     ------
@@ -556,11 +596,22 @@ def _obs_root(S_z: LinearOperator) -> np.ndarray:
                 "The observation covariance has a variance that is not positive, so "
                 "it cannot whiten the observations."
             )
-        return np.sqrt(np.asarray(S_z.values, dtype=float))
+        return S_z.sqrt()
+    if isinstance(S_z, BlockDiagonalOperator):
+        return BlockDiagonalOperator([_obs_root(form) for form in S_z.blocks])
     try:
+        if isinstance(S_z, KroneckerOperator) and S_z.shape[0] == S_z._size:
+            return S_z.sqrt()
+        if isinstance(S_z, SparseOperator):
+            root = S_z._root  # SparseOperator._make_root's
+            if isinstance(root, SparseOperator):
+                # a group with no Cholesky factor makes the root singular
+                splu(sp.csc_matrix(root.matrix))
+                return root
         # np.asarray: SciPy is not annotated, and gives no array type
-        return np.asarray(cholesky(S_z.dense(), lower=True))
-    except LinAlgError as err:
+        return DenseOperator._adopt(np.asarray(cholesky(S_z.dense(), lower=True)))
+    # RuntimeError: SuperLU's singular factor
+    except (LinAlgError, RuntimeError) as err:
         raise LinAlgError(
             "The observation covariance is not positive-definite, so it cannot "
             "whiten the observations."
@@ -568,7 +619,7 @@ def _obs_root(S_z: LinearOperator) -> np.ndarray:
 
 
 def _innovation(
-    problem: Problem, predicted_mean: np.ndarray, root: np.ndarray, Q: np.ndarray
+    problem: Problem, predicted_mean: np.ndarray, root: LinearOperator, Q: np.ndarray
 ) -> tuple[np.ndarray, float]:
     r"""Return :math:`e = Q^T L^{-1} d` and :math:`\lVert L^{-1} d - Q e \rVert^2`, for :math:`d = z - c - \bar{y}`."""
     d = problem.obs.values - problem._offset_values() - predicted_mean
@@ -713,7 +764,7 @@ def _factor(problem: Problem, options: EnsembleOptions) -> Ensemble:
         prior_mean=_read_only(x_bar),
         deviations=_read_only(A),
         predicted_mean=_read_only(y_bar),
-        obs_root=_read_only(root),
+        obs_root=root,
         eigenvectors=_read_only(Q),
         eigenvalues=_read_only(eigenvalues),
         F=_read_only(np.ascontiguousarray(F)),

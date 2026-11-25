@@ -190,7 +190,7 @@ inversion is a function that builds the `Problem`.
 
 A module `methods/<name>.py` with three things: its options (a frozen dataclass
 with a `gamma` field, values checked in `__post_init__`), its solution (answers
-`posterior.Solution`; `with_gamma`, `with_data`, `sample`, `kept` (a sampler's kept draws), `lengths` (its chains'), `stats` (its record of each kept draw, by ArviZ's names), `at_bound`, `estimate_is_mean`,
+`posterior.Solution`; `with_gamma`, `with_data` (with a `seed`, which `trials` gives each trial when the options have one: every solution the method can return takes it, the analytic one too), `sample`, `kept` (a sampler's kept draws), `lengths` (its chains'), `stats` (its record of each kept draw, by ArviZ's names), `at_bound`, `estimate_is_mean`,
 `estimate_is_linear`, `evidence_is_laplace` (`no_evidence`, why not), and `innovation_precision` with `self_sensitivity` (for
 `Posterior.data_worth`) only if it can; a member it lacks raises `fips.UnavailableError`), and a function `(problem, options) -> Posterior`. Add a line to
 `_METHODS` in `methods/__init__.py`; its docstring says how a lognormal or an
@@ -297,8 +297,9 @@ dependency needs a reason, proposed first.
   diagonal, sparse, block diagonal or Kronecker, applied through its
   factors), it takes the information form (`Information`): `S_0 = R R^T` by
   the form's own `sqrt` (through the factors for a Kronecker `S_0`), and it
-  factors the `n x n` matrix `R^T H^T S_z^-1 H R`, holding no `m x m`
-  of its own. Otherwise, or when `S_0` has no Cholesky factor, the whitened form. Both give the same
+  factors the `n x n` matrix `R^T H^T S_z^-1 H R`; the only `m x m` it holds
+  is a dense `S_z`'s factor (`S_z._solver()`, made once at the solve and kept
+  for every output, `with_data` and `with_gamma`; not pickled). Otherwise, or when `S_0` has no Cholesky factor, the whitened form. Both give the same
   posterior; the oracle and `tests/test_whitened.py` run every case in both
   (the `analytic_form` fixture replaces `_choose`).
 - **A solve factors by Cholesky at its gamma; the first `with_gamma`

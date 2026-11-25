@@ -1285,7 +1285,7 @@ def _many_groups(kind: str, n_groups: int, per_group: int = 8):
 @pytest.mark.parametrize("analytic_form", ["information"], indirect=True)
 @pytest.mark.parametrize("kind", ["sparse", "dense"])
 def test_the_mismatch_is_factored_once_however_many_groups(kind, monkeypatch):
-    """data_worth factors a sparse or dense S_z as often for 48 groups as for 3, a few times in all."""
+    """data_worth factors a sparse or dense S_z as often for 48 groups as for 3: never, since it solves through the factor the solve kept."""
     problem, total = _many_groups(kind, n_groups=48)
     post = fips.solve(problem)
     calls = {"splu": 0, "_solver": 0, "_solve_psd": 0}
@@ -1311,14 +1311,9 @@ def test_the_mismatch_is_factored_once_however_many_groups(kind, monkeypatch):
     table = post.data_worth(by="group", W=total)
     assert len(table) == 48
     assert calls == few
-    # Three solves with S_z for H G and the like, each factoring a sparse S_z again, and
-    # one factorization for all the groups; a dense S_z is factored for the groups only
-    # (the other solves are inside _solve_psd): never one per group
-    if kind == "sparse":
-        assert calls["splu"] == 4
-    else:
-        assert calls["_solver"] == 1
-        assert calls["_solve_psd"] == 3
+    # every solve with S_z (H G and the like, and each group's block) goes through
+    # the factor kept at the solve: none per group, and none at all
+    assert calls == {"splu": 0, "_solver": 0, "_solve_psd": 0}
 
 
 def test_a_dense_mismatch_is_not_inverted_whole():

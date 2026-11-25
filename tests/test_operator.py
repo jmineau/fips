@@ -1001,6 +1001,23 @@ class TestSparseStaysSparse:
         assert type(result.data) is SparseOperator
         np.testing.assert_array_equal(result.dense(), operation(dense).dense())
 
+    def test_a_dense_block_beside_a_sparse_one(self):
+        """``from_blocks`` of a sparse Jacobian and a dense bias column is sparse while it is at most a quarter full, and dense past that."""
+        obs = pd.RangeIndex(40, name="obs_id")
+        cells = pd.RangeIndex(40, name="cell")
+        bias = pd.DataFrame(1.0, index=obs, columns=pd.Index(["a"], name="site"))
+        for jacobian, kind in [
+            (sp.eye_array(40, format="csr"), SparseOperator),
+            (sp.csr_array(np.ones((40, 40))), DenseOperator),
+        ]:
+            H = Operator.from_blocks(
+                {("z", "flux"): (jacobian, obs, cells), ("z", "bias"): bias}
+            )
+            assert type(H.data) is kind
+            np.testing.assert_array_equal(
+                H.dense(), np.hstack([jacobian.toarray(), np.ones((40, 1))])
+            )
+
 
 class TestTranspose:
     """The transpose swaps the spaces with the matrix."""

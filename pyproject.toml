@@ -25,7 +25,7 @@ classifiers = [
 ]
 dependencies = [
     "numpy>=1.24.2",  # 1.24.0 and 1.24.1 fail the read-only-array tests (1.22 has no Python 3.11 wheel)
-    "pandas>=2.0.0",  # need pandas 2.0 for upgraded Index object
+    "pandas>=2.1.0",  # 2.1: `__pandas_priority__`, so `series + vector` is refused
     "scipy>=1.12.0",  # `scipy.sparse.diags_array` and `eye_array`
     "xarray>=2022.12.0",  # 2022.3.0 to 2022.9.0 fail `to_xarray`
 ]

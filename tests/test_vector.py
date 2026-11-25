@@ -473,12 +473,20 @@ class TestArithmetic:
             vector + np.ones((5, 1))
 
     def test_pandas_objects_are_refused(self, vector):
+        """On either side: pandas would otherwise combine ``series + vector`` by position."""
         series = vector.to_series()
         for other in (series, series.to_frame(), series.index):
             with pytest.raises(TypeError, match="Vector.from_series"):
                 vector + other
             with pytest.raises(TypeError, match=r"\.values"):
                 vector * other
+        for other in (series, series.to_frame()):
+            with pytest.raises(TypeError, match="Vector.from_series"):
+                other + vector
+            with pytest.raises(TypeError, match="Vector.from_series"):
+                other - vector
+        with pytest.raises(TypeError, match="Vector.from_series"):
+            np.add(series, vector)
 
     def test_an_operator_or_covariance_is_refused(self, vector):
         op = Operator(np.eye(5), vector.space, vector.space)
