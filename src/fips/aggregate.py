@@ -240,7 +240,12 @@ def _chosen(space: Space, blocks: "str | Sequence[str] | None") -> list[str]:
     """Return the names of `blocks` (every block of `space` by default), checked."""
     if blocks is None:
         return list(space.names)
-    chosen = [blocks] if isinstance(blocks, str) else list(blocks)
+    # names as the space keeps them (strings), each once
+    chosen = list(
+        dict.fromkeys(
+            str(name) for name in ([blocks] if isinstance(blocks, str) else blocks)
+        )
+    )
     unknown = [name for name in chosen if name not in space]
     if unknown:
         raise ValueError(
