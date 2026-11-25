@@ -328,7 +328,8 @@ when:
   elements, 2026-11-12).
 - **the starts ended at different modes** (with ``starts`` above 1): Gauss-Newton
   from some draws of the prior found another mode, more than one posterior
-  standard deviation from the first. The estimate is the mode of lowest
+  standard deviation from the first (with a loose ``tol``, starts that end
+  too near to tell apart are first solved again to a tighter one). The estimate is the mode of lowest
   cost, and the draws, split at the Gaussian there, stay near it: chains
   that agree cannot show another mode, since they all start from draws of
   one mode's Gaussian. More observations, or a narrower prior, can rule the

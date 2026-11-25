@@ -1969,6 +1969,57 @@ def test_a_loose_tol_does_not_split_one_mode(caplog):
     assert "ended at one mode" in caplog.text
 
 
+class SquareAndValueBesideLinear(ForwardModel):
+    """``F(x) = (x_0^2, x_0, x_1, ..., x_{n-1})``: :func:`two_modes`' element beside elements observed one by one."""
+
+    def __init__(self, cols: Space, rows: Space):
+        super().__init__(rows, cols)
+
+    def __call__(self, x):
+        v = x.values
+        return Vector(np.concatenate([[v[0] * v[0], v[0]], v[1:]]), self.rows)
+
+    def jacobian(self, x):
+        n = len(self.cols)
+        J = np.zeros((n + 1, n))
+        J[:2, 0] = [2.0 * x.values[0], 1.0]
+        J[2:, 1:] = np.eye(n - 1)
+        return Operator(J, self.rows, self.cols)
+
+
+def test_a_loose_tol_does_not_hide_a_second_mode():
+    """
+    Two modes 3.1 posterior standard deviations apart, near -2 and +2, end nearer than a loose ``tol``'s ``3 sqrt(tol * n)`` = 5.2: the starts are solved again to a tighter ``tol``, which tells them apart.
+
+    From the prior mean Gauss-Newton ends near +2, the higher cost. Compared
+    at 5.2 alone, the starts near -2 were taken for that mode, with no
+    warning and the estimate near +2.
+    """
+    n = 100
+    cells = Space({"x": pd.RangeIndex(n, name="i")})
+    rows = Space({"z": pd.RangeIndex(n + 1, name="j")})
+    rng = np.random.default_rng(0)
+    problem = Problem(
+        prior=Vector(np.r_[0.3, np.zeros(n - 1)], cells),
+        prior_cov=Covariance.diagonal(np.r_[100.0, np.ones(n - 1)], cells),
+        obs=Vector(np.r_[4.0, -2.0, rng.standard_normal(n - 1)], rows),
+        obs_cov=Covariance.diagonal(np.r_[25.0, 100.0, np.ones(n - 1)], rows),
+        forward=SquareAndValueBesideLinear(cells, rows),
+    )
+    with pytest.warns(fips.FipsWarning, match="ended at 2 modes"):
+        post = fips.solve(
+            problem,
+            "gauss_newton",
+            tol=0.03,
+            starts=8,
+            seed=4,
+            chains=1,
+            draws=100,
+            burn_in=50,
+        )
+    assert post.estimate.values[0] < -1.5
+
+
 def test_a_start_that_does_not_converge_is_left_out(caplog, monkeypatch):
     """A start whose Gauss-Newton raises is logged and left out; the prior mean's mode stays."""
     real = gauss_newton._iterate

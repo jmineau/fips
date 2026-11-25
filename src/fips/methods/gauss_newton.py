@@ -201,7 +201,8 @@ class GaussNewtonOptions:
         The number of starts Gauss-Newton runs from: the prior mean and
         ``starts - 1`` draws of the prior. Where they end at modes more
         than one posterior standard deviation apart, the posterior has
-        several, and the solve warns: its draws, split at the Gaussian at
+        several, and the solve warns (with a loose `tol`, starts that end
+        too near to tell are first solved again to a tighter one): its draws, split at the Gaussian at
         one mode, do not reach another, and chains that agree cannot show
         it. The estimate is then the mode of lowest cost; otherwise it is
         the prior mean's, the same as with one start. Each start costs a
@@ -1536,7 +1537,9 @@ The distance between two starts' modes, in posterior standard deviations (:math:
 
 Two solves that converge to one mode differ by up to about the rule's
 :math:`\sqrt{\mathrm{tol} \cdot n}` each, so with a loose ``tol`` (or many
-elements) the cutoff is three times that instead, where larger.
+elements) two end points within three times that can be one mode or two:
+``_starts`` solves both again, to a ``tol`` at which that is below this
+cutoff, and compares their modes.
 """
 
 
@@ -1554,11 +1557,16 @@ def _starts(
     is 0 and the solve is with the other elements' prior covariance; a prior
     singular beyond its zero variances draws no start, with a warning. The
     draws come from the seed's child after the
-    sampler's (so the chains' streams are unchanged). Two modes differ when
-    they are more than :data:`_DISTINCT` posterior standard deviations apart,
-    or :math:`3 \sqrt{\mathrm{tol} \cdot n}` where larger, the distance two
-    solves of one mode can end apart (``_d2``, in the metric of the problem
-    linearized at the lower one).
+    sampler's (so the chains' streams are unchanged). Two starts end at
+    different modes when they end more than :data:`_DISTINCT` posterior
+    standard deviations apart (``_d2``, in the metric of the problem
+    linearized at the lower one). With a loose ``tol``, two solves of one
+    mode can end up to :math:`3 \sqrt{\mathrm{tol} \cdot n}` apart, which
+    cannot tell one mode from two: two starts that end between
+    :data:`_DISTINCT` and that far apart are each solved again from where
+    they ended, to the ``tol`` at which that distance is :data:`_DISTINCT`,
+    and the new end points are compared. Several modes are then ranked by
+    their costs at the new end points too.
     A start that does not converge, or that the model cannot run from, is
     logged and left out. The other starts run quietly (their own warnings
     are logged at INFO: they are checks); a start whose mode is taken is
@@ -1572,6 +1580,10 @@ def _starts(
     solve_S_z = problem.obs_cov.data._solver()
     gamma = options.gamma
     apart = max(_DISTINCT, 3.0 * math.sqrt(options.tol * len(x_0)))
+    # the tol at which two solves of one mode end within _DISTINCT
+    tight = replace(options, tol=min(options.tol, (_DISTINCT / 3.0) ** 2 / len(x_0)))
+    # by id: the solution (kept, so that its id is not reused) and it solved again
+    polished: dict[int, tuple[GaussNewton, GaussNewton]] = {}
 
     def cost(solution: GaussNewton) -> float:
         """Return the cost at the solution's mode."""
@@ -1586,6 +1598,31 @@ def _starts(
         return math.sqrt(
             max(_d2(b.mode_y - a.mode_y, J_step, S_0, solve_S_z, gamma), 0.0)
         )
+
+    def polish(solution: GaussNewton) -> GaussNewton:
+        """Return the solution solved again from its mode to the tight tol (itself if `tol` is tight, or if that fails)."""
+        if apart == _DISTINCT:
+            return solution
+        if id(solution) not in polished:
+            again = solution
+            try:
+                with _quietly():
+                    again = _iterate(
+                        problem, tight, origin=(solution.mode, solution.mode_y)
+                    )
+            except (ConvergenceError, RuntimeError, *_FAILED) as err:
+                logger.info(
+                    "Gauss-Newton to tol=%g did not converge: %s", tight.tol, err
+                )
+            polished[id(solution)] = (solution, again)
+        return polished[id(solution)][1]
+
+    def same(a: GaussNewton, b: GaussNewton) -> bool:
+        """Return whether `a` and `b` end at one mode, solving both again to the tight tol where their distance cannot tell."""
+        d = distance(a, b)
+        if d > apart:
+            return False
+        return d <= _DISTINCT or distance(polish(a), polish(b)) <= _DISTINCT
 
     offsets = np.column_stack(
         [problem.prior_cov.sample(rng).values for _ in range(1, options.starts)]
@@ -1625,7 +1662,7 @@ def _starts(
                 "Gauss-Newton from the prior draw %d did not end at a mode: %s", k, err
             )
             continue
-        if all(distance(other, mode) > apart for mode in modes):
+        if not any(same(other, mode) for mode in modes):
             modes.append(other)
         else:
             logger.debug(
@@ -1640,9 +1677,11 @@ def _starts(
             f" ({failed} of the draws did not converge)" if failed else "",
         )
         return solved
-    costs = [cost(mode) for mode in modes]
+    costs = [cost(polish(mode)) for mode in modes]
     best = modes[int(np.argmin(costs))]
-    far = max(distance(best, mode) for mode in modes if mode is not best)
+    far = max(
+        distance(polish(best), polish(mode)) for mode in modes if mode is not best
+    )
     warn(
         logger,
         "Gauss-Newton from %d starts (the prior mean and %d draws of the prior) "
