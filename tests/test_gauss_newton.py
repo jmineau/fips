@@ -1901,6 +1901,28 @@ def test_starts_at_one_mode_change_nothing(caplog):
     np.testing.assert_array_equal(four._solution.kept(), one._solution.kept())
 
 
+def test_a_loose_tol_does_not_split_one_mode(caplog):
+    """With ``tol=0.03`` each start stops up to about ``sqrt(tol * n)`` = 1.7 posterior standard deviations from the one mode, so the starts end over 1 apart: they are still one mode (#252)."""
+    rng = np.random.default_rng(1)
+    n, m = 100, 25
+    cells = Space({"x": pd.RangeIndex(n, name="i")})
+    rows = Space({"z": pd.RangeIndex(m, name="j")})
+    model = fips.LogNormalForward(
+        Operator(rng.uniform(0, 1, (m, n)) / n * 10, rows, cells), 1.0
+    )
+    truth = Vector(0.5 * rng.standard_normal(n), cells)
+    problem = Problem(
+        prior=Vector(np.zeros(n), cells),
+        prior_cov=fips.Independent().with_std(0.5),
+        obs=Vector(model(truth).values + 0.05 * rng.standard_normal(m), rows),
+        obs_cov=fips.Independent().with_std(0.05),
+        forward=model,
+    )
+    with caplog.at_level("INFO", logger="fips.methods.gauss_newton"):
+        fips.solve(problem, "gauss_newton", tol=0.03, draws=100, burn_in=50)
+    assert "ended at one mode" in caplog.text
+
+
 def test_a_start_that_does_not_converge_is_left_out(caplog, monkeypatch):
     """A start whose Gauss-Newton raises is logged and left out; the prior mean's mode stays."""
     real = gauss_newton._iterate

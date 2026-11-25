@@ -1529,8 +1529,9 @@ _DISTINCT = 1.0
 r"""
 The distance between two starts' modes, in posterior standard deviations (:math:`\sqrt{d^2}` in the metric of the Gaussian at the lower one), above which they are different modes.
 
-Two solves that converge to one mode differ by about the rule's
-:math:`\sqrt{\mathrm{tol} \cdot n}`, far below it.
+Two solves that converge to one mode differ by up to about the rule's
+:math:`\sqrt{\mathrm{tol} \cdot n}` each, so with a loose ``tol`` (or many
+elements) the cutoff is three times that instead, where larger.
 """
 
 
@@ -1546,8 +1547,10 @@ def _starts(
     :math:`LDL^T`, whose :math:`y` still gives :math:`x`; a singular one
     draws no start, logged), from the seed's child after the
     sampler's (so the chains' streams are unchanged). Two modes differ when
-    they are more than :data:`_DISTINCT` posterior standard deviations apart
-    (``_d2``, in the metric of the problem linearized at the lower one).
+    they are more than :data:`_DISTINCT` posterior standard deviations apart,
+    or :math:`3 \sqrt{\mathrm{tol} \cdot n}` where larger, the distance two
+    solves of one mode can end apart (``_d2``, in the metric of the problem
+    linearized at the lower one).
     A start that does not converge, or that the model cannot run from, is
     logged and left out. The other starts run quietly (their own warnings
     are logged at INFO: they are checks); a start whose mode is taken is
@@ -1560,6 +1563,7 @@ def _starts(
     S_0 = problem.prior_cov.data
     solve_S_z = problem.obs_cov.data._solver()
     gamma = options.gamma
+    apart = max(_DISTINCT, 3.0 * math.sqrt(options.tol * len(x_0)))
 
     def cost(solution: GaussNewton) -> float:
         """Return the cost at the solution's mode."""
@@ -1601,7 +1605,7 @@ def _starts(
                 "Gauss-Newton from the prior draw %d did not end at a mode: %s", k, err
             )
             continue
-        if all(distance(other, mode) > _DISTINCT for mode in modes):
+        if all(distance(other, mode) > apart for mode in modes):
             modes.append(other)
         else:
             logger.debug(
