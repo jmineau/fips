@@ -766,11 +766,12 @@ class Whitened(_Factors):
         with np.errstate(divide="ignore", invalid="ignore"):
             return (self.whitener @ HQy) / np.sqrt(self.eigenvalues)
 
-    def with_data(self, problem: Problem) -> "Whitened":
+    def with_data(self, problem: Problem, seed: int | None = None) -> "Whitened":
         """
         Return the factors of `problem`, this one's with other observation values.
 
-        Only the whitened innovation changes: one ``m x m`` product.
+        Only the whitened innovation changes: one ``m x m`` product. `seed`
+        is ignored: nothing is drawn.
         """
         d = _innovation(problem)
         innovation = _read_only(self.whitener @ d)
@@ -1142,12 +1143,13 @@ class Information(_Factors):
         """
         return self.G.T @ y
 
-    def with_data(self, problem: Problem) -> "Information":
+    def with_data(self, problem: Problem, seed: int | None = None) -> "Information":
         """
         Return the factors of `problem`, this one's with other observation values.
 
         Only :math:`b` changes: a solve with the observation covariance, a
-        product with :math:`H^T` and one with :math:`G^T` (``n x n``).
+        product with :math:`H^T` and one with :math:`G^T` (``n x n``). `seed`
+        is ignored: nothing is drawn.
         """
         innovation = _read_only(_carried(problem, self.G, self._solve_obs))
         return dataclasses.replace(self, problem=problem, innovation=innovation)

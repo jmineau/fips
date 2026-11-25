@@ -1365,8 +1365,8 @@ class Bounded:
             )
         )
 
-    def with_data(self, problem: Problem) -> "Bounded":
-        """Return the solution of `problem`, this one's with other observation values: the active set again, sharing the kept columns and the prior's draws."""
+    def with_data(self, problem: Problem, seed: int | None = None) -> "Bounded":
+        """Return the solution of `problem`, this one's with other observation values: the active set again, sharing the kept columns and the prior's draws; `seed`, if given, in place of this one's for the draws (each trial of :meth:`Posterior.trials <fips.Posterior.trials>` has its own)."""
         return self._sharing_the_prior(
             type(self).solve(
                 self.analytic.with_data(problem),
@@ -1374,7 +1374,7 @@ class Bounded:
                 self.upper,
                 self.draws,
                 self.burn_in,
-                self.seed,
+                self.seed if seed is None else seed,
                 self.distribution,
                 columns=self._columns(),
             )

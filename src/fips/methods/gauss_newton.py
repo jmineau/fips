@@ -109,7 +109,7 @@ import logging
 import math
 import numbers
 from collections.abc import Callable, Iterator
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import ClassVar
 
 import numpy as np
@@ -599,14 +599,19 @@ class GaussNewton:
         """Return the problem linearized at the last iterate, which the gain is of."""
         return self.analytic.problem
 
-    def with_data(self, problem: Problem) -> "GaussNewton":
+    def with_data(self, problem: Problem, seed: int | None = None) -> "GaussNewton":
         """
         Return the solution of `problem`, this one's with other observation values: Gauss-Newton again, from the last linearization.
 
         The first step reuses the factors of the last linearized problem (they
         do not depend on the observations' values), so it costs a product.
+        `seed` replaces the options' seed for the sampler (each trial of
+        :meth:`Posterior.trials <fips.Posterior.trials>` has its own).
         """
-        return _iterate(problem, self.options, start=self)
+        options = self.options
+        if seed is not None:
+            options = replace(options, seed=seed)
+        return _iterate(problem, options, start=self)
 
 
 _QUARTER = 0.5 * math.pi

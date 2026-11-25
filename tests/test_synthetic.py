@@ -36,6 +36,7 @@ and to what it refuses and what it allocates.
 
 import logging
 import tracemalloc
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -1049,6 +1050,71 @@ class _DataScaled:
 
     def with_data(self, problem):
         return _DataScaled(self._inner.with_data(problem), problem)
+
+
+def _bounded_posterior(draws: int) -> Posterior:
+    """A ``"bounded"`` posterior of six elements, three observations and few draws: its own checks warn."""
+    state = Space({"flux": pd.Index(list("abcdef"), name="cell")})
+    obs = Space({"co2": pd.RangeIndex(3, name="obs_id")})
+    H = np.random.default_rng(1).uniform(0, 1, (3, 6))
+    problem = Problem(
+        prior=Vector(np.full(6, 0.2), state),
+        prior_cov=fips.Independent().with_std(0.5),
+        obs=Vector([-0.4, 0.1, -0.2], obs),
+        obs_cov=fips.Independent().with_std(0.1),
+        forward=Operator(H, obs, state),
+    )
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", fips.FipsWarning)
+        return fips.solve(problem, "bounded", lower=0.0, draws=draws, seed=0)
+
+
+def test_trials_warn_once_of_the_trials_own_warnings(caplog):
+    """Each trial's posterior checks its draws; trials gives one warning that counts the trials that warned, and logs each trial's own at INFO."""
+    post = _bounded_posterior(60)
+    with (
+        caplog.at_level("INFO", logger="fips"),
+        warnings.catch_warnings(record=True) as caught,
+    ):
+        warnings.simplefilter("always")
+        post.trials(n=10, rng=0)
+    ours = [w for w in caught if issubclass(w.category, fips.FipsWarning)]
+    assert len(ours) == 1
+    assert "of the 10 trials warned of their own posterior" in str(ours[0].message)
+    assert any(
+        r.levelname == "INFO" and "mix slowly" in r.getMessage() for r in caplog.records
+    )
+
+
+def test_each_trial_draws_from_its_own_seed():
+    """Trials of the same data still differ in their draws: each trial's sampler has its own seed, made from the method's and the trial's number, so the trials' Monte Carlo errors are independent."""
+    post = _bounded_posterior(200)
+    truth, obs = post.problem.prior, post.problem.obs
+    table = post.trials(lambda rng: (truth, obs), n=4, rng=0)
+    spread = table["posterior_std"].groupby(level="cell").nunique()
+    assert (spread == 4).all()
+    again = post.trials(lambda rng: (truth, obs), n=4, rng=0)
+    pd.testing.assert_frame_equal(table, again)
+
+
+@pytest.mark.parametrize("method", ["bounded", "gauss_newton"])
+def test_trials_of_a_method_that_returned_the_analytic_solution(method, analytic_form):
+    """With no finite bound, or a linear forward operator, the method returns the analytic solution (either form), which draws nothing: trials passes it the seed its options have, and it is ignored."""
+    state = Space({"x": pd.RangeIndex(4, name="i")})
+    obs = Space({"z": pd.RangeIndex(6, name="j")})
+    rng = np.random.default_rng(0)
+    problem = Problem(
+        prior=Vector(np.zeros(4), state),
+        prior_cov=fips.Independent().with_std(1.0),
+        obs=Vector(rng.standard_normal(6), obs),
+        obs_cov=fips.Independent().with_std(0.5),
+        forward=Operator(rng.standard_normal((6, 4)), obs, state),
+    )
+    post = fips.solve(problem, method)
+    assert isinstance(post._solution, analytic_form)
+    pd.testing.assert_frame_equal(
+        post.trials(n=2, rng=0), fips.solve(problem).trials(n=2, rng=0)
+    )
 
 
 def test_trials_reports_each_trials_own_posterior_std_unless_the_method_is_linear():

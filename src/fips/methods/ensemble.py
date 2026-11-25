@@ -519,8 +519,8 @@ class Ensemble:
         """Return the same ensemble's update at `gamma`: the factors do not depend on it."""
         return dataclasses.replace(self, gamma=gamma)
 
-    def with_data(self, problem: Problem) -> "Ensemble":
-        """Return the update of `problem`, this one's with other observation values: the same members and modeled observations, the innovation alone computed again."""
+    def with_data(self, problem: Problem, seed: int | None = None) -> "Ensemble":
+        """Return the update of `problem`, this one's with other observation values: the same members and modeled observations, the innovation alone computed again (`seed` is ignored: nothing is drawn)."""
         innovation, outside = _innovation(
             problem, self.predicted_mean, self.obs_root, self.eigenvectors
         )

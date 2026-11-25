@@ -684,8 +684,8 @@ class Variational:
         options = dataclasses.replace(self.options, gamma=gamma)
         return _linear(self.problem, options, keep=self)
 
-    def with_data(self, problem: Problem) -> "Variational":
-        """Return the solution of `problem`, this one's with other observation values: one CG solve with the eigenpairs kept (a linear problem), or Gauss-Newton again from the last linearization."""
+    def with_data(self, problem: Problem, seed: int | None = None) -> "Variational":
+        """Return the solution of `problem`, this one's with other observation values: one CG solve with the eigenpairs kept (a linear problem), or Gauss-Newton again from the last linearization (`seed` is ignored: nothing is drawn)."""
         if self.estimate_is_mean:
             return _linear(problem, self.options, keep=self)
         return _iterate(problem, self.options, start=self)
