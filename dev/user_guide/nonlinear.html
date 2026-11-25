@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=62dcd2a7"></script>
+    <script src="../_static/documentation_options.js?v=e0193a5c"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -845,7 +845,8 @@ draws in nearly every solve, while totals of them are right (400
 elements, 2026-11-12).</p></li>
 <li><p><strong>the starts ended at different modes</strong> (with <code class="docutils literal notranslate"><span class="pre">starts</span></code> above 1): Gauss-Newton
 from some draws of the prior found another mode, more than one posterior
-standard deviation from the first. The estimate is the mode of lowest
+standard deviation from the first (with a loose <code class="docutils literal notranslate"><span class="pre">tol</span></code>, starts that end
+too near to tell apart are first solved again to a tighter one). The estimate is the mode of lowest
 cost, and the draws, split at the Gaussian there, stay near it: chains
 that agree cannot show another mode, since they all start from draws of
 one mode’s Gaussian. More observations, or a narrower prior, can rule the
@@ -950,7 +951,7 @@ Vehtari et al. (2021) and Stan do. Set it to 0.95 for the same numbers.</p>
 <span class="go">    Data variables:</span>
 <span class="go">        flux     (chain, draw, cell) float64 160kB 0.5425 0.3668 ... 0.2786 0.1602</span>
 <span class="go">    Attributes:</span>
-<span class="go">        created_at:                 2026-11-25T20:26:55.956646+00:00</span>
+<span class="go">        created_at:                 2026-11-25T21:55:40.145372+00:00</span>
 <span class="go">        creation_library:           ArviZ</span>
 <span class="go">        creation_library_version:   1.3.1</span>
 <span class="go">        creation_library_language:  Python</span>

@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=62dcd2a7"></script>
+    <script src="../../_static/documentation_options.js?v=e0193a5c"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -1131,7 +1131,8 @@ the sampler of fips 0.2.0b2, from the mode.</p></li>
 <li><p><strong>starts</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – The number of starts Gauss-Newton runs from: the prior mean and
 <code class="docutils literal notranslate"><span class="pre">starts</span> <span class="pre">-</span> <span class="pre">1</span></code> draws of the prior. Where they end at modes more
 than one posterior standard deviation apart, the posterior has
-several, and the solve warns: its draws, split at the Gaussian at
+several, and the solve warns (with a loose <cite>tol</cite>, starts that end
+too near to tell are first solved again to a tighter one): its draws, split at the Gaussian at
 one mode, do not reach another, and chains that agree cannot show
 it. The estimate is then the mode of lowest cost; otherwise it is
 the prior mean’s, the same as with one start. Each start costs a
