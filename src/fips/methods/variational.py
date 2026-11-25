@@ -25,8 +25,13 @@ the whitened normal equations
 matrix is the identity plus a positive semidefinite one, so its eigenvalues
 are at least 1, and conjugate gradients (``_cg``) solve them in a number of
 products set by how many eigenvalues of :math:`\tilde{H}` stand above 1,
-not by ``n``. CG stops when the residual is below ``cg_tol`` times the right
-side. With a forward model the same solve is the inner step of Gauss-Newton
+not by ``n``. CG stops when the residual is below ``cg_tol`` times the smaller
+of the right side's length and the square root of its size: the matrix is at
+least the identity, so the estimate's error, measured in the posterior
+covariance, is at most the residual, and very precise observations, which make
+the right side long, do not loosen it. The target is never below roundoff,
+``100 eps`` times the right side's length, where CG's updated residual no
+longer follows the true one and further iterations drift. With a forward model the same solve is the inner step of Gauss-Newton
 (incremental 4D-Var): at each iterate :math:`x_i` the problem linearized
 there (:meth:`Problem.linearized <fips.Problem.linearized>`) is solved by
 CG, started from :math:`\xi_i`, and the iterations stop by Rodgers' rule, as
@@ -142,10 +147,13 @@ class VariationalOptions:
     cg_tol : float, default 1e-8
         The tolerance of the iterative solves: conjugate gradients stop when
         the residual of the whitened normal equations is below ``cg_tol`` times
-        their right side, and Lanczos when each eigenvalue is good to ``cg_tol``
+        the smaller of their right side's length and the square root of its
+        size ``k`` (but not below roundoff, ``100 eps`` times the right side's
+        length), and Lanczos when each eigenvalue is good to ``cg_tol``
         relative (``eigsh``'s ``tol``). The error of the estimate, measured in
-        the posterior covariance, is at most ``cg_tol`` times the length of the
-        right side. Below 1: the prior, where CG starts, is at 1.
+        the posterior covariance, is at most that residual, so each element is
+        within ``cg_tol * sqrt(k)`` posterior standard deviations wherever the
+        floor does not set the target. Below 1.
     max_cg_iterations : int, default 1000
         The most conjugate-gradient iterations of one solve; a solve that has
         not reached ``cg_tol`` by then raises.
@@ -208,9 +216,9 @@ class VariationalOptions:
             object.__setattr__(self, name, number)
         if self.cg_tol >= 1.0:
             raise ValueError(
-                f"cg_tol must be below 1, got {self.cg_tol}: it is the residual of the "
-                "conjugate gradients relative to the right side, and the start, "
-                "the prior, has a relative residual of 1 (cg_tol=1 returns the prior)."
+                f"cg_tol must be below 1, got {self.cg_tol}: it scales the residual "
+                "the conjugate gradients stop at, and at 1 their start, the prior, "
+                "can already meet it (cg_tol=1 can return the prior)."
             )
         value = self.seed
         if (
@@ -296,8 +304,14 @@ def _cg(
     r"""
     Return the solution of :math:`(I + \tilde{H}) \xi = b` by conjugate gradients from `start`, and the iterations taken.
 
-    It stops when the residual's length is at most `cg_tol` times `b`'s; a
-    start that already is (a Gauss-Newton iterate at the mode) takes none.
+    It stops when the residual's length is at most `cg_tol` times the smaller
+    of `b`'s length and the square root of its size: the error, measured in
+    the matrix (the posterior's precision), is at most the residual, since the
+    matrix is at least the identity, so a long `b` (observations far more
+    precise than the prior) does not loosen it. The target is never below
+    ``100 eps`` times `b`'s length: below that the updated residual is
+    roundoff, no longer the true one, and the iterations would drift. A start
+    that already is (a Gauss-Newton iterate at the mode) takes none.
     The matrix is the identity plus a positive semidefinite one, so every
     search direction has positive curvature.
 
@@ -309,7 +323,10 @@ def _cg(
     size = float(np.linalg.norm(b))
     if size == 0.0:
         return np.zeros_like(b), 0
-    target = cg_tol * size
+    # not below roundoff, where the updated residual stops following the true one
+    target = max(
+        cg_tol * min(size, math.sqrt(len(b))), 100 * np.finfo(float).eps * size
+    )
     xi = np.array(start, dtype=float)
     r = b - xi - system.hessian(xi[:, None])[:, 0] if xi.any() else np.array(b)
     rr = float(r @ r)
@@ -328,8 +345,8 @@ def _cg(
         rr = rr_new
     raise ConvergenceError(
         f"The conjugate gradients did not converge in {max_iterations} iterations: "
-        f"the residual is {math.sqrt(rr) / size:.3g} of the right side, above "
-        f"cg_tol = {cg_tol:.3g}. Raise max_cg_iterations, or cg_tol; a prior-preconditioned "
+        f"the residual is {math.sqrt(rr):.3g}, above {target:.3g} "
+        f"(cg_tol = {cg_tol:.3g}). Raise max_cg_iterations, or cg_tol; a prior-preconditioned "
         "Hessian with very large eigenvalues (observations far more precise than "
         "the prior) converges slowly."
     )
