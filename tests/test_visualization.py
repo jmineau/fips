@@ -203,6 +203,25 @@ class TestPlotComparison:
 
         assert list(self._lines(ax)) == ["series 1", "c", "series 3"]
 
+    @pytest.mark.parametrize("kind", ["line", "bar"])
+    def test_series_that_share_a_name_are_each_drawn(self, kind):
+        """Two posteriors' estimates share their name: each is drawn with its own values and error, told apart by position in the legend."""
+        index = pd.Index([0.0, 1.0, 2.0], name="x")
+        a = pd.Series([1.0, 2.0, 3.0], index=index, name="estimate")
+        b = pd.Series([1.5, 2.5, 3.5], index=index, name="estimate")
+
+        _, ax = plot_comparison(a, b, errors=[np.ones(3), 2 * np.ones(3)], kind=kind)
+
+        assert [t.get_text() for t in ax.get_legend().get_texts()] == [
+            "estimate (1)",
+            "estimate (2)",
+        ]
+        if kind == "line":
+            np.testing.assert_array_equal(ax.lines[1].get_ydata(), b.values)
+        else:
+            heights = [p.get_height() for p in ax.patches]
+            np.testing.assert_array_equal(heights, np.concatenate([a.values, b.values]))
+
     def test_truth_is_drawn_as_a_line(self):
         """The truth of a line plot is a dashed black line."""
         a = self._series("a", [1.0, 2.0, 3.0])

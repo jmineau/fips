@@ -466,8 +466,9 @@ def _ess_of(chains: np.ndarray) -> np.ndarray:
     \rho_{2k+1}` are summed while they are positive, each made no larger than
     the one before, and :math:`\tau = -1 + 2 \sum_k (\rho_{2k} +
     \rho_{2k+1}) + \rho_{2K}`, at least :math:`1 / \log_{10}(M N)`; the
-    effective number is :math:`M N / \tau`. A row that never moves has
-    :math:`M N`. Each row is centered and scaled to at most 1 first (the
+    effective number is :math:`M N / \tau`. A row that never moves (its range
+    at most ``resolution`` of its largest magnitude, so the same in any units)
+    has :math:`M N`. Each row is centered and scaled to at most 1 first (the
     number does not change), so that draws far out do not overflow the FFT.
     """
     rows, M, N = chains.shape
@@ -477,8 +478,12 @@ def _ess_of(chains: np.ndarray) -> np.ndarray:
     stops = 2 * np.arange(pairs) + 1 >= N - 3  # the last pair Geyer's loop reaches
     for first in range(0, rows, _ROWS):
         block = chains[first : first + _ROWS]
-        moves = (
-            np.ptp(block.reshape(len(block), -1), axis=1) >= np.finfo(float).resolution
+        flat = block.reshape(len(block), -1)
+        with np.errstate(invalid="ignore"):  # inf - inf
+            spread = np.ptp(flat, axis=1)
+        # relative, so a row in small units still moves; an infinite range moves (its number is NaN)
+        moves = (spread > np.finfo(float).resolution * np.abs(flat).max(axis=1)) | (
+            spread == np.inf
         )
         if not moves.any():
             continue

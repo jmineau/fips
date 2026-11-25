@@ -256,6 +256,34 @@ def test_precise_observations_do_not_loosen_cg():
     assert post.chi2 == pytest.approx(exact.chi2, rel=1e-8)
 
 
+def test_default_tol_keeps_small_eigenvalues():
+    """At the default cg_tol, Lanczos keeps a pair whose eigenvalue is far below the largest but still informative (they span 1e10 to 11 here), so the variances, DOFS and evidence are the analytic ones."""
+    n, m = 30, 5
+    state = fips.Space({"x": pd.RangeIndex(n, name="i")})
+    obs = fips.Space({"z": pd.RangeIndex(m, name="j")})
+    H = np.zeros((m, n))
+    H[np.arange(m), np.arange(m)] = 1.0
+    obs_std = np.array([1e-5, 1e-4, 1e-3, 0.1, 0.3])
+    problem = fips.Problem(
+        prior=fips.Vector(np.zeros(n), state),
+        prior_cov=fips.Independent().with_std(1.0),
+        # the prior predicts the precise observations, so CG's residual is small
+        obs=fips.Vector([0.0, 0.0, 0.0, 1.0, 1.0], obs),
+        obs_cov=fips.Covariance.diagonal(fips.Vector(obs_std**2, obs)),
+        forward=fips.Operator(H, obs, state),
+    )
+    post = fips.solve(problem, "variational")
+    exact = fips.solve(problem)
+    assert len(post.eigenvalues) == m
+    # 1 - lambda / (1 + lambda) cancels for lambda = 1e10: an absolute floor (of a
+    # prior variance of 1) for the smallest variances, which roundoff sets
+    np.testing.assert_allclose(
+        post.variances.values, exact.variances.values, rtol=1e-6, atol=1e-12
+    )
+    assert post.dofs == pytest.approx(exact.dofs, abs=1e-8)
+    assert post.log_evidence == pytest.approx(exact.log_evidence, abs=1e-8)
+
+
 def test_matrix_free_forward_operator():
     """H given only as products (a SciPy LinearOperator) gives the same posterior, and fips.solve can still use it."""
     problem = build(seed=6, sparse=False)
