@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../../_static/documentation_options.js?v=323b24bf"></script>
+    <script src="../../../_static/documentation_options.js?v=62dcd2a7"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -1201,11 +1201,12 @@
         <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">divide</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">,</span> <span class="n">invalid</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">):</span>
             <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">whitener</span> <span class="o">@</span> <span class="n">HQy</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eigenvalues</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">with_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problem</span><span class="p">:</span> <span class="n">Problem</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Whitened"</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">with_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problem</span><span class="p">:</span> <span class="n">Problem</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Whitened"</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the factors of `problem`, this one's with other observation values.</span>
 
-<span class="sd">        Only the whitened innovation changes: one ``m x m`` product.</span>
+<span class="sd">        Only the whitened innovation changes: one ``m x m`` product. `seed`</span>
+<span class="sd">        is ignored: nothing is drawn.</span>
 <span class="sd">        """</span>
         <span class="n">d</span> <span class="o">=</span> <span class="n">_innovation</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span>
         <span class="n">innovation</span> <span class="o">=</span> <span class="n">_read_only</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">whitener</span> <span class="o">@</span> <span class="n">d</span><span class="p">)</span>
@@ -1577,12 +1578,13 @@
 <span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">G</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">y</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">with_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problem</span><span class="p">:</span> <span class="n">Problem</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Information"</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">with_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problem</span><span class="p">:</span> <span class="n">Problem</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Information"</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the factors of `problem`, this one's with other observation values.</span>
 
 <span class="sd">        Only :math:`b` changes: a solve with the observation covariance, a</span>
-<span class="sd">        product with :math:`H^T` and one with :math:`G^T` (``n x n``).</span>
+<span class="sd">        product with :math:`H^T` and one with :math:`G^T` (``n x n``). `seed`</span>
+<span class="sd">        is ignored: nothing is drawn.</span>
 <span class="sd">        """</span>
         <span class="n">innovation</span> <span class="o">=</span> <span class="n">_read_only</span><span class="p">(</span><span class="n">_carried</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">G</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solve_obs</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problem</span><span class="o">=</span><span class="n">problem</span><span class="p">,</span> <span class="n">innovation</span><span class="o">=</span><span class="n">innovation</span><span class="p">)</span>

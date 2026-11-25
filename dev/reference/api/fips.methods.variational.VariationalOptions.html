@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=323b24bf"></script>
+    <script src="../../_static/documentation_options.js?v=62dcd2a7"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -1093,10 +1093,13 @@ rank, conservative (variances too large, DOFS too small) below it.
 Each pair costs about two products with <span class="math notranslate nohighlight">\(H\)</span> and <span class="math notranslate nohighlight">\(H^T\)</span>.</p></li>
 <li><p><strong>cg_tol</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span>) – The tolerance of the iterative solves: conjugate gradients stop when
 the residual of the whitened normal equations is below <code class="docutils literal notranslate"><span class="pre">cg_tol</span></code> times
-their right side, and Lanczos when each eigenvalue is good to <code class="docutils literal notranslate"><span class="pre">cg_tol</span></code>
+the smaller of their right side’s length and the square root of its
+size <code class="docutils literal notranslate"><span class="pre">k</span></code> (but not below roundoff, <code class="docutils literal notranslate"><span class="pre">100</span> <span class="pre">eps</span></code> times the right side’s
+length), and Lanczos when each eigenvalue is good to <code class="docutils literal notranslate"><span class="pre">cg_tol</span></code>
 relative (<code class="docutils literal notranslate"><span class="pre">eigsh</span></code>’s <code class="docutils literal notranslate"><span class="pre">tol</span></code>). The error of the estimate, measured in
-the posterior covariance, is at most <code class="docutils literal notranslate"><span class="pre">cg_tol</span></code> times the length of the
-right side. Below 1: the prior, where CG starts, is at 1.</p></li>
+the posterior covariance, is at most that residual, so each element is
+within <code class="docutils literal notranslate"><span class="pre">cg_tol</span> <span class="pre">*</span> <span class="pre">sqrt(k)</span></code> posterior standard deviations wherever the
+floor does not set the target. Below 1.</p></li>
 <li><p><strong>max_cg_iterations</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – The most conjugate-gradient iterations of one solve; a solve that has
 not reached <code class="docutils literal notranslate"><span class="pre">cg_tol</span></code> by then raises.</p></li>
 <li><p><strong>max_iterations</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – For a forward model, the most Gauss-Newton steps (each a CG solve of

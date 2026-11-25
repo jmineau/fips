@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../../_static/documentation_options.js?v=323b24bf"></script>
+    <script src="../../../_static/documentation_options.js?v=62dcd2a7"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -541,7 +541,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numbers</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterator</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">replace</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassVar</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -1034,14 +1034,19 @@
 <span class="w">        </span><span class="sd">"""Return the problem linearized at the last iterate, which the gain is of."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">problem</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">with_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problem</span><span class="p">:</span> <span class="n">Problem</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"GaussNewton"</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">with_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problem</span><span class="p">:</span> <span class="n">Problem</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"GaussNewton"</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the solution of `problem`, this one's with other observation values: Gauss-Newton again, from the last linearization.</span>
 
 <span class="sd">        The first step reuses the factors of the last linearized problem (they</span>
 <span class="sd">        do not depend on the observations' values), so it costs a product.</span>
+<span class="sd">        `seed` replaces the options' seed for the sampler (each trial of</span>
+<span class="sd">        :meth:`Posterior.trials &lt;fips.Posterior.trials&gt;` has its own).</span>
 <span class="sd">        """</span>
-        <span class="k">return</span> <span class="n">_iterate</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">options</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span>
+        <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">options</span> <span class="o">=</span> <span class="n">replace</span><span class="p">(</span><span class="n">options</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_iterate</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">options</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
 
 
 <span class="n">_QUARTER</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span>
@@ -1978,8 +1983,11 @@
 <span class="sd">    The other starts are draws of the prior, :math:`x = x_0 + R w`, each</span>
 <span class="sd">    with :math:`y = S_0^{-1} (x - x_0)` (one solve with the prior covariance</span>
 <span class="sd">    for them all, quietly: a nearly singular one falls back to</span>
-<span class="sd">    :math:`LDL^T`, whose :math:`y` still gives :math:`x`; a singular one</span>
-<span class="sd">    draws no start, logged), from the seed's child after the</span>
+<span class="sd">    :math:`LDL^T`, whose :math:`y` still gives :math:`x`). An element of</span>
+<span class="sd">    zero prior variance is at its prior mean in every draw, so its :math:`y`</span>
+<span class="sd">    is 0 and the solve is with the other elements' prior covariance; a prior</span>
+<span class="sd">    singular beyond its zero variances draws no start, with a warning. The</span>
+<span class="sd">    draws come from the seed's child after the</span>
 <span class="sd">    sampler's (so the chains' streams are unchanged). Two modes differ when</span>
 <span class="sd">    they are more than :data:`_DISTINCT` posterior standard deviations apart</span>
 <span class="sd">    (``_d2``, in the metric of the problem linearized at the lower one).</span>
@@ -2013,13 +2021,25 @@
     <span class="n">offsets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">(</span>
         <span class="p">[</span><span class="n">problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span><span class="o">.</span><span class="n">values</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">starts</span><span class="p">)]</span>
     <span class="p">)</span>
+    <span class="c1"># an element of zero variance is at its prior mean in every draw: its y is 0</span>
+    <span class="n">varies</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">S_0</span><span class="o">.</span><span class="n">diagonal</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">offsets</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">setdiff1d</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x_0</span><span class="p">)),</span> <span class="n">varies</span><span class="p">)]</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">ys</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">offsets</span><span class="p">)</span>
+    <span class="n">part</span> <span class="o">=</span> <span class="n">S_0</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">varies</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">x_0</span><span class="p">)</span> <span class="k">else</span> <span class="n">S_0</span><span class="o">.</span><span class="n">_select</span><span class="p">(</span><span class="n">varies</span><span class="p">,</span> <span class="n">varies</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="k">with</span> <span class="n">_quietly</span><span class="p">():</span>  <span class="c1"># a prior nearly singular: LDL^T's y is still x's, to roundoff</span>
-            <span class="n">ys</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">S_0</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">offsets</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">offsets</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+            <span class="n">ys</span><span class="p">[</span><span class="n">varies</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">offsets</span><span class="p">[</span><span class="n">varies</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">varies</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="p">)</span>
     <span class="k">except</span> <span class="n">LinAlgError</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-            <span class="s2">"Gauss-Newton ran from the prior mean alone: the prior covariance "</span>
-            <span class="s2">"is singular, so a draw of it has no y with x = x_0 + S_0 y."</span>
+        <span class="n">warn</span><span class="p">(</span>
+            <span class="n">logger</span><span class="p">,</span>
+            <span class="s2">"Gauss-Newton ran from the prior mean alone, not from </span><span class="si">%d</span><span class="s2"> draws of the "</span>
+            <span class="s2">"prior as well: the prior covariance is singular beyond its zero "</span>
+            <span class="s2">"variances, so the solve with it for the draws' starts (y in "</span>
+            <span class="s2">"x = x_0 + S_0 y) failed. Whether the posterior has other modes was "</span>
+            <span class="s2">"not checked."</span><span class="p">,</span>
+            <span class="n">options</span><span class="o">.</span><span class="n">starts</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">solved</span>
     <span class="n">modes</span><span class="p">,</span> <span class="n">failed</span> <span class="o">=</span> <span class="p">[</span><span class="n">solved</span><span class="p">],</span> <span class="mi">0</span>

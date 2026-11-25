@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=323b24bf"></script>
+    <script src="../../_static/documentation_options.js?v=62dcd2a7"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -457,9 +457,11 @@
 <span class="sd">  the problem's spaces: ``estimate()``, ``variances()``, ``cov(W)``,</span>
 <span class="sd">  ``gain(W)``, ``dofs()``, ``dofs_per_element()``, ``information()``,</span>
 <span class="sd">  ``chi2()``, ``misfits()`` and ``chi2_tests()``. It may also have</span>
-<span class="sd">  ``with_gamma(gamma)`` and ``with_data(problem)``, which give another</span>
-<span class="sd">  solution without solving again, ``sample(N, rng)``, which draws from the</span>
-<span class="sd">  posterior (``Posterior.sample``), ``at_bound()``, which says which state</span>
+<span class="sd">  ``with_gamma(gamma)`` and ``with_data(problem, seed=None)``, which give</span>
+<span class="sd">  another solution without solving again (`seed`, given only when the</span>
+<span class="sd">  options have one, is for a sampler and ignored by any other solution),</span>
+<span class="sd">  ``sample(N, rng)``, which draws from the posterior (``Posterior.sample``),</span>
+<span class="sd">  ``at_bound()``, which says which state</span>
 <span class="sd">  elements sit on a bound (``Posterior.at_bound``), ``iterations()`` and</span>
 <span class="sd">  ``linearized()`` for an iterated method (``Posterior.iterations``, and the</span>
 <span class="sd">  linear problem its gain is of), ``spectrum()`` for a low-rank posterior</span>

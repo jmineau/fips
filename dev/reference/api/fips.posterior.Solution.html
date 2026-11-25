@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=323b24bf"></script>
+    <script src="../../_static/documentation_options.js?v=62dcd2a7"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -1091,9 +1091,13 @@ so when it is asked for the feature (or, for <code class="docutils literal notra
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">with_gamma(gamma)</span> <span class="pre">-&gt;</span> <span class="pre">Solution</span></code>: the solution at another
 regularization factor, without solving again (<code class="xref py py-meth docutils literal notranslate"><span class="pre">Posterior.with_gamma()</span></code>).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">with_data(problem)</span> <span class="pre">-&gt;</span> <span class="pre">Solution</span></code>: the solution of <cite>problem</cite>, the same
-problem with other values of the observations, without solving again
-(<code class="xref py py-meth docutils literal notranslate"><span class="pre">Posterior.with_data()</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">with_data(problem,</span> <span class="pre">seed=None)</span> <span class="pre">-&gt;</span> <span class="pre">Solution</span></code>: the solution of
+<cite>problem</cite>, the same problem with other values of the observations,
+without solving again (<code class="xref py py-meth docutils literal notranslate"><span class="pre">Posterior.with_data()</span></code>); a sampled solution
+draws from <cite>seed</cite> in place of its own when one is given (each trial of
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">Posterior.trials()</span></code> has its own), and any other ignores it. It is
+passed only when the method’s options have a <code class="docutils literal notranslate"><span class="pre">seed</span></code>, and then to
+whatever solution the method returned, the analytic one included.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">innovation_precision(groups)</span> <span class="pre">-&gt;</span> <span class="pre">list[np.ndarray]</span></code>: for each array of
 observation positions <span class="math notranslate nohighlight">\(g\)</span>, the block <span class="math notranslate nohighlight">\(P_{gg}\)</span> of
 <span class="math notranslate nohighlight">\(P = (H S_0 H^T + S_z/\gamma)^{-1}\)</span> (<code class="docutils literal notranslate"><span class="pre">m_g</span> <span class="pre">x</span> <span class="pre">m_g</span></code>), and

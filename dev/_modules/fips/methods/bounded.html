@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../../_static/documentation_options.js?v=323b24bf"></script>
+    <script src="../../../_static/documentation_options.js?v=62dcd2a7"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -1800,8 +1800,8 @@
             <span class="p">)</span>
         <span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">with_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problem</span><span class="p">:</span> <span class="n">Problem</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Bounded"</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Return the solution of `problem`, this one's with other observation values: the active set again, sharing the kept columns and the prior's draws."""</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">with_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problem</span><span class="p">:</span> <span class="n">Problem</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Bounded"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the solution of `problem`, this one's with other observation values: the active set again, sharing the kept columns and the prior's draws; `seed`, if given, in place of this one's for the draws (each trial of :meth:`Posterior.trials &lt;fips.Posterior.trials&gt;` has its own)."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sharing_the_prior</span><span class="p">(</span>
             <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">with_data</span><span class="p">(</span><span class="n">problem</span><span class="p">),</span>
@@ -1809,7 +1809,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">upper</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">draws</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">burn_in</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">seed</span> <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">seed</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">distribution</span><span class="p">,</span>
                 <span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_columns</span><span class="p">(),</span>
             <span class="p">)</span>
