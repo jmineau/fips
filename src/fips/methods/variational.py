@@ -29,7 +29,9 @@ not by ``n``. CG stops when the residual is below ``cg_tol`` times the smaller
 of the right side's length and the square root of its size: the matrix is at
 least the identity, so the estimate's error, measured in the posterior
 covariance, is at most the residual, and very precise observations, which make
-the right side long, do not loosen it. With a forward model the same solve is the inner step of Gauss-Newton
+the right side long, do not loosen it. The target is never below roundoff,
+``100 eps`` times the right side's length, where CG's updated residual no
+longer follows the true one and further iterations drift. With a forward model the same solve is the inner step of Gauss-Newton
 (incremental 4D-Var): at each iterate :math:`x_i` the problem linearized
 there (:meth:`Problem.linearized <fips.Problem.linearized>`) is solved by
 CG, started from :math:`\xi_i`, and the iterations stop by Rodgers' rule, as
@@ -146,10 +148,12 @@ class VariationalOptions:
         The tolerance of the iterative solves: conjugate gradients stop when
         the residual of the whitened normal equations is below ``cg_tol`` times
         the smaller of their right side's length and the square root of its
-        size ``k``, and Lanczos when each eigenvalue is good to ``cg_tol``
+        size ``k`` (but not below roundoff, ``100 eps`` times the right side's
+        length), and Lanczos when each eigenvalue is good to ``cg_tol``
         relative (``eigsh``'s ``tol``). The error of the estimate, measured in
         the posterior covariance, is at most that residual, so each element is
-        within ``cg_tol * sqrt(k)`` posterior standard deviations. Below 1.
+        within ``cg_tol * sqrt(k)`` posterior standard deviations wherever the
+        floor does not set the target. Below 1.
     max_cg_iterations : int, default 1000
         The most conjugate-gradient iterations of one solve; a solve that has
         not reached ``cg_tol`` by then raises.
@@ -304,8 +308,10 @@ def _cg(
     of `b`'s length and the square root of its size: the error, measured in
     the matrix (the posterior's precision), is at most the residual, since the
     matrix is at least the identity, so a long `b` (observations far more
-    precise than the prior) does not loosen it. A start that already is (a
-    Gauss-Newton iterate at the mode) takes none.
+    precise than the prior) does not loosen it. The target is never below
+    ``100 eps`` times `b`'s length: below that the updated residual is
+    roundoff, no longer the true one, and the iterations would drift. A start
+    that already is (a Gauss-Newton iterate at the mode) takes none.
     The matrix is the identity plus a positive semidefinite one, so every
     search direction has positive curvature.
 
@@ -317,7 +323,10 @@ def _cg(
     size = float(np.linalg.norm(b))
     if size == 0.0:
         return np.zeros_like(b), 0
-    target = cg_tol * min(size, math.sqrt(len(b)))
+    # not below roundoff, where the updated residual stops following the true one
+    target = max(
+        cg_tol * min(size, math.sqrt(len(b))), 100 * np.finfo(float).eps * size
+    )
     xi = np.array(start, dtype=float)
     r = b - xi - system.hessian(xi[:, None])[:, 0] if xi.any() else np.array(b)
     rr = float(r @ r)

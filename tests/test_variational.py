@@ -256,6 +256,27 @@ def test_precise_observations_do_not_loosen_cg():
     assert post.chi2 == pytest.approx(exact.chi2, rel=1e-8)
 
 
+def test_cg_stops_above_roundoff():
+    """Observations a hundred million times more precise than the prior, on a random sparse H, make the right side so long that cg_tol times the square root of its size is below its roundoff; CG stops at roundoff instead of iterating on it, and the estimate is the analytic one to 1e-8 posterior standard deviations (without the floor it drifted by four)."""
+    n, m = 300, 20
+    state = fips.Space({"x": pd.RangeIndex(n, name="i")})
+    obs = fips.Space({"z": pd.RangeIndex(m, name="j")})
+    rng = np.random.default_rng(3)
+    H = sp.random(m, n, density=0.05, random_state=rng, format="csr").toarray()
+    obs_std = rng.uniform(1e-8, 7e-8, m)
+    problem = fips.Problem(
+        prior=fips.Vector(np.zeros(n), state),
+        prior_cov=fips.Independent().with_std(1.0),
+        obs=fips.Vector(rng.standard_normal(m), obs),
+        obs_cov=fips.Covariance.diagonal(fips.Vector(obs_std**2, obs)),
+        forward=fips.Operator(H, obs, state),
+    )
+    post = fips.solve(problem, "variational")
+    exact = fips.solve(problem)
+    error = np.abs(post.estimate.values - exact.estimate.values)
+    assert (error / np.sqrt(exact.variances.values)).max() < 1e-8
+
+
 def test_default_tol_keeps_small_eigenvalues():
     """At the default cg_tol, Lanczos keeps a pair whose eigenvalue is far below the largest but still informative (they span 1e10 to 11 here), so the variances, DOFS and evidence are the analytic ones."""
     n, m = 30, 5
