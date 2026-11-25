@@ -105,9 +105,13 @@ class Solution(Protocol):
 
     - ``with_gamma(gamma) -> Solution``: the solution at another
       regularization factor, without solving again (:meth:`Posterior.with_gamma`).
-    - ``with_data(problem) -> Solution``: the solution of `problem`, the same
-      problem with other values of the observations, without solving again
-      (:meth:`Posterior.with_data`).
+    - ``with_data(problem, seed=None) -> Solution``: the solution of
+      `problem`, the same problem with other values of the observations,
+      without solving again (:meth:`Posterior.with_data`); a sampled solution
+      draws from `seed` in place of its own when one is given (each trial of
+      :meth:`Posterior.trials` has its own), and any other ignores it. It is
+      passed only when the method's options have a ``seed``, and then to
+      whatever solution the method returned, the analytic one included.
     - ``innovation_precision(groups) -> list[np.ndarray]``: for each array of
       observation positions :math:`g`, the block :math:`P_{gg}` of
       :math:`P = (H S_0 H^T + S_z/\gamma)^{-1}` (``m_g x m_g``), and

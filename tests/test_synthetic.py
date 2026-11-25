@@ -1097,6 +1097,26 @@ def test_each_trial_draws_from_its_own_seed():
     pd.testing.assert_frame_equal(table, again)
 
 
+@pytest.mark.parametrize("method", ["bounded", "gauss_newton"])
+def test_trials_of_a_method_that_returned_the_analytic_solution(method, analytic_form):
+    """With no finite bound, or a linear forward operator, the method returns the analytic solution (either form), which draws nothing: trials passes it the seed its options have, and it is ignored."""
+    state = Space({"x": pd.RangeIndex(4, name="i")})
+    obs = Space({"z": pd.RangeIndex(6, name="j")})
+    rng = np.random.default_rng(0)
+    problem = Problem(
+        prior=Vector(np.zeros(4), state),
+        prior_cov=fips.Independent().with_std(1.0),
+        obs=Vector(rng.standard_normal(6), obs),
+        obs_cov=fips.Independent().with_std(0.5),
+        forward=Operator(rng.standard_normal((6, 4)), obs, state),
+    )
+    post = fips.solve(problem, method)
+    assert isinstance(post._solution, analytic_form)
+    pd.testing.assert_frame_equal(
+        post.trials(n=2, rng=0), fips.solve(problem).trials(n=2, rng=0)
+    )
+
+
 def test_trials_reports_each_trials_own_posterior_std_unless_the_method_is_linear():
     """A method not linear in the data claims its spread trial by trial; a linear one claims one for all."""
     arrays = World()
