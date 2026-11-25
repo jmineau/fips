@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=01cd3bb2"></script>
+    <script src="../../_static/documentation_options.js?v=2a34e42f"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -459,7 +459,7 @@
     <span class="n">SparseOperator</span><span class="p">,</span>
     <span class="n">as_linear_operator</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg.forms</span><span class="w"> </span><span class="kn">import</span> <span class="n">_adopt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg.forms</span><span class="w"> </span><span class="kn">import</span> <span class="n">_DENSE_FILL</span><span class="p">,</span> <span class="n">_adopt</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.space</span><span class="w"> </span><span class="kn">import</span> <span class="n">Space</span><span class="p">,</span> <span class="n">_listed</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.vector</span><span class="w"> </span><span class="kn">import</span> <span class="n">Vector</span>
 
@@ -867,7 +867,9 @@
 <span class="sd">        -------</span>
 <span class="sd">        Operator</span>
 <span class="sd">            The assembled matrix: sparse if every block is sparse (or</span>
-<span class="sd">            diagonal), dense otherwise. A labeled block keeps its form</span>
+<span class="sd">            diagonal), or if its dense blocks leave it at most a quarter full</span>
+<span class="sd">            (a bias column beside a sparse Jacobian); dense otherwise. A</span>
+<span class="sd">            labeled block keeps its form</span>
 <span class="sd">            when it covers its blocks' labels (a pandas-sparse frame is</span>
 <span class="sd">            sparse); a single block that covers both spaces keeps its form.</span>
 
@@ -1002,6 +1004,20 @@
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">forms</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">row_space</span><span class="o">.</span><span class="n">names</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">col_space</span><span class="o">.</span><span class="n">names</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_build</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">values</span><span class="p">())),</span> <span class="n">row_space</span><span class="p">,</span> <span class="n">col_space</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
         <span class="n">parts</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">form</span><span class="o">.</span><span class="n">_csr</span><span class="p">()</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">form</span> <span class="ow">in</span> <span class="n">forms</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">part</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">parts</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+            <span class="c1"># a dense block (a bias column beside a sparse Jacobian) keeps the</span>
+            <span class="c1"># whole sparse while it is at most a quarter full, as a product does</span>
+            <span class="n">stored</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">form</span> <span class="ow">in</span> <span class="n">forms</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">part</span> <span class="o">=</span> <span class="n">parts</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+                <span class="n">stored</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">form</span><span class="o">.</span><span class="n">dense</span><span class="p">())</span> <span class="k">if</span> <span class="n">part</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">part</span><span class="o">.</span><span class="n">nnz</span>
+            <span class="k">if</span> <span class="n">stored</span> <span class="o">&lt;=</span> <span class="n">_DENSE_FILL</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">row_space</span><span class="p">)</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">col_space</span><span class="p">):</span>
+                <span class="n">parts</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">key</span><span class="p">:</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">(</span><span class="n">form</span><span class="o">.</span><span class="n">dense</span><span class="p">())</span>
+                    <span class="k">if</span> <span class="n">parts</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span>
+                    <span class="k">else</span> <span class="n">parts</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">form</span> <span class="ow">in</span> <span class="n">forms</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                <span class="p">}</span>
         <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">part</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">parts</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
             <span class="n">grid</span> <span class="o">=</span> <span class="p">[</span>
                 <span class="p">[</span><span class="n">parts</span><span class="o">.</span><span class="n">get</span><span class="p">((</span><span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">))</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">col_space</span><span class="o">.</span><span class="n">names</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">row_space</span><span class="o">.</span><span class="n">names</span>

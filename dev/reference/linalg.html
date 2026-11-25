@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=01cd3bb2"></script>
+    <script src="../_static/documentation_options.js?v=2a34e42f"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -1089,8 +1089,10 @@ product with a dense side is dense; a Kronecker form times a sparse one
 (<code class="docutils literal notranslate"><span class="pre">H</span> <span class="pre">&#64;</span> <span class="pre">S_0</span></code>) is computed through the factors and is dense; a product with a
 matrix-free side is matrix-free, applied term by term. <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">&#64;</span> <span class="pre">x</span></code> with an
 array is an array, as in SciPy.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">+</span> <span class="pre">B</span></code> and <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">-</span> <span class="pre">B</span></code> follow the same rule (an array counts as dense), and
-a scalar <code class="docutils literal notranslate"><span class="pre">*</span></code> or <code class="docutils literal notranslate"><span class="pre">/</span></code> keeps the form.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">+</span> <span class="pre">B</span></code> and <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">-</span> <span class="pre">B</span></code> follow the same rule (an array counts as dense),
+except that a block diagonal form plus a diagonal one, or a block diagonal
+one on the same rows, is added block by block and stays block diagonal; a
+scalar <code class="docutils literal notranslate"><span class="pre">*</span></code> or <code class="docutils literal notranslate"><span class="pre">/</span></code> keeps the form.</p></li>
 <li><p>A product of a sparse form and a dense array (<code class="docutils literal notranslate"><span class="pre">H</span> <span class="pre">&#64;</span> <span class="pre">X</span></code>, <code class="docutils literal notranslate"><span class="pre">X</span> <span class="pre">&#64;</span> <span class="pre">H.T</span></code>) runs
 on threads when it is large, one block of the sparse matrix’s rows to a
 thread, and is the same bit for bit as on one. The threads are the CPUs the

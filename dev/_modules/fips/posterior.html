@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=01cd3bb2"></script>
+    <script src="../../_static/documentation_options.js?v=2a34e42f"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -881,7 +881,9 @@
         <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">err</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_largest_variance</span><span class="p">(</span><span class="n">Xt</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">cov</span><span class="p">:</span> <span class="n">LinearOperator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_largest_variance</span><span class="p">(</span>
+    <span class="n">Xt</span><span class="p">:</span> <span class="s2">"np.ndarray | sp.sparray | None"</span><span class="p">,</span> <span class="n">cov</span><span class="p">:</span> <span class="n">LinearOperator</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Return the largest variance of each column of `Xt` under any covariance with `cov`'s variances.</span>
 
@@ -890,12 +892,17 @@
 <span class="sd">    :math:`S` has :math:`|S_{ij}| \le \sigma_i \sigma_j`, so this bounds</span>
 <span class="sd">    :math:`|x|^T |S| |x|`, the size of the terms :math:`x^T S x` is summed</span>
 <span class="sd">    from: the scale its roundoff is relative to. `Xt` None stands for the</span>
-<span class="sd">    identity (each element's own variance).</span>
+<span class="sd">    identity (each element's own variance). A sparse `Xt` stays sparse.</span>
 <span class="sd">    """</span>
     <span class="n">sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">cov</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(),</span> <span class="mf">0.0</span><span class="p">))</span>
     <span class="k">if</span> <span class="n">Xt</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">sigma</span><span class="o">**</span><span class="mi">2</span>
-    <span class="k">return</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">Xt</span><span class="p">)</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">sigma</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">Xt</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="n">absolute</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">Xt</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>  <span class="c1"># sparse: a new matrix of its entries' absolute values, still sparse</span>
+        <span class="n">absolute</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">(</span><span class="n">Xt</span><span class="p">)</span>
+        <span class="n">absolute</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">absolute</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">absolute</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">sigma</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_checked_level</span><span class="p">(</span><span class="n">level</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
@@ -1731,7 +1738,10 @@
 <span class="sd">        :func:`_largest_variance` of the prior covariance for the rows of</span>
 <span class="sd">        `W_form` (the state's elements for None).</span>
 <span class="sd">        """</span>
-        <span class="n">Wt</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">W_form</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">W_form</span><span class="o">.</span><span class="n">_transpose</span><span class="p">()</span><span class="o">.</span><span class="n">dense</span><span class="p">()</span>  <span class="c1"># n x k</span>
+        <span class="k">if</span> <span class="n">W_form</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_largest_variance</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">sparse</span> <span class="o">=</span> <span class="n">W_form</span><span class="o">.</span><span class="n">_csr</span><span class="p">()</span>  <span class="c1"># an aggregation's W is sparse: no n x k array</span>
+        <span class="n">Wt</span> <span class="o">=</span> <span class="n">W_form</span><span class="o">.</span><span class="n">_transpose</span><span class="p">()</span><span class="o">.</span><span class="n">dense</span><span class="p">()</span> <span class="k">if</span> <span class="n">sparse</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">sparse</span><span class="o">.</span><span class="n">T</span>
         <span class="k">return</span> <span class="n">_largest_variance</span><span class="p">(</span><span class="n">Wt</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_prior_variances</span><span class="p">(</span>
@@ -4091,14 +4101,13 @@
             <span class="n">WK</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solution</span><span class="o">.</span><span class="n">gain</span><span class="p">()</span>  <span class="c1"># n x m</span>
             <span class="n">Wx0</span><span class="p">,</span> <span class="n">Wmu</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">mu</span>
             <span class="n">posterior_var</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span>
-            <span class="n">Wt_post</span> <span class="o">=</span> <span class="n">Wt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">state</span><span class="p">))</span>  <span class="c1"># n x n: the per-element case</span>
+            <span class="n">W_form</span> <span class="o">=</span> <span class="n">Ww_form</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># the per-element case: W = I</span>
             <span class="n">index</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">index</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">W_form</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_aggregation</span><span class="p">(</span><span class="n">W</span><span class="p">)</span>
             <span class="n">WK</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solution</span><span class="o">.</span><span class="n">gain</span><span class="p">(</span><span class="n">W_form</span><span class="p">)</span>  <span class="c1"># k x m</span>
             <span class="n">Wx0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">W_form</span> <span class="o">@</span> <span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
             <span class="n">posterior_var</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span>
-            <span class="n">Wt_post</span> <span class="o">=</span> <span class="n">W_form</span><span class="o">.</span><span class="n">_transpose</span><span class="p">()</span><span class="o">.</span><span class="n">dense</span><span class="p">()</span>  <span class="c1"># n x k</span>
             <span class="n">index</span> <span class="o">=</span> <span class="n">W</span><span class="o">.</span><span class="n">rows</span><span class="o">.</span><span class="n">index</span>
             <span class="k">if</span> <span class="n">W_world</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">Ww_form</span> <span class="o">=</span> <span class="n">W_form</span>
@@ -4114,7 +4123,6 @@
                     <span class="p">(</span><span class="s2">"the rows of W"</span><span class="p">,</span> <span class="s2">"the world's state"</span><span class="p">),</span>
                 <span class="p">)</span>
             <span class="n">Wmu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">Ww_form</span> <span class="o">@</span> <span class="n">mu</span><span class="p">)</span>
-            <span class="n">Wt</span> <span class="o">=</span> <span class="n">Ww_form</span><span class="o">.</span><span class="n">_transpose</span><span class="p">()</span><span class="o">.</span><span class="n">dense</span><span class="p">()</span>  <span class="c1"># n_w x k</span>
 
         <span class="n">estimate</span> <span class="o">=</span> <span class="n">Wx0</span> <span class="o">+</span> <span class="n">WK</span> <span class="o">@</span> <span class="n">d</span>
         <span class="n">bias</span> <span class="o">=</span> <span class="n">estimate</span> <span class="o">-</span> <span class="n">Wmu</span>
@@ -4124,13 +4132,15 @@
         <span class="n">scale</span> <span class="o">=</span> <span class="n">_largest_variance</span><span class="p">(</span><span class="n">KT</span><span class="p">,</span> <span class="n">world</span><span class="o">.</span><span class="n">obs_cov</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">P</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># G^T = (W K H_w - W)^T = H_w^T (W K)^T - W^T, n x k</span>
-            <span class="n">Gt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">world</span><span class="o">.</span><span class="n">_operator</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">_transpose</span><span class="p">()</span> <span class="o">@</span> <span class="n">KT</span><span class="p">)</span> <span class="o">-</span> <span class="n">Wt</span>
+            <span class="n">Gt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">world</span><span class="o">.</span><span class="n">_operator</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">_transpose</span><span class="p">()</span> <span class="o">@</span> <span class="n">KT</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">Ww_form</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">Gt</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">diag_indices</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">Gt</span><span class="p">))]</span> <span class="o">-=</span> <span class="mf">1.0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">Gt</span> <span class="o">-=</span> <span class="n">Ww_form</span><span class="o">.</span><span class="n">_transpose</span><span class="p">()</span><span class="o">.</span><span class="n">dense</span><span class="p">()</span>  <span class="c1"># n_w x k</span>
             <span class="n">variance</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">"ik,ik-&gt;k"</span><span class="p">,</span> <span class="n">Gt</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">P</span> <span class="o">@</span> <span class="n">Gt</span><span class="p">))</span>
             <span class="n">scale</span> <span class="o">+=</span> <span class="n">_largest_variance</span><span class="p">(</span><span class="n">Gt</span><span class="p">,</span> <span class="n">P</span><span class="p">)</span>
         <span class="n">std</span> <span class="o">=</span> <span class="n">_std</span><span class="p">(</span><span class="n">variance</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="s2">"error variances"</span><span class="p">)</span>
-        <span class="n">prior_scale</span> <span class="o">=</span> <span class="n">_largest_variance</span><span class="p">(</span>
-            <span class="kc">None</span> <span class="k">if</span> <span class="n">W</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">Wt_post</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">data</span>
-        <span class="p">)</span>
+        <span class="n">prior_scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prior_scale</span><span class="p">(</span><span class="n">W_form</span><span class="p">)</span>
         <span class="n">posterior_std</span> <span class="o">=</span> <span class="n">_std</span><span class="p">(</span><span class="n">posterior_var</span><span class="p">,</span> <span class="n">prior_scale</span><span class="p">,</span> <span class="s2">"posterior variances"</span><span class="p">)</span>
 
         <span class="n">half</span> <span class="o">=</span> <span class="n">ndtri</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">+</span> <span class="n">level</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">posterior_std</span>  <span class="c1"># half the interval</span>

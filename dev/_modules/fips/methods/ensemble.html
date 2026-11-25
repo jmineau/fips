@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../../_static/documentation_options.js?v=01cd3bb2"></script>
+    <script src="../../../_static/documentation_options.js?v=2a34e42f"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -532,11 +532,21 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">scipy.sparse</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sp</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">numpy.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinAlgError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">cholesky</span><span class="p">,</span> <span class="n">eigh</span><span class="p">,</span> <span class="n">solve_triangular</span><span class="p">,</span> <span class="n">svd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.sparse.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">splu</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">DiagonalOperator</span><span class="p">,</span> <span class="n">LinearOperator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">BlockDiagonalOperator</span><span class="p">,</span>
+    <span class="n">DenseOperator</span><span class="p">,</span>
+    <span class="n">DiagonalOperator</span><span class="p">,</span>
+    <span class="n">KroneckerOperator</span><span class="p">,</span>
+    <span class="n">LinearOperator</span><span class="p">,</span>
+    <span class="n">SparseOperator</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg.forms</span><span class="w"> </span><span class="kn">import</span> <span class="n">_read_only</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg.kronecker</span><span class="w"> </span><span class="kn">import</span> <span class="n">_KroneckerRoot</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.methods.analytic</span><span class="w"> </span><span class="kn">import</span> <span class="n">AnalyticOptions</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.operator</span><span class="w"> </span><span class="kn">import</span> <span class="n">Operator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.posterior</span><span class="w"> </span><span class="kn">import</span> <span class="n">Posterior</span>
@@ -771,8 +781,8 @@
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""The prior members' deviations, scaled: :math:`A = (X - \bar{x}) / \sqrt{N - 1}` (``n x N``)."""</span>
     <span class="n">predicted_mean</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""The mean of the modeled observations, :math:`\bar{y}` (``m``)."""</span>
-    <span class="n">obs_root</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">"""The root of :math:`S_z`: the square roots of a diagonal one (``m``), or its lower Cholesky factor :math:`L` (``m x m``)."""</span>
+    <span class="n">obs_root</span><span class="p">:</span> <span class="n">LinearOperator</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""A square root :math:`L` of :math:`S_z` (:math:`L L^T = S_z`), in a form that keeps its structure: the square roots of a diagonal one, a root per block or per group of correlated rows, a Kronecker one's factors' Cholesky factors, or the lower Cholesky factor of a dense one."""</span>
     <span class="n">eigenvectors</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">""":math:`Q`, the eigenvectors of :math:`M` with an eigenvalue kept (``m x k``)."""</span>
     <span class="n">eigenvalues</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
@@ -967,18 +977,48 @@
                 <span class="n">_read_only</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_whiten</span><span class="p">(</span><span class="n">root</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">transpose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">"""Return :math:`L^{-1} X`, or :math:`L^{-T} X` with `transpose`, for the root of :math:`S_z` (``Ensemble.obs_root``)."""</span>
-    <span class="k">if</span> <span class="n">root</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">X</span> <span class="o">/</span> <span class="p">(</span><span class="n">root</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="k">if</span> <span class="n">X</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span> <span class="k">else</span> <span class="n">root</span><span class="p">)</span>
-    <span class="n">trans</span> <span class="o">=</span> <span class="s2">"T"</span> <span class="k">if</span> <span class="n">transpose</span> <span class="k">else</span> <span class="s2">"N"</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_whiten</span><span class="p">(</span><span class="n">root</span><span class="p">:</span> <span class="n">LinearOperator</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">transpose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Return :math:`L^{-1} X`, or :math:`L^{-T} X` with `transpose`, for the root :math:`L` of :math:`S_z` (``Ensemble.obs_root``), in its form."""</span>
+    <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">DiagonalOperator</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">X</span> <span class="o">/</span> <span class="p">(</span><span class="n">root</span><span class="o">.</span><span class="n">values</span> <span class="k">if</span> <span class="n">X</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">root</span><span class="o">.</span><span class="n">values</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">])</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">BlockDiagonalOperator</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">_whiten</span><span class="p">(</span><span class="n">form</span><span class="p">,</span> <span class="n">X</span><span class="p">[</span><span class="n">rows</span><span class="p">],</span> <span class="n">transpose</span><span class="p">)</span> <span class="k">for</span> <span class="n">form</span><span class="p">,</span> <span class="n">rows</span> <span class="ow">in</span> <span class="n">root</span><span class="o">.</span><span class="n">_parts</span><span class="p">()]</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">_KroneckerRoot</span><span class="p">):</span>
+        <span class="c1"># L = D P (L_1 kron ... kron L_K) P^T on the whole grid, inverted factor by factor</span>
+        <span class="n">of</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="n">_of</span><span class="p">,</span> <span class="n">root</span><span class="o">.</span><span class="n">_of</span><span class="o">.</span><span class="n">std</span>
+        <span class="n">inverses</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">solve_triangular</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">L</span><span class="p">)),</span> <span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">L</span> <span class="ow">in</span> <span class="n">root</span><span class="o">.</span><span class="n">_roots</span>
+        <span class="p">)</span>
+        <span class="n">Y</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">transpose</span><span class="p">:</span>
+            <span class="n">Y</span> <span class="o">=</span> <span class="n">of</span><span class="o">.</span><span class="n">_gather</span><span class="p">(</span><span class="n">of</span><span class="o">.</span><span class="n">_through</span><span class="p">(</span><span class="n">of</span><span class="o">.</span><span class="n">_scatter</span><span class="p">(</span><span class="n">Y</span><span class="p">),</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">M</span><span class="o">.</span><span class="n">T</span> <span class="k">for</span> <span class="n">M</span> <span class="ow">in</span> <span class="n">inverses</span><span class="p">)))</span>
+            <span class="n">Y</span> <span class="o">=</span> <span class="n">Y</span> <span class="o">/</span> <span class="n">s</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">Y</span> <span class="o">=</span> <span class="n">of</span><span class="o">.</span><span class="n">_gather</span><span class="p">(</span><span class="n">of</span><span class="o">.</span><span class="n">_through</span><span class="p">(</span><span class="n">of</span><span class="o">.</span><span class="n">_scatter</span><span class="p">(</span><span class="n">Y</span> <span class="o">/</span> <span class="n">s</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]),</span> <span class="n">inverses</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">Y</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">SparseOperator</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+            <span class="n">splu</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">csc_matrix</span><span class="p">(</span><span class="n">root</span><span class="o">.</span><span class="n">matrix</span><span class="p">))</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">trans</span><span class="o">=</span><span class="s2">"T"</span> <span class="k">if</span> <span class="n">transpose</span> <span class="k">else</span> <span class="s2">"N"</span><span class="p">)</span>
+        <span class="p">)</span>
     <span class="c1"># np.asarray: SciPy is not annotated, and gives no array type</span>
-    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">solve_triangular</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">trans</span><span class="o">=</span><span class="n">trans</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+        <span class="n">solve_triangular</span><span class="p">(</span><span class="n">root</span><span class="o">.</span><span class="n">dense</span><span class="p">(),</span> <span class="n">X</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">trans</span><span class="o">=</span><span class="mi">1</span> <span class="k">if</span> <span class="n">transpose</span> <span class="k">else</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="p">)</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_obs_root</span><span class="p">(</span><span class="n">S_z</span><span class="p">:</span> <span class="n">LinearOperator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_obs_root</span><span class="p">(</span><span class="n">S_z</span><span class="p">:</span> <span class="n">LinearOperator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LinearOperator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Return the root of the observation covariance: the square roots of a diagonal one, or the Cholesky factor of any other, made dense.</span>
+<span class="sd">    Return a square root of the observation covariance, in a form that keeps its structure.</span>
+
+<span class="sd">    A diagonal one gives its square roots, a block diagonal one the root of</span>
+<span class="sd">    each block, a Kronecker one on its whole grid the Cholesky factors of its</span>
+<span class="sd">    factors, and a sparse one the Cholesky factor of each group of rows that</span>
+<span class="sd">    are correlated (its draws' root). Any other is the Cholesky factor of its</span>
+<span class="sd">    dense matrix. Nothing ``m x m`` is formed but for a dense covariance.</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
@@ -991,11 +1031,22 @@
                 <span class="s2">"The observation covariance has a variance that is not positive, so "</span>
                 <span class="s2">"it cannot whiten the observations."</span>
             <span class="p">)</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">S_z</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">S_z</span><span class="o">.</span><span class="n">sqrt</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">S_z</span><span class="p">,</span> <span class="n">BlockDiagonalOperator</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">BlockDiagonalOperator</span><span class="p">([</span><span class="n">_obs_root</span><span class="p">(</span><span class="n">form</span><span class="p">)</span> <span class="k">for</span> <span class="n">form</span> <span class="ow">in</span> <span class="n">S_z</span><span class="o">.</span><span class="n">blocks</span><span class="p">])</span>
     <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">S_z</span><span class="p">,</span> <span class="n">KroneckerOperator</span><span class="p">)</span> <span class="ow">and</span> <span class="n">S_z</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">S_z</span><span class="o">.</span><span class="n">_size</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">S_z</span><span class="o">.</span><span class="n">sqrt</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">S_z</span><span class="p">,</span> <span class="n">SparseOperator</span><span class="p">):</span>
+            <span class="n">root</span> <span class="o">=</span> <span class="n">S_z</span><span class="o">.</span><span class="n">_root</span>  <span class="c1"># SparseOperator._make_root's</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">SparseOperator</span><span class="p">):</span>
+                <span class="c1"># a group with no Cholesky factor makes the root singular</span>
+                <span class="n">splu</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">csc_matrix</span><span class="p">(</span><span class="n">root</span><span class="o">.</span><span class="n">matrix</span><span class="p">))</span>
+                <span class="k">return</span> <span class="n">root</span>
         <span class="c1"># np.asarray: SciPy is not annotated, and gives no array type</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">cholesky</span><span class="p">(</span><span class="n">S_z</span><span class="o">.</span><span class="n">dense</span><span class="p">(),</span> <span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
-    <span class="k">except</span> <span class="n">LinAlgError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">DenseOperator</span><span class="o">.</span><span class="n">_adopt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">cholesky</span><span class="p">(</span><span class="n">S_z</span><span class="o">.</span><span class="n">dense</span><span class="p">(),</span> <span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">)))</span>
+    <span class="c1"># RuntimeError: SuperLU's singular factor</span>
+    <span class="k">except</span> <span class="p">(</span><span class="n">LinAlgError</span><span class="p">,</span> <span class="ne">RuntimeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">LinAlgError</span><span class="p">(</span>
             <span class="s2">"The observation covariance is not positive-definite, so it cannot "</span>
             <span class="s2">"whiten the observations."</span>
@@ -1003,7 +1054,7 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_innovation</span><span class="p">(</span>
-    <span class="n">problem</span><span class="p">:</span> <span class="n">Problem</span><span class="p">,</span> <span class="n">predicted_mean</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">root</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">Q</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="n">problem</span><span class="p">:</span> <span class="n">Problem</span><span class="p">,</span> <span class="n">predicted_mean</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">root</span><span class="p">:</span> <span class="n">LinearOperator</span><span class="p">,</span> <span class="n">Q</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""Return :math:`e = Q^T L^{-1} d` and :math:`\lVert L^{-1} d - Q e \rVert^2`, for :math:`d = z - c - \bar{y}`."""</span>
     <span class="n">d</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">values</span> <span class="o">-</span> <span class="n">problem</span><span class="o">.</span><span class="n">_offset_values</span><span class="p">()</span> <span class="o">-</span> <span class="n">predicted_mean</span>
@@ -1148,7 +1199,7 @@
         <span class="n">prior_mean</span><span class="o">=</span><span class="n">_read_only</span><span class="p">(</span><span class="n">x_bar</span><span class="p">),</span>
         <span class="n">deviations</span><span class="o">=</span><span class="n">_read_only</span><span class="p">(</span><span class="n">A</span><span class="p">),</span>
         <span class="n">predicted_mean</span><span class="o">=</span><span class="n">_read_only</span><span class="p">(</span><span class="n">y_bar</span><span class="p">),</span>
-        <span class="n">obs_root</span><span class="o">=</span><span class="n">_read_only</span><span class="p">(</span><span class="n">root</span><span class="p">),</span>
+        <span class="n">obs_root</span><span class="o">=</span><span class="n">root</span><span class="p">,</span>
         <span class="n">eigenvectors</span><span class="o">=</span><span class="n">_read_only</span><span class="p">(</span><span class="n">Q</span><span class="p">),</span>
         <span class="n">eigenvalues</span><span class="o">=</span><span class="n">_read_only</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">),</span>
         <span class="n">F</span><span class="o">=</span><span class="n">_read_only</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">F</span><span class="p">)),</span>
