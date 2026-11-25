@@ -298,7 +298,7 @@ def test_with_data_is_a_fresh_solve(form, gamma, analytic_form):
 
 
 def test_the_information_form_factors_a_dense_mismatch_once(monkeypatch):
-    """A dense observation covariance is factored at the solve and kept: the outputs and ``with_data`` (each trial) solve with it through that factor; the first ``with_gamma`` factors the problem again with its eigendecomposition, once; a pickle factors it again when next needed."""
+    """A dense observation covariance is factored at the solve and kept: the outputs, ``with_data`` (each trial) and the eigendecomposition of the first ``with_gamma`` solve with it through that factor; a pickle factors it again when next needed."""
     rng = np.random.default_rng(7)
     n, m = 4, 30
     state = Space({"x": pd.RangeIndex(n, name="i")})
@@ -329,8 +329,7 @@ def test_the_information_form_factors_a_dense_mismatch_once(monkeypatch):
     post.trials(n=3, rng=0)
     assert factored == [], "trials"
     _ = post.with_gamma(2.0).estimate, post.with_gamma(3.0).chi2
-    assert factored == ["_solver"], "with_gamma"
-    factored.clear()
+    assert factored == [], "with_gamma"
     loaded = pickle.loads(pickle.dumps(post))
     assert loaded.chi2 == pytest.approx(post.chi2, rel=1e-12)
     assert factored == ["_solver"]

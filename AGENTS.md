@@ -297,8 +297,9 @@ dependency needs a reason, proposed first.
   diagonal, sparse, block diagonal or Kronecker, applied through its
   factors), it takes the information form (`Information`): `S_0 = R R^T` by
   the form's own `sqrt` (through the factors for a Kronecker `S_0`), and it
-  factors the `n x n` matrix `R^T H^T S_z^-1 H R`, holding no `m x m`
-  of its own. Otherwise, or when `S_0` has no Cholesky factor, the whitened form. Both give the same
+  factors the `n x n` matrix `R^T H^T S_z^-1 H R`; the only `m x m` it holds
+  is a dense `S_z`'s factor (`S_z._solver()`, made once at the solve and kept
+  for every output, `with_data` and `with_gamma`; not pickled). Otherwise, or when `S_0` has no Cholesky factor, the whitened form. Both give the same
   posterior; the oracle and `tests/test_whitened.py` run every case in both
   (the `analytic_form` fixture replaces `_choose`).
 - **A solve factors by Cholesky at its gamma; the first `with_gamma`

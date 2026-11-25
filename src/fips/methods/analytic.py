@@ -449,12 +449,14 @@ class _Factors:
                 "Eigendecomposing the %s form's matrix, for another gamma.",
                 type(self).__name__,
             )
-            eigendecomposed = type(self).factor(
-                self.problem, self.gamma, eigendecompose=True
-            )
+            eigendecomposed = self._eigendecompose()
             # Kept outside the fields (the dataclass is frozen): later sweeps share it
             self.__dict__["_eigendecomposed"] = eigendecomposed
         return eigendecomposed.with_gamma(gamma)
+
+    def _eigendecompose(self) -> "Self":
+        """Return the problem factored again with its matrix eigendecomposed, for :meth:`with_gamma`."""
+        return type(self).factor(self.problem, self.gamma, eigendecompose=True)
 
     def __getstate__(self) -> dict:
         """Return the fields for a pickle or a copy, without the kept eigendecomposition (the first ``with_gamma`` after loading redoes it) or the information form's kept factorization of the observation covariance."""
@@ -785,11 +787,11 @@ class Information(_Factors):
     is dense, diagonal, sparse, block diagonal or Kronecker; otherwise into
     :class:`Whitened`. It factors an :math:`n \times n` matrix instead of an
     :math:`m \times m` one, and gives the same posterior. It holds one
-    :math:`n \times n` array; it forms nothing :math:`m \times m` of its own
-    (a dense observation covariance is factored by Cholesky once, and the factor
-    kept for every output and every :meth:`with_data`; a Kronecker one is applied
-    through its factors). The arrays are read-only,
-    also after a pickle or a copy.
+    :math:`n \times n` array and, for a dense observation covariance, that
+    covariance's Cholesky factor (:math:`m \times m`), made once at the solve
+    and kept for every output, every :meth:`with_data` and :meth:`with_gamma`;
+    it forms no other :math:`m \times m` (a Kronecker one is applied through
+    its factors). The arrays are read-only, also after a pickle or a copy.
 
     With :math:`S_0 = R_0 R_0^T` the prior covariance (:math:`R_0` its
     square root in its own form: :meth:`~fips.linalg.LinearOperator.sqrt`),
@@ -845,17 +847,31 @@ class Information(_Factors):
     )
     """:math:`B \\mapsto S_z^{-1} B` with the factorization made once (``S_z._solver()``), carried to :meth:`with_data` and to the readings at other gammas of one eigendecomposition; not pickled (made again at the first solve after loading)."""
 
-    def _solve_obs(self, B: np.ndarray) -> np.ndarray:
-        r"""Return :math:`S_z^{-1} B` through the kept factorization of the observation covariance."""
+    def _kept_solver(self) -> Callable[[np.ndarray], np.ndarray]:
+        r"""Return :math:`B \mapsto S_z^{-1} B` with the kept factorization, factoring the observation covariance if none is kept (after a pickle)."""
         if self._obs_solver is None:
             object.__setattr__(self, "_obs_solver", self.problem.obs_cov.data._solver())
         solve = self._obs_solver
         assert solve is not None
-        return np.asarray(solve(B))
+        return solve
+
+    def _solve_obs(self, B: np.ndarray) -> np.ndarray:
+        r"""Return :math:`S_z^{-1} B` through the kept factorization of the observation covariance."""
+        return np.asarray(self._kept_solver()(B))
+
+    def _eigendecompose(self) -> "Information":
+        """Return the problem factored again with its matrix eigendecomposed, through the kept factorization of the observation covariance (it is not factored twice)."""
+        return self.factor(
+            self.problem, self.gamma, eigendecompose=True, solve=self._kept_solver()
+        )
 
     @classmethod
     def factor(
-        cls, problem: Problem, gamma: float, eigendecompose: bool = False
+        cls,
+        problem: Problem,
+        gamma: float,
+        eigendecompose: bool = False,
+        solve: Callable[[np.ndarray], np.ndarray] | None = None,
     ) -> "Information":
         r"""
         Factor a problem.
@@ -874,6 +890,11 @@ class Information(_Factors):
         eigendecompose : bool, default False
             Eigendecompose :math:`N`, which :meth:`with_gamma` reads at any
             gamma, instead of the Cholesky at `gamma` (``_decompose``).
+        solve : callable, optional
+            :math:`B \mapsto S_z^{-1} B` through a factorization already made
+            (``S_z._solver()`` of a factor of the same problem, which checked
+            :math:`S_z`); by default the observation covariance is checked and
+            factored here.
 
         Returns
         -------
@@ -890,13 +911,14 @@ class Information(_Factors):
         """
         H = problem._operator.data
         S_z = problem.obs_cov.data
-        try:
-            S_z.logdet()  # raises unless positive-definite
-        except LinAlgError as err:
-            raise LinAlgError(
-                "The observation covariance is not positive-definite, so it cannot "
-                "weight the observations."
-            ) from err
+        if solve is None:
+            try:
+                S_z.logdet()  # raises unless positive-definite
+            except LinAlgError as err:
+                raise LinAlgError(
+                    "The observation covariance is not positive-definite, so it "
+                    "cannot weight the observations."
+                ) from err
         try:
             R_0 = problem.prior_cov.data.sqrt()
         except LinAlgError as err:
@@ -907,7 +929,8 @@ class Information(_Factors):
         if not eigendecompose:  # with_gamma factors the same mismatch again
             _warn_if_ill_conditioned(S_z._correlation_condition())
         HR = (H @ R_0).dense()
-        solve = S_z._solver()  # factored once, for this solve and every output
+        if solve is None:
+            solve = S_z._solver()  # factored once, for this solve and every output
         N = HR.T @ np.asarray(solve(HR))
         N = 0.5 * (N + N.T)
         X, eigenvalues, dofs, information = _decompose(
