@@ -123,6 +123,40 @@ class TestConstruction:
         assert not hasattr(Problem(**_inputs()), "solve")
 
 
+class TestNonFinite:
+    """A Vector keeps infinity (bounds use it), so the problem refuses it where it is data."""
+
+    @pytest.mark.parametrize("bad", [np.inf, -np.inf])
+    @pytest.mark.parametrize(
+        "argument, values, space, what, labels",
+        [
+            ("prior", [1.0, np.nan, 3.0, 0.0, 0.0], STATE, "The prior", "('flux', 2)"),
+            ("obs", [5.0, np.nan, 7.0], OBS, "The observations", "('a', 'o2')"),
+            ("offset", [1.0, 2.0, np.nan], OBS, "The offset", "('b', 'o3')"),
+        ],
+    )
+    def test_an_infinite_value_is_refused_naming_its_labels(
+        self, argument, values, space, what, labels, bad
+    ):
+        vector = Vector(np.where(np.isnan(values), bad, values), space)
+        with pytest.raises(
+            ValueError, match=rf"{what} is not finite \(NaN or infinite\).*{labels}"
+        ):
+            Problem(**_inputs(**{argument: vector}))
+
+    @pytest.mark.parametrize("bad", [np.inf, -np.inf, np.nan])
+    def test_a_number_offset_is_refused_too(self, bad):
+        with pytest.raises(ValueError, match="not finite|NaN"):
+            Problem(**_inputs(offset=bad))
+
+    def test_the_message_counts_the_labels(self):
+        obs = Vector([np.inf, -np.inf, 7.0], OBS)
+        with pytest.raises(
+            ValueError, match=r"at 2 labels: \('a', 'o1'\), \('a', 'o2'\)"
+        ):
+            Problem(**_inputs(obs=obs))
+
+
 class TestZeroPriorVariances:
     """Some prior variances may be zero; all of them may not."""
 

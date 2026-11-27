@@ -255,8 +255,10 @@ operator's rows and the observation covariance must have exactly the labels
 of the observations, and its columns and the prior covariance exactly those
 of the prior, in any order. A block or a label on one side only raises a
 :class:`ValueError` naming it; nothing is filled with zeros or rounded unless
-you ask. Each input is then held in the order of the prior's and the
-observations' spaces, in its own form.
+you ask. A prior, observation or offset value that is NaN or infinite raises
+too, naming its labels (a :class:`~fips.Vector` itself accepts infinity, which
+the bounds of ``"bounded"`` use for "no bound"). Each input is then held in
+the order of the prior's and the observations' spaces, in its own form.
 
 The **offset** :math:`c` is the part of the observations the state does not
 explain (a background): a vector on the observations' space, or one number.

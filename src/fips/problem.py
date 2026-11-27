@@ -37,7 +37,7 @@ from fips.forward import (
 )
 from fips.linalg import LinearOperator
 from fips.operator import Operator
-from fips.space import Space
+from fips.space import Space, _listed
 from fips.vector import Vector
 
 logger = logging.getLogger(__name__)
@@ -51,6 +51,17 @@ def _vector(value: Any, what: str) -> Vector:
             "Vector.from_series(series, block=...) or Vector.from_blocks({...})."
         )
     return value
+
+
+def _finite(vector: Vector, what: str) -> Vector:
+    """Return `vector`; raise a ValueError naming its labels if a value is NaN or infinite."""
+    bad = ~np.isfinite(vector.values)
+    if bad.any():
+        raise ValueError(
+            f"{what} is not finite (NaN or infinite) at {int(bad.sum())} labels: "
+            f"{_listed(vector.space.index[bad])}."
+        )
+    return vector
 
 
 def _covariance(value: Any, space: Space, what: str, of: str) -> Covariance:
@@ -131,7 +142,11 @@ class Problem:
         have exactly the labels of the space it is put on: a block or a label
         on one side and not the other. The message names them. Also if every
         variance of the prior covariance is zero (some may be: an
-        element known exactly, a bias block given as 0).
+        element known exactly, a bias block given as 0). Also if a value of
+        the prior, the observations or the offset is not finite (NaN or
+        infinite); the message names the labels. (A :class:`~fips.Vector`
+        itself accepts infinity, which the bounds of ``"bounded"`` use for
+        "no bound".)
 
     See Also
     --------
@@ -188,8 +203,8 @@ class Problem:
         forward: Forward,
         offset: "Vector | float | None" = None,
     ):
-        self._prior = _vector(prior, "prior")
-        self._obs = _vector(obs, "obs")
+        self._prior = _finite(_vector(prior, "prior"), "The prior")
+        self._obs = _finite(_vector(obs, "obs"), "The observations")
         state, observed = self._prior.space, self._obs.space
 
         self._forward: Forward
@@ -249,6 +264,8 @@ class Problem:
                 "Build a Vector with Vector.from_series(series, block=...) or "
                 "Vector.from_blocks({...})."
             )
+        if self._offset is not None:
+            _finite(self._offset, "The offset")
 
     @property
     def prior(self) -> Vector:
