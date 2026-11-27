@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=31fbb947"></script>
+    <script src="../../_static/documentation_options.js?v=32b72622"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -1123,7 +1123,11 @@ for all of them. None (the default) is no offset.</p></li>
     have exactly the labels of the space it is put on: a block or a label
     on one side and not the other. The message names them. Also if every
     variance of the prior covariance is zero (some may be: an
-    element known exactly, a bias block given as 0).</p></li>
+    element known exactly, a bias block given as 0). Also if a value of
+    the prior, the observations or the offset is not finite (NaN or
+    infinite); the message names the labels. (A <a class="reference internal" href="fips.Vector.html#fips.Vector" title="fips.Vector"><code class="xref py py-class docutils literal notranslate"><span class="pre">Vector</span></code></a>
+    itself accepts infinity, which the bounds of <code class="docutils literal notranslate"><span class="pre">&quot;bounded&quot;</span></code> use for
+    “no bound”.)</p></li>
 </ul>
 </dd>
 </dl>
