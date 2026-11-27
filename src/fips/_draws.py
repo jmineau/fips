@@ -266,13 +266,11 @@ def _split_rhat(draws: np.ndarray, lengths: tuple[int, ...]) -> np.ndarray:
                 part
                 for chain in _chains(values, lengths)
                 for part in (chain[:, :half], chain[:, -half:])
-            ]
-        )  # halves x rows x L
-        W = halves.var(axis=2, ddof=1).mean(axis=0)
-        B = half * halves.mean(axis=2).var(axis=0, ddof=1)
-        moves = W > 0
-        pooled = (half - 1) / half * W[moves] + B[moves] / half
-        rhat[moves] = np.maximum(rhat[moves], np.sqrt(pooled / W[moves]))
+            ],
+            axis=1,
+        )  # rows x halves x L
+        moves = halves.var(axis=2, ddof=1).mean(axis=1) > 0
+        rhat[moves] = np.maximum(rhat[moves], _rhat_of(halves[moves]))
     return rhat
 
 
