@@ -160,8 +160,8 @@ class Covariance(Operator):
         ``cov.data`` for the matrix), or `space` is not a Space.
     ValueError
         If the matrix does not have one row and one column per label, it
-        stores a NaN, or a dense or sparse matrix is not symmetric: its
-        largest ``|A - A^T|`` is more than 1e-10 of its largest entry (the
+        stores a value that is not finite (NaN or infinite), or a dense or
+        sparse matrix is not symmetric: its largest ``|A - A^T|`` is more than 1e-10 of its largest entry (the
         message names the two entries and their labels). A diagonal or
         Kronecker form is symmetric by construction, and a block diagonal one
         is checked block by block. Also if the matrix is not positive

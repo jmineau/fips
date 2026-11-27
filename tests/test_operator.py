@@ -156,17 +156,17 @@ class TestConstructor:
             Operator(data, state, state)
 
     @pytest.mark.parametrize(
-        "data",
-        [
-            np.array([[1.0, np.nan, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]),
-            sp.csr_array(([np.nan], ([0], [1])), shape=(3, 3)),
-            DiagonalOperator([1.0, np.nan, 3.0]),
-        ],
-        ids=["dense", "sparse", "diagonal"],
+        "bad", [np.nan, np.inf, -np.inf], ids=["nan", "inf", "-inf"]
     )
-    def test_nan_refused(self, data, state):
-        """A stored NaN raises, in every form."""
-        with pytest.raises(ValueError, match="NaN entries"):
+    @pytest.mark.parametrize("form", ["dense", "sparse", "diagonal"])
+    def test_not_finite_refused(self, form, bad, state):
+        """A stored NaN or infinite value raises, in every form."""
+        data = {
+            "dense": np.array([[1.0, bad, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]),
+            "sparse": sp.csr_array(([bad], ([0], [1])), shape=(3, 3)),
+            "diagonal": DiagonalOperator([1.0, bad, 3.0]),
+        }[form]
+        with pytest.raises(ValueError, match="not finite"):
             Operator(data, state, state)
 
     @pytest.mark.parametrize(
@@ -393,7 +393,11 @@ class TestFromFrame:
         frame = bare(H)
         frame.iloc[1, 2] = np.nan
 
-        with pytest.raises(ValueError, match="NaN entries"):
+        with pytest.raises(ValueError, match="not finite"):
+            Operator.from_frame(frame, row_block="co2", col_block="flux")
+
+        frame.iloc[1, 2] = np.inf
+        with pytest.raises(ValueError, match="not finite"):
             Operator.from_frame(frame, row_block="co2", col_block="flux")
 
     def test_not_a_frame_refused(self):
