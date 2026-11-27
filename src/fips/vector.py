@@ -9,16 +9,13 @@ variances. The values are a NumPy array and the labels are the space's; a
 
 import numbers
 from collections.abc import Mapping
-from typing import TYPE_CHECKING
+from typing import Any
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
 
 from fips.space import Space, _listed
-
-if TYPE_CHECKING:
-    import xarray as xr
 
 
 class Vector:
@@ -364,7 +361,7 @@ class Vector:
             np.array(values), index=self._space.select(block), name=self._name
         )
 
-    def to_xarray(self) -> "xr.DataArray | xr.Dataset":
+    def to_xarray(self) -> Any:
         """
         Return the values as xarray, each block on its own levels.
 
