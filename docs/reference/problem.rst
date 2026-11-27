@@ -13,7 +13,9 @@ naming the blocks and labels on one side only. A covariance model is built on
 the prior's or the observations' space. :func:`solve` solves a problem.
 :meth:`Problem.restrict` holds part of the state at its prior (the cells no
 observation sees well), and :meth:`Problem.aggregate` aggregates the
-observations (see :doc:`aggregate`).
+observations (see :doc:`aggregate`). :meth:`Problem.normalized_innovations`
+compares each observation with the prior, and :meth:`Problem.keep_obs` solves
+on the observations you keep.
 
 .. seealso::
 
@@ -66,18 +68,20 @@ What needs no solve and no :math:`m \times m` matrix is on the problem: what
 the problem predicts, a truth and its synthetic observations
 (:ref:`how to use them <synthetic-data>`), members drawn from the prior for
 the ensemble method (:doc:`/user_guide/ensemble`), and the problems made from it (the
-observations aggregated, part of the state held at its prior). What depends on
+observations aggregated or kept, part of the state held at its prior). What depends on
 the solve is on the :class:`Posterior`.
 
 .. autosummary::
    :toctree: api/
 
    Problem.predict
+   Problem.normalized_innovations
    Problem.simulate
    Problem.ensemble
    Problem.linearized
    Problem.aggregate
    Problem.restrict
+   Problem.keep_obs
 
 Serialization
 ~~~~~~~~~~~~~
