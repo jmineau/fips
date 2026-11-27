@@ -950,7 +950,6 @@ dependencies = [
     { name = "pandas" },
     { name = "scipy", version = "1.17.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "scipy", version = "1.18.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
-    { name = "xarray" },
 ]
 
 [package.optional-dependencies]
@@ -960,12 +959,15 @@ arviz = [
 viz = [
     { name = "matplotlib" },
 ]
+xarray = [
+    { name = "xarray" },
+]
 
 [package.dev-dependencies]
 dev = [
     { name = "docstr-coverage" },
     { name = "emcee" },
-    { name = "fips", extra = ["arviz", "viz"] },
+    { name = "fips", extra = ["arviz", "viz", "xarray"] },
     { name = "git-cliff" },
     { name = "ipython" },
     { name = "matplotlib" },
@@ -996,15 +998,15 @@ requires-dist = [
     { name = "numpy", specifier = ">=1.24.2" },
     { name = "pandas", specifier = ">=2.1.0" },
     { name = "scipy", specifier = ">=1.12.0" },
-    { name = "xarray", specifier = ">=2022.12.0" },
+    { name = "xarray", marker = "extra == 'xarray'", specifier = ">=2022.12.0" },
 ]
-provides-extras = ["viz", "arviz"]
+provides-extras = ["xarray", "viz", "arviz"]
 
 [package.metadata.requires-dev]
 dev = [
     { name = "docstr-coverage", specifier = ">=2.3" },
     { name = "emcee", specifier = ">=3.1" },
-    { name = "fips", extras = ["viz", "arviz"] },
+    { name = "fips", extras = ["viz", "arviz", "xarray"] },
     { name = "git-cliff", specifier = ">=2.10" },
     { name = "ipython", specifier = ">=9.0" },
     { name = "matplotlib", specifier = ">=3.8" },
