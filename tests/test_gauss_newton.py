@@ -84,6 +84,11 @@ from fips.problem import Problem as _Problem
 # ---------------------------------------------------------------------------
 
 
+def cycled(index: pd.Index) -> pd.Index:
+    """`index` with its last label moved to the front."""
+    return index[np.roll(np.arange(len(index)), 1)]
+
+
 class LinearModel(ForwardModel):
     """A linear map written as a model: ``F(x) = H x``, the Jacobian ``H``."""
 
@@ -183,8 +188,10 @@ class Arrays:
         state = state or default_state
         H = Operator(self.H, obs, state)
         if permuted:
-            rows = Space({"conc": obs.select("conc")[::-1]})
-            cols = Space({b: state.select(b)[::-1] for b in state.names})
+            # A cycle, not a reversal: a reversal is its own inverse, so it
+            # cannot tell the order from its inverse.
+            rows = Space({"conc": cycled(obs.select("conc"))})
+            cols = Space({b: cycled(state.select(b)) for b in state.names})
             H = H.align(rows, cols)
         return Problem(
             prior=Vector(self.x_0, state),

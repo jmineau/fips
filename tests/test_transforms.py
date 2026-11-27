@@ -63,6 +63,11 @@ from fips.transforms import _softplus_moments, _Transformed
 # ---------------------------------------------------------------------------
 
 
+def cycled(index: pd.Index) -> pd.Index:
+    """`index` with its last label moved to the front."""
+    return index[np.roll(np.arange(len(index)), 1)]
+
+
 class ScaledInventory(fips.ForwardModel):
     """The observations of an inventory scaled by exp(x): F(x) = H (r * exp(x)), as the nonlinear guide writes it."""
 
@@ -261,12 +266,14 @@ class Case:
         )
 
     def operator(self, sparse: bool = False, permuted: bool = False) -> Operator:
-        """``H`` labeled; `sparse` holds it as a SciPy matrix, `permuted` reverses its rows and columns."""
+        """``H`` labeled; `sparse` holds it as a SciPy matrix, `permuted` shifts its rows and columns by one place."""
         state, obs = self.spaces()
         H = Operator(sps.csr_array(self.H) if sparse else self.H, obs, state)
         if permuted:
-            rows = Space({"conc": obs.select("conc")[::-1]})
-            cols = Space({b: state.select(b)[::-1] for b in state.names})
+            # A cycle, not a reversal: a reversal is its own inverse, so it
+            # cannot tell the order from its inverse.
+            rows = Space({"conc": cycled(obs.select("conc"))})
+            cols = Space({b: cycled(state.select(b)) for b in state.names})
             H = H.align(rows, cols)
         return H
 
