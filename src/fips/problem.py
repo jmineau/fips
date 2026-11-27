@@ -14,7 +14,9 @@ The problem is the question, and the :class:`~fips.Posterior` that
 solve and no ``m x m`` matrix (:meth:`Problem.predict`, and
 :meth:`Problem.simulate` for a synthetic truth and its observations,
 :meth:`Problem.ensemble` for members drawn from the prior), and makes other
-problems from itself (:meth:`Problem.aggregate`, :meth:`Problem.restrict`);
+problems from itself (:meth:`Problem.aggregate`, :meth:`Problem.restrict`,
+:meth:`Problem.keep_obs`); :meth:`Problem.normalized_innovations` compares each
+observation with the prior;
 the posterior holds what depends on the solve or on the ``m x m`` matrix it
 factors.
 """
@@ -35,12 +37,15 @@ from fips.forward import (
     _differentiated,
     _evaluated,
 )
-from fips.linalg import LinearOperator
+from fips.linalg import DiagonalOperator, LinearOperator
 from fips.operator import Operator
 from fips.space import Space, _listed
 from fips.vector import Vector
 
 logger = logging.getLogger(__name__)
+
+# Entries of the n x block matrix of H's rows that normalized_innovations holds at once
+_INNOVATION_CHUNK = 2**22
 
 
 def _vector(value: Any, what: str) -> Vector:
@@ -803,6 +808,205 @@ class Problem:
             prior_cov=self._prior_cov,
             obs=Vector(form @ self._obs.values, rows, name=self._obs.name),
             obs_cov=self._obs_cov.aggregate(W),
+            forward=forward,
+            offset=offset,
+        )
+
+    def normalized_innovations(self) -> Vector:
+        r"""
+        Return each observation's departure from the prior over the spread it is expected to have, before any solve.
+
+        The innovation of observation :math:`i` is :math:`d_i = z_i - (H
+        x_0)_i - c_i`, what the observation says that the prior did not
+        predict (:math:`F(x_0)` with a forward model). If the prior and both
+        covariances are right, :math:`d` has the covariance :math:`H S_0 H^T +
+        S_z`, so each is divided by the square root of the
+        :math:`i`-th diagonal entry of that matrix:
+
+        .. math::
+
+            \frac{z_i - (H x_0)_i - c_i}
+                 {\sqrt{(H S_0 H^T)_{ii} + (S_z)_{ii}}}
+
+        Only the diagonal is computed, as the row sums of
+        :math:`(H S_0) \circ H`, a block of rows at a time through the
+        prior covariance's own product (a Kronecker one through its
+        factors): no :math:`m \times m` matrix is formed and nothing is
+        factored, so it asks about the problem, not about a solve.
+
+        It returns numbers and rejects nothing, and fips sets no threshold:
+        which observations to look at or leave out is the caller's choice
+        (:meth:`keep_obs` solves without the ones left out). A large value
+        says that the observation, the prior and the two covariances
+        disagree, not which of them is wrong; a prior covariance that is too
+        small gives large values everywhere. An observation with no expected
+        spread (zero in both covariances' diagonals) gives NaN or infinity.
+
+        Returns
+        -------
+        Vector
+            The normalized innovations, on the observations' space.
+
+        See Also
+        --------
+        keep_obs : The problem on some of the observations.
+        Posterior.innovation_cov : The full innovation covariance of a solve.
+        Posterior.desroziers : The check on the observation covariance after a solve.
+
+        Notes
+        -----
+        With a forward model, :math:`F(x_0)` and the Jacobian at the prior
+        stand in for :math:`H x_0` and :math:`H`.
+
+        Examples
+        --------
+        The third observation is more than 4 spreads from what the prior predicts:
+
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> import fips
+        >>> cells = pd.Index(["a", "b"], name="cell")
+        >>> obs_id = pd.Index(["o1", "o2", "o3"], name="obs_id")
+        >>> prior = fips.Vector.from_series(pd.Series(0.0, index=cells), block="flux")
+        >>> obs = fips.Vector.from_series(
+        ...     pd.Series([0.5, -1.0, 8.0], index=obs_id), block="co2"
+        ... )
+        >>> problem = fips.Problem(
+        ...     prior=prior,
+        ...     prior_cov=fips.Independent().with_std(1.0),
+        ...     obs=obs,
+        ...     obs_cov=fips.Independent().with_std(1.0),
+        ...     forward=fips.Operator(
+        ...         np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]),
+        ...         obs.space,
+        ...         prior.space,
+        ...     ),
+        ... )
+        >>> problem.normalized_innovations().values.round(2)
+        array([ 0.35, -0.71,  4.62])
+        """
+        H = self.linearized(self._prior)._operator.data
+        m, n = H.shape
+        variance = self._obs_cov.data.diagonal()
+        columns = np.arange(n)
+        step = max(1, _INNOVATION_CHUNK // max(n, 1))
+        for start in range(0, m, step):
+            rows = np.arange(start, min(start + step, m))
+            Ht = H._select(rows, columns)._transpose().dense()  # n x block
+            SHt = np.asarray(self._prior_cov.data.matmat(Ht))
+            variance[rows] += (Ht * SHt).sum(axis=0)
+        departure = self._obs.values - self.predict(self._prior).values
+        with np.errstate(divide="ignore", invalid="ignore"):
+            values = departure / np.sqrt(variance)
+        return Vector(values, self._obs.space, name="normalized innovation")
+
+    def keep_obs(self, keep: Space) -> "Problem":
+        r"""
+        Return the problem on some of the observations, the rest left out.
+
+        The mirror of :meth:`restrict`, which keeps part of the state. Use it
+        to solve without the observations you chose to leave out, such as
+        those whose :meth:`normalized_innovations` are large. The
+        observations, the rows of the forward operator, the offset and the
+        observation covariance are cut to the kept labels. For a correlated
+        covariance the kept rows and columns are the marginal covariance of
+        the kept observations, which is the right one, and it keeps its form
+        where it can (a block-diagonal covariance stays block diagonal, a
+        Kronecker one stays as its factors). A forward model is followed by
+        the selection: the new problem's model is the old one's rows at the
+        kept labels. The prior and the prior covariance are unchanged.
+
+        Observations picked by their innovation are no longer a random sample:
+        screening removes the large departures, so the screened problem's
+        ``reduced_chi2`` and chi-squared tests read low.
+
+        Parameters
+        ----------
+        keep : Space
+            The observations of the new problem: blocks of the observations'
+            space, each with some of its labels (in any order; the new problem
+            has them in this order). A block of the observations not in `keep`
+            is left out whole.
+
+        Returns
+        -------
+        Problem
+            The problem (of the same class) on the kept observations, with the
+            same prior and prior covariance.
+
+        Raises
+        ------
+        TypeError
+            If `keep` is not a Space.
+        ValueError
+            If `keep` has a block or a label that the observations lack.
+
+        See Also
+        --------
+        restrict : The problem on part of the state.
+        normalized_innovations : Each observation against the prior.
+        aggregate : The observations combined, not left out.
+
+        Examples
+        --------
+        Leave out the observation whose innovation is largest:
+
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> import fips
+        >>> cells = pd.Index(["a", "b"], name="cell")
+        >>> obs_id = pd.Index(["o1", "o2", "o3"], name="obs_id")
+        >>> prior = fips.Vector.from_series(pd.Series(0.0, index=cells), block="flux")
+        >>> obs = fips.Vector.from_series(
+        ...     pd.Series([0.5, -1.0, 8.0], index=obs_id), block="co2"
+        ... )
+        >>> problem = fips.Problem(
+        ...     prior=prior,
+        ...     prior_cov=fips.Independent().with_std(1.0),
+        ...     obs=obs,
+        ...     obs_cov=fips.Independent().with_std(1.0),
+        ...     forward=fips.Operator(
+        ...         np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]),
+        ...         obs.space,
+        ...         prior.space,
+        ...     ),
+        ... )
+        >>> d = problem.normalized_innovations().to_series()
+        >>> screened = problem.keep_obs(fips.Space.from_index(d[d.abs() < 3].index))
+        >>> screened.obs.values
+        array([ 0.5, -1. ])
+        >>> fips.solve(screened).estimate.values.round(3)
+        array([ 0.25, -0.5 ])
+        """
+        if not isinstance(keep, Space):
+            raise TypeError(f"keep must be a Space, got {type(keep).__name__}.")
+        observed = self._obs.space
+        kept = observed._subset(keep, "The space to keep")
+        forward = self._forward
+        if isinstance(forward, Operator):
+            forward = Operator(
+                forward.data._select(kept, np.arange(len(self._prior))),
+                keep,
+                self._prior.space,
+                name=forward.name,
+            )
+        else:
+            assert isinstance(forward, ForwardModel)  # the other kind Problem takes
+            rows = DiagonalOperator(np.ones(len(observed)))._select(
+                kept, np.arange(len(observed))
+            )
+            forward = _Aggregated(forward, Operator(rows, keep, observed))
+        offset = self._offset
+        if offset is not None:
+            offset = Vector(offset.values[kept], keep, name=offset.name)
+        obs_cov = self._obs_cov
+        return type(self)(
+            prior=self._prior,
+            prior_cov=self._prior_cov,
+            obs=Vector(self._obs.values[kept], keep, name=self._obs.name),
+            obs_cov=Covariance._computed(
+                obs_cov.data._select(kept, kept), keep, name=obs_cov.name
+            ),
             forward=forward,
             offset=offset,
         )

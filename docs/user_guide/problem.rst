@@ -343,6 +343,58 @@ the estimate back on the whole state:
    small = hourly.restrict(fips.Space({"flux": pd.Index(["c0", "c1"], name="cell")}))
    fips.solve(small).estimate.combine_first(hourly.prior).to_series().round(3)
 
+**Looking at each observation before the solve.** An observation that the
+prior, both covariances and the other observations cannot explain can pull a
+solve away from the rest. :meth:`Problem.normalized_innovations
+<fips.Problem.normalized_innovations>` divides each observation's departure
+from the prior, :math:`z - H x_0 - c`, by the spread it is expected to have,
+:math:`\sqrt{(H S_0 H^T + S_z)_{ii}}`, and gives a value on the observations.
+Only that diagonal is computed, a block of rows at a time through each
+covariance's own product, so no :math:`m \times m` matrix is formed and nothing
+is solved (with a forward model, it is taken at the prior). Here one
+observation of a synthetic problem is moved by several of its own standard
+deviations, and the check finds it:
+
+.. ipython:: python
+
+   _, simulated = hourly.simulate(rng=1)
+   values = simulated.to_series("ch4")
+   values.iloc[10] += 0.4
+   spiked = fips.Problem(
+       prior=hourly.prior,
+       prior_cov=hourly.prior_cov,
+       obs=fips.Vector.from_series(values, block="ch4"),
+       obs_cov=hourly.obs_cov,
+       forward=hourly.forward,
+   )
+   d = spiked.normalized_innovations().to_series()
+   d.abs().nlargest(3).round(1)
+
+fips returns the numbers and sets no threshold: a large value says that the
+observation, the prior and the two covariances disagree, not which of them is
+wrong, and a prior covariance that is too small makes every value large.
+Which observations to leave out is your choice. :meth:`Problem.keep_obs
+<fips.Problem.keep_obs>` is the mirror of :meth:`~fips.Problem.restrict` for
+the observations: given a :class:`~fips.Space` with some of their labels, it
+cuts the observations, the forward operator's rows, the offset and the
+observation covariance to them (the marginal covariance of the kept
+observations, in the same form where it can be), and leaves the prior alone:
+
+.. ipython:: python
+
+   keep = fips.Space.from_index(d[d.abs() < 4].index)
+   screened = spiked.keep_obs(keep)
+   len(spiked.obs), len(screened.obs)
+   fips.solve(screened).estimate.to_series().round(3)
+
+**A screened problem reads low on** ``reduced_chi2``. Choosing observations by
+how well the prior predicts them removes the large departures, so what is
+left is no longer a random sample of the errors: the screened problem's
+:attr:`~fips.Posterior.reduced_chi2` and chi-squared tests come out lower than
+the errors deserve, and their p-values are not those of a fresh sample. Read
+them as a description of the observations kept, not as a test of the
+covariances.
+
 **A forward model that is not linear** goes in the same place: ``forward=``
 takes a :class:`~fips.ForwardModel` as well as an operator
 (:doc:`nonlinear`).

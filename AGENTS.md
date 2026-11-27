@@ -51,7 +51,8 @@ src/fips/
                     jvp/vjp), taylortest (and the adjoint)
   transforms.py     LogNormalForward, SoftplusForward: H on a positive T(u) of one block; prior_for
                     (softplus moments by panels split at the bend: Gauss-Hermite fails past 2 scales)
-  problem.py        Problem: the inputs, checked once; predict, linearized, aggregate, restrict
+  problem.py        Problem: the inputs, checked once; predict, normalized_innovations, linearized, aggregate,
+                    restrict, keep_obs
   posterior.py      Posterior (labels a method's answer); the Solution and Options protocols
   aggregate.py      sum, mean (an aggregation W), offset_block
   _draws.py         the checks of a sampler's chains: autocorrelation, split R-hat, ArviZ's rank-normalized
@@ -153,8 +154,8 @@ inversion is a function that builds the `Problem`.
   non-diagonal `S_z` (`m x m`; Gauss-Newton, each step's `J S_0`, `J S_0 J^T`),
   and `post.cov()` forms `n x n` only when read. `"variational"` forms nothing `n x n` or `m x m`.
 - **The problem is the question, the posterior the answer.** `Problem` holds
-  what needs no solve and no `m x m` matrix (`predict`; `linearized`,
-  `aggregate`, `restrict` make a new problem through `__init__`; `restrict`
+  what needs no solve and no `m x m` matrix (`predict`,
+  `normalized_innovations`; `linearized`, `aggregate`, `restrict`, `keep_obs` make a new problem through `__init__`; `restrict`
   refuses a model); `Posterior` what depends on the solve, built once, kept.
 - **The posterior labels; the method computes.** A method's solution answers
   `posterior.Solution` with unlabeled arrays in the problem's order;

@@ -327,7 +327,9 @@ class _Aggregated(ForwardModel):
     A model followed by an aggregation of its observations, :math:`W F(x)`; its Jacobian is :math:`W J(x)`.
 
     :meth:`Problem.aggregate <fips.Problem.aggregate>` makes one from a
-    problem whose forward is a model. It pickles when the model does.
+    problem whose forward is a model, and :meth:`Problem.keep_obs
+    <fips.Problem.keep_obs>` one whose aggregation selects rows. It pickles
+    when the model does.
     """
 
     def __init__(self, model: ForwardModel, aggregation: Operator):
