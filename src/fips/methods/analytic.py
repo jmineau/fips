@@ -143,6 +143,23 @@ class AnalyticOptions:
         object.__setattr__(self, "gamma", gamma)
 
 
+def _eigen_weights(eigenvalues: np.ndarray, gamma: np.ndarray | float) -> np.ndarray:
+    r"""Return :math:`w_k = \gamma / (\gamma \lambda_k + 1)` (the analytic and the ensemble methods' weights; arrays broadcast, for several gammas)."""
+    return gamma / (gamma * eigenvalues + 1.0)
+
+
+def _information(eigenvalues: np.ndarray, gamma: np.ndarray | float) -> np.ndarray:
+    r"""Return :math:`\tfrac{1}{2} \sum_k \ln(1 + \gamma \lambda_k)` over the last axis (as :func:`_eigen_weights`)."""
+    return 0.5 * np.log1p(gamma * eigenvalues).sum(axis=-1)
+
+
+def _above_roundoff(eigenvalues: np.ndarray) -> np.ndarray:
+    """Return which of `eigenvalues` are above roundoff, ``k * eps`` times the largest: relative, so the units of the problem do not change the rank."""
+    return eigenvalues > len(eigenvalues) * np.finfo(float).eps * eigenvalues.max(
+        initial=0.0
+    )
+
+
 @dataclass(frozen=True, eq=False)
 class _Factors:
     r"""
@@ -186,7 +203,7 @@ class _Factors:
         r"""Return :math:`w_k = \gamma / (\gamma \lambda_k + 1)`, or ones after a Cholesky (its factors are read at gamma already)."""
         if self.eigenvalues is None:
             return np.ones(len(self.innovation))
-        return self.gamma / (self.gamma * self.eigenvalues + 1.0)
+        return _eigen_weights(self.eigenvalues, self.gamma)
 
     def dofs(self) -> float:
         r"""Return :math:`\sum_k \gamma \lambda_k / (\gamma \lambda_k + 1)`, or after a Cholesky the DOFS computed with it."""
@@ -206,7 +223,7 @@ class _Factors:
         if self.eigenvalues is None:
             assert self.information_at_gamma is not None  # set with every Cholesky
             return self.information_at_gamma
-        return 0.5 * float(np.sum(np.log1p(self.gamma * self.eigenvalues)))
+        return float(_information(self.eigenvalues, self.gamma))
 
     def chi2(self) -> float:
         r"""Return the chi-squared of the innovation, :math:`d^T (H S_0 H^T + S_z/\gamma)^{-1} d` (each form defines it)."""
@@ -253,10 +270,8 @@ class _Factors:
         """
         if self.eigenvalues is None:
             return self.with_gamma(self.gamma)._increment_chi2_at(y)
-        eigenvalues = self.eigenvalues
-        roundoff = len(eigenvalues) * np.finfo(float).eps * eigenvalues.max(initial=0.0)
-        kept = eigenvalues > roundoff
-        s2 = self.gamma * eigenvalues[kept]
+        kept = _above_roundoff(self.eigenvalues)
+        s2 = self.gamma * self.eigenvalues[kept]
         xi = self._whitened_increment(y)[kept]
         return float(np.sum(xi**2 * (1.0 + s2) / s2)), int(kept.sum())
 
@@ -311,8 +326,8 @@ class _Factors:
         eigenvalues = factors.eigenvalues
         assert eigenvalues is not None  # _eigendecomposition gives them
         gammas = np.asarray(gammas, dtype=float)
-        weights = gammas[:, None] / (gammas[:, None] * eigenvalues[None, :] + 1.0)
-        information = 0.5 * np.log1p(gammas[:, None] * eigenvalues[None, :]).sum(axis=1)
+        weights = _eigen_weights(eigenvalues[None, :], gammas[:, None])
+        information = _information(eigenvalues[None, :], gammas[:, None])
         return factors._chi2_at(gammas, weights), information
 
     def _chi2_at(self, gammas: np.ndarray, weights: np.ndarray) -> np.ndarray:
@@ -361,7 +376,7 @@ class _Factors:
         delta = np.asarray(prior_root @ prior_normals, dtype=float)
         error = np.asarray(obs_root @ obs_normals, dtype=float) / np.sqrt(gammas)
         innovations = np.asarray(problem._operator.data @ delta) + error  # m x N
-        weights = gammas[None, :] / (gammas[None, :] * eigenvalues[:, None] + 1.0)
+        weights = _eigen_weights(eigenvalues[:, None], gammas[None, :])
         carried = factors._carry(innovations)
         components = factors.innovation[:, None] - scales[None, :] * carried
         return (
@@ -430,9 +445,7 @@ class _Factors:
         """
         if self.eigenvalues is None:
             return self.with_gamma(self.gamma)._increment_chi2()
-        eigenvalues = self.eigenvalues
-        roundoff = len(eigenvalues) * np.finfo(float).eps * eigenvalues.max(initial=0.0)
-        kept = eigenvalues > roundoff
+        kept = _above_roundoff(self.eigenvalues)
         return float(np.sum(self._chi2_terms(kept))), int(kept.sum())
 
     def _chi2_terms(self, kept: np.ndarray) -> np.ndarray:

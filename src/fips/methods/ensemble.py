@@ -115,7 +115,12 @@ from fips.linalg import (
 )
 from fips.linalg.forms import _read_only
 from fips.linalg.kronecker import _KroneckerRoot
-from fips.methods.analytic import AnalyticOptions
+from fips.methods.analytic import (
+    AnalyticOptions,
+    _above_roundoff,
+    _eigen_weights,
+    _information,
+)
 from fips.operator import Operator
 from fips.posterior import Posterior
 from fips.problem import Problem
@@ -360,8 +365,6 @@ class Ensemble:
     r"""The whitened innovation on the eigenvectors, :math:`e = Q^T L^{-1} d` (``k``)."""
     outside: float
     r""":math:`\lVert L^{-1} d - Q e \rVert^2`, the whitened innovation outside the eigenvectors (where :math:`\lambda = 0`)."""
-    localized: bool
-    """Whether the update was localized."""
     shared: dict = field(default_factory=dict, kw_only=True, repr=False)
     """The updated deviations by gamma, computed once and shared with the solutions of other observations (not pickled)."""
 
@@ -369,7 +372,7 @@ class Ensemble:
 
     def weights(self) -> np.ndarray:
         r"""Return :math:`w_k = \gamma / (1 + \gamma \lambda_k)`."""
-        return self.gamma / (1.0 + self.gamma * self.eigenvalues)
+        return _eigen_weights(self.eigenvalues, self.gamma)
 
     def _reduced(self) -> np.ndarray:
         r"""Return :math:`c_k = \gamma / (\sqrt{1 + \gamma\lambda_k} (\sqrt{1 + \gamma\lambda_k} + 1))`, the weights of the reduced gain."""
@@ -444,7 +447,7 @@ class Ensemble:
 
     def information(self) -> float:
         r"""Return :math:`\tfrac{1}{2} \ln \lvert I + \gamma M \rvert = \tfrac{1}{2} \sum_k \ln(1 + \gamma\lambda_k)`."""
-        return 0.5 * float(np.sum(np.log1p(self.gamma * self.eigenvalues)))
+        return float(_information(self.eigenvalues, self.gamma))
 
     def chi2(self) -> float:
         r"""Return :math:`d^T (P_{yy} + R)^{-1} d = \gamma \lVert L^{-1} d - Q e \rVert^2 + \sum_k w_k e_k^2`."""
@@ -484,9 +487,7 @@ class Ensemble:
         freedom.
         """
         chi2, m = self.chi2(), len(self.problem.obs)
-        eigenvalues = self.eigenvalues
-        roundoff = len(eigenvalues) * np.finfo(float).eps * eigenvalues.max(initial=0.0)
-        kept = eigenvalues > roundoff
+        kept = _above_roundoff(self.eigenvalues)
         increment = float(np.sum((self.weights() * self.innovation**2)[kept]))
         rank = int(kept.sum())
         return {
@@ -771,7 +772,6 @@ def _factor(problem: Problem, options: EnsembleOptions) -> Ensemble:
         E=_read_only(np.ascontiguousarray(E)),
         innovation=innovation,
         outside=outside,
-        localized=options.localization is not None,
     )
 
 
