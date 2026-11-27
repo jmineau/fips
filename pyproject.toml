@@ -24,17 +24,17 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
-    "numpy>=1.24.2",  # 1.24.0 and 1.24.1 fail the read-only-array tests (1.22 has no Python 3.11 wheel)
-    "pandas>=2.1.0",  # 2.1: `__pandas_priority__`, so `series + vector` is refused
-    "scipy>=1.12.0",  # `scipy.sparse.diags_array` and `eye_array`
+    "numpy>=2.0.2",  # before 2.0.2, on AVX-512 CPUs, exp and log can differ in the last bit by where their output lies in memory, so a seeded solve is not repeatable (#278)
+    "pandas>=2.2.2",  # the first pandas that allows NumPy 2 (2.2.1 requires numpy<2)
+    "scipy>=1.13.0",  # the first SciPy that supports NumPy 2 (1.12 requires numpy<1.29)
 ]
 
 [project.optional-dependencies]
 xarray = [
-    "xarray>=2022.12.0",  # Vector.to_xarray; 2022.3.0 to 2022.9.0 fail it
+    "xarray>=2024.6.0",  # Vector.to_xarray; the first xarray release with NumPy 2 support
 ]
 viz = [
-    "matplotlib>=3.6.0",
+    "matplotlib>=3.8.4",  # the first matplotlib that allows NumPy 2 (3.8.3 requires numpy<2)
 ]
 arviz = [
     "arviz>=1.1; python_version >= '3.12'",  # Posterior.to_inference_data; ArviZ 1 needs 3.12
@@ -105,7 +105,7 @@ filterwarnings = [
     # import); pytest's "error" filter would bring it back.
     "ignore:numpy.ndarray size changed:RuntimeWarning",
     # matplotlib before 3.10.7 calls pyparsing methods that pyparsing 3.3 deprecates;
-    # the floors job installs matplotlib 3.8.
+    # the floors job installs matplotlib 3.8.4.
     "ignore::pyparsing.warnings.PyparsingDeprecationWarning",
     # Name no fips class here: pytest imports it at startup, before pytest-cov
     # measures, and coverage then misses every module-level line of fips.

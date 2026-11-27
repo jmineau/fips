@@ -79,12 +79,6 @@ from fips.methods.analytic import Information, Whitened
 from fips.methods.gauss_newton import GaussNewton, GaussNewtonOptions
 from fips.problem import Problem as _Problem
 
-# NumPy before 2.0.2, on a CPU with AVX-512, computes exp and log in a SIMD or a
-# scalar loop by where the output lies in memory, and the two can differ in the
-# last bit; the chains grow that into other draws, so two solves from one seed
-# can differ (#278)
-REPEATABLE = np.lib.NumpyVersion(np.__version__) >= "2.0.2"
-
 # ---------------------------------------------------------------------------
 # Models, at the top level of the module so that they pickle
 # ---------------------------------------------------------------------------
@@ -1296,8 +1290,6 @@ def test_the_draws_are_made_again_refitted_only_where_the_chains_disagree(
     for tuning, before, end in zip(again._tunings(), burned_in, ends, strict=True):
         assert not np.array_equal(tuning.point.x, before)
         assert not np.array_equal(tuning.point.x, agreed[:, end - 1])
-    if not REPEATABLE:
-        pytest.skip("NumPy before 2.0.2 does not repeat exp and log bit for bit")
     np.testing.assert_array_equal(solved(True)[1], redrawn)
     monkeypatch.undo()
     solution = fips.solve(two_cells(), "gauss_newton", draws=400, burn_in=100)._solution
@@ -1807,9 +1799,9 @@ def test_the_chains_disagree_on_a_closely_pinned_curve_and_the_solve_warns(
 
     The seed is one whose chains disagree by a margin on every NumPy and
     SciPy fips supports (a seed fixes a solve per version, not across them):
-    at seed 9, 1.195 on NumPy 2.5 and SciPy 1.18 and 1.26 at the floors (NumPy
-    1.24, SciPy 1.12), where the default seed gives 1.136 and 1.034
-    (2026-11-18).
+    at seed 9, 1.195 on NumPy 2.5 and SciPy 1.18 and 1.26 on NumPy 1.24 and
+    SciPy 1.12 (the floors then), where the default seed gives 1.136 and
+    1.034 (2026-11-18).
     """
     monkeypatch.setattr(gauss_newton.GaussNewton, "_disagree", lambda self, kept: False)
     with caplog.at_level("WARNING", logger="fips.methods.gauss_newton"):
