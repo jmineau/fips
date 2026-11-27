@@ -187,10 +187,7 @@ class GaussNewtonOptions:
         again: such a solve costs about twice the model runs or more.
     seed : int, default 0
         The seed of the starts, the tuning and the kept draws, so that a
-        solve is reproducible. Bit for bit only with NumPy 2.0.2 or later:
-        before it, on a CPU with AVX-512, NumPy's ``exp`` and ``log`` can
-        differ in the last bit by where their output lies in memory, and
-        the chains grow that into other draws.
+        solve is reproducible.
     chains : int, default 4
         The number of chains the draws are split among. Each starts from a
         draw of the Gaussian at the mode and tunes its own step over its own
