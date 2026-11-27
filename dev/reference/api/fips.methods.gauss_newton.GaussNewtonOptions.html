@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=d76e691e"></script>
+    <script src="../../_static/documentation_options.js?v=8d9fd964"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -1119,10 +1119,7 @@ widened where they spread past it, each chain tunes its step again
 over half a burn-in from its last draw, and the kept draws are made
 again: such a solve costs about twice the model runs or more.</p></li>
 <li><p><strong>seed</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – The seed of the starts, the tuning and the kept draws, so that a
-solve is reproducible. Bit for bit only with NumPy 2.0.2 or later:
-before it, on a CPU with AVX-512, NumPy’s <code class="docutils literal notranslate"><span class="pre">exp</span></code> and <code class="docutils literal notranslate"><span class="pre">log</span></code> can
-differ in the last bit by where their output lies in memory, and
-the chains grow that into other draws.</p></li>
+solve is reproducible.</p></li>
 <li><p><strong>chains</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></span>) – The number of chains the draws are split among. Each starts from a
 draw of the Gaussian at the mode and tunes its own step over its own
 burn-in. Chains that disagree, by a split R-hat
