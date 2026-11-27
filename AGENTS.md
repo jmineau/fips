@@ -87,7 +87,7 @@ docs/               Sphinx: guides, reference/ (by topic), examples/ (notebooks)
 
 Imports run one way: `space` < `vector`, `linalg` < `operator` < `forward` < `transforms`, `covariance` <
 `problem` < `posterior` < `methods` < `hyperparameters`, with `aggregate` and `visualization` on top; `distributions`
-and `_errors` import nothing of fips's, `_draws` only `_errors` (so `posterior` and the methods share it). No import inside a function to dodge a cycle, none under `TYPE_CHECKING`.
+and `_errors` import nothing of fips's, `_draws` only `_errors` (so `posterior` and the methods share it). No import of a fips module inside a function to dodge a cycle, none under `TYPE_CHECKING`. An optional third-party package (xarray, ArviZ) is imported inside the function that needs it, and under `TYPE_CHECKING` for its annotation.
 `Covariance` does not import the models: `models.py` sets
 `Covariance._block_diag_models`, so `Covariance.block_diag` takes model parts.
 `posterior.py` imports no method: a method imports `posterior` and returns
