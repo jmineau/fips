@@ -27,10 +27,12 @@ dependencies = [
     "numpy>=1.24.2",  # 1.24.0 and 1.24.1 fail the read-only-array tests (1.22 has no Python 3.11 wheel)
     "pandas>=2.1.0",  # 2.1: `__pandas_priority__`, so `series + vector` is refused
     "scipy>=1.12.0",  # `scipy.sparse.diags_array` and `eye_array`
-    "xarray>=2022.12.0",  # 2022.3.0 to 2022.9.0 fail `to_xarray`
 ]
 
 [project.optional-dependencies]
+xarray = [
+    "xarray>=2022.12.0",  # Vector.to_xarray; 2022.3.0 to 2022.9.0 fail it
+]
 viz = [
     "matplotlib>=3.6.0",
 ]
@@ -48,7 +50,7 @@ Changelog = "https://github.com/jmineau/fips/blob/main/CHANGELOG.md"
 [dependency-groups]
 # Dev tooling and docs together; `uv sync` installs it by default.
 dev = [
-    "fips[viz,arviz]",  # arviz: the tests hold fips's R-hat and effective draws to arviz-stats', and to_inference_data's output
+    "fips[viz,arviz,xarray]",  # xarray: the docs and tests call to_xarray; arviz: the tests hold fips's R-hat and effective draws to arviz-stats', and to_inference_data's output
     "docstr-coverage>=2.3",
     "git-cliff>=2.10",  # `just changelog`
     "ipython>=9.0",  # `.. ipython::` in the docs

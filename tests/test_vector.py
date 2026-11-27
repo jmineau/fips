@@ -1,6 +1,8 @@
 """Tests for fips.vector: values on a space."""
 
 import pickle
+import subprocess
+import sys
 
 import numpy as np
 import pandas as pd
@@ -626,3 +628,16 @@ class TestUfuncs:
             axis=0,
         )
         np.testing.assert_allclose(draws, vector.values, rtol=0.02)
+
+
+class TestWithoutXarray:
+    """xarray is an optional extra: only ``to_xarray`` needs it."""
+
+    def test_fips_imports_without_it(self):
+        code = "import sys; sys.modules['xarray'] = None; import fips"
+        subprocess.run([sys.executable, "-c", code], check=True)
+
+    def test_to_xarray_names_the_extra(self, vector, monkeypatch):
+        monkeypatch.setitem(sys.modules, "xarray", None)
+        with pytest.raises(ImportError, match=r"fips\[xarray\]"):
+            vector.to_xarray()

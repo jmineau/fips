@@ -84,7 +84,13 @@ def _public_callables():
 )
 def test_type_hints_resolve(name, obj):
     """`typing.get_type_hints` resolves every annotation of the public API (a name only the defining module imports, or a method named like a builtin, would raise or resolve wrongly)."""
-    hints = typing.get_type_hints(obj)
+    # An optional package is imported only for type checking: give its name here.
+    xr = pytest.importorskip("xarray")
+    if not hasattr(xr, "DataTree") and "DataTree" in str(obj.__annotations__):
+        pytest.skip(
+            "xarray.DataTree is new in xarray 2024.10 (to_inference_data needs ArviZ, Python 3.12+)"
+        )
+    hints = typing.get_type_hints(obj, localns={"xr": xr})
     for hint in hints.values():
         assert not inspect.isfunction(hint), (name, hint)
 

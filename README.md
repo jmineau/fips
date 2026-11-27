@@ -37,6 +37,7 @@ Inverse problems in geophysics and atmospheric science often involve large state
 ```bash
 pip install fips            # the solver
 pip install "fips[viz]"     # with plot_comparison (matplotlib)
+pip install "fips[xarray]"  # with Vector.to_xarray
 ```
 
 For development:

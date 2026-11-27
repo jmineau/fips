@@ -87,7 +87,7 @@ docs/               Sphinx: guides, reference/ (by topic), examples/ (notebooks)
 
 Imports run one way: `space` < `vector`, `linalg` < `operator` < `forward` < `transforms`, `covariance` <
 `problem` < `posterior` < `methods` < `hyperparameters`, with `aggregate` and `visualization` on top; `distributions`
-and `_errors` import nothing of fips's, `_draws` only `_errors` (so `posterior` and the methods share it). No import inside a function to dodge a cycle, none under `TYPE_CHECKING`.
+and `_errors` import nothing of fips's, `_draws` only `_errors` (so `posterior` and the methods share it). No import of a fips module inside a function to dodge a cycle, none under `TYPE_CHECKING`. An optional third-party package (xarray, ArviZ) is imported inside the function that needs it, and under `TYPE_CHECKING` for its annotation.
 `Covariance` does not import the models: `models.py` sets
 `Covariance._block_diag_models`, so `Covariance.block_diag` takes model parts.
 `posterior.py` imports no method: a method imports `posterior` and returns
@@ -217,7 +217,7 @@ Driven by `just` and `uv`; CI runs the same recipes.
 
 | Command | What it does |
 |---|---|
-| `just sync` | `uv sync`: fips, its `viz` extra, and the dev tools |
+| `just sync` | `uv sync`: fips, its extras, and the dev tools |
 | `just quality-check` | `lint` + `type-check` + `docstr` + `test`: what CI checks |
 | `just test` | pytest in parallel, skipping `network`/`slow` (`-n 0` for serial); also the docstring examples |
 | `just sync-floors` | every dependency at its declared minimum (then `just test`); CI's "minimum dependencies" job: give each direct dependency a minimum |
@@ -262,7 +262,7 @@ SciPy (`scipy.linalg`, `scipy.sparse`, `LinearOperator`, `eigsh`).
 pylops is read, not installed or copied (LGPL). GSTools only in an extra,
 if `covariance/kernels.py` outgrows its kernels. fips writes the samplers its
 methods need (HMC: exact for the bounded posterior, split at a Gaussian about the mode for a model) on NumPy and SciPy. The other inverse-problem libraries (pyOE, hippylib, pyemu, the
-Yadav and Michalak code) are test oracles, not dependencies. emcee, in the `dev` group only, is the outside sampler `tests/test_outside_sampler.py` holds the sampled methods to. ArviZ (1.x, Python 3.12+) is the `arviz` extra, imported only by
+Yadav and Michalak code) are test oracles, not dependencies. emcee, in the `dev` group only, is the outside sampler `tests/test_outside_sampler.py` holds the sampled methods to. xarray is the `xarray` extra, imported only inside `Vector.to_xarray`. ArviZ (1.x, Python 3.12+) is the `arviz` extra, imported only by
 `Posterior.to_inference_data`; fips computes its checks itself, and the tests hold them to `arviz-stats`. A new runtime
 dependency needs a reason, proposed first.
 

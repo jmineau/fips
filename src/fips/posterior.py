@@ -24,7 +24,7 @@ import logging
 import numbers
 from collections.abc import Callable
 from functools import cached_property
-from typing import Any, ClassVar, Protocol
+from typing import TYPE_CHECKING, Any, ClassVar, Protocol
 
 import numpy as np
 import pandas as pd
@@ -42,6 +42,9 @@ from fips.operator import Operator
 from fips.problem import Problem, _covariance, _vector
 from fips.space import Space
 from fips.vector import Vector
+
+if TYPE_CHECKING:
+    import xarray as xr
 
 logger = logging.getLogger(__name__)
 
@@ -1596,7 +1599,7 @@ class Posterior:
         draws = self._optional("kept", "chains of draws (it is not sampled)")()
         return pd.DataFrame(stats, index=_chain_draw_index(self._lengths(draws)))
 
-    def to_inference_data(self, W: Operator | None = None) -> Any:
+    def to_inference_data(self, W: Operator | None = None) -> "xr.DataTree":
         """
         Return a sampled posterior's kept draws as ArviZ's ``DataTree``, for its plots and checks.
 

@@ -9,13 +9,16 @@ variances. The values are a NumPy array and the labels are the space's; a
 
 import numbers
 from collections.abc import Mapping
+from typing import TYPE_CHECKING
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-import xarray as xr
 
 from fips.space import Space, _listed
+
+if TYPE_CHECKING:
+    import xarray as xr
 
 
 class Vector:
@@ -361,9 +364,12 @@ class Vector:
             np.array(values), index=self._space.select(block), name=self._name
         )
 
-    def to_xarray(self) -> xr.DataArray | xr.Dataset:
+    def to_xarray(self) -> "xr.DataArray | xr.Dataset":
         """
         Return the values as xarray, each block on its own levels.
+
+        Needs xarray, which the ``xarray`` extra installs
+        (``pip install "fips[xarray]"``).
 
         Returns
         -------
@@ -372,6 +378,11 @@ class Vector:
             of the block's levels (and no ``block`` dimension), named after
             the block. For several blocks, a Dataset with one such variable
             per block.
+
+        Raises
+        ------
+        ImportError
+            If xarray is not installed.
 
         Examples
         --------
@@ -386,6 +397,13 @@ class Vector:
         >>> Vector.from_series(flux, block="flux").to_xarray().dims
         ('lat', 'lon')
         """
+        try:
+            import xarray as xr
+        except ImportError as exc:
+            raise ImportError(
+                "xarray is required for to_xarray; install it with "
+                '`pip install "fips[xarray]"`.'
+            ) from exc
         arrays = {
             block: pd.Series(
                 self._values[self._space.slice(block)],
