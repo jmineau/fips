@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=8d9fd964"></script>
+    <script src="../../_static/documentation_options.js?v=67917608"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -780,7 +780,9 @@
 <span class="sd">    A model followed by an aggregation of its observations, :math:`W F(x)`; its Jacobian is :math:`W J(x)`.</span>
 
 <span class="sd">    :meth:`Problem.aggregate &lt;fips.Problem.aggregate&gt;` makes one from a</span>
-<span class="sd">    problem whose forward is a model. It pickles when the model does.</span>
+<span class="sd">    problem whose forward is a model, and :meth:`Problem.keep_obs</span>
+<span class="sd">    &lt;fips.Problem.keep_obs&gt;` one whose aggregation selects rows. It pickles</span>
+<span class="sd">    when the model does.</span>
 <span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">ForwardModel</span><span class="p">,</span> <span class="n">aggregation</span><span class="p">:</span> <span class="n">Operator</span><span class="p">):</span>

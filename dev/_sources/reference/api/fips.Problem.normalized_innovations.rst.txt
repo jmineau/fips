@@ -1,0 +1,5 @@
+fips.Problem.normalized\_innovations
+====================================
+
+.. currentmodule:: fips
+.. automethod:: Problem.normalized_innovations

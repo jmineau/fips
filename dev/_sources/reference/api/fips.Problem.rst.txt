@@ -33,7 +33,9 @@
 
    ~Problem.aggregate
    ~Problem.ensemble
+   ~Problem.keep_obs
    ~Problem.linearized
+   ~Problem.normalized_innovations
    ~Problem.predict
    ~Problem.restrict
    ~Problem.simulate

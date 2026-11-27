@@ -1,0 +1,5 @@
+fips.Problem.keep\_obs
+======================
+
+.. currentmodule:: fips
+.. automethod:: Problem.keep_obs
