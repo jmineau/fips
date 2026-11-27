@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=0ab4eb53"></script>
+    <script src="../../_static/documentation_options.js?v=31fbb947"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -438,13 +438,16 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numbers</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">npt</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.space</span><span class="w"> </span><span class="kn">import</span> <span class="n">Space</span><span class="p">,</span> <span class="n">_listed</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
 
 
 <div class="viewcode-block" id="Vector">
@@ -806,9 +809,12 @@
 
 <div class="viewcode-block" id="Vector.to_xarray">
 <a class="viewcode-back" href="../../reference/api/fips.Vector.to_xarray.html#fips.Vector.to_xarray">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">to_xarray</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span> <span class="o">|</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_xarray</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"xr.DataArray | xr.Dataset"</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the values as xarray, each block on its own levels.</span>
+
+<span class="sd">        Needs xarray, which the ``xarray`` extra installs</span>
+<span class="sd">        (``pip install "fips[xarray]"``).</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -817,6 +823,11 @@
 <span class="sd">            of the block's levels (and no ``block`` dimension), named after</span>
 <span class="sd">            the block. For several blocks, a Dataset with one such variable</span>
 <span class="sd">            per block.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ImportError</span>
+<span class="sd">            If xarray is not installed.</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
@@ -831,6 +842,13 @@
 <span class="sd">        &gt;&gt;&gt; Vector.from_series(flux, block="flux").to_xarray().dims</span>
 <span class="sd">        ('lat', 'lon')</span>
 <span class="sd">        """</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
+        <span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span>
+                <span class="s2">"xarray is required for to_xarray; install it with "</span>
+                <span class="s1">'`pip install "fips[xarray]"`.'</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
         <span class="n">arrays</span> <span class="o">=</span> <span class="p">{</span>
             <span class="n">block</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_space</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="n">block</span><span class="p">)],</span>

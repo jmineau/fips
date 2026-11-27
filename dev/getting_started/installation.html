@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=0ab4eb53"></script>
+    <script src="../_static/documentation_options.js?v=31fbb947"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -461,7 +461,6 @@
 <li><p>Python 3.11 or newer</p></li>
 <li><p><a class="reference external" href="https://numpy.org">NumPy</a></p></li>
 <li><p><a class="reference external" href="https://pandas.pydata.org">pandas</a></p></li>
-<li><p><a class="reference external" href="https://xarray.pydata.org">xarray</a></p></li>
 <li><p><a class="reference external" href="https://scipy.org">scipy</a></p></li>
 </ul>
 </section>
@@ -474,6 +473,9 @@
 <h3>Optional extras<a class="headerlink" href="#optional-extras" title="Link to this heading">#</a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Plotting (plot_comparison): matplotlib</span>
 pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"fips[viz]"</span>
+
+<span class="c1"># Vector.to_xarray: xarray</span>
+pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"fips[xarray]"</span>
 </pre></div>
 </div>
 </section>
@@ -482,7 +484,7 @@ pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"fips
 <h2>Development Installation<a class="headerlink" href="#development-installation" title="Link to this heading">#</a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/jmineau/fips.git
 <span class="nb">cd</span><span class="w"> </span>fips
-uv<span class="w"> </span>sync<span class="w">                    </span><span class="c1"># fips, its viz extra, and the dev tools</span>
+uv<span class="w"> </span>sync<span class="w">                    </span><span class="c1"># fips, its extras, and the dev tools</span>
 uv<span class="w"> </span>run<span class="w"> </span>pre-commit<span class="w"> </span>install
 uv<span class="w"> </span>run<span class="w"> </span>just<span class="w"> </span>quality-check
 </pre></div>

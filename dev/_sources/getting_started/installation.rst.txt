@@ -7,7 +7,6 @@ Requirements
 - Python 3.11 or newer
 - `NumPy <https://numpy.org>`_
 - `pandas <https://pandas.pydata.org>`_
-- `xarray <https://xarray.pydata.org>`_
 - `scipy <https://scipy.org>`_
 
 From PyPI
@@ -25,6 +24,9 @@ Optional extras
    # Plotting (plot_comparison): matplotlib
    pip install "fips[viz]"
 
+   # Vector.to_xarray: xarray
+   pip install "fips[xarray]"
+
 Development Installation
 ------------------------
 
@@ -32,7 +34,7 @@ Development Installation
 
    git clone https://github.com/jmineau/fips.git
    cd fips
-   uv sync                    # fips, its viz extra, and the dev tools
+   uv sync                    # fips, its extras, and the dev tools
    uv run pre-commit install
    uv run just quality-check
 
