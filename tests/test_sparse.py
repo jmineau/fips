@@ -192,7 +192,7 @@ class TestFromFrame:
 
     def test_stored_nan_raises(self):
         """A NaN a sparse column stores is data, not an implicit zero: refused, as on the dense path."""
-        with pytest.raises(ValueError, match="NaN entries"):
+        with pytest.raises(ValueError, match="not finite"):
             _read(_nan_filled_frame(stored_nan=True))
         dense = np.diag([1.0, np.nan, 3.0])
         sites = pd.Index(["a", "b", "c"], name="site")
@@ -200,11 +200,11 @@ class TestFromFrame:
             pd.DataFrame(dense, index=sites, columns=sites),
             _from_spmatrix(sp.csr_matrix(dense), sites, sites),
         ):
-            with pytest.raises(ValueError, match="NaN entries"):
+            with pytest.raises(ValueError, match="not finite"):
                 _read_covariance(frame)
         mixed = _filled_frame((None, 0.0))
         mixed.iloc[0, 0] = np.nan  # in the dense column of a sparse frame
-        with pytest.raises(ValueError, match="NaN entries"):
+        with pytest.raises(ValueError, match="not finite"):
             _read(mixed)
 
     def test_diagonal_frame_is_a_diagonal(self):

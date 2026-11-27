@@ -249,7 +249,8 @@ class Operator:
         If `data` is a pandas object or an :class:`Operator`, or `rows` or
         `cols` is not a Space.
     ValueError
-        If the shape of `data` does not match the spaces, or it stores a NaN.
+        If the shape of `data` does not match the spaces, or it stores a value
+        that is not finite (NaN or infinite).
 
     See Also
     --------
@@ -304,8 +305,10 @@ class Operator:
                 f"The matrix has shape {form.shape}, but the spaces have "
                 f"{len(rows)} rows and {len(cols)} columns."
             )
-        if np.isnan(_stored_values(form)).any():
-            raise ValueError("The matrix has NaN entries.")
+        if not np.isfinite(_stored_values(form)).all():
+            raise ValueError(
+                "The matrix has entries that are not finite (NaN or infinite)."
+            )
         self._data = form
         self._rows = rows
         self._cols = cols
@@ -358,7 +361,7 @@ class Operator:
             If an axis with a ``block`` level is given its block name too, or
             one without is not; its labels cannot make a :class:`Space`; a
             sparse column has a fill value other than 0 or NaN; or an entry
-            is NaN.
+            is not finite (NaN or infinite).
 
         Examples
         --------

@@ -152,6 +152,20 @@ class TestConstruction:
         with pytest.raises(TypeError, match="Space"):
             Covariance(np.eye(6), CELLS.index)
 
+    def test_infinite_variance_refused_in_every_form(self):
+        """An infinite variance raises one message for diagonal, dense and sparse storage (#254)."""
+        space = Space({"f": pd.Index([0, 1], name="i")})
+        dense = np.array([[np.inf, 0.0], [0.0, 1.0]])
+        sparse = sp.csr_array(np.array([[np.inf, 0.5], [0.5, 1.0]]))
+        for build in (
+            lambda: Covariance.diagonal([np.inf, 1.0], space),
+            lambda: Covariance(dense, space),
+            lambda: Covariance(sparse, space),
+            lambda: Covariance.diagonal([-np.inf, 1.0], space),
+        ):
+            with pytest.raises(ValueError, match="not finite"):
+                build()
+
     def test_from_frame_puts_the_columns_in_the_rows_order(self):
         """``from_frame`` reads the labels and reorders the columns to the rows."""
         A = _spd(np.random.default_rng(2), 6)
