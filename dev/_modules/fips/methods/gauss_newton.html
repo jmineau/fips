@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../../_static/documentation_options.js?v=57bf2306"></script>
+    <script src="../../../_static/documentation_options.js?v=0ab4eb53"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -621,7 +621,10 @@
 <span class="sd">        again: such a solve costs about twice the model runs or more.</span>
 <span class="sd">    seed : int, default 0</span>
 <span class="sd">        The seed of the starts, the tuning and the kept draws, so that a</span>
-<span class="sd">        solve is reproducible.</span>
+<span class="sd">        solve is reproducible. Bit for bit only with NumPy 2.0.2 or later:</span>
+<span class="sd">        before it, on a CPU with AVX-512, NumPy's ``exp`` and ``log`` can</span>
+<span class="sd">        differ in the last bit by where their output lies in memory, and</span>
+<span class="sd">        the chains grow that into other draws.</span>
 <span class="sd">    chains : int, default 4</span>
 <span class="sd">        The number of chains the draws are split among. Each starts from a</span>
 <span class="sd">        draw of the Gaussian at the mode and tunes its own step over its own</span>
