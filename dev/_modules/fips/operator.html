@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=d942ac48"></script>
+    <script src="../../_static/documentation_options.js?v=977bbea9"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -680,7 +680,8 @@
 <span class="sd">        If `data` is a pandas object or an :class:`Operator`, or `rows` or</span>
 <span class="sd">        `cols` is not a Space.</span>
 <span class="sd">    ValueError</span>
-<span class="sd">        If the shape of `data` does not match the spaces, or it stores a NaN.</span>
+<span class="sd">        If the shape of `data` does not match the spaces, or it stores a value</span>
+<span class="sd">        that is not finite (NaN or infinite).</span>
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
@@ -735,8 +736,10 @@
                 <span class="sa">f</span><span class="s2">"The matrix has shape </span><span class="si">{</span><span class="n">form</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">, but the spaces have "</span>
                 <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span><span class="si">}</span><span class="s2"> rows and </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">cols</span><span class="p">)</span><span class="si">}</span><span class="s2"> columns."</span>
             <span class="p">)</span>
-        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">_stored_values</span><span class="p">(</span><span class="n">form</span><span class="p">))</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"The matrix has NaN entries."</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">_stored_values</span><span class="p">(</span><span class="n">form</span><span class="p">))</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"The matrix has entries that are not finite (NaN or infinite)."</span>
+            <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="n">form</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span> <span class="o">=</span> <span class="n">rows</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cols</span> <span class="o">=</span> <span class="n">cols</span>
@@ -791,7 +794,7 @@
 <span class="sd">            If an axis with a ``block`` level is given its block name too, or</span>
 <span class="sd">            one without is not; its labels cannot make a :class:`Space`; a</span>
 <span class="sd">            sparse column has a fill value other than 0 or NaN; or an entry</span>
-<span class="sd">            is NaN.</span>
+<span class="sd">            is not finite (NaN or infinite).</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>

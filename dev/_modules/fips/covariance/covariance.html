@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../../_static/documentation_options.js?v=d942ac48"></script>
+    <script src="../../../_static/documentation_options.js?v=977bbea9"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -591,8 +591,8 @@
 <span class="sd">        ``cov.data`` for the matrix), or `space` is not a Space.</span>
 <span class="sd">    ValueError</span>
 <span class="sd">        If the matrix does not have one row and one column per label, it</span>
-<span class="sd">        stores a NaN, or a dense or sparse matrix is not symmetric: its</span>
-<span class="sd">        largest ``|A - A^T|`` is more than 1e-10 of its largest entry (the</span>
+<span class="sd">        stores a value that is not finite (NaN or infinite), or a dense or</span>
+<span class="sd">        sparse matrix is not symmetric: its largest ``|A - A^T|`` is more than 1e-10 of its largest entry (the</span>
 <span class="sd">        message names the two entries and their labels). A diagonal or</span>
 <span class="sd">        Kronecker form is symmetric by construction, and a block diagonal one</span>
 <span class="sd">        is checked block by block. Also if the matrix is not positive</span>
