@@ -79,6 +79,12 @@ from fips.methods.analytic import Information, Whitened
 from fips.methods.gauss_newton import GaussNewton, GaussNewtonOptions
 from fips.problem import Problem as _Problem
 
+# NumPy before 2.0.2, on a CPU with AVX-512, computes exp and log in a SIMD or a
+# scalar loop by where the output lies in memory, and the two can differ in the
+# last bit; the chains grow that into other draws, so two solves from one seed
+# can differ (#278)
+REPEATABLE = np.lib.NumpyVersion(np.__version__) >= "2.0.2"
+
 # ---------------------------------------------------------------------------
 # Models, at the top level of the module so that they pickle
 # ---------------------------------------------------------------------------
@@ -1290,6 +1296,8 @@ def test_the_draws_are_made_again_refitted_only_where_the_chains_disagree(
     for tuning, before, end in zip(again._tunings(), burned_in, ends, strict=True):
         assert not np.array_equal(tuning.point.x, before)
         assert not np.array_equal(tuning.point.x, agreed[:, end - 1])
+    if not REPEATABLE:
+        pytest.skip("NumPy before 2.0.2 does not repeat exp and log bit for bit")
     np.testing.assert_array_equal(solved(True)[1], redrawn)
     monkeypatch.undo()
     solution = fips.solve(two_cells(), "gauss_newton", draws=400, burn_in=100)._solution
