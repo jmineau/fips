@@ -443,7 +443,7 @@ whole state by its labels, and keeps it sparse:
    project = stilt.Project("my_project")
    J = project.jacobian(project.simulations, grid, time_bins)
    jacobian = fips.Operator.from_blocks(
-       {("concentration", "flux"): (J.data, J.receptors.rename("receptor"), J.columns)},
+       {("concentration", "flux"): (J.data, J.releases.rename("receptor"), J.columns)},
        rows=obs.space,
        cols=prior.space,
    )

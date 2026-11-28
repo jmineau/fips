@@ -238,7 +238,7 @@ Options
 -------
 
 The options are the models' arguments. The solve's options (``tol``,
-``max_iterations``, ``draws``, ``burn_in``, ``seed``, ``chains``, ``gamma``) are those of
+``max_iterations``, ``draws``, ``burn_in``, ``seed``, ``chains``, ``gamma``, ``starts``) are those of
 ``"gauss_newton"`` (:doc:`nonlinear`).
 
 .. list-table::

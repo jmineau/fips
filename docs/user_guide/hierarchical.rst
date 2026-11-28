@@ -261,7 +261,7 @@ Options
      - The function from a dict of hyperparameters to the :class:`~fips.Problem`, or
        to its analytic posterior (``fips.solve(problem, gamma=s["gamma"])``
        makes gamma a hyperparameter). Or the problem itself, for the fast path.
-   * - ``hyperparameters``
+   * - ``priors``
      - (required)
      - The prior of each hyperparameter, by the name ``build`` reads it by. Their
        order is the order of the columns of ``result.hyperparameters``.
