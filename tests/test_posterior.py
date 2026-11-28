@@ -213,6 +213,28 @@ class TestOutputs:
         np.testing.assert_allclose(post.variances.values, 0.5)
         np.testing.assert_allclose(post.estimate.values, 0.5)
 
+    @pytest.mark.parametrize(
+        ("observed", "forward"),
+        [([1.0], [[1.0]]), ([1.0, 2.0], [[1.0], [1.0]]), ([1.0, 1.0], [[1.0], [2.0]])],
+        ids=["one-observation", "constant-fit", "constant-observations"],
+    )
+    def test_r2_returns_nan_without_warnings_for_undefined_correlation(
+        self, observed, forward
+    ):
+        state = Space({"x": pd.RangeIndex(1, name="i")})
+        obs = Space({"z": pd.RangeIndex(len(observed), name="j")})
+        post = fips.solve(
+            Problem(
+                prior=Vector([0.0], state),
+                prior_cov=Covariance.diagonal(1.0, state),
+                obs=Vector(observed, obs),
+                obs_cov=Covariance.diagonal(1.0, obs),
+                forward=Operator(np.array(forward), obs, state),
+            )
+        )
+        assert np.isnan(post.r2)
+        assert np.isnan(post.summary()["r2"].iloc[0])
+
     def test_repr(self, post):
         assert repr(post) == "Posterior(AnalyticOptions(gamma=1.0), n_state=8, n_obs=8)"
 
