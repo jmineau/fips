@@ -3030,6 +3030,10 @@ class Posterior:
         fit that is off by a constant or a factor scores as well as an exact
         one. :attr:`rmse` measures the misfit itself.
 
+        The correlation is undefined with fewer than two observations or
+        when either the offset-adjusted observations or the fitted values are
+        constant. In those cases, this returns NaN without a warning.
+
         See Also
         --------
         modeled_obs : :math:`H\hat{x} + c`.
@@ -3068,11 +3072,16 @@ class Posterior:
         0.983
         """
         z = self._problem.obs.values
+        if z.size < 2:
+            return float("nan")
         offset = self._problem.offset
         if offset is not None:
             z = z - offset.values
         fit = self._problem._apply(self.estimate.values)
-        return float(np.corrcoef(z, fit)[0, 1] ** 2)
+        if np.all(z == z[0]) or np.all(fit == fit[0]):
+            return float("nan")
+        with np.errstate(divide="ignore", invalid="ignore"):
+            return float(np.corrcoef(z, fit)[0, 1] ** 2)
 
     @property
     def rmse(self) -> float:
