@@ -27,6 +27,9 @@ Optional extras
    # Vector.to_xarray: xarray
    pip install "fips[xarray]"
 
+   # Posterior.to_inference_data: ArviZ (Python 3.12+)
+   pip install "fips[arviz]"
+
 Development Installation
 ------------------------
 

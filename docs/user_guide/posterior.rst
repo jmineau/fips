@@ -366,7 +366,7 @@ until you configure logging.** Several methods warn about things that change
 how far the answer can be trusted (a covariance close to singular, a prior
 wide against its bounds, draws that mix slowly, iterations that converge
 slowly). Each is a :class:`~fips.FipsWarning`, which Python prints once for
-each line of your code that leads to it, so you see it without hyperparameter
+each line of your code that leads to it, so you see it without setting
 anything up. :func:`warnings.filterwarnings` chooses what happens to them;
 in a loop of inversions, for example, make them errors so that no answer
 that drew one goes into the table unnoticed:

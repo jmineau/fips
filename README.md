@@ -38,6 +38,7 @@ Inverse problems in geophysics and atmospheric science often involve large state
 pip install fips            # the solver
 pip install "fips[viz]"     # with plot_comparison (matplotlib)
 pip install "fips[xarray]"  # with Vector.to_xarray
+pip install "fips[arviz]"   # with Posterior.to_inference_data (Python 3.12+)
 ```
 
 For development:
